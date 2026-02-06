@@ -255,19 +255,25 @@ async function handleLogin() {
     }
 }
 
+let syncTimeout;
 async function syncUserData() {
     if (!userEmail) return;
-    try {
-        await sql`UPDATE users SET 
-            score = ${score}, 
-            coins = ${coins}, 
-            is_vip = ${isVip},
-            total_helpers = ${totalHelpersOwned},
-            total_cloth = ${totalClothOwned},
-            has_karcher = ${hasKarcher},
-            has_speedup = ${hasSpeedUp}
-            WHERE email = ${userEmail}`;
-    } catch (e) { console.error("Neon Sync Error", e); }
+
+    // Debounce sync to prevent lag
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(async () => {
+        try {
+            await sql`UPDATE users SET 
+                score = ${score}, 
+                coins = ${coins}, 
+                is_vip = ${isVip},
+                total_helpers = ${totalHelpersOwned},
+                total_cloth = ${totalClothOwned},
+                has_karcher = ${hasKarcher},
+                has_speedup = ${hasSpeedUp}
+                WHERE email = ${userEmail}`;
+        } catch (e) { console.error("Neon Sync Error", e); }
+    }, 1000);
 }
 
 async function fetchLeaderboard() {
@@ -574,16 +580,22 @@ function drag(e) {
 
 window.addEventListener('load', async () => {
     await initDatabase();
-    updatePowerStats();
-    initUI();
-    centerCloth();
-    updateUIValues();
 
+    // Reset score on refresh (Session-based leaderboard)
+    score = 0;
     if (userEmail) {
+        try {
+            await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`;
+        } catch (e) { console.error("Score Reset Error", e); }
         get('auth-modal').classList.add('hidden');
     } else {
         get('auth-modal').classList.remove('hidden');
     }
+
+    updatePowerStats();
+    initUI();
+    centerCloth();
+    updateUIValues();
 
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
