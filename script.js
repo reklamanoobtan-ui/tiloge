@@ -7,7 +7,8 @@ import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.
 // IMPORTANT: This is the connection string you provided.
 const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
-// State
+// State & Version Control
+const APP_VERSION = "2.0.0"; // Increment this to force all clients to reload
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
@@ -175,9 +176,10 @@ function updateLeaderboardUI() {
     }
 }
 
-// Database Initialization & Auth Logic
+// Database Initialization & Config
 async function initDatabase() {
     try {
+        // 1. Create Tables
         await sql`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE,
@@ -192,7 +194,30 @@ async function initDatabase() {
             has_speedup BOOLEAN DEFAULT false,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS system_config (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )`;
+
+        // 2. Perform Wipe (Requested by User)
+        await sql`DELETE FROM users`;
+
+        // 3. Update Sync Version in DB
+        await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
+                  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
+
     } catch (e) { console.error("DB Init Error", e); }
+}
+
+async function checkForUpdates() {
+    try {
+        const result = await sql`SELECT value FROM system_config WHERE key = 'app_version'`;
+        if (result.length > 0 && result[0].value !== APP_VERSION) {
+            console.log("New version detected! Reloading...");
+            location.reload();
+        }
+    } catch (e) { console.error("Update Check Error", e); }
 }
 
 async function handleRegister() {
@@ -605,6 +630,7 @@ window.addEventListener('load', async () => {
 
     fetchLeaderboard();
     setInterval(fetchLeaderboard, 5000);
+    setInterval(checkForUpdates, 30000); // Check for global updates every 30s
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     scheduleNextStain();
