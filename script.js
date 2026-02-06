@@ -699,8 +699,8 @@ function getSpawnInterval() {
     // Apply VIP bonus (half interval)
     if (isVip) interval = interval / 2;
 
-    // Minimum cap: 0.005 seconds (5ms)
-    return Math.max(5, interval);
+    // Minimum cap: 0.05 seconds (50ms)
+    return Math.max(50, interval);
 }
 
 function scheduleNextStain() {
