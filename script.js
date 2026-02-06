@@ -14,14 +14,11 @@ if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
 
-// Mock/Fake players for competitive feel
-let leaderboard = JSON.parse(localStorage.getItem('tilo_leaderboard')) || [
-    { name: "Sandro99", score: 1200, vip: false },
-    { name: "Lasha_GT", score: 950, vip: true },
-    { name: "Anano✨", score: 800, vip: false },
-    { name: "Gio_King", score: 2500, vip: true },
-    { name: "Mariam_7", score: 450, vip: false }
-];
+// Neon Database Config (HTTP API)
+// IMPORTANT: Replace this with your Neon HTTP connection string or endpoint
+const NEON_DATABASE_URL = "YOUR_NEON_HTTP_ENDPOINT_HERE";
+
+let onlinePlayers = [];
 
 // Stats Logic (Owned vs Active)
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
@@ -103,18 +100,7 @@ function updateUIValues() {
 }
 
 function updateLeaderboardUI() {
-    // Merge current player into local leaderboard
-    let combined = [...leaderboard];
-    if (nickname) {
-        let me = combined.find(u => u.name === nickname);
-        if (me) {
-            me.score = score;
-            me.vip = isVip;
-        } else {
-            combined.push({ name: nickname, score: score, vip: isVip, isMe: true });
-        }
-    }
-    combined.sort((a, b) => b.score - a.score);
+    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
 
     // Mini HUD Update
     const miniList = get('mini-lb-list');
@@ -122,13 +108,14 @@ function updateLeaderboardUI() {
         miniList.innerHTML = '';
         const top3 = combined.slice(0, 3);
         top3.forEach((entry, i) => {
+            const isMe = entry.nickname === nickname;
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
-            if (entry.name === nickname) item.style.background = "rgba(255, 204, 0, 0.2)";
+            if (isMe) item.style.background = "rgba(255, 204, 0, 0.2)";
 
             let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
             item.innerHTML = `
-                <span class="mini-lb-name">${medal} ${entry.vip ? '👑' : ''}${entry.name}</span>
+                <span class="mini-lb-name">${medal} ${entry.is_vip ? '👑' : ''}${entry.nickname}</span>
                 <span class="mini-lb-score">${Math.floor(entry.score)}</span>
             `;
             miniList.appendChild(item);
@@ -140,32 +127,49 @@ function updateLeaderboardUI() {
     if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
         list.innerHTML = '';
         combined.slice(0, 10).forEach((entry, i) => {
+            const isMe = entry.nickname === nickname;
             const item = document.createElement('div');
             item.className = 'lb-item';
-            if (entry.name === nickname) item.style.fontWeight = "bold";
+            if (isMe) item.style.fontWeight = "bold";
 
             if (i === 0) item.style.color = "#FFD700";
             else if (i === 1) item.style.color = "#C0C0C0";
             else if (i === 2) item.style.color = "#CD7F32";
-            else if (entry.vip) item.style.color = "#ff8c00";
+            else if (entry.is_vip) item.style.color = "#ff8c00";
 
-            item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.vip ? '👑 ' : ''}${entry.name}</span> <span>${Math.floor(entry.score)}</span>`;
+            item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span> <span>${Math.floor(entry.score)}</span>`;
             list.appendChild(item);
         });
     }
+}
 
-    // Periodically fluctuate "other" scores to simulate activity
-    if (!window.simulating) {
-        window.simulating = true;
-        setInterval(() => {
-            leaderboard.forEach(u => {
-                if (u.name !== nickname && Math.random() > 0.8) {
-                    u.score += Math.random() * 5;
-                }
-            });
-            localStorage.setItem('tilo_leaderboard', JSON.stringify(leaderboard));
-            updateUIValues();
-        }, 5000);
+// Sync score with Neon
+async function syncScore() {
+    if (!nickname || NEON_DATABASE_URL === "YOUR_NEON_HTTP_ENDPOINT_HERE") return;
+
+    try {
+        await fetch(NEON_DATABASE_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                nickname: nickname,
+                score: score,
+                is_vip: isVip
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        console.error("Neon Sync Error", e);
+    }
+}
+
+async function fetchLeaderboard() {
+    if (NEON_DATABASE_URL === "YOUR_NEON_HTTP_ENDPOINT_HERE") return;
+    try {
+        const res = await fetch(NEON_DATABASE_URL);
+        onlinePlayers = await res.json();
+        updateLeaderboardUI();
+    } catch (e) {
+        console.error("Neon Fetch Error", e);
     }
 }
 
@@ -181,6 +185,7 @@ function updateScore(points) {
             showStatusUpdate("+1 🪙 ქულებისათვის!");
         }
         updateUIValues();
+        syncScore();
     }
 
     if (cleanedCountForScaling >= 10) {
@@ -262,7 +267,9 @@ function initUI() {
         const val = get('nickname-input').value.trim();
         if (val) {
             nickname = val; localStorage.setItem('tilo_nick', nickname);
-            get('auth-modal').classList.add('hidden'); updateUIValues();
+            get('auth-modal').classList.add('hidden');
+            updateUIValues();
+            syncScore();
         }
     };
 
@@ -451,6 +458,10 @@ window.addEventListener('load', () => {
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
+
+    fetchLeaderboard();
+    setInterval(fetchLeaderboard, 5000); // Polling for real-time vibe
+
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     if (!nickname && get('auth-modal')) get('auth-modal').classList.remove('hidden');
     scheduleNextStain();
