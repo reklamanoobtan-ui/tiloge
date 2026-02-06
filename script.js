@@ -179,8 +179,8 @@ function updateLeaderboardUI() {
 // Database Initialization & Config
 async function initDatabase() {
     try {
-        // 1. Ensure schema is correct (Dropping and Recreating because reset was requested)
-        await sql`DROP TABLE IF EXISTS users CASCADE`;
+        // 1. Ensure schema is correct (Reset Complete)
+        // await sql`DROP TABLE IF EXISTS users CASCADE`;
 
         await sql`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
