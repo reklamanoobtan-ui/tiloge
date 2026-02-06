@@ -87,9 +87,9 @@ function updateUIValues() {
     }
 
     if (get('interval-val')) {
-        let base = hasSpeedUp ? Math.max(0.01, currentInterval - 5000) : currentInterval;
+        let base = hasSpeedUp ? Math.max(50, currentInterval - 5000) : currentInterval;
         const displayInterval = isVip ? (base / 2) : base;
-        get('interval-val').textContent = (displayInterval / 1000).toFixed(6);
+        get('interval-val').textContent = (Math.max(50, displayInterval) / 1000).toFixed(6);
     }
 
     updateLeaderboardUI();
@@ -172,8 +172,8 @@ function updateScore(points) {
 
     if (cleanedCountForScaling >= 10) {
         cleanedCountForScaling = 0;
-        if (currentInterval > 0.01) {
-            currentInterval = Math.max(0.01, currentInterval - (currentInterval * 0.1));
+        if (currentInterval > 50) {
+            currentInterval = Math.max(50, currentInterval - (currentInterval * 0.1));
             updateUIValues();
         }
     }
@@ -452,9 +452,9 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    let base = hasSpeedUp ? Math.max(0.01, currentInterval - 5000) : currentInterval;
+    let base = hasSpeedUp ? Math.max(50, currentInterval - 5000) : currentInterval;
     const displayInterval = isVip ? (base / 2) : base;
-    return Math.max(0.01, displayInterval);
+    return Math.max(50, displayInterval);
 }
 
 function scheduleNextStain() {
