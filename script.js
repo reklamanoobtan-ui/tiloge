@@ -14,6 +14,7 @@ let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 let score = 0;
 let currentInterval = 10000; // Base: 10 seconds
+let sessionSpeedBonus = parseInt(localStorage.getItem('tilo_session_bonus')) || 0;
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
@@ -64,6 +65,7 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_has_karcher', hasKarcher);
     localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
     localStorage.setItem('tilo_has_speedup', hasSpeedUp);
+    localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
 }
 
 function updateUIValues() {
@@ -87,13 +89,14 @@ function updateUIValues() {
 
     // Shop Items - One time purchases
     if (get('buy-speed-btn')) {
-        if (hasSpeedUp) {
-            get('buy-speed-btn').textContent = "შეძენილია";
-            get('buy-speed-btn').disabled = true;
-            get('buy-speed-btn').classList.add('purchased');
-        } else {
+        if (!hasSpeedUp) {
             get('buy-speed-btn').textContent = "50 🪙";
             get('buy-speed-btn').disabled = false;
+            get('buy-speed-btn').classList.remove('purchased');
+        } else {
+            // After permanent buy, show temporary buy
+            get('buy-speed-btn').textContent = "10 🪙 (-1წ)";
+            get('buy-speed-btn').disabled = coins < 10;
             get('buy-speed-btn').classList.remove('purchased');
         }
     }
@@ -394,9 +397,21 @@ function initUI() {
     };
 
     get('buy-speed-btn').onclick = () => {
-        if (coins >= 50 && !hasSpeedUp) {
-            coins -= 50; hasSpeedUp = true;
-            saveStatsToLocal(); updateUIValues(); syncUserData();
+        if (!hasSpeedUp) {
+            // First time permanent buy
+            if (coins >= 50) {
+                coins -= 50; hasSpeedUp = true;
+                saveStatsToLocal(); updateUIValues(); syncUserData();
+                showStatusUpdate("მუდმივი აჩქარება მიღებულია!");
+            }
+        } else {
+            // Subsequent temporary buy
+            if (coins >= 10) {
+                coins -= 10;
+                sessionSpeedBonus += 1000; // Reduce 1s
+                saveStatsToLocal(); updateUIValues(); syncUserData();
+                showStatusUpdate("-1 წამი სისწრაფე!");
+            }
         }
     };
 
@@ -614,7 +629,7 @@ function getSpawnInterval() {
     // Every 50 points, decrease speed by 1 second (1000ms)
     let speedBonus = Math.floor(score / 50) * 1000;
 
-    let interval = base - speedBonus;
+    let interval = base - speedBonus - sessionSpeedBonus;
 
     // Apply VIP bonus (half interval)
     if (isVip) interval = interval / 2;
@@ -681,6 +696,9 @@ window.addEventListener('load', async () => {
 
     // Reset score on refresh (Session-based leaderboard)
     score = 0;
+    sessionSpeedBonus = 0; // Reset temp speed bonus on refresh
+    localStorage.setItem('tilo_session_bonus', 0);
+
     if (userEmail) {
         try {
             await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`;
