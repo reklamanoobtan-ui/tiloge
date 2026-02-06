@@ -17,6 +17,7 @@ let currentInterval = 10000; // Base: 10 seconds
 let sessionSpeedBonus = parseInt(localStorage.getItem('tilo_session_bonus')) || 0;
 let activeSpeedBonus = parseInt(localStorage.getItem('tilo_active_speed_bonus'));
 if (isNaN(activeSpeedBonus)) activeSpeedBonus = sessionSpeedBonus;
+let manualSpeedBonus = parseInt(localStorage.getItem('tilo_manual_bonus')) || 0;
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
@@ -71,8 +72,8 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_has_speedup', hasSpeedUp);
     localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
     localStorage.setItem('tilo_active_speed_bonus', activeSpeedBonus);
-    localStorage.setItem('tilo_score_cloth_lvl', scoreClothLvl);
     localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
+    localStorage.setItem('tilo_manual_bonus', manualSpeedBonus);
     localStorage.setItem('tilo_vip', isVip);
     localStorage.setItem('tilo_has_karcher', hasKarcher);
     localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
@@ -253,6 +254,7 @@ async function initDatabase() {
         try {
             await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_cloth_lvl INTEGER DEFAULT 0`;
             await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_helper_lvl INTEGER DEFAULT 0`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS manual_speed_bonus INTEGER DEFAULT 0`;
         } catch (e) { }
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
@@ -326,6 +328,7 @@ async function handleLogin() {
             hasSpeedUp = user.has_speedup;
             scoreClothLvl = user.score_cloth_lvl || 0;
             scoreHelperLvl = user.score_helper_lvl || 0;
+            manualSpeedBonus = user.manual_speed_bonus || 0;
 
             // Update Local Storage
             localStorage.setItem('tilo_nick', nickname);
@@ -340,6 +343,7 @@ async function handleLogin() {
             localStorage.setItem('tilo_has_speedup', hasSpeedUp);
             localStorage.setItem('tilo_score_cloth_lvl', scoreClothLvl);
             localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
+            localStorage.setItem('tilo_manual_bonus', manualSpeedBonus);
 
             updateUIValues();
             location.reload();
@@ -368,7 +372,8 @@ async function syncUserData() {
                 has_karcher = ${hasKarcher},
                 has_speedup = ${hasSpeedUp},
                 score_cloth_lvl = ${scoreClothLvl},
-                score_helper_lvl = ${scoreHelperLvl}
+                score_helper_lvl = ${scoreHelperLvl},
+                manual_speed_bonus = ${manualSpeedBonus}
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
     }, 1000);
@@ -499,6 +504,17 @@ function initUI() {
                 alert("რეიტინგი გასუფთავდა! ყველა მომხმარებელი დარეფრეშდება.");
                 location.reload();
             } catch (e) { alert("შეცდომა!"); }
+        }
+    };
+
+    get('buy-manual-speed-btn').onclick = () => {
+        if (coins >= 50) {
+            coins -= 50;
+            manualSpeedBonus += 500; // Decrease 0.5s
+            saveStatsToLocal(); updateUIValues(); syncUserData();
+            showStatusUpdate("-0.5 წამი სიჩქარე! ⚡");
+        } else {
+            showStatusUpdate("არ გაქვთ საკმარისი ქოინი! 🪙");
         }
     };
 
@@ -706,9 +722,9 @@ function getSpawnInterval() {
     let base = hasSpeedUp ? 5000 : 10000;
 
     // Every 50 points, decrease speed by 1 second (1000ms)
-    let speedBonus = Math.floor(score / 50) * 1000;
+    
 
-    let interval = base - speedBonus - activeSpeedBonus;
+    let interval = base - activeSpeedBonus - manualSpeedBonus;
 
     // Apply VIP bonus (half interval)
     if (isVip) interval = interval / 2;
