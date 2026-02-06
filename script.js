@@ -243,8 +243,13 @@ async function initDatabase() {
             total_cloth INTEGER DEFAULT 0,
             has_karcher BOOLEAN DEFAULT false,
             has_speedup BOOLEAN DEFAULT false,
+            last_seen TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+
+        try {
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
+        } catch (e) { }
 
         // Score levels are now session-based, no ALTER needed
 
@@ -355,7 +360,8 @@ async function syncUserData() {
                 total_helpers = ${totalHelpersOwned},
                 total_cloth = ${totalClothOwned},
                 has_karcher = ${hasKarcher},
-                has_speedup = ${hasSpeedUp}
+                has_speedup = ${hasSpeedUp},
+                last_seen = NOW()
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
     }, 1000);
@@ -366,6 +372,10 @@ async function fetchLeaderboard() {
         const result = await sql`SELECT nickname, score, is_vip, total_helpers, total_cloth, has_karcher FROM users ORDER BY score DESC LIMIT 20`;
         onlinePlayers = result;
         updateLeaderboardUI();
+
+        // Fetch online count (seen in last 30s)
+        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '30 seconds'`;
+        if (get('online-count')) get('online-count').textContent = countRes[0].count;
     } catch (e) { console.error("Neon Fetch Error", e); }
 }
 
@@ -800,6 +810,7 @@ window.addEventListener('load', async () => {
         if (get('lb-timer')) get('lb-timer').textContent = `(${lbTimeLeft}წ)`;
     }, 1000);
     setInterval(checkForUpdates, 30000); // Check for global updates every 30s
+    setInterval(() => { if (userEmail) syncUserData(); }, 15000); // Heartbeat for online status
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     scheduleNextStain();
