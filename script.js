@@ -22,18 +22,18 @@ if (isNaN(coins)) coins = 0;
 let isVip = localStorage.getItem('tilo_vip') === 'true';
 let onlinePlayers = [];
 
-// Stats Logic (Owned vs Active)
+// Shop State
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
 let activeHelpers = parseInt(localStorage.getItem('tilo_active_helpers')) || 0;
-if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
-
 let totalClothOwned = parseInt(localStorage.getItem('tilo_total_cloth')) || 0;
 let activeCloth = parseInt(localStorage.getItem('tilo_active_cloth')) || 0;
-if (activeCloth > totalClothOwned) activeCloth = totalClothOwned;
-
 let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
 let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
 let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
+
+// Bounds checks
+if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
+if (activeCloth > totalClothOwned) activeCloth = totalClothOwned;
 
 // Base stats
 let baseClothStrength = 20;
@@ -54,7 +54,7 @@ function updatePowerStats() {
     clothStrength = power;
 }
 
-function saveStats() {
+function saveStatsToLocal() {
     localStorage.setItem('tilo_coins', coins);
     localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
     localStorage.setItem('tilo_active_helpers', activeHelpers);
@@ -70,10 +70,16 @@ function updateUIValues() {
     if (get('coins-val')) get('coins-val').textContent = coins;
     if (get('score-val')) get('score-val').textContent = score;
 
+    // Settings UI
     if (get('active-helpers')) get('active-helpers').textContent = activeHelpers;
     if (get('total-helpers')) get('total-helpers').textContent = totalHelpersOwned;
     if (get('active-cloth')) get('active-cloth').textContent = activeCloth;
     if (get('total-cloth')) get('total-cloth').textContent = totalClothOwned;
+
+    // Shop UI
+    if (get('helper-count')) get('helper-count').textContent = totalHelpersOwned;
+    if (get('cloth-level')) get('cloth-level').textContent = totalClothOwned;
+
     if (get('karcher-status')) {
         if (!hasKarcher) get('karcher-status').textContent = "არ გაქვთ";
         else get('karcher-status').textContent = karcherEnabled ? "ჩართულია" : "გამორთულია";
@@ -84,6 +90,10 @@ function updateUIValues() {
         const displayInterval = isVip ? (base / 2) : base;
         get('interval-val').textContent = (Math.max(50, displayInterval) / 1000).toFixed(6);
     }
+
+    // Profile in Settings
+    if (get('settings-user-name')) get('settings-user-name').textContent = nickname || "სტუმარი";
+    if (get('settings-user-email')) get('settings-user-email').textContent = userEmail || "";
 
     updateLeaderboardUI();
 }
@@ -143,22 +153,26 @@ async function initDatabase() {
             score INTEGER DEFAULT 0,
             coins INTEGER DEFAULT 0,
             is_vip BOOLEAN DEFAULT false,
+            total_helpers INTEGER DEFAULT 0,
+            total_cloth INTEGER DEFAULT 0,
+            has_karcher BOOLEAN DEFAULT false,
+            has_speedup BOOLEAN DEFAULT false,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
     } catch (e) { console.error("DB Init Error", e); }
 }
 
 async function handleRegister() {
-    const email = get('auth-email').value;
-    const pass = get('auth-password').value;
+    const email = get('auth-email').value.trim();
+    const pass = get('auth-password').value.trim();
     const nick = get('nickname-input').value.trim();
     const err = get('auth-error');
 
     if (!email || !pass || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
 
     try {
-        await sql`INSERT INTO users (email, password, nickname, coins, is_vip) 
-                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip})`;
+        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, total_helpers, total_cloth, has_karcher, has_speedup) 
+                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${totalHelpersOwned}, ${totalClothOwned}, ${hasKarcher}, ${hasSpeedUp})`;
         err.style.color = "#4caf50";
         err.textContent = "რეგისტრაცია წარმატებულია! ახლა შედით სისტემაში.";
     } catch (e) {
@@ -168,8 +182,8 @@ async function handleRegister() {
 }
 
 async function handleLogin() {
-    const email = get('auth-email').value;
-    const pass = get('auth-password').value;
+    const email = get('auth-email').value.trim();
+    const pass = get('auth-password').value.trim();
     const err = get('auth-error');
 
     try {
@@ -181,14 +195,25 @@ async function handleLogin() {
             score = user.score;
             coins = user.coins;
             isVip = user.is_vip;
+            totalHelpersOwned = user.total_helpers;
+            totalClothOwned = user.total_cloth;
+            hasKarcher = user.has_karcher;
+            hasSpeedUp = user.has_speedup;
 
+            // Update Local Storage
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
             localStorage.setItem('tilo_vip', isVip);
+            localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
+            localStorage.setItem('tilo_active_helpers', totalHelpersOwned);
+            localStorage.setItem('tilo_total_cloth', totalClothOwned);
+            localStorage.setItem('tilo_active_cloth', totalClothOwned);
+            localStorage.setItem('tilo_has_karcher', hasKarcher);
+            localStorage.setItem('tilo_has_speedup', hasSpeedUp);
 
             updateUIValues();
-            location.reload(); // Refresh to start game with loaded stats
+            location.reload();
         } else {
             err.textContent = "არასწორი მონაცემები!";
         }
@@ -197,11 +222,18 @@ async function handleLogin() {
     }
 }
 
-async function syncScore() {
+async function syncUserData() {
     if (!userEmail) return;
     try {
-        await sql`UPDATE users SET score = ${score}, coins = ${coins}, is_vip = ${isVip} 
-                  WHERE email = ${userEmail}`;
+        await sql`UPDATE users SET 
+            score = ${score}, 
+            coins = ${coins}, 
+            is_vip = ${isVip},
+            total_helpers = ${totalHelpersOwned},
+            total_cloth = ${totalClothOwned},
+            has_karcher = ${hasKarcher},
+            has_speedup = ${hasSpeedUp}
+            WHERE email = ${userEmail}`;
     } catch (e) { console.error("Neon Sync Error", e); }
 }
 
@@ -221,11 +253,11 @@ function updateScore(points) {
 
         if (Math.floor(score / 1000) > Math.floor(oldScore / 1000)) {
             coins += Math.floor(score / 1000) - Math.floor(oldScore / 1000);
-            saveStats();
+            saveStatsToLocal();
             showStatusUpdate("+1 🪙 ქულებისათვის!");
         }
         updateUIValues();
-        syncScore();
+        syncUserData();
     }
 
     if (cleanedCountForScaling >= 10) {
@@ -251,7 +283,7 @@ function showStatusUpdate(text) {
 function initUI() {
     get('buy-vip-btn').onclick = () => {
         if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
-            isVip = true; updatePowerStats(); saveStats(); syncScore();
+            isVip = true; updatePowerStats(); saveStatsToLocal(); syncUserData();
             if (get('cloth')) get('cloth').classList.add('vip-cloth');
             if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
             get('buy-vip-btn').style.display = 'none';
@@ -267,35 +299,71 @@ function initUI() {
     get('buy-helper-btn').onclick = () => {
         if (coins >= 100 && totalHelpersOwned < 10) {
             coins -= 100; totalHelpersOwned++; activeHelpers++;
-            saveStats(); updateUIValues(); syncScore(); startHelperBot();
+            saveStatsToLocal(); updateUIValues(); syncUserData(); startHelperBot();
+        }
+    };
+
+    get('buy-speed-btn').onclick = () => {
+        if (coins >= 50 && !hasSpeedUp) {
+            coins -= 50; hasSpeedUp = true;
+            saveStatsToLocal(); updateUIValues(); syncUserData();
         }
     };
 
     get('buy-cloth-power-btn').onclick = () => {
         if (coins >= 70 && totalClothOwned < 10) {
             coins -= 70; totalClothOwned++; activeCloth++;
-            updatePowerStats(); saveStats(); updateUIValues(); syncScore();
+            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
         }
     };
 
     get('buy-karcher-btn').onclick = () => {
         if (coins >= 1000 && !hasKarcher) {
             coins -= 1000; hasKarcher = true; karcherEnabled = true;
-            updatePowerStats(); saveStats(); updateUIValues(); syncScore();
+            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
             get('buy-karcher-btn').textContent = "შეძენილია"; get('buy-karcher-btn').disabled = true;
         }
+    };
+
+    // Settings adjustments
+    get('set-dec-helper').onclick = () => {
+        if (activeHelpers > 0) {
+            activeHelpers--; saveStatsToLocal(); updateUIValues();
+            const bots = document.querySelectorAll('.helper-bot');
+            if (bots.length > 0) bots[bots.length - 1].remove();
+        }
+    };
+    get('set-inc-helper').onclick = () => {
+        if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStatsToLocal(); updateUIValues(); startHelperBot(); }
+    };
+    get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
+    get('set-inc-cloth').onclick = () => { if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
+
+    get('toggle-karcher-btn').onclick = () => {
+        if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStatsToLocal(); updateUIValues(); }
     };
 
     // Auth Actions
     get('register-btn').onclick = handleRegister;
     get('login-btn').onclick = handleLogin;
-
     get('logout-btn').onclick = () => {
         if (confirm("ნამდვილად გსურთ გასვლა?")) {
             localStorage.clear();
             location.reload();
         }
     };
+
+    // Donation logic
+    document.querySelectorAll('.buy-coins-btn').forEach(btn => {
+        btn.onclick = () => {
+            const amount = parseInt(btn.dataset.coins);
+            if (confirm(`გსურთ ${amount} ქოინის ყიდვა?`)) {
+                coins += amount;
+                saveStatsToLocal(); updateUIValues(); syncUserData();
+                alert("ქოინები დაემატა!");
+            }
+        };
+    });
 
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
     get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
@@ -479,18 +547,8 @@ window.addEventListener('load', async () => {
     updateUIValues();
 
     if (userEmail) {
-        get('user-display-name').textContent = nickname;
-        get('header-user-info').classList.remove('hidden');
         get('auth-modal').classList.add('hidden');
-
-        // Add "Switch Account" behavior if user clicks their name
-        get('user-display-name').style.cursor = "pointer";
-        get('user-display-name').title = "ანგარიშის შეცვლა";
-        get('user-display-name').onclick = () => {
-            get('auth-modal').classList.toggle('hidden');
-        };
     } else {
-        get('header-user-info').classList.add('hidden');
         get('auth-modal').classList.remove('hidden');
     }
 
