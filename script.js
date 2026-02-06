@@ -25,6 +25,8 @@ if (isNaN(coins)) coins = 0;
 let isVip = localStorage.getItem('tilo_vip') === 'true';
 let onlinePlayers = [];
 let lbTimeLeft = 10;
+let currentTheme = localStorage.getItem('tilo_theme') || 'light';
+document.body.className = `theme-${currentTheme}`;
 
 // Shop State
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
@@ -403,7 +405,7 @@ function showStatusUpdate(text) {
     ds.style.color = '#ffcc00';
     setTimeout(() => {
         ds.textContent = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
-        ds.style.color = '#666';
+        ds.style.color = '';
     }, 3000);
 }
 
@@ -532,46 +534,24 @@ function initUI() {
         }
     };
 
-    // Donation logic
-    document.querySelectorAll('.buy-coins-btn').forEach(btn => {
-        btn.onclick = () => {
-            const amount = parseInt(btn.dataset.coins);
-            if (confirm(`გსურთ ${amount} ქოინის ყიდვა?`)) {
-                coins += amount;
-                saveStatsToLocal(); updateUIValues(); syncUserData();
-                alert("ქოინები დაემატა!");
-            }
+    // Theme logic
+    get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
+    get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');
+
+    document.querySelectorAll('.theme-opt').forEach(opt => {
+        opt.onclick = () => {
+            const theme = opt.dataset.theme;
+            currentTheme = theme;
+            document.body.className = `theme-${theme}`;
+            localStorage.setItem('tilo_theme', theme);
+
+            // UI Update
+            document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
         };
+        // Set initial active
+        if (opt.dataset.theme === currentTheme) opt.classList.add('active');
     });
-
-    get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
-    get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
-
-    // Promo Code Logic
-    get('apply-promo-btn').onclick = () => {
-        const input = get('promo-input').value.trim().toLowerCase();
-        const msg = get('promo-msg');
-        if (input === 'baro') {
-            const usedPromos = JSON.parse(localStorage.getItem('tilo_used_promos') || "[]");
-            if (usedPromos.includes('baro')) {
-                msg.textContent = "კოდი უკვე გამოყენებულია!";
-                msg.style.color = "#ff4d4d";
-            } else {
-                coins += 5000;
-                usedPromos.push('baro');
-                localStorage.setItem('tilo_used_promos', JSON.stringify(usedPromos));
-                saveStatsToLocal();
-                updateUIValues();
-                syncUserData();
-                msg.textContent = "კოდი გააქტიურდა! +5000 🪙";
-                msg.style.color = "#4caf50";
-                get('promo-input').value = "";
-            }
-        } else {
-            msg.textContent = "არასწორი კოდი!";
-            msg.style.color = "#ff4d4d";
-        }
-    };
 
     get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');

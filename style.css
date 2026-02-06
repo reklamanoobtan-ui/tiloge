@@ -2,9 +2,37 @@
 
 :root {
     --bg-color: #fdfdfd;
+    --text-color: #444;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --secondary-text: #666;
     --cloth-color: #ffcc00;
     --font-main: 'Outfit', sans-serif;
     --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark {
+    --bg-color: #121212;
+    --text-color: #eee;
+    --glass-bg: rgba(30, 30, 30, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --secondary-text: #aaa;
+}
+
+body.theme-ocean {
+    --bg-color: #0c1445;
+    --text-color: #fff;
+    --glass-bg: rgba(12, 20, 69, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --secondary-text: #b8c1ec;
+}
+
+body.theme-forest {
+    --bg-color: #1b261b;
+    --text-color: #e3f2e3;
+    --glass-bg: rgba(27, 38, 27, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --secondary-text: #a8bba8;
 }
 
 * {
@@ -157,14 +185,18 @@ body {
 }
 
 .stat-box {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--glass-bg);
     backdrop-filter: blur(10px);
     padding: 10px 20px;
     border-radius: 30px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     font-weight: 600;
-    color: #444;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--glass-border);
 }
 
 #vip-tag {
@@ -412,9 +444,10 @@ body {
 }
 
 .info-text h1 {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 400;
-    color: #666;
+    color: var(--secondary-text);
+    transition: all 0.3s ease;
     text-transform: uppercase;
 }
 
@@ -438,7 +471,8 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: var(--bg-color);
+    color: var(--text-color);
     padding: 40px;
     border-radius: 24px;
     width: 90%;
@@ -446,6 +480,33 @@ body {
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     position: relative;
+    border: 1px solid var(--glass-border);
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.theme-opt {
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.theme-opt:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.theme-opt.active {
+    border-color: var(--cloth-color);
+    background: rgba(255, 204, 0, 0.1);
 }
 
 #nickname-input {
@@ -592,4 +653,4 @@ body {
     color: rgba(255, 255, 255, 0.4) !important;
     cursor: default !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
-}/ *   G a m e   A r e n a   * / 
+}
