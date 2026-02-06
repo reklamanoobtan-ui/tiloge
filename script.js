@@ -135,6 +135,22 @@ function updateUIValues() {
 function updateLeaderboardUI() {
     const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
 
+    const getTitle = (score) => {
+        if (score >= 5000) return "🏆 ლეგენდა";
+        if (score >= 1000) return "💎 ექსპერტი";
+        if (score >= 500) return "✨ ოსტატი";
+        if (score >= 100) return "🧼 მწმენდავი";
+        return "🌱 დამწყები";
+    };
+
+    const getAchvIcons = (p) => {
+        let i = '';
+        if (p.has_karcher) i += ' 💦';
+        if (p.total_helpers > 0) i += ' 🧹';
+        if (p.total_cloth > 0) i += ' 🧽';
+        return i;
+    };
+
     // Mini HUD Update
     const miniList = get('mini-lb-list');
     if (miniList) {
@@ -148,7 +164,10 @@ function updateLeaderboardUI() {
 
             let rankSymbol = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `#${i + 1}`));
             item.innerHTML = `
-                <span class="mini-lb-name">${rankSymbol} ${entry.is_vip ? '👑' : ''}${entry.nickname}</span>
+                <div class="mini-lb-content" style="display: flex; flex-direction: column;">
+                    <span class="mini-lb-name">${rankSymbol} ${entry.is_vip ? '👑' : ''}${entry.nickname}${getAchvIcons(entry)}</span>
+                    <span class="mini-lb-title" style="font-size: 0.6rem; opacity: 0.7; margin-left: 25px;">${getTitle(entry.score)}</span>
+                </div>
                 <span class="mini-lb-score">${Math.floor(entry.score)}</span>
             `;
             miniList.appendChild(item);
@@ -170,7 +189,16 @@ function updateLeaderboardUI() {
             else if (i === 2) item.style.color = "#CD7F32";
             else if (entry.is_vip) item.style.color = "#ff8c00";
 
-            item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span> <span>${Math.floor(entry.score)}</span>`;
+            item.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="lb-rank">#${i + 1}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}${getAchvIcons(entry)}</span>
+                        <span style="font-size: 0.7rem; opacity: 0.6;">${getTitle(entry.score)}</span>
+                    </div>
+                </div>
+                <span>${Math.floor(entry.score)}</span>
+            `;
             list.appendChild(item);
         });
     }
@@ -312,7 +340,7 @@ async function syncUserData() {
 
 async function fetchLeaderboard() {
     try {
-        const result = await sql`SELECT nickname, score, is_vip FROM users ORDER BY score DESC LIMIT 20`;
+        const result = await sql`SELECT nickname, score, is_vip, total_helpers, total_cloth, has_karcher FROM users ORDER BY score DESC LIMIT 20`;
         onlinePlayers = result;
         updateLeaderboardUI();
     } catch (e) { console.error("Neon Fetch Error", e); }
