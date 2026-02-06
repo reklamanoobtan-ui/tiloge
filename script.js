@@ -33,8 +33,8 @@ let activeCloth = parseInt(localStorage.getItem('tilo_active_cloth')) || 0;
 let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
 let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
 let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
-let scoreClothLvl = parseInt(localStorage.getItem('tilo_score_cloth_lvl')) || 0;
-let scoreHelperLvl = parseInt(localStorage.getItem('tilo_score_helper_lvl')) || 0;
+let scoreClothLvl = 0;
+let scoreHelperLvl = 0;
 
 // Bounds checks
 if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
@@ -71,7 +71,6 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_has_speedup', hasSpeedUp);
     localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
     localStorage.setItem('tilo_active_speed_bonus', activeSpeedBonus);
-    localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
     localStorage.setItem('tilo_vip', isVip);
     localStorage.setItem('tilo_has_karcher', hasKarcher);
     localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
@@ -243,16 +242,10 @@ async function initDatabase() {
             total_cloth INTEGER DEFAULT 0,
             has_karcher BOOLEAN DEFAULT false,
             has_speedup BOOLEAN DEFAULT false,
-            score_cloth_lvl INTEGER DEFAULT 0,
-            score_helper_lvl INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
-        // Ensure columns exist for old users
-        try {
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_cloth_lvl INTEGER DEFAULT 0`;
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_helper_lvl INTEGER DEFAULT 0`;
-        } catch (e) { }
+        // Score levels are now session-based, no ALTER needed
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
             key TEXT PRIMARY KEY,
@@ -323,9 +316,6 @@ async function handleLogin() {
             totalClothOwned = user.total_cloth;
             hasKarcher = user.has_karcher;
             hasSpeedUp = user.has_speedup;
-            scoreClothLvl = user.score_cloth_lvl || 0;
-            scoreHelperLvl = user.score_helper_lvl || 0;
-            // manualSpeedBonus removed
 
             // Update Local Storage
             localStorage.setItem('tilo_nick', nickname);
@@ -338,9 +328,6 @@ async function handleLogin() {
             localStorage.setItem('tilo_active_cloth', totalClothOwned);
             localStorage.setItem('tilo_has_karcher', hasKarcher);
             localStorage.setItem('tilo_has_speedup', hasSpeedUp);
-            localStorage.setItem('tilo_score_cloth_lvl', scoreClothLvl);
-            localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
-            // manualSpeedBonus removed
 
             updateUIValues();
             location.reload();
@@ -367,9 +354,7 @@ async function syncUserData() {
                 total_helpers = ${totalHelpersOwned},
                 total_cloth = ${totalClothOwned},
                 has_karcher = ${hasKarcher},
-                has_speedup = ${hasSpeedUp},
-                score_cloth_lvl = ${scoreClothLvl},
-                score_helper_lvl = ${scoreHelperLvl}
+                has_speedup = ${hasSpeedUp}
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
     }, 1000);
@@ -778,8 +763,12 @@ window.addEventListener('load', async () => {
     score = 0;
     sessionSpeedBonus = 0;
     activeSpeedBonus = 0; // Reset all session speed bonuses
+    scoreClothLvl = 0;
+    scoreHelperLvl = 0; // Reset score-based upgrades on refresh
     localStorage.setItem('tilo_session_bonus', 0);
     localStorage.setItem('tilo_active_speed_bonus', 0);
+    localStorage.setItem('tilo_score_cloth_lvl', 0);
+    localStorage.setItem('tilo_score_helper_lvl', 0);
 
     if (userEmail) {
         try {
