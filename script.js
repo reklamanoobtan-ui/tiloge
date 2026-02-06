@@ -289,9 +289,12 @@ function initUI() {
     // Auth Actions
     get('register-btn').onclick = handleRegister;
     get('login-btn').onclick = handleLogin;
+
     get('logout-btn').onclick = () => {
-        localStorage.clear();
-        location.reload();
+        if (confirm("ნამდვილად გსურთ გასვლა?")) {
+            localStorage.clear();
+            location.reload();
+        }
     };
 
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
@@ -477,10 +480,17 @@ window.addEventListener('load', async () => {
 
     if (userEmail) {
         get('user-display-name').textContent = nickname;
-        get('user-info-section').classList.remove('hidden');
-        get('auth-forms').classList.add('hidden');
+        get('header-user-info').classList.remove('hidden');
         get('auth-modal').classList.add('hidden');
+
+        // Add "Switch Account" behavior if user clicks their name
+        get('user-display-name').style.cursor = "pointer";
+        get('user-display-name').title = "ანგარიშის შეცვლა";
+        get('user-display-name').onclick = () => {
+            get('auth-modal').classList.toggle('hidden');
+        };
     } else {
+        get('header-user-info').classList.add('hidden');
         get('auth-modal').classList.remove('hidden');
     }
 
