@@ -200,8 +200,8 @@ async function initDatabase() {
             value TEXT
         )`;
 
-        // 2. Perform Wipe (Requested by User)
-        await sql`DELETE FROM users`;
+        // 2. Perform Wipe (Completed)
+        // await sql`DELETE FROM users`;
 
         // 3. Update Sync Version in DB
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
