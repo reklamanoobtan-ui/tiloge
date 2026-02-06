@@ -692,10 +692,9 @@ function getSpawnInterval() {
     // Start at 10s. If hasSpeedUp, start at 5s.
     let base = hasSpeedUp ? 5000 : 10000;
 
-    // Every 50 points, decrease speed by 1 second (1000ms)
-
-
-    let speedBonus = Math.floor(score / 50) * 1000; let interval = base - speedBonus - activeSpeedBonus;
+    // Every 10 points, decrease speed by 0.1 second (100ms)
+    let speedBonus = Math.floor(score / 10) * 100;
+    let interval = base - speedBonus - activeSpeedBonus;
 
     // Apply VIP bonus (half interval)
     if (isVip) interval = interval / 2;
