@@ -13,8 +13,15 @@ let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
-let currentUser = null;
-let onlinePlayers = [];
+
+// Mock/Fake players for competitive feel
+let leaderboard = JSON.parse(localStorage.getItem('tilo_leaderboard')) || [
+    { name: "Sandro99", score: 1200, vip: false },
+    { name: "Lasha_GT", score: 950, vip: true },
+    { name: "Anano✨", score: 800, vip: false },
+    { name: "Gio_King", score: 2500, vip: true },
+    { name: "Mariam_7", score: 450, vip: false }
+];
 
 // Stats Logic (Owned vs Active)
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
@@ -96,7 +103,18 @@ function updateUIValues() {
 }
 
 function updateLeaderboardUI() {
-    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
+    // Merge current player into local leaderboard
+    let combined = [...leaderboard];
+    if (nickname) {
+        let me = combined.find(u => u.name === nickname);
+        if (me) {
+            me.score = score;
+            me.vip = isVip;
+        } else {
+            combined.push({ name: nickname, score: score, vip: isVip, isMe: true });
+        }
+    }
+    combined.sort((a, b) => b.score - a.score);
 
     // Mini HUD Update
     const miniList = get('mini-lb-list');
@@ -104,14 +122,11 @@ function updateLeaderboardUI() {
         miniList.innerHTML = '';
         const top3 = combined.slice(0, 3);
         top3.forEach((entry, i) => {
-            const isMe = currentUser && entry.id === currentUser.uid;
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
-            if (isMe) item.style.background = "rgba(255, 204, 0, 0.2)";
+            if (entry.name === nickname) item.style.background = "rgba(255, 204, 0, 0.2)";
 
-            // Medals for top 3
             let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
-
             item.innerHTML = `
                 <span class="mini-lb-name">${medal} ${entry.vip ? '👑' : ''}${entry.name}</span>
                 <span class="mini-lb-score">${Math.floor(entry.score)}</span>
@@ -125,33 +140,32 @@ function updateLeaderboardUI() {
     if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
         list.innerHTML = '';
         combined.slice(0, 10).forEach((entry, i) => {
-            const isMe = currentUser && entry.id === currentUser.uid;
             const item = document.createElement('div');
             item.className = 'lb-item';
-            if (isMe) item.style.fontWeight = "bold";
+            if (entry.name === nickname) item.style.fontWeight = "bold";
 
-            // Highlight top 3 colors
-            if (i === 0) item.style.color = "#FFD700"; // Gold
-            else if (i === 1) item.style.color = "#C0C0C0"; // Silver
-            else if (i === 2) item.style.color = "#CD7F32"; // Bronze
+            if (i === 0) item.style.color = "#FFD700";
+            else if (i === 1) item.style.color = "#C0C0C0";
+            else if (i === 2) item.style.color = "#CD7F32";
             else if (entry.vip) item.style.color = "#ff8c00";
 
             item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.vip ? '👑 ' : ''}${entry.name}</span> <span>${Math.floor(entry.score)}</span>`;
             list.appendChild(item);
         });
     }
-}
 
-// Sync score with Firebase
-function syncScore() {
-    if (currentUser && window.fbDb) {
-        const { doc, setDoc } = window.fbCreators;
-        setDoc(doc(window.fbDb, "players", currentUser.uid), {
-            name: nickname,
-            score: score,
-            vip: isVip,
-            lastUpdate: Date.now()
-        }, { merge: true });
+    // Periodically fluctuate "other" scores to simulate activity
+    if (!window.simulating) {
+        window.simulating = true;
+        setInterval(() => {
+            leaderboard.forEach(u => {
+                if (u.name !== nickname && Math.random() > 0.8) {
+                    u.score += Math.random() * 5;
+                }
+            });
+            localStorage.setItem('tilo_leaderboard', JSON.stringify(leaderboard));
+            updateUIValues();
+        }, 5000);
     }
 }
 
@@ -167,7 +181,6 @@ function updateScore(points) {
             showStatusUpdate("+1 🪙 ქულებისათვის!");
         }
         updateUIValues();
-        syncScore();
     }
 
     if (cleanedCountForScaling >= 10) {
@@ -190,49 +203,10 @@ function showStatusUpdate(text) {
     }, 3000);
 }
 
-function initFirebase() {
-    if (!window.fbAuth) return;
-    const { onAuthStateChanged, collection, query, orderBy, limit, onSnapshot } = window.fbCreators;
-
-    onAuthStateChanged(window.fbAuth, (user) => {
-        currentUser = user;
-        const infoSection = get('user-info-section');
-        const authForms = get('auth-forms');
-
-        if (user) {
-            nickname = user.displayName || "Unknown";
-            localStorage.setItem('tilo_nick', nickname);
-            get('user-display-name').textContent = nickname;
-            infoSection.classList.remove('hidden');
-            authForms.classList.add('hidden');
-
-            // Sync current score immediately on login
-            syncScore();
-            get('auth-modal').classList.add('hidden');
-        } else {
-            infoSection.classList.add('hidden');
-            authForms.classList.remove('hidden');
-            get('auth-modal').classList.remove('hidden');
-        }
-        updateUIValues();
-    });
-
-    // Real-time Leaderboard Listener
-    const q = query(collection(window.fbDb, "players"), orderBy("score", "desc"), limit(20));
-    onSnapshot(q, (snapshot) => {
-        onlinePlayers = [];
-        snapshot.forEach((doc) => {
-            onlinePlayers.push({ id: doc.id, ...doc.data() });
-        });
-        updateLeaderboardUI();
-    });
-}
-
 function initUI() {
     get('buy-vip-btn').onclick = () => {
         if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
             isVip = true; updatePowerStats(); saveStats();
-            syncScore();
             if (get('cloth')) get('cloth').classList.add('vip-cloth');
             if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
             get('buy-vip-btn').style.display = 'none';
@@ -267,7 +241,6 @@ function initUI() {
         }
     };
 
-    // Settings
     get('set-dec-helper').onclick = () => {
         if (activeHelpers > 0) {
             activeHelpers--; saveStats(); updateUIValues();
@@ -285,42 +258,12 @@ function initUI() {
         if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStats(); updateUIValues(); }
     };
 
-    // Firebase Auth UI
-    get('register-btn').onclick = async () => {
-        const email = get('auth-email').value;
-        const password = get('auth-password').value;
-        const nick = get('nickname-input').value.trim();
-        const err = get('auth-error');
-        if (!email || !password || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
-
-        try {
-            const { createUserWithEmailAndPassword, updateProfile } = window.fbCreators;
-            const userCredential = await createUserWithEmailAndPassword(window.fbAuth, email, password);
-            await updateProfile(userCredential.user, { displayName: nick });
-            nickname = nick;
-            err.textContent = "";
-            showStatusUpdate("რეგისტრაცია წარმატებულია!");
-        } catch (e) {
-            err.textContent = "შეცდომა რეგისტრაციისას: " + e.message;
+    get('save-nick-btn').onclick = () => {
+        const val = get('nickname-input').value.trim();
+        if (val) {
+            nickname = val; localStorage.setItem('tilo_nick', nickname);
+            get('auth-modal').classList.add('hidden'); updateUIValues();
         }
-    };
-
-    get('login-btn').onclick = async () => {
-        const email = get('auth-email').value;
-        const password = get('auth-password').value;
-        const err = get('auth-error');
-        try {
-            const { signInWithEmailAndPassword } = window.fbCreators;
-            await signInWithEmailAndPassword(window.fbAuth, email, password);
-            err.textContent = "";
-        } catch (e) {
-            err.textContent = "შეცდომა შესვლისას: " + e.message;
-        }
-    };
-
-    get('logout-btn').onclick = () => {
-        const { signOut } = window.fbCreators;
-        signOut(window.fbAuth);
     };
 
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
@@ -425,7 +368,6 @@ function createParticles(x, y, color) {
     const container = get('canvas-container');
     const isKarcherActive = hasKarcher && karcherEnabled;
     const count = isKarcherActive ? 8 : 4;
-
     for (let i = 0; i < count; i++) {
         const p = document.createElement('div');
         if (isKarcherActive) {
@@ -439,11 +381,9 @@ function createParticles(x, y, color) {
             p.style.borderRadius = '50%';
         }
         p.style.pointerEvents = 'none'; container.appendChild(p);
-
         const angle = Math.random() * Math.PI * 2;
         const velocity = Math.random() * (isKarcherActive ? 100 : 40);
         const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
-
         p.animate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
             { transform: `translate(${tx}px,${ty}px) scale(0)`, opacity: 0 }
@@ -506,21 +446,13 @@ window.addEventListener('load', () => {
     centerCloth();
     checkDailyReset();
     updateUIValues();
-
-    // Wait for Firebase to load from window
-    const checkFb = setInterval(() => {
-        if (window.fbAuth) {
-            clearInterval(checkFb);
-            initFirebase();
-        }
-    }, 100);
-
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
+    if (!nickname && get('auth-modal')) get('auth-modal').classList.remove('hidden');
     scheduleNextStain();
 });
 
