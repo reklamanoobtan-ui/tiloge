@@ -179,7 +179,9 @@ function updateLeaderboardUI() {
 // Database Initialization & Config
 async function initDatabase() {
     try {
-        // 1. Create Tables
+        // 1. Ensure schema is correct (Dropping and Recreating because reset was requested)
+        await sql`DROP TABLE IF EXISTS users CASCADE`;
+
         await sql`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE,
@@ -199,9 +201,6 @@ async function initDatabase() {
             key TEXT PRIMARY KEY,
             value TEXT
         )`;
-
-        // 2. Perform Wipe (Completed)
-        // await sql`DELETE FROM users`;
 
         // 3. Update Sync Version in DB
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
@@ -231,11 +230,21 @@ async function handleRegister() {
     try {
         await sql`INSERT INTO users (email, password, nickname, coins, is_vip, total_helpers, total_cloth, has_karcher, has_speedup) 
                   VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${totalHelpersOwned}, ${totalClothOwned}, ${hasKarcher}, ${hasSpeedUp})`;
+
+        // Auto-login after registration
+        nickname = nick;
+        userEmail = email;
+        localStorage.setItem('tilo_nick', nickname);
+        localStorage.setItem('tilo_email', userEmail);
+
         err.style.color = "#4caf50";
-        err.textContent = "რეგისტრაცია წარმატებულია! ახლა შედით სისტემაში.";
+        err.textContent = "რეგისტრაცია წარმატებულია! შევდივარ...";
+
+        setTimeout(() => location.reload(), 1500);
     } catch (e) {
+        console.error("Register Error:", e);
         err.style.color = "#ff4d4d";
-        err.textContent = "შეცდომა: ელ-ფოსტა ან ნიკნეიმი უკვე დაკავებულია.";
+        err.textContent = "ელ-ფოსტა ან ნიკნეიმი უკვე დაკავებულია.";
     }
 }
 
