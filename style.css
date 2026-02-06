@@ -585,3 +585,12 @@ body {
     }
 }
 
+
+/* Purchased button state */
+.action-btn.purchased {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    cursor: default !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+

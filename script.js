@@ -85,6 +85,39 @@ function updateUIValues() {
         else get('karcher-status').textContent = karcherEnabled ? "ჩართულია" : "გამორთულია";
     }
 
+    // Shop Items - One time purchases
+    if (get('buy-speed-btn')) {
+        if (hasSpeedUp) {
+            get('buy-speed-btn').textContent = "შეძენილია";
+            get('buy-speed-btn').disabled = true;
+            get('buy-speed-btn').classList.add('purchased');
+        } else {
+            get('buy-speed-btn').textContent = "50 🪙";
+            get('buy-speed-btn').disabled = false;
+            get('buy-speed-btn').classList.remove('purchased');
+        }
+    }
+
+    if (get('buy-karcher-btn')) {
+        if (hasKarcher) {
+            get('buy-karcher-btn').textContent = "შეძენილია";
+            get('buy-karcher-btn').disabled = true;
+            get('buy-karcher-btn').classList.add('purchased');
+        } else {
+            get('buy-karcher-btn').textContent = "1000 🪙";
+            get('buy-karcher-btn').disabled = false;
+            get('buy-karcher-btn').classList.remove('purchased');
+        }
+    }
+
+    if (get('buy-vip-btn')) {
+        if (isVip) {
+            get('buy-vip-btn').style.display = 'none';
+        } else {
+            get('buy-vip-btn').style.display = 'block';
+        }
+    }
+
     if (get('interval-val')) {
         let base = hasSpeedUp ? Math.max(50, currentInterval - 5000) : currentInterval;
         const displayInterval = isVip ? (base / 2) : base;
