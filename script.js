@@ -102,10 +102,48 @@ function updateUIValues() {
     }
 
     if (get('interval-val')) {
-        let base = hasSpeedUp ? Math.max(0.000001, currentInterval - 5000) : currentInterval;
+        let base = hasSpeedUp ? Math.max(0.01, currentInterval - 5000) : currentInterval;
         const displayInterval = isVip ? (base / 2) : base;
         get('interval-val').textContent = (displayInterval / 1000).toFixed(6);
     }
+
+    updateLeaderboardUI();
+}
+
+function updateLeaderboardUI() {
+    // Main Modal Update
+    const list = get('leaderboard-list');
+    const lbModal = get('leaderboard-modal');
+    if (list && lbModal && !lbModal.classList.contains('hidden')) {
+        renderLeaderboardList(list, 10);
+    }
+
+    // Mini HUD Update
+    const miniList = get('mini-lb-list');
+    if (miniList) {
+        miniList.innerHTML = '';
+        const top3 = leaderboard.sort((a, b) => b.score - a.score).slice(0, 3);
+        top3.forEach((entry, i) => {
+            const item = document.createElement('div');
+            item.className = 'mini-lb-item';
+            item.innerHTML = `
+                <span class="mini-lb-name">#${i + 1} ${entry.vip ? '👑' : ''}${entry.name}</span>
+                <span class="mini-lb-score">${entry.score}</span>
+            `;
+            miniList.appendChild(item);
+        });
+    }
+}
+
+function renderLeaderboardList(container, limit) {
+    container.innerHTML = '';
+    leaderboard.sort((a, b) => b.score - a.score).slice(0, limit).forEach((entry, i) => {
+        const item = document.createElement('div');
+        item.className = 'lb-item';
+        item.style.color = entry.vip ? '#ff8c00' : 'inherit';
+        item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.vip ? '👑 ' : ''}${entry.name}</span> <span>${entry.score}</span>`;
+        container.appendChild(item);
+    });
 }
 
 function updateScore(points) {
@@ -113,25 +151,31 @@ function updateScore(points) {
         const oldScore = score;
         score += points;
         cleanedCountForScaling += points;
+
         if (Math.floor(score / 1000) > Math.floor(oldScore / 1000)) {
             coins += Math.floor(score / 1000) - Math.floor(oldScore / 1000);
             saveStats();
             showStatusUpdate("+1 🪙 ქულებისათვის!");
         }
-        updateUIValues();
-    }
 
-    if (nickname) {
-        let userEntry = leaderboard.find(entry => entry.name === nickname);
-        if (userEntry) { userEntry.score = score; userEntry.vip = isVip; }
-        else { leaderboard.push({ name: nickname, score: score, vip: isVip }); }
-        localStorage.setItem('tilo_leaderboard', JSON.stringify(leaderboard));
+        if (nickname) {
+            let userEntry = leaderboard.find(entry => entry.name === nickname);
+            if (userEntry) {
+                userEntry.score = score;
+                userEntry.vip = isVip;
+            } else {
+                leaderboard.push({ name: nickname, score: score, vip: isVip });
+            }
+            localStorage.setItem('tilo_leaderboard', JSON.stringify(leaderboard));
+        }
+
+        updateUIValues();
     }
 
     if (cleanedCountForScaling >= 10) {
         cleanedCountForScaling = 0;
-        if (currentInterval > 0.001) {
-            currentInterval = Math.max(0.001, currentInterval - (currentInterval * 0.1));
+        if (currentInterval > 0.01) {
+            currentInterval = Math.max(0.01, currentInterval - (currentInterval * 0.1));
             updateUIValues();
             showStatusUpdate(`სირთულე გაიზარდა!`);
         }
@@ -153,7 +197,6 @@ function initUI() {
     const shopModal = get('shop-modal');
     const settingsModal = get('settings-modal');
 
-    // VIP
     get('buy-vip-btn').onclick = () => {
         if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
             isVip = true;
@@ -172,18 +215,12 @@ function initUI() {
     get('settings-btn').onclick = () => settingsModal.classList.remove('hidden');
     get('close-settings').onclick = () => settingsModal.classList.add('hidden');
 
-    // Shop Actions
     get('buy-helper-btn').onclick = () => {
         if (coins >= 100 && totalHelpersOwned < 10) {
-            coins -= 100;
-            totalHelpersOwned++;
-            activeHelpers++;
-            saveStats();
-            updateUIValues();
-            startHelperBot();
+            coins -= 100; totalHelpersOwned++; activeHelpers++;
+            saveStats(); updateUIValues(); startHelperBot();
             showStatusUpdate("დამხმარე შეიძინეთ! 🧹");
-        } else if (totalHelpersOwned >= 10) alert("მაქსიმუმ 10 დამხმარე!");
-        else alert("არ გაქვთ საკმარისი ქოინები!");
+        }
     };
 
     const speedBtn = get('buy-speed-btn');
@@ -199,71 +236,42 @@ function initUI() {
 
     get('buy-cloth-power-btn').onclick = () => {
         if (coins >= 70 && totalClothOwned < 10) {
-            coins -= 70;
-            totalClothOwned++;
-            activeCloth++;
-            updatePowerStats();
-            saveStats();
-            updateUIValues();
-            showStatusUpdate(`ნაჭერი გაძლიერდა! (დონე ${totalClothOwned})`);
-        } else if (totalClothOwned >= 10) alert("მაქსიმალური დონე!");
-        else alert("არ გაქვთ საკმარისი ქოინები!");
+            coins -= 70; totalClothOwned++; activeCloth++;
+            updatePowerStats(); saveStats(); updateUIValues();
+            showStatusUpdate(`წმენდა გაძლიერდა!`);
+        }
     };
 
-    const buyKarcherBtn = get('buy-karcher-btn');
-    if (hasKarcher) { buyKarcherBtn.textContent = "შეძენილია"; buyKarcherBtn.disabled = true; }
-    buyKarcherBtn.onclick = () => {
+    get('buy-karcher-btn').onclick = () => {
         if (coins >= 1000 && !hasKarcher) {
             coins -= 1000; hasKarcher = true; karcherEnabled = true;
             updatePowerStats(); saveStats(); updateUIValues();
-            buyKarcherBtn.textContent = "შეძენილია"; buyKarcherBtn.disabled = true;
+            get('buy-karcher-btn').textContent = "შეძენილია"; get('buy-karcher-btn').disabled = true;
             showStatusUpdate(`კერხერი გააქტიურდა! ⚡`);
         }
     };
 
-    // Settings Toggle Actions
     get('set-dec-helper').onclick = () => {
         if (activeHelpers > 0) {
-            activeHelpers--;
-            saveStats(); updateUIValues();
+            activeHelpers--; saveStats(); updateUIValues();
             const bots = document.querySelectorAll('.helper-bot');
             if (bots.length > 0) bots[bots.length - 1].remove();
-            showStatusUpdate("დამხმარე გაითიშა");
         }
     };
     get('set-inc-helper').onclick = () => {
         if (activeHelpers < totalHelpersOwned) {
-            activeHelpers++;
-            saveStats(); updateUIValues();
+            activeHelpers++; saveStats(); updateUIValues();
             startHelperBot();
-            showStatusUpdate("დამხმარე ჩაირთო");
         }
     };
 
-    get('set-dec-cloth').onclick = () => {
-        if (activeCloth > 0) {
-            activeCloth--;
-            updatePowerStats(); saveStats(); updateUIValues();
-            showStatusUpdate("ძალა შემცირდა");
-        }
-    };
-    get('set-inc-cloth').onclick = () => {
-        if (activeCloth < totalClothOwned) {
-            activeCloth++;
-            updatePowerStats(); saveStats(); updateUIValues();
-            showStatusUpdate("ძალა აღდგა");
-        }
-    };
+    get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStats(); updateUIValues(); } };
+    get('set-inc-cloth').onclick = () => { if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStats(); updateUIValues(); } };
 
     get('toggle-karcher-btn').onclick = () => {
-        if (hasKarcher) {
-            karcherEnabled = !karcherEnabled;
-            updatePowerStats(); saveStats(); updateUIValues();
-            showStatusUpdate(karcherEnabled ? "კერხერი ჩაირთო" : "კერხერი გამოირთო");
-        } else alert("კერხერი არ გაქვს!");
+        if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStats(); updateUIValues(); }
     };
 
-    // Donation logic... (keeping same)
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
     get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
     document.querySelectorAll('.buy-coins-btn').forEach(btn => {
@@ -277,15 +285,7 @@ function initUI() {
     });
 
     get('leaderboard-btn').onclick = () => {
-        const list = get('leaderboard-list');
-        list.innerHTML = '';
-        leaderboard.sort((a, b) => b.score - a.score).slice(0, 10).forEach((entry, i) => {
-            const item = document.createElement('div');
-            item.className = 'lb-item';
-            item.style.color = entry.vip ? '#ff8c00' : 'inherit';
-            item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.vip ? '👑 ' : ''}${entry.name}</span> <span>${entry.score}</span>`;
-            list.appendChild(item);
-        });
+        updateLeaderboardUI();
         get('leaderboard-modal').classList.remove('hidden');
     };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
@@ -421,9 +421,9 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    let base = hasSpeedUp ? Math.max(0.001, currentInterval - 5000) : currentInterval;
+    let base = hasSpeedUp ? Math.max(0.01, currentInterval - 5000) : currentInterval;
     const displayInterval = isVip ? (base / 2) : base;
-    return Math.max(0.001, displayInterval);
+    return Math.max(0.01, displayInterval);
 }
 
 function scheduleNextStain() {
@@ -471,7 +471,6 @@ window.addEventListener('load', () => {
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
-    // Only spawn ACTIVE helpers
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     if (!nickname && get('auth-modal')) get('auth-modal').classList.remove('hidden');
     scheduleNextStain();

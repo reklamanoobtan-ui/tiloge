@@ -425,6 +425,63 @@ body {
     color: #ffcc00;
 }
 
+.mini-lb {
+    position: absolute;
+    top: 90px;
+    right: 20px;
+    width: 200px;
+    padding: 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    z-index: 100;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.mini-lb h3 {
+    margin-bottom: 10px;
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mini-lb-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    animation: slideInRank 0.3s ease-out;
+}
+
+@keyframes slideInRank {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.mini-lb-item:last-child {
+    border: none;
+    margin-bottom: 0;
+}
+
+.mini-lb-name {
+    font-weight: 600;
+    color: #444;
+}
+
+.mini-lb-score {
+    color: #ffcc00;
+    font-weight: 700;
+}
+
 .close-modal {
     position: absolute;
     top: 20px;
