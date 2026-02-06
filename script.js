@@ -13,8 +13,7 @@ let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 let score = 0;
-let cleanedCountForScaling = 0;
-let currentInterval = 10000;
+let currentInterval = 10000; // Base: 10 seconds
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
@@ -120,9 +119,8 @@ function updateUIValues() {
     }
 
     if (get('interval-val')) {
-        let base = hasSpeedUp ? Math.max(50, currentInterval - 5000) : currentInterval;
-        const displayInterval = isVip ? (base / 2) : base;
-        get('interval-val').textContent = (Math.max(50, displayInterval) / 1000).toFixed(6);
+        let interval = getSpawnInterval();
+        get('interval-val').textContent = (interval / 1000).toFixed(6);
     }
 
     // Profile in Settings
@@ -350,7 +348,6 @@ function updateScore(points) {
     if (points > 0) {
         const oldScore = score;
         score += points;
-        cleanedCountForScaling += points;
 
         if (Math.floor(score / 1000) > Math.floor(oldScore / 1000)) {
             coins += Math.floor(score / 1000) - Math.floor(oldScore / 1000);
@@ -359,14 +356,6 @@ function updateScore(points) {
         }
         updateUIValues();
         syncUserData();
-    }
-
-    if (cleanedCountForScaling >= 10) {
-        cleanedCountForScaling = 0;
-        if (currentInterval > 50) {
-            currentInterval = Math.max(50, currentInterval - (currentInterval * 0.1));
-            updateUIValues();
-        }
     }
 }
 
@@ -619,9 +608,19 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    let base = hasSpeedUp ? Math.max(50, currentInterval - 5000) : currentInterval;
-    const displayInterval = isVip ? (base / 2) : base;
-    return Math.max(50, displayInterval);
+    // Start at 10s. If hasSpeedUp, start at 5s.
+    let base = hasSpeedUp ? 5000 : 10000;
+
+    // Every 50 points, decrease speed by 1 second (1000ms)
+    let speedBonus = Math.floor(score / 50) * 1000;
+
+    let interval = base - speedBonus;
+
+    // Apply VIP bonus (half interval)
+    if (isVip) interval = interval / 2;
+
+    // Minimum cap: 0.005 seconds (5ms)
+    return Math.max(5, interval);
 }
 
 function scheduleNextStain() {
