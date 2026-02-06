@@ -1,0 +1,433 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+:root {
+    --bg-color: #fdfdfd;
+    --cloth-color: #ffcc00;
+    --font-main: 'Outfit', sans-serif;
+    --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-color);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: var(--font-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.stain {
+    position: absolute;
+    filter: blur(8px);
+    transition: width 0.5s ease, height 0.5s ease, filter 0.5s ease, opacity 0.5s ease, background-color 0.5s ease;
+    pointer-events: none;
+}
+
+.pulse-animation {
+    animation: pulsing-stain 1s infinite alternate;
+}
+
+@keyframes pulsing-stain {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.1);
+    }
+}
+
+.cloth {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    background: #ffdb4d;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 20%),
+        radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.05) 0%, transparent 20%);
+    border-radius: 8px;
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.15),
+        0 5px 15px rgba(0, 0, 0, 0.1);
+    cursor: grab;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+    touch-action: none;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.vip-cloth {
+    animation: vip-colors 5s infinite linear !important;
+    background-image: none !important;
+}
+
+@keyframes vip-colors {
+    0% {
+        background-color: #ffdb4d;
+    }
+
+    25% {
+        background-color: #ff4d4d;
+    }
+
+    50% {
+        background-color: #4dff4d;
+    }
+
+    75% {
+        background-color: #4d4dff;
+    }
+
+    100% {
+        background-color: #ffdb4d;
+    }
+}
+
+.cloth:active {
+    cursor: grabbing;
+    transform: scale(1.08) rotate(2deg);
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.2),
+        0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cloth::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 1px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.cloth::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(0, 0, 0, 0.05) 100%);
+    pointer-events: none;
+}
+
+.header-ui {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.header-ui * {
+    pointer-events: auto;
+}
+
+.user-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    color: #444;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+#vip-tag {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: white;
+    border: none;
+    animation: pulse-gold 2s infinite;
+}
+
+.vip-hidden {
+    display: none !important;
+}
+
+@keyframes pulse-gold {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.glass-btn {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.vip-btn {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: white;
+    border: none;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.donate-btn {
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    color: white;
+    border: none;
+}
+
+.donate-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.buy-coins-btn {
+    background: #f8f9fa;
+    border: 2px solid #eee;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.buy-coins-btn span {
+    font-size: 0.8rem;
+    color: #4caf50;
+}
+
+.buy-coins-btn:hover {
+    border-color: #ffcc00;
+    transform: translateY(-2px);
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 16px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.shop-info h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.shop-info p {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Helper Bot */
+.helper-bot {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: #ff4d4d;
+    border-radius: 50%;
+    z-index: 90;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    font-size: 1.2rem;
+    pointer-events: none;
+    transition: transform 1.5s ease-in-out, left 1.5s ease-in-out, top 1.5s ease-in-out;
+}
+
+.helper-bot::after {
+    content: '🧹';
+}
+
+.helper-bot::before {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    border: 2px solid rgba(255, 77, 77, 0.3);
+    border-radius: 50%;
+    animation: ping 1.5s infinite;
+}
+
+@keyframes ping {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.karcher-active {
+    box-shadow:
+        0 0 30px rgba(0, 210, 255, 0.5),
+        0 15px 45px rgba(0, 0, 0, 0.2) !important;
+    border: 2px solid #00d2ff !important;
+}
+
+.karcher-active::before {
+    border-color: rgba(0, 210, 255, 0.4) !important;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.small-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #ffcc00;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.small-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.small-btn:active {
+    transform: scale(0.95);
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.info-text h1 {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #666;
+    text-transform: uppercase;
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+#nickname-input {
+    width: 100%;
+    padding: 12px;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+
+.action-btn {
+    background: #ffcc00;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.lb-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.lb-rank {
+    font-weight: 600;
+    color: #ffcc00;
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}

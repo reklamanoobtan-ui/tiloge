@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ტილო - გამწმენდი</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="header-ui">
+        <div class="user-stats">
+            <div class="stat-box">✨ <span id="score-val">0</span> ქულა</div>
+            <div class="stat-box">🪙 <span id="coins-val">0</span> ქოინი</div>
+            <div class="stat-box">⏱️ <span id="interval-val">10.00</span>წმ</div>
+            <div id="vip-tag" class="stat-box vip-hidden">👑 VIP</div>
+        </div>
+        <div class="info-text">
+            <h1 id="diff-status">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
+        </div>
+        <div class="actions">
+            <button id="shop-btn" class="glass-btn">🛒 მაღაზია</button>
+            <button id="settings-btn" class="glass-btn">⚙️ პარამეტრები</button>
+            <button id="donate-btn" class="glass-btn donate-btn">💎 დონაცია</button>
+            <button id="buy-vip-btn" class="glass-btn vip-btn">👑 VIP (2 ₾)</button>
+            <button id="leaderboard-btn" class="glass-btn">🏆 რეიტინგი</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-settings">&times;</span>
+            <h2>⚙️ მართვა</h2>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>დამხმარეები</h3>
+                    <p>აქტიური: <span id="active-helpers">0</span> / <span id="total-helpers">0</span></p>
+                </div>
+                <div class="btn-group">
+                    <button id="set-dec-helper" class="small-btn">-</button>
+                    <button id="set-inc-helper" class="small-btn">+</button>
+                </div>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>ნაჭრის ძალა</h3>
+                    <p>აქტიური: <span id="active-cloth">0</span> / <span id="total-cloth">0</span></p>
+                </div>
+                <div class="btn-group">
+                    <button id="set-dec-cloth" class="small-btn">-</button>
+                    <button id="set-inc-cloth" class="small-btn">+</button>
+                </div>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>კერხერი</h3>
+                    <p>სტატუსი: <span id="karcher-status">გამორთულია</span></p>
+                </div>
+                <button id="toggle-karcher-btn" class="action-btn">შეცვლა</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-shop">&times;</span>
+            <h2>🛒 მაღაზია</h2>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>დამხმარე (<span id="helper-count">0</span>/10)</h3>
+                    <p>ავტომატურად ასუფთავებს ლაქებს</p>
+                </div>
+                <button id="buy-helper-btn" class="action-btn">100 🪙</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>გამოჩენის აჩქარება</h3>
+                    <p>ლაქები 5 წამით მალე ჩნდება</p>
+                </div>
+                <button id="buy-speed-btn" class="action-btn">50 🪙</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>ნაჭრის გაძლიერება (<span id="cloth-level">0</span>/10)</h3>
+                    <p>ნაჭერი უფრო სწრაფად შლის ლაქას</p>
+                </div>
+                <button id="buy-cloth-power-btn" class="action-btn">70 🪙</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>კერხერი (Karcher)</h3>
+                    <p>+100% ძალა და დიდი რადიუსი</p>
+                </div>
+                <button id="buy-karcher-btn" class="action-btn">1000 🪙</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donate-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-donate">&times;</span>
+            <h2>💎 ქოინების ყიდვა</h2>
+            <div class="donate-grid">
+                <button class="buy-coins-btn" data-coins="10" data-price="2">10 🪙<br><span>2 ₾</span></button>
+                <button class="buy-coins-btn" data-coins="100" data-price="15">100 🪙<br><span>15 ₾</span></button>
+                <button class="buy-coins-btn" data-coins="500" data-price="50">500 🪙<br><span>50 ₾</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <h2>შეიყვანეთ თქვენი ნიკნეიმი</h2>
+            <p>რეიტინგში მოსახვედრად საჭიროა სახელი</p>
+            <input type="text" id="nickname-input" placeholder="მაგ: მწმენდავი-X" maxlength="15">
+            <button id="save-nick-btn" class="action-btn">შენახვა</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-leaderboard">&times;</span>
+            <h2>კვირის რეიტინგი</h2>
+            <div id="leaderboard-list">
+                <!-- Data will be injected here -->
+            </div>
+            <p class="reset-info">განახლდება ყოველ კვირას</p>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="cloth" class="cloth"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
