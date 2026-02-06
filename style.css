@@ -313,18 +313,30 @@ body {
 }
 
 .karcher-active {
-    background: url('karcher.png') no-repeat center center !important;
-    background-size: contain !important;
-    width: 150px !important;
-    height: 80px !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid rgba(0, 191, 255, 0.5) !important;
+    background-color: #f0f8ff !important;
+    /* Alice Blue for wet look */
+    animation: water-ripple 2s infinite ease-in-out;
+}
+
+@keyframes water-ripple {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter: opacity(0.9);
+    }
+
+    50% {
+        transform: scale(1.05);
+        filter: opacity(1);
+    }
 }
 
 .karcher-active::before {
-    display: none !important;
+    display: block !important;
+    border-color: rgba(0, 191, 255, 0.4) !important;
 }
 
 /* Water Splash Effect */
