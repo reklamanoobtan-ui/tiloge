@@ -36,7 +36,6 @@ let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
 let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
 let scoreClothLvl = 0;
 let scoreHelperLvl = 0;
-let scoreAreaLvl = 0;
 
 // Bounds checks
 if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
@@ -53,13 +52,6 @@ function updatePowerStats() {
     power *= (1 + (scoreClothLvl * 0.1));
 
     const clothEl = get('cloth');
-    if (clothEl) {
-        // Growth logic: +20px per level
-        const size = 180 + (scoreClothLvl * 20);
-        clothEl.style.width = `${size}px`;
-        clothEl.style.height = `${size}px`;
-    }
-
     if (hasKarcher && karcherEnabled) {
         power *= 2;
         cleaningRadius = 3;
@@ -90,8 +82,6 @@ function updateUIValues() {
     if (get('score-val')) get('score-val').textContent = score;
     if (get('score-cloth-lvl')) get('score-cloth-lvl').textContent = scoreClothLvl;
     if (get('score-helper-lvl')) get('score-helper-lvl').textContent = scoreHelperLvl;
-    if (get('score-area-lvl')) get('score-area-lvl').textContent = scoreAreaLvl;
-    updateArenaSize();
 
     // Settings UI
     if (get('active-helpers')) get('active-helpers').textContent = activeHelpers;
@@ -531,15 +521,6 @@ function initUI() {
         }
     };
 
-    get('upgrade-area-score-btn').onclick = () => {
-        if (score >= 100) {
-            score -= 100; scoreAreaLvl++;
-            updateArenaSize(); saveStatsToLocal(); updateUIValues(); syncUserData();
-            showStatusUpdate("მოედნის ზომა გაიზარდა! 📦");
-        } else {
-            showStatusUpdate("არ გაქვთ საკმარისი ქულები! 🎯");
-        }
-    };
 
     // Auth Actions
     get('register-btn').onclick = handleRegister;
@@ -643,20 +624,8 @@ function checkCleaningAtPos(x, y) {
     });
 }
 
-function updateArenaSize() {
-    const arena = get('game-arena');
-    if (!arena) return;
-    const w = 600 + (scoreAreaLvl * 100);
-    const h = 400 + (scoreAreaLvl * 80);
-    arena.style.width = `${w}px`;
-    arena.style.height = `${h}px`;
-}
-
 function createStain() {
-    const arena = get('game-arena');
-    if (!arena) return;
-    const arenaRect = arena.getBoundingClientRect();
-
+    const container = get('canvas-container');
     const stain = document.createElement('div');
     stain.className = 'stain';
     let health = 100;
@@ -667,19 +636,15 @@ function createStain() {
     ];
     const type = types[Math.floor(Math.random() * types.length)];
     const size = Math.random() * 80 + 40;
-
-    // Position relative to CURRENT arena size
-    const posX = Math.random() * (arenaRect.width - size);
-    const posY = Math.random() * (arenaRect.height - size);
-
+    const posX = Math.random() * (window.innerWidth - size);
+    const posY = Math.random() * (window.innerHeight - size);
     stain.style.width = `${size}px`; stain.style.height = `${size}px`;
     stain.style.left = `${posX}px`; stain.style.top = `${posY}px`;
     stain.style.backgroundColor = type.color;
     stain.style.filter = `blur(${type.blur})`;
     stain.style.borderRadius = `${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}%`;
     stain.dataset.health = health; stain.dataset.maxHealth = health;
-
-    arena.appendChild(stain);
+    container.appendChild(stain);
 }
 
 function checkCleaning() {
@@ -812,13 +777,11 @@ window.addEventListener('load', async () => {
     sessionSpeedBonus = 0;
     activeSpeedBonus = 0; // Reset all session speed bonuses
     scoreClothLvl = 0;
-    scoreHelperLvl = 0;
-    scoreAreaLvl = 0; // Reset score-based upgrades on refresh
+    scoreHelperLvl = 0; // Reset score-based upgrades on refresh
     localStorage.setItem('tilo_session_bonus', 0);
     localStorage.setItem('tilo_active_speed_bonus', 0);
     localStorage.setItem('tilo_score_cloth_lvl', 0);
     localStorage.setItem('tilo_score_helper_lvl', 0);
-    localStorage.setItem('tilo_score_area_lvl', 0);
 
     if (userEmail) {
         try {
