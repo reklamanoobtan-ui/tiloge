@@ -33,6 +33,8 @@ let activeCloth = parseInt(localStorage.getItem('tilo_active_cloth')) || 0;
 let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
 let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
 let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
+let scoreClothLvl = parseInt(localStorage.getItem('tilo_score_cloth_lvl')) || 0;
+let scoreHelperLvl = parseInt(localStorage.getItem('tilo_score_helper_lvl')) || 0;
 
 // Bounds checks
 if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
@@ -45,6 +47,9 @@ let cleaningRadius = 1;
 
 function updatePowerStats() {
     let power = (baseClothStrength + (activeCloth * 15)) * (isVip ? 2 : 1);
+    // Score based bonus: +10% per level
+    power *= (1 + (scoreClothLvl * 0.1));
+
     const clothEl = get('cloth');
     if (hasKarcher && karcherEnabled) {
         power *= 2;
@@ -66,6 +71,11 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_has_speedup', hasSpeedUp);
     localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
     localStorage.setItem('tilo_active_speed_bonus', activeSpeedBonus);
+    localStorage.setItem('tilo_score_cloth_lvl', scoreClothLvl);
+    localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
+    localStorage.setItem('tilo_vip', isVip);
+    localStorage.setItem('tilo_has_karcher', hasKarcher);
+    localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
 }
 
 function updateUIValues() {
@@ -137,6 +147,9 @@ function updateUIValues() {
     // Profile in Settings
     if (get('settings-user-name')) get('settings-user-name').textContent = nickname || "სტუმარი";
     if (get('settings-user-email')) get('settings-user-email').textContent = userEmail || "";
+
+    if (get('score-cloth-lvl')) get('score-cloth-lvl').textContent = scoreClothLvl;
+    if (get('score-helper-lvl')) get('score-helper-lvl').textContent = scoreHelperLvl;
 
     updateLeaderboardUI();
 }
@@ -231,8 +244,16 @@ async function initDatabase() {
             total_cloth INTEGER DEFAULT 0,
             has_karcher BOOLEAN DEFAULT false,
             has_speedup BOOLEAN DEFAULT false,
+            score_cloth_lvl INTEGER DEFAULT 0,
+            score_helper_lvl INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+
+        // Ensure columns exist for old users
+        try {
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_cloth_lvl INTEGER DEFAULT 0`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS score_helper_lvl INTEGER DEFAULT 0`;
+        } catch (e) { }
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
             key TEXT PRIMARY KEY,
@@ -303,6 +324,8 @@ async function handleLogin() {
             totalClothOwned = user.total_cloth;
             hasKarcher = user.has_karcher;
             hasSpeedUp = user.has_speedup;
+            scoreClothLvl = user.score_cloth_lvl || 0;
+            scoreHelperLvl = user.score_helper_lvl || 0;
 
             // Update Local Storage
             localStorage.setItem('tilo_nick', nickname);
@@ -315,6 +338,8 @@ async function handleLogin() {
             localStorage.setItem('tilo_active_cloth', totalClothOwned);
             localStorage.setItem('tilo_has_karcher', hasKarcher);
             localStorage.setItem('tilo_has_speedup', hasSpeedUp);
+            localStorage.setItem('tilo_score_cloth_lvl', scoreClothLvl);
+            localStorage.setItem('tilo_score_helper_lvl', scoreHelperLvl);
 
             updateUIValues();
             location.reload();
@@ -341,7 +366,9 @@ async function syncUserData() {
                 total_helpers = ${totalHelpersOwned},
                 total_cloth = ${totalClothOwned},
                 has_karcher = ${hasKarcher},
-                has_speedup = ${hasSpeedUp}
+                has_speedup = ${hasSpeedUp},
+                score_cloth_lvl = ${scoreClothLvl},
+                score_helper_lvl = ${scoreHelperLvl}
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
     }, 1000);
@@ -475,6 +502,26 @@ function initUI() {
         }
     };
 
+    get('upgrade-cloth-score-btn').onclick = () => {
+        if (score >= 100) {
+            score -= 100; scoreClothLvl++;
+            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
+            showStatusUpdate("ტილო გაძლიერდა! 💪");
+        } else {
+            showStatusUpdate("არ გაქვთ საკმარისი ქულები! 🎯");
+        }
+    };
+
+    get('upgrade-helper-score-btn').onclick = () => {
+        if (score >= 100) {
+            score -= 100; scoreHelperLvl++;
+            saveStatsToLocal(); updateUIValues(); syncUserData();
+            showStatusUpdate("დამხმარეები გაძლიერდნენ! 🤖");
+        } else {
+            showStatusUpdate("არ გაქვთ საკმარისი ქულები! 🎯");
+        }
+    };
+
     // Auth Actions
     get('register-btn').onclick = handleRegister;
     get('login-btn').onclick = handleLogin;
@@ -543,12 +590,17 @@ function startHelperBot() {
             const target = stains[Math.floor(Math.random() * Math.min(stains.length, 3))];
             const rect = target.getBoundingClientRect();
             botEl.style.left = `${rect.left}px`; botEl.style.top = `${rect.top}px`;
+
+            // Speed boost per level: 10% faster (shorter timeout)
+            const baseDelay = 1000;
+            const delay = baseDelay / (1 + (scoreHelperLvl * 0.1));
+
             setTimeout(() => {
                 if (target.parentElement) {
                     target.dataset.health = 0;
                     checkCleaningAtPos(rect.left + 30, rect.top + 30);
                 }
-            }, 1000);
+            }, delay);
         } else {
             botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
             botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
@@ -754,6 +806,9 @@ window.addEventListener('load', async () => {
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     scheduleNextStain();
+
+    // Continuous cleaning loop (runs even if not dragging)
+    setInterval(checkCleaning, 200);
 });
 
 window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", dragEnd); window.addEventListener("mousemove", drag);
