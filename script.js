@@ -13,14 +13,8 @@ let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
-
-// Bot Players for Live Leaderboard Simulation
-let bots = [
-    { name: "Sandro99", score: 1500, vip: false, speed: 0.5 },
-    { name: "Lasha_GT", score: 1200, vip: true, speed: 0.8 },
-    { name: "Anano✨", score: 800, vip: false, speed: 0.3 },
-    { name: "Gio_King", score: 2500, vip: true, speed: 1.2 }
-];
+let currentUser = null;
+let onlinePlayers = [];
 
 // Stats Logic (Owned vs Active)
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
@@ -45,7 +39,7 @@ function updatePowerStats() {
     const clothEl = get('cloth');
     if (hasKarcher && karcherEnabled) {
         power *= 2;
-        cleaningRadius = 3; // Even bigger for Karcher
+        cleaningRadius = 3;
         if (clothEl) clothEl.classList.add('karcher-active');
     } else {
         cleaningRadius = 1;
@@ -57,15 +51,12 @@ function updatePowerStats() {
 const difficultyIntervalStep = 2000;
 
 // Leaderboard & Time
-let leaderboard = JSON.parse(localStorage.getItem('tilo_leaderboard')) || [];
 const lastReset = localStorage.getItem('tilo_last_reset');
 
 function checkDailyReset() {
     const now = new Date();
     const oneDay = 24 * 60 * 60 * 1000;
     if (!lastReset || (now.getTime() - parseInt(lastReset)) > oneDay) {
-        leaderboard = [];
-        localStorage.setItem('tilo_leaderboard', JSON.stringify(leaderboard));
         localStorage.setItem('tilo_last_reset', now.getTime().toString());
     }
 }
@@ -105,12 +96,7 @@ function updateUIValues() {
 }
 
 function updateLeaderboardUI() {
-    // Combine real user and bots
-    let combined = [...bots];
-    if (nickname) {
-        combined.push({ name: nickname, score: score, vip: isVip, isPlayer: true });
-    }
-    combined.sort((a, b) => b.score - a.score);
+    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
 
     // Mini HUD Update
     const miniList = get('mini-lb-list');
@@ -118,11 +104,16 @@ function updateLeaderboardUI() {
         miniList.innerHTML = '';
         const top3 = combined.slice(0, 3);
         top3.forEach((entry, i) => {
+            const isMe = currentUser && entry.id === currentUser.uid;
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
-            if (entry.isPlayer) item.style.background = "rgba(255, 204, 0, 0.1)";
+            if (isMe) item.style.background = "rgba(255, 204, 0, 0.2)";
+
+            // Medals for top 3
+            let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+
             item.innerHTML = `
-                <span class="mini-lb-name">#${i + 1} ${entry.vip ? '👑' : ''}${entry.name}</span>
+                <span class="mini-lb-name">${medal} ${entry.vip ? '👑' : ''}${entry.name}</span>
                 <span class="mini-lb-score">${Math.floor(entry.score)}</span>
             `;
             miniList.appendChild(item);
@@ -134,26 +125,34 @@ function updateLeaderboardUI() {
     if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
         list.innerHTML = '';
         combined.slice(0, 10).forEach((entry, i) => {
+            const isMe = currentUser && entry.id === currentUser.uid;
             const item = document.createElement('div');
             item.className = 'lb-item';
-            if (entry.isPlayer) item.style.fontWeight = "bold";
-            item.style.color = entry.vip ? '#ff8c00' : 'inherit';
+            if (isMe) item.style.fontWeight = "bold";
+
+            // Highlight top 3 colors
+            if (i === 0) item.style.color = "#FFD700"; // Gold
+            else if (i === 1) item.style.color = "#C0C0C0"; // Silver
+            else if (i === 2) item.style.color = "#CD7F32"; // Bronze
+            else if (entry.vip) item.style.color = "#ff8c00";
+
             item.innerHTML = `<span class="lb-rank">#${i + 1}</span> <span>${entry.vip ? '👑 ' : ''}${entry.name}</span> <span>${Math.floor(entry.score)}</span>`;
             list.appendChild(item);
         });
     }
 }
 
-// Simulate bots playing
-function simulateBots() {
-    bots.forEach(bot => {
-        // Increase score randomly based on their "speed"
-        if (Math.random() > 0.7) {
-            bot.score += Math.random() * bot.speed * 5;
-        }
-    });
-    updateLeaderboardUI();
-    setTimeout(simulateBots, 2000);
+// Sync score with Firebase
+function syncScore() {
+    if (currentUser && window.fbDb) {
+        const { doc, setDoc } = window.fbCreators;
+        setDoc(doc(window.fbDb, "players", currentUser.uid), {
+            name: nickname,
+            score: score,
+            vip: isVip,
+            lastUpdate: Date.now()
+        }, { merge: true });
+    }
 }
 
 function updateScore(points) {
@@ -168,6 +167,7 @@ function updateScore(points) {
             showStatusUpdate("+1 🪙 ქულებისათვის!");
         }
         updateUIValues();
+        syncScore();
     }
 
     if (cleanedCountForScaling >= 10) {
@@ -190,12 +190,49 @@ function showStatusUpdate(text) {
     }, 3000);
 }
 
+function initFirebase() {
+    if (!window.fbAuth) return;
+    const { onAuthStateChanged, collection, query, orderBy, limit, onSnapshot } = window.fbCreators;
+
+    onAuthStateChanged(window.fbAuth, (user) => {
+        currentUser = user;
+        const infoSection = get('user-info-section');
+        const authForms = get('auth-forms');
+
+        if (user) {
+            nickname = user.displayName || "Unknown";
+            localStorage.setItem('tilo_nick', nickname);
+            get('user-display-name').textContent = nickname;
+            infoSection.classList.remove('hidden');
+            authForms.classList.add('hidden');
+
+            // Sync current score immediately on login
+            syncScore();
+            get('auth-modal').classList.add('hidden');
+        } else {
+            infoSection.classList.add('hidden');
+            authForms.classList.remove('hidden');
+            get('auth-modal').classList.remove('hidden');
+        }
+        updateUIValues();
+    });
+
+    // Real-time Leaderboard Listener
+    const q = query(collection(window.fbDb, "players"), orderBy("score", "desc"), limit(20));
+    onSnapshot(q, (snapshot) => {
+        onlinePlayers = [];
+        snapshot.forEach((doc) => {
+            onlinePlayers.push({ id: doc.id, ...doc.data() });
+        });
+        updateLeaderboardUI();
+    });
+}
+
 function initUI() {
     get('buy-vip-btn').onclick = () => {
         if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
-            isVip = true;
-            updatePowerStats();
-            saveStats();
+            isVip = true; updatePowerStats(); saveStats();
+            syncScore();
             if (get('cloth')) get('cloth').classList.add('vip-cloth');
             if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
             get('buy-vip-btn').style.display = 'none';
@@ -230,6 +267,7 @@ function initUI() {
         }
     };
 
+    // Settings
     get('set-dec-helper').onclick = () => {
         if (activeHelpers > 0) {
             activeHelpers--; saveStats(); updateUIValues();
@@ -240,7 +278,6 @@ function initUI() {
     get('set-inc-helper').onclick = () => {
         if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStats(); updateUIValues(); startHelperBot(); }
     };
-
     get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStats(); updateUIValues(); } };
     get('set-inc-cloth').onclick = () => { if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStats(); updateUIValues(); } };
 
@@ -248,26 +285,48 @@ function initUI() {
         if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStats(); updateUIValues(); }
     };
 
-    get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
-    get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
+    // Firebase Auth UI
+    get('register-btn').onclick = async () => {
+        const email = get('auth-email').value;
+        const password = get('auth-password').value;
+        const nick = get('nickname-input').value.trim();
+        const err = get('auth-error');
+        if (!email || !password || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
 
-    document.querySelectorAll('.buy-coins-btn').forEach(btn => {
-        btn.onclick = () => {
-            const amount = parseInt(btn.dataset.coins);
-            coins += amount; saveStats(); updateUIValues();
-        };
-    });
-
-    get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
-    get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
-
-    get('save-nick-btn').onclick = () => {
-        const val = get('nickname-input').value.trim();
-        if (val) {
-            nickname = val; localStorage.setItem('tilo_nick', nickname);
-            get('auth-modal').classList.add('hidden'); updateUIValues();
+        try {
+            const { createUserWithEmailAndPassword, updateProfile } = window.fbCreators;
+            const userCredential = await createUserWithEmailAndPassword(window.fbAuth, email, password);
+            await updateProfile(userCredential.user, { displayName: nick });
+            nickname = nick;
+            err.textContent = "";
+            showStatusUpdate("რეგისტრაცია წარმატებულია!");
+        } catch (e) {
+            err.textContent = "შეცდომა რეგისტრაციისას: " + e.message;
         }
     };
+
+    get('login-btn').onclick = async () => {
+        const email = get('auth-email').value;
+        const password = get('auth-password').value;
+        const err = get('auth-error');
+        try {
+            const { signInWithEmailAndPassword } = window.fbCreators;
+            await signInWithEmailAndPassword(window.fbAuth, email, password);
+            err.textContent = "";
+        } catch (e) {
+            err.textContent = "შეცდომა შესვლისას: " + e.message;
+        }
+    };
+
+    get('logout-btn').onclick = () => {
+        const { signOut } = window.fbCreators;
+        signOut(window.fbAuth);
+    };
+
+    get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
+    get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
+    get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
+    get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
 }
 
 function startHelperBot() {
@@ -372,23 +431,18 @@ function createParticles(x, y, color) {
         if (isKarcherActive) {
             p.className = 'water-splash';
             const size = Math.random() * 10 + 5;
-            p.style.width = `${size}px`;
-            p.style.height = `${size}px`;
-            p.style.left = `${x}px`;
-            p.style.top = `${y}px`;
+            p.style.width = `${size}px`; p.style.height = `${size}px`;
+            p.style.left = `${x}px`; p.style.top = `${y}px`;
         } else {
             p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
             p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
             p.style.borderRadius = '50%';
         }
-
-        p.style.pointerEvents = 'none';
-        container.appendChild(p);
+        p.style.pointerEvents = 'none'; container.appendChild(p);
 
         const angle = Math.random() * Math.PI * 2;
         const velocity = Math.random() * (isKarcherActive ? 100 : 40);
-        const tx = Math.cos(angle) * velocity;
-        const ty = Math.sin(angle) * velocity;
+        const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
 
         p.animate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
@@ -411,8 +465,7 @@ function centerCloth() {
     const cloth = get('cloth');
     if (!cloth) return;
     const r = cloth.getBoundingClientRect();
-    xOffset = window.innerWidth / 2 - r.width / 2;
-    yOffset = window.innerHeight / 2 - r.height / 2;
+    xOffset = window.innerWidth / 2 - r.width / 2; yOffset = window.innerHeight / 2 - r.height / 2;
     setTranslate(xOffset, yOffset, cloth);
 }
 
@@ -433,21 +486,16 @@ function drag(e) {
         const cy = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
         currentX = cx - initialX; currentY = cy - initialY;
         xOffset = currentX; yOffset = currentY;
-
         const cloth = get('cloth');
         setTranslate(currentX, currentY, cloth);
 
-        // Rotate Karcher towards movement direction
         if (hasKarcher && karcherEnabled) {
-            const dx = cx - initialX - (xOffset - (cx - initialX)); // Simplified diff
-            // Actually just calculate delta from last position
             if (this.lastX) {
                 const angle = Math.atan2(cy - this.lastY, cx - this.lastX) * 180 / Math.PI;
                 cloth.style.transform += ` rotate(${angle}deg)`;
             }
             this.lastX = cx; this.lastY = cy;
         }
-
         checkCleaning();
     }
 }
@@ -458,14 +506,21 @@ window.addEventListener('load', () => {
     centerCloth();
     checkDailyReset();
     updateUIValues();
-    simulateBots(); // Start leaderboard simulation
+
+    // Wait for Firebase to load from window
+    const checkFb = setInterval(() => {
+        if (window.fbAuth) {
+            clearInterval(checkFb);
+            initFirebase();
+        }
+    }, 100);
+
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
-    if (!nickname && get('auth-modal')) get('auth-modal').classList.remove('hidden');
     scheduleNextStain();
 });
 
