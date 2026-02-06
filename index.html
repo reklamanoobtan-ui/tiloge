@@ -64,6 +64,16 @@
                 </div>
                 <button id="toggle-karcher-btn" class="action-btn">შეცვლა</button>
             </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <h3>დამატებითი აჩქარება</h3>
+                    <p>აქტიური: <span id="active-speed-bonus">0</span> წმ</p>
+                </div>
+                <div class="btn-group">
+                    <button id="set-dec-speed" class="small-btn">-</button>
+                    <button id="set-inc-speed" class="small-btn">+</button>
+                </div>
+            </div>
 
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
 
@@ -73,7 +83,11 @@
                     <p id="settings-user-name">სტუმარი</p>
                     <p id="settings-user-email" style="font-size: 0.7rem; opacity: 0.6;"></p>
                 </div>
-                <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="reset-lb-btn" class="action-btn hidden" style="background: #ff4d4d; color: white;">Reset
+                        Top 10</button>
+                    <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
+                </div>
             </div>
         </div>
     </div>

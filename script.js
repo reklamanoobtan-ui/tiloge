@@ -15,6 +15,8 @@ let xOffset = 0, yOffset = 0;
 let score = 0;
 let currentInterval = 10000; // Base: 10 seconds
 let sessionSpeedBonus = parseInt(localStorage.getItem('tilo_session_bonus')) || 0;
+let activeSpeedBonus = parseInt(localStorage.getItem('tilo_active_speed_bonus'));
+if (isNaN(activeSpeedBonus)) activeSpeedBonus = sessionSpeedBonus;
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
@@ -61,11 +63,9 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_active_helpers', activeHelpers);
     localStorage.setItem('tilo_total_cloth', totalClothOwned);
     localStorage.setItem('tilo_active_cloth', activeCloth);
-    localStorage.setItem('tilo_vip', isVip);
-    localStorage.setItem('tilo_has_karcher', hasKarcher);
-    localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
     localStorage.setItem('tilo_has_speedup', hasSpeedUp);
     localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
+    localStorage.setItem('tilo_active_speed_bonus', activeSpeedBonus);
 }
 
 function updateUIValues() {
@@ -121,9 +121,17 @@ function updateUIValues() {
         }
     }
 
+    if (get('active-speed-bonus')) get('active-speed-bonus').textContent = activeSpeedBonus / 1000;
+
     if (get('interval-val')) {
         let interval = getSpawnInterval();
         get('interval-val').textContent = (interval / 1000).toFixed(6);
+    }
+
+    // Admin Access
+    if (get('reset-lb-btn')) {
+        if (nickname === 'unoobi') get('reset-lb-btn').classList.remove('hidden');
+        else get('reset-lb-btn').classList.add('hidden');
     }
 
     // Profile in Settings
@@ -408,7 +416,8 @@ function initUI() {
             // Subsequent temporary buy
             if (coins >= 10) {
                 coins -= 10;
-                sessionSpeedBonus += 1000; // Reduce 1s
+                sessionSpeedBonus += 1000;
+                activeSpeedBonus += 1000;
                 saveStatsToLocal(); updateUIValues(); syncUserData();
                 showStatusUpdate("-1 წამი სისწრაფე!");
             }
@@ -442,10 +451,28 @@ function initUI() {
         if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStatsToLocal(); updateUIValues(); startHelperBot(); }
     };
     get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
-    get('set-inc-cloth').onclick = () => { if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
+    get('set-dec-speed').onclick = () => {
+        if (activeSpeedBonus >= 1000) { activeSpeedBonus -= 1000; saveStatsToLocal(); updateUIValues(); }
+    };
+    get('set-inc-speed').onclick = () => {
+        if (activeSpeedBonus < sessionSpeedBonus) { activeSpeedBonus += 1000; saveStatsToLocal(); updateUIValues(); }
+    };
 
     get('toggle-karcher-btn').onclick = () => {
         if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStatsToLocal(); updateUIValues(); }
+    };
+
+    get('reset-lb-btn').onclick = async () => {
+        if (nickname === 'unoobi' && confirm("ნამდვილად გსურთ რეიტინგის გასუფთავება?")) {
+            try {
+                await sql`UPDATE users SET score = 0`;
+                // Force global reload
+                const nextVer = (parseFloat(APP_VERSION) + 0.01).toFixed(2);
+                await sql`UPDATE system_config SET value = ${nextVer} WHERE key = 'app_version'`;
+                alert("რეიტინგი გასუფთავდა! ყველა მომხმარებელი დარეფრეშდება.");
+                location.reload();
+            } catch (e) { alert("შეცდომა!"); }
+        }
     };
 
     // Auth Actions
@@ -629,7 +656,7 @@ function getSpawnInterval() {
     // Every 50 points, decrease speed by 1 second (1000ms)
     let speedBonus = Math.floor(score / 50) * 1000;
 
-    let interval = base - speedBonus - sessionSpeedBonus;
+    let interval = base - speedBonus - activeSpeedBonus;
 
     // Apply VIP bonus (half interval)
     if (isVip) interval = interval / 2;
@@ -696,8 +723,10 @@ window.addEventListener('load', async () => {
 
     // Reset score on refresh (Session-based leaderboard)
     score = 0;
-    sessionSpeedBonus = 0; // Reset temp speed bonus on refresh
+    sessionSpeedBonus = 0;
+    activeSpeedBonus = 0; // Reset all session speed bonuses
     localStorage.setItem('tilo_session_bonus', 0);
+    localStorage.setItem('tilo_active_speed_bonus', 0);
 
     if (userEmail) {
         try {
