@@ -1,6 +1,12 @@
 // Safe element getter
 const get = (id) => document.getElementById(id);
 
+// Neon Database Config (Serverless Driver)
+import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+
+// IMPORTANT: This is the connection string you provided.
+const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
+
 // State
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
@@ -9,17 +15,11 @@ let score = 0;
 let cleanedCountForScaling = 0;
 let currentInterval = 10000;
 let nickname = localStorage.getItem('tilo_nick') || '';
+let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
-
-// Neon Database Config (Serverless Driver)
-import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
-
-// IMPORTANT: This is the connection string you provided.
-const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
-
 let onlinePlayers = [];
 
 // Stats Logic (Owned vs Active)
@@ -52,19 +52,6 @@ function updatePowerStats() {
         if (clothEl) clothEl.classList.remove('karcher-active');
     }
     clothStrength = power;
-}
-
-const difficultyIntervalStep = 2000;
-
-// Leaderboard & Time
-const lastReset = localStorage.getItem('tilo_last_reset');
-
-function checkDailyReset() {
-    const now = new Date();
-    const oneDay = 24 * 60 * 60 * 1000;
-    if (!lastReset || (now.getTime() - parseInt(lastReset)) > oneDay) {
-        localStorage.setItem('tilo_last_reset', now.getTime().toString());
-    }
 }
 
 function saveStats() {
@@ -145,39 +132,85 @@ function updateLeaderboardUI() {
     }
 }
 
-// Sync score with Neon
-async function syncScore() {
-    if (!nickname) return;
+// Database Initialization & Auth Logic
+async function initDatabase() {
     try {
-        // Ensure table exists
-        await sql`CREATE TABLE IF NOT EXISTS leaderboard (
+        await sql`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
+            email TEXT UNIQUE,
+            password TEXT,
             nickname TEXT UNIQUE,
             score INTEGER DEFAULT 0,
+            coins INTEGER DEFAULT 0,
             is_vip BOOLEAN DEFAULT false,
-            updated_at TIMESTAMP DEFAULT NOW()
+            created_at TIMESTAMP DEFAULT NOW()
         )`;
+    } catch (e) { console.error("DB Init Error", e); }
+}
 
-        // Upsert score
-        await sql`
-            INSERT INTO leaderboard (nickname, score, is_vip, updated_at)
-            VALUES (${nickname}, ${score}, ${isVip}, NOW())
-            ON CONFLICT (nickname) 
-            DO UPDATE SET score = EXCLUDED.score, is_vip = EXCLUDED.is_vip, updated_at = NOW()
-        `;
+async function handleRegister() {
+    const email = get('auth-email').value;
+    const pass = get('auth-password').value;
+    const nick = get('nickname-input').value.trim();
+    const err = get('auth-error');
+
+    if (!email || !pass || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
+
+    try {
+        await sql`INSERT INTO users (email, password, nickname, coins, is_vip) 
+                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip})`;
+        err.style.color = "#4caf50";
+        err.textContent = "რეგისტრაცია წარმატებულია! ახლა შედით სისტემაში.";
     } catch (e) {
-        console.error("Neon Sync Error", e);
+        err.style.color = "#ff4d4d";
+        err.textContent = "შეცდომა: ელ-ფოსტა ან ნიკნეიმი უკვე დაკავებულია.";
     }
+}
+
+async function handleLogin() {
+    const email = get('auth-email').value;
+    const pass = get('auth-password').value;
+    const err = get('auth-error');
+
+    try {
+        const result = await sql`SELECT * FROM users WHERE email = ${email} AND password = ${pass}`;
+        if (result.length > 0) {
+            const user = result[0];
+            nickname = user.nickname;
+            userEmail = user.email;
+            score = user.score;
+            coins = user.coins;
+            isVip = user.is_vip;
+
+            localStorage.setItem('tilo_nick', nickname);
+            localStorage.setItem('tilo_email', userEmail);
+            localStorage.setItem('tilo_coins', coins);
+            localStorage.setItem('tilo_vip', isVip);
+
+            updateUIValues();
+            location.reload(); // Refresh to start game with loaded stats
+        } else {
+            err.textContent = "არასწორი მონაცემები!";
+        }
+    } catch (e) {
+        err.textContent = "შეცდომა ბაზასთან კავშირისას.";
+    }
+}
+
+async function syncScore() {
+    if (!userEmail) return;
+    try {
+        await sql`UPDATE users SET score = ${score}, coins = ${coins}, is_vip = ${isVip} 
+                  WHERE email = ${userEmail}`;
+    } catch (e) { console.error("Neon Sync Error", e); }
 }
 
 async function fetchLeaderboard() {
     try {
-        const result = await sql`SELECT nickname, score, is_vip FROM leaderboard ORDER BY score DESC LIMIT 20`;
+        const result = await sql`SELECT nickname, score, is_vip FROM users ORDER BY score DESC LIMIT 20`;
         onlinePlayers = result;
         updateLeaderboardUI();
-    } catch (e) {
-        console.error("Neon Fetch Error", e);
-    }
+    } catch (e) { console.error("Neon Fetch Error", e); }
 }
 
 function updateScore(points) {
@@ -218,7 +251,7 @@ function showStatusUpdate(text) {
 function initUI() {
     get('buy-vip-btn').onclick = () => {
         if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
-            isVip = true; updatePowerStats(); saveStats();
+            isVip = true; updatePowerStats(); saveStats(); syncScore();
             if (get('cloth')) get('cloth').classList.add('vip-cloth');
             if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
             get('buy-vip-btn').style.display = 'none';
@@ -234,50 +267,31 @@ function initUI() {
     get('buy-helper-btn').onclick = () => {
         if (coins >= 100 && totalHelpersOwned < 10) {
             coins -= 100; totalHelpersOwned++; activeHelpers++;
-            saveStats(); updateUIValues(); startHelperBot();
+            saveStats(); updateUIValues(); syncScore(); startHelperBot();
         }
     };
 
     get('buy-cloth-power-btn').onclick = () => {
         if (coins >= 70 && totalClothOwned < 10) {
             coins -= 70; totalClothOwned++; activeCloth++;
-            updatePowerStats(); saveStats(); updateUIValues();
+            updatePowerStats(); saveStats(); updateUIValues(); syncScore();
         }
     };
 
     get('buy-karcher-btn').onclick = () => {
         if (coins >= 1000 && !hasKarcher) {
             coins -= 1000; hasKarcher = true; karcherEnabled = true;
-            updatePowerStats(); saveStats(); updateUIValues();
+            updatePowerStats(); saveStats(); updateUIValues(); syncScore();
             get('buy-karcher-btn').textContent = "შეძენილია"; get('buy-karcher-btn').disabled = true;
         }
     };
 
-    get('set-dec-helper').onclick = () => {
-        if (activeHelpers > 0) {
-            activeHelpers--; saveStats(); updateUIValues();
-            const bots = document.querySelectorAll('.helper-bot');
-            if (bots.length > 0) bots[bots.length - 1].remove();
-        }
-    };
-    get('set-inc-helper').onclick = () => {
-        if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStats(); updateUIValues(); startHelperBot(); }
-    };
-    get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStats(); updateUIValues(); } };
-    get('set-inc-cloth').onclick = () => { if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStats(); updateUIValues(); } };
-
-    get('toggle-karcher-btn').onclick = () => {
-        if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStats(); updateUIValues(); }
-    };
-
-    get('save-nick-btn').onclick = () => {
-        const val = get('nickname-input').value.trim();
-        if (val) {
-            nickname = val; localStorage.setItem('tilo_nick', nickname);
-            get('auth-modal').classList.add('hidden');
-            updateUIValues();
-            syncScore();
-        }
+    // Auth Actions
+    get('register-btn').onclick = handleRegister;
+    get('login-btn').onclick = handleLogin;
+    get('logout-btn').onclick = () => {
+        localStorage.clear();
+        location.reload();
     };
 
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
@@ -454,12 +468,22 @@ function drag(e) {
     }
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    await initDatabase();
     updatePowerStats();
     initUI();
     centerCloth();
-    checkDailyReset();
     updateUIValues();
+
+    if (userEmail) {
+        get('user-display-name').textContent = nickname;
+        get('user-info-section').classList.remove('hidden');
+        get('auth-forms').classList.add('hidden');
+        get('auth-modal').classList.add('hidden');
+    } else {
+        get('auth-modal').classList.remove('hidden');
+    }
+
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
@@ -467,10 +491,9 @@ window.addEventListener('load', () => {
     }
 
     fetchLeaderboard();
-    setInterval(fetchLeaderboard, 5000); // Polling for real-time vibe
+    setInterval(fetchLeaderboard, 5000);
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
-    if (!nickname && get('auth-modal')) get('auth-modal').classList.remove('hidden');
     scheduleNextStain();
 });
 

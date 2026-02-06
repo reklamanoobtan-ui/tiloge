@@ -116,13 +116,26 @@
         </div>
     </div>
 
-    <!-- Nickname Registration Modal -->
+    <!-- Authentication Modal -->
     <div id="auth-modal" class="modal hidden">
         <div class="modal-content glass">
-            <h2>შეიყვანეთ თქვენი ნიკნეიმი</h2>
-            <p>რეიტინგში მოსახვედრად საჭიროა სახელი</p>
-            <input type="text" id="nickname-input" placeholder="მაგ: მწმენდავი-X" maxlength="15">
-            <button id="save-nick-btn" class="action-btn">შენახვა</button>
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            <div id="auth-forms">
+                <input type="email" id="auth-email" placeholder="ელ-ფოსტა">
+                <input type="password" id="auth-password" placeholder="პაროლი">
+                <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
+
+                <div id="auth-buttons">
+                    <button id="login-btn" class="action-btn">შესვლა</button>
+                    <button id="register-btn" class="action-btn second-btn">რეგისტრაცია</button>
+                </div>
+                <p id="auth-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 10px;"></p>
+            </div>
+            <div id="user-info-section" class="hidden">
+                <p>მოგესალმებით, <span id="user-display-name"></span>!</p>
+                <button id="logout-btn" class="small-btn"
+                    style="width: auto; padding: 5px 15px; margin: 10px auto;">გამოსვლა</button>
+            </div>
         </div>
     </div>
 
