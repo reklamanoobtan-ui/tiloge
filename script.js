@@ -138,16 +138,16 @@ function updateLeaderboardUI() {
     const miniList = get('mini-lb-list');
     if (miniList) {
         miniList.innerHTML = '';
-        const top3 = combined.slice(0, 3);
-        top3.forEach((entry, i) => {
+        const top10 = combined.slice(0, 10);
+        top10.forEach((entry, i) => {
             const isMe = entry.nickname === nickname;
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
             if (isMe) item.style.background = "rgba(255, 204, 0, 0.2)";
 
-            let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+            let rankSymbol = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `#${i + 1}`));
             item.innerHTML = `
-                <span class="mini-lb-name">${medal} ${entry.is_vip ? '👑' : ''}${entry.nickname}</span>
+                <span class="mini-lb-name">${rankSymbol} ${entry.is_vip ? '👑' : ''}${entry.nickname}</span>
                 <span class="mini-lb-score">${Math.floor(entry.score)}</span>
             `;
             miniList.appendChild(item);
