@@ -24,6 +24,7 @@ if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
 let onlinePlayers = [];
+let lbTimeLeft = 10;
 
 // Shop State
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
@@ -791,7 +792,14 @@ window.addEventListener('load', async () => {
     }
 
     fetchLeaderboard();
-    setInterval(fetchLeaderboard, 5000);
+    setInterval(() => {
+        lbTimeLeft--;
+        if (lbTimeLeft <= 0) {
+            fetchLeaderboard();
+            lbTimeLeft = 10;
+        }
+        if (get('lb-timer')) get('lb-timer').textContent = `(${lbTimeLeft}წ)`;
+    }, 1000);
     setInterval(checkForUpdates, 30000); // Check for global updates every 30s
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
