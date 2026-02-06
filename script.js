@@ -14,9 +14,11 @@ if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
 
-// Neon Database Config (HTTP API)
-// IMPORTANT: Replace this with your Neon HTTP connection string or endpoint
-const NEON_DATABASE_URL = "YOUR_NEON_HTTP_ENDPOINT_HERE";
+// Neon Database Config (Serverless Driver)
+import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+
+// IMPORTANT: This is the connection string you provided.
+const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
 let onlinePlayers = [];
 
@@ -145,28 +147,33 @@ function updateLeaderboardUI() {
 
 // Sync score with Neon
 async function syncScore() {
-    if (!nickname || NEON_DATABASE_URL === "YOUR_NEON_HTTP_ENDPOINT_HERE") return;
-
+    if (!nickname) return;
     try {
-        await fetch(NEON_DATABASE_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                nickname: nickname,
-                score: score,
-                is_vip: isVip
-            }),
-            headers: { 'Content-Type': 'application/json' }
-        });
+        // Ensure table exists
+        await sql`CREATE TABLE IF NOT EXISTS leaderboard (
+            id SERIAL PRIMARY KEY,
+            nickname TEXT UNIQUE,
+            score INTEGER DEFAULT 0,
+            is_vip BOOLEAN DEFAULT false,
+            updated_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // Upsert score
+        await sql`
+            INSERT INTO leaderboard (nickname, score, is_vip, updated_at)
+            VALUES (${nickname}, ${score}, ${isVip}, NOW())
+            ON CONFLICT (nickname) 
+            DO UPDATE SET score = EXCLUDED.score, is_vip = EXCLUDED.is_vip, updated_at = NOW()
+        `;
     } catch (e) {
         console.error("Neon Sync Error", e);
     }
 }
 
 async function fetchLeaderboard() {
-    if (NEON_DATABASE_URL === "YOUR_NEON_HTTP_ENDPOINT_HERE") return;
     try {
-        const res = await fetch(NEON_DATABASE_URL);
-        onlinePlayers = await res.json();
+        const result = await sql`SELECT nickname, score, is_vip FROM leaderboard ORDER BY score DESC LIMIT 20`;
+        onlinePlayers = result;
         updateLeaderboardUI();
     } catch (e) {
         console.error("Neon Fetch Error", e);
