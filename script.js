@@ -468,6 +468,33 @@ function initUI() {
 
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
     get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
+
+    // Promo Code Logic
+    get('apply-promo-btn').onclick = () => {
+        const input = get('promo-input').value.trim().toLowerCase();
+        const msg = get('promo-msg');
+        if (input === 'baro') {
+            const usedPromos = JSON.parse(localStorage.getItem('tilo_used_promos') || "[]");
+            if (usedPromos.includes('baro')) {
+                msg.textContent = "კოდი უკვე გამოყენებულია!";
+                msg.style.color = "#ff4d4d";
+            } else {
+                coins += 5000;
+                usedPromos.push('baro');
+                localStorage.setItem('tilo_used_promos', JSON.stringify(usedPromos));
+                saveStatsToLocal();
+                updateUIValues();
+                syncUserData();
+                msg.textContent = "კოდი გააქტიურდა! +5000 🪙";
+                msg.style.color = "#4caf50";
+                get('promo-input').value = "";
+            }
+        } else {
+            msg.textContent = "არასწორი კოდი!";
+            msg.style.color = "#ff4d4d";
+        }
+    };
+
     get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
 }
@@ -616,7 +643,10 @@ function dragStart(e) {
     const cy = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
     initialX = cx - xOffset; initialY = cy - yOffset;
     const cloth = get('cloth');
-    if (e.target === cloth || (cloth && cloth.contains(e.target))) isDragging = true;
+    if (e.target === cloth || (cloth && cloth.contains(e.target))) {
+        isDragging = true;
+        this.lastX = undefined; this.lastY = undefined;
+    }
 }
 function dragEnd() { if (currentX !== undefined) initialX = currentX; if (currentY !== undefined) initialY = currentY; isDragging = false; }
 function drag(e) {
@@ -627,15 +657,22 @@ function drag(e) {
         currentX = cx - initialX; currentY = cy - initialY;
         xOffset = currentX; yOffset = currentY;
         const cloth = get('cloth');
-        setTranslate(currentX, currentY, cloth);
+
+        let transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
 
         if (hasKarcher && karcherEnabled) {
-            if (this.lastX) {
-                const angle = Math.atan2(cy - this.lastY, cx - this.lastX) * 180 / Math.PI;
-                cloth.style.transform += ` rotate(${angle}deg)`;
+            if (this.lastX !== undefined) {
+                const dx = cx - this.lastX;
+                const dy = cy - this.lastY;
+                if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    transform += ` rotate(${angle}deg)`;
+                }
             }
             this.lastX = cx; this.lastY = cy;
         }
+
+        if (cloth) cloth.style.transform = transform;
         checkCleaning();
     }
 }

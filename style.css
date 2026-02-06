@@ -313,24 +313,22 @@ body {
 }
 
 .karcher-active {
-    box-shadow: 0 0 20px rgba(0, 191, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.5) !important;
-    border: 2px solid rgba(0, 191, 255, 0.5) !important;
-    background-color: #f0f8ff !important;
-    /* Alice Blue for wet look */
-    animation: water-ripple 2s infinite ease-in-out;
+    box-shadow: 0 0 25px rgba(0, 191, 255, 1), inset 0 0 15px rgba(255, 255, 255, 0.8) !important;
+    border: 3px solid rgba(0, 191, 255, 0.8) !important;
+    background-color: #e0f2ff !important;
+    /* Slightly more blue wet look */
+    animation: water-glow 1.5s infinite alternate ease-in-out;
 }
 
-@keyframes water-ripple {
-
-    0%,
-    100% {
-        transform: scale(1);
-        filter: opacity(0.9);
+@keyframes water-glow {
+    from {
+        box-shadow: 0 0 15px rgba(0, 191, 255, 0.7), inset 0 0 5px rgba(255, 255, 255, 0.5);
+        filter: brightness(1);
     }
 
-    50% {
-        transform: scale(1.05);
-        filter: opacity(1);
+    to {
+        box-shadow: 0 0 30px rgba(0, 191, 255, 1), inset 0 0 20px rgba(255, 255, 255, 1);
+        filter: brightness(1.2);
     }
 }
 
@@ -543,11 +541,13 @@ body {
     right: 20px;
     cursor: pointer;
 }
+
 /* User Profile in Header */
 .user-profile {
     position: absolute;
     top: 10px;
-    right: 320px; /* Space from leaderboard */
+    right: 320px;
+    /* Space from leaderboard */
     display: flex;
     align-items: center;
     gap: 10px;
@@ -593,4 +593,3 @@ body {
     cursor: default !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
-
