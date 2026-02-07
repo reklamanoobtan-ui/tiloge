@@ -638,6 +638,7 @@ function checkCleaningAtPos(x, y) {
 }
 
 function createStain() {
+    if (document.querySelectorAll('.stain').length >= 250) return;
     const container = get('canvas-container');
     const stain = document.createElement('div');
     stain.className = 'stain';
