@@ -104,13 +104,12 @@ function updateUIValues() {
     if (get('buy-speed-btn')) {
         if (!hasSpeedUp) {
             get('buy-speed-btn').textContent = "50 🪙";
-            get('buy-speed-btn').disabled = false;
+            get('buy-speed-btn').disabled = coins < 50;
             get('buy-speed-btn').classList.remove('purchased');
         } else {
-            // After permanent buy, show temporary buy
-            get('buy-speed-btn').textContent = "10 🪙 (-1წ)";
-            get('buy-speed-btn').disabled = coins < 10;
-            get('buy-speed-btn').classList.remove('purchased');
+            get('buy-speed-btn').textContent = "შეძენილია";
+            get('buy-speed-btn').disabled = true;
+            get('buy-speed-btn').classList.add('purchased');
         }
     }
 
@@ -439,15 +438,8 @@ function initUI() {
                 coins -= 50; hasSpeedUp = true;
                 saveStatsToLocal(); updateUIValues(); syncUserData();
                 showStatusUpdate("მუდმივი აჩქარება მიღებულია!");
-            }
-        } else {
-            // Subsequent temporary buy
-            if (coins >= 10) {
-                coins -= 10;
-                sessionSpeedBonus += 1000;
-                activeSpeedBonus += 1000;
-                saveStatsToLocal(); updateUIValues(); syncUserData();
-                showStatusUpdate("-1 წამი სისწრაფე!");
+                get('buy-speed-btn').textContent = "შეძენილია";
+                get('buy-speed-btn').classList.add('purchased');
             }
         }
     };
@@ -523,6 +515,47 @@ function initUI() {
         }
     };
 
+
+    // Donation logic
+    document.querySelectorAll('.buy-coins-btn').forEach(btn => {
+        btn.onclick = () => {
+            const amount = parseInt(btn.dataset.coins);
+            if (confirm(`გსურთ ${amount} ქოინის ყიდვა?`)) {
+                coins += amount;
+                saveStatsToLocal(); updateUIValues(); syncUserData();
+                alert("ქოინები დაემატა!");
+            }
+        };
+    });
+
+    get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
+    get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
+
+    // Promo Code Logic
+    get('apply-promo-btn').onclick = () => {
+        const input = get('promo-input').value.trim().toLowerCase();
+        const msg = get('promo-msg');
+        if (input === 'baro') {
+            const usedPromos = JSON.parse(localStorage.getItem('tilo_used_promos') || "[]");
+            if (usedPromos.includes('baro')) {
+                msg.textContent = "კოდი უკვე გამოყენებულია!";
+                msg.style.color = "#ff4d4d";
+            } else {
+                coins += 5000;
+                usedPromos.push('baro');
+                localStorage.setItem('tilo_used_promos', JSON.stringify(usedPromos));
+                saveStatsToLocal();
+                updateUIValues();
+                syncUserData();
+                msg.textContent = "კოდი გააქტიურდა! +5000 🪙";
+                msg.style.color = "#4caf50";
+                get('promo-input').value = "";
+            }
+        } else {
+            msg.textContent = "არასწორი კოდი!";
+            msg.style.color = "#ff4d4d";
+        }
+    };
 
     // Auth Actions
     get('register-btn').onclick = handleRegister;
