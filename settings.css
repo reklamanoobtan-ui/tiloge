@@ -41,6 +41,76 @@
     align-items: center;
 }
 
+/* Chat Styles */
+.chat-container {
+    position: absolute;
+    top: 360px;
+    /* Below leaderboard */
+    right: 20px;
+    width: 250px;
+    padding: 15px;
+    border-radius: 16px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    z-index: 90;
+}
+
+.chat-messages {
+    height: 150px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.chat-msg {
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    word-break: break-all;
+}
+
+.chat-msg strong {
+    color: var(--cloth-color);
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 5px;
+}
+
+#chat-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 5px;
+    color: var(--text-color);
+    outline: none;
+    font-size: 0.8rem;
+}
+
+#send-chat-btn {
+    background: var(--cloth-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 0 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 1200px) {
+    .chat-container {
+        display: none;
+        /* Hide chat on mobile/small screens for now */
+    }
+}
+
 .settings-col .shop-item:hover {
     background: rgba(255, 255, 255, 0.06);
     transform: translateY(-2px);

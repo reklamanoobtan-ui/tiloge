@@ -265,6 +265,13 @@ async function initDatabase() {
             value TEXT
         )`;
 
+        await sql`CREATE TABLE IF NOT EXISTS chat_messages (
+            id SERIAL PRIMARY KEY,
+            nickname TEXT,
+            message TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
         // 3. Update Sync Version in DB
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
@@ -487,11 +494,30 @@ function initUI() {
         if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStatsToLocal(); updateUIValues(); startHelperBot(); }
     };
     get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
+    get('set-inc-cloth').onclick = () => {
+        if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStatsToLocal(); updateUIValues(); }
+    };
+
     get('set-dec-speed').onclick = () => {
         if (activeSpeedBonus >= 1000) { activeSpeedBonus -= 1000; saveStatsToLocal(); updateUIValues(); }
     };
     get('set-inc-speed').onclick = () => {
-        if (activeSpeedBonus < sessionSpeedBonus) { activeSpeedBonus += 1000; saveStatsToLocal(); updateUIValues(); }
+        if (activeSpeedBonus < sessionSpeedBonus) {
+            activeSpeedBonus += 1000; saveStatsToLocal(); updateUIValues();
+        } else {
+            // Direct Purchase from Settings
+            if (coins >= 10) {
+                if (confirm("გსურთ დროებითი აჩქარების ყიდვა 10 ქოინად? (იკარგება გასვლისას)")) {
+                    coins -= 10;
+                    sessionSpeedBonus += 1000;
+                    activeSpeedBonus += 1000;
+                    saveStatsToLocal(); updateUIValues(); syncUserData();
+                    showStatusUpdate("-1 წამი (სესიური)!");
+                }
+            } else {
+                showStatusUpdate("არ გაქვთ საკმარისი ქოინები!");
+            }
+        }
     };
 
     get('toggle-karcher-btn').onclick = () => {
@@ -604,6 +630,51 @@ function initUI() {
 
     get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
+
+    setupChat();
+}
+
+let lastChatId = 0;
+function setupChat() {
+    const chatInput = get('chat-input');
+    const sendBtn = get('send-chat-btn');
+    const msgContainer = get('chat-messages');
+
+    async function sendMsg() {
+        const text = chatInput.value.trim().substring(0, 50);
+        if (!text) return;
+        if (!nickname) { alert("ჩათისთვის გაიარეთ ავტორიზაცია!"); return; }
+
+        try {
+            await sql`INSERT INTO chat_messages (nickname, message) VALUES (${nickname}, ${text})`;
+            chatInput.value = '';
+            fetchChat();
+        } catch (e) { console.error("Chat Send Error", e); }
+    }
+
+    sendBtn.onclick = sendMsg;
+    chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
+
+    // Poll for chat
+    setInterval(fetchChat, 2000);
+}
+
+async function fetchChat() {
+    try {
+        // Fetch messages from last 10 seconds
+        const msgs = await sql`SELECT * FROM chat_messages WHERE created_at > NOW() - INTERVAL '10 seconds' ORDER BY created_at ASC`;
+        const container = get('chat-messages');
+        container.innerHTML = '';
+        msgs.forEach(m => {
+            const el = document.createElement('div');
+            el.className = 'chat-msg';
+            const isMe = m.nickname === nickname;
+            if (isMe) el.style.background = "rgba(255, 204, 0, 0.1)";
+            el.innerHTML = `<strong>${m.nickname}:</strong> ${m.message}`;
+            container.appendChild(el);
+            container.scrollTop = container.scrollHeight;
+        });
+    } catch (e) { }
 }
 
 function startHelperBot() {
