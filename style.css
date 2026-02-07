@@ -113,6 +113,20 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+.cloth.spinning {
+    animation: cloth-spin 0.5s linear infinite !important;
+}
+
+@keyframes cloth-spin {
+    from {
+        transform: rotate(0deg) scale(1.05);
+    }
+
+    to {
+        transform: rotate(360deg) scale(1.05);
+    }
+}
+
 .vip-cloth {
     animation: vip-colors 5s infinite linear !important;
     background-image: none !important;

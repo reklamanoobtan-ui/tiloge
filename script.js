@@ -35,6 +35,7 @@ let totalClothOwned = parseInt(localStorage.getItem('tilo_total_cloth')) || 0;
 let activeCloth = parseInt(localStorage.getItem('tilo_active_cloth')) || 0;
 let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
 let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
+
 let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
 let scoreClothLvl = 0;
 let scoreHelperLvl = 0;
@@ -482,6 +483,8 @@ function initUI() {
         }
     };
 
+
+
     // Settings adjustments
     get('set-dec-helper').onclick = () => {
         if (activeHelpers > 0) {
@@ -727,27 +730,138 @@ function startHelperBot() {
         if (!botEl.parentElement) return;
         const stains = document.querySelectorAll('.stain');
         if (stains.length > 0) {
-            const target = stains[Math.floor(Math.random() * Math.min(stains.length, 3))];
+            // Pick a random stain from available ones to avoid clumping
+            const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left}px`; botEl.style.top = `${rect.top}px`;
 
-            // Speed boost per level: 10% faster (shorter timeout)
-            const baseDelay = 1000;
+            // Add slight randomness to target position
+            const rX = (Math.random() - 0.5) * 30;
+            const rY = (Math.random() - 0.5) * 30;
+
+            botEl.style.left = `${rect.left + rX}px`;
+            botEl.style.top = `${rect.top + rY}px`;
+
+            const baseDelay = 1500;
             const delay = baseDelay / (1 + (scoreHelperLvl * 0.1));
+            // Randomize delay slightly
+            const randomDelay = delay + (Math.random() * 800);
 
             setTimeout(() => {
                 if (target.parentElement) {
                     target.dataset.health = 0;
                     checkCleaningAtPos(rect.left + 30, rect.top + 30);
                 }
-            }, delay);
+                moveBot();
+            }, randomDelay);
         } else {
             botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
             botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+            setTimeout(moveBot, 2000);
         }
-        setTimeout(moveBot, 2000);
     }
     moveBot();
+}
+
+function spawnSpinner() {
+    if (!get('canvas-container')) return;
+    const spinner = document.createElement('div');
+    spinner.className = 'spin-cloth';
+
+    // Center positioning
+    const centerX = window.innerWidth / 2 - 75;
+    const centerY = window.innerHeight / 2 - 75;
+    spinner.style.left = `${centerX}px`;
+    spinner.style.top = `${centerY}px`;
+
+    let isDraggingSpinner = false;
+    let dragStartX, dragStartY;
+    let sOffsetX, sOffsetY;
+
+    function onMouseDown(e) {
+        isDraggingSpinner = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        sOffsetX = e.clientX - spinner.getBoundingClientRect().left;
+        sOffsetY = e.clientY - spinner.getBoundingClientRect().top;
+        spinner.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function onMouseMove(e) {
+        if (isDraggingSpinner) {
+            spinner.style.left = `${e.clientX - sOffsetX}px`;
+            spinner.style.top = `${e.clientY - sOffsetY}px`;
+        }
+    }
+
+    function onMouseUp(e) {
+        if (isDraggingSpinner) {
+            isDraggingSpinner = false;
+            spinner.style.cursor = 'pointer';
+
+            // Check if this was a click (not a drag)
+            const dragDistance = Math.sqrt(
+                Math.pow(e.clientX - dragStartX, 2) +
+                Math.pow(e.clientY - dragStartY, 2)
+            );
+
+            // If moved less than 5 pixels, treat as click
+            if (dragDistance < 5) {
+                handleSpin();
+            }
+        }
+    }
+
+    function handleSpin() {
+        let spinSpeed = parseInt(spinner.dataset.spinSpeed || '0');
+        spinSpeed += 5;
+        spinner.dataset.spinSpeed = spinSpeed;
+
+        spinner.classList.add('spinning');
+        spinner.style.animationDuration = `${Math.max(0.1, 1 - (spinSpeed * 0.05))}s`;
+
+        const rect = spinner.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const radius = 150 + (spinSpeed * 10);
+
+        const stains = document.querySelectorAll('.stain');
+        stains.forEach(stain => {
+            const sRect = stain.getBoundingClientRect();
+            const sx = sRect.left + sRect.width / 2;
+            const sy = sRect.top + sRect.height / 2;
+            const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
+
+            if (dist < radius) {
+                let h = parseFloat(stain.dataset.health);
+                h -= (20 + spinSpeed * 2);
+                stain.dataset.health = h;
+                stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
+
+                if (h <= 0) {
+                    stain.dataset.cleaning = 'true'; stain.style.opacity = '0';
+                    createParticles(sx, sy, stain.style.backgroundColor);
+                    setTimeout(() => stain.remove(), 800);
+                    updateScore(1);
+                }
+            }
+        });
+
+        setTimeout(() => {
+            spinSpeed -= 2;
+            spinner.dataset.spinSpeed = Math.max(0, spinSpeed);
+            if (spinSpeed <= 0) {
+                spinner.classList.remove('spinning');
+            }
+        }, 1000);
+    }
+
+    spinner.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    get('canvas-container').appendChild(spinner);
 }
 
 function checkCleaningAtPos(x, y) {
@@ -961,6 +1075,77 @@ window.addEventListener('load', async () => {
 
     // Continuous cleaning loop (runs even if not dragging)
     setInterval(checkCleaning, 200);
+
+    // Add click-to-spin functionality to cloth
+    const cloth = get('cloth');
+    if (cloth) {
+        let clothSpinSpeed = 0;
+        let clickStartX, clickStartY;
+        let clickStartTime;
+
+        cloth.addEventListener('mousedown', (e) => {
+            clickStartX = e.clientX;
+            clickStartY = e.clientY;
+            clickStartTime = Date.now();
+        });
+
+        cloth.addEventListener('mouseup', (e) => {
+            const clickDuration = Date.now() - clickStartTime;
+            const dragDistance = Math.sqrt(
+                Math.pow(e.clientX - clickStartX, 2) +
+                Math.pow(e.clientY - clickStartY, 2)
+            );
+
+            // If clicked (not dragged) and quick click
+            if (dragDistance < 10 && clickDuration < 300) {
+                clothSpinSpeed += 5;
+                cloth.dataset.spinSpeed = clothSpinSpeed;
+
+                // Add spinning animation
+                cloth.classList.add('spinning');
+                const duration = Math.max(0.1, 1 - (clothSpinSpeed * 0.05));
+                cloth.style.animationDuration = `${duration}s`;
+
+                // Clean stains in radius
+                const rect = cloth.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const radius = 200 + (clothSpinSpeed * 15);
+
+                const stains = document.querySelectorAll('.stain');
+                stains.forEach(stain => {
+                    const sRect = stain.getBoundingClientRect();
+                    const sx = sRect.left + sRect.width / 2;
+                    const sy = sRect.top + sRect.height / 2;
+                    const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
+
+                    if (dist < radius) {
+                        let h = parseFloat(stain.dataset.health);
+                        h -= (30 + clothSpinSpeed * 3);
+                        stain.dataset.health = h;
+                        stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
+
+                        if (h <= 0) {
+                            stain.dataset.cleaning = 'true';
+                            stain.style.opacity = '0';
+                            createParticles(sx, sy, stain.style.backgroundColor);
+                            setTimeout(() => stain.remove(), 800);
+                            updateScore(1);
+                        }
+                    }
+                });
+
+                // Decay spin speed
+                setTimeout(() => {
+                    clothSpinSpeed -= 3;
+                    cloth.dataset.spinSpeed = Math.max(0, clothSpinSpeed);
+                    if (clothSpinSpeed <= 0) {
+                        cloth.classList.remove('spinning');
+                    }
+                }, 1200);
+            }
+        });
+    }
 });
 
 window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", dragEnd); window.addEventListener("mousemove", drag);
