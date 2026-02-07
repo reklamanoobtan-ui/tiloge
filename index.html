@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ტილო - გამწმენდი</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="settings.css">
 </head>
 
 <body>
@@ -37,75 +38,85 @@
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
-        <div class="modal-content glass">
+        <div class="modal-content glass wide-modal">
             <span class="close-modal" id="close-settings">&times;</span>
-            <h2>⚙️ მართვა</h2>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>დამხმარეები</h3>
-                    <p>აქტიური: <span id="active-helpers">0</span> / <span id="total-helpers">0</span></p>
-                </div>
-                <div class="btn-group">
-                    <button id="set-dec-helper" class="small-btn">-</button>
-                    <button id="set-inc-helper" class="small-btn">+</button>
-                </div>
-            </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>ნაჭრის ძალა</h3>
-                    <p>აქტიური: <span id="active-cloth">0</span> / <span id="total-cloth">0</span></p>
-                </div>
-                <div class="btn-group">
-                    <button id="set-dec-cloth" class="small-btn">-</button>
-                    <button id="set-inc-cloth" class="small-btn">+</button>
-                </div>
-            </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>კერხერი</h3>
-                    <p>სტატუსი: <span id="karcher-status">გამორთულია</span></p>
-                </div>
-                <button id="toggle-karcher-btn" class="action-btn">შეცვლა</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>დამატებითი აჩქარება</h3>
-                    <p>აქტიური: <span id="active-speed-bonus">0</span> წმ</p>
-                </div>
-                <div class="btn-group">
-                    <button id="set-dec-speed" class="small-btn">-</button>
-                    <button id="set-inc-speed" class="small-btn">+</button>
-                </div>
-            </div>
+            <h2 style="margin-bottom: 30px;">⚙️ მართვა</h2>
 
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+            <div class="settings-layout">
+                <!-- Left Column: General Settings -->
+                <div class="settings-col">
+                    <h3 class="section-title">ზოგადი პარამეტრები</h3>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>დამხმარეები</h3>
+                            <p>აქტიური: <span id="active-helpers">0</span> / <span id="total-helpers">0</span></p>
+                        </div>
+                        <div class="btn-group">
+                            <button id="set-dec-helper" class="small-btn">-</button>
+                            <button id="set-inc-helper" class="small-btn">+</button>
+                        </div>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>ნაჭრის ძალა</h3>
+                            <p>აქტიური: <span id="active-cloth">0</span> / <span id="total-cloth">0</span></p>
+                        </div>
+                        <div class="btn-group">
+                            <button id="set-dec-cloth" class="small-btn">-</button>
+                            <button id="set-inc-cloth" class="small-btn">+</button>
+                        </div>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>კერხერი</h3>
+                            <p>სტატუსი: <span id="karcher-status">გამორთულია</span></p>
+                        </div>
+                        <button id="toggle-karcher-btn" class="action-btn">შეცვლა</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>დამატებითი აჩქარება</h3>
+                            <p>აქტიური: <span id="active-speed-bonus">0</span> წმ</p>
+                        </div>
+                        <div class="btn-group">
+                            <button id="set-dec-speed" class="small-btn">-</button>
+                            <button id="set-inc-speed" class="small-btn">+</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="shop-item" id="settings-profile-section">
-                <div class="shop-info">
-                    <h3>👤 პროფილი</h3>
-                    <p id="settings-user-name">სტუმარი</p>
-                    <p id="settings-user-email" style="font-size: 0.7rem; opacity: 0.6;"></p>
+                <!-- Right Column: Upgrades & Stats -->
+                <div class="settings-col">
+                    <h3 class="section-title">გაძლიერება და სტატისტიკა</h3>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>💪 ტილოს ძალა (+<span id="score-cloth-lvl">0</span>)</h3>
+                            <p>100 ქულა = +10% სიმძლავრე</p>
+                        </div>
+                        <button id="upgrade-cloth-score-btn" class="action-btn" style="min-width: 80px;">100 🎯</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>🤖 დამხმარის ძალა (+<span id="score-helper-lvl">0</span>)</h3>
+                            <p>100 ქულა = +10% სისწრაფე</p>
+                        </div>
+                        <button id="upgrade-helper-score-btn" class="action-btn" style="min-width: 80px;">100
+                            🎯</button>
+                    </div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button id="reset-lb-btn" class="action-btn hidden" style="background: #ff4d4d; color: white;">Reset
-                        Top 10</button>
-                    <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
-                </div>
-            </div>
 
-            <div class="shop-item">
-                <div class="shop-info" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                    <h3 style="font-size: 0.9rem;">💪 ტილოს ძალა (+<span id="score-cloth-lvl">0</span>)</h3>
-                    <p style="font-size: 0.75rem; opacity: 0.7;">100 ქულა = +10% სიმძლავრე</p>
+                <div class="shop-item settings-profile-full" id="settings-profile-section">
+                    <div class="shop-info">
+                        <h3>👤 პროფილი</h3>
+                        <p id="settings-user-name">სტუმარი</p>
+                        <p id="settings-user-email" style="font-size: 0.7rem; opacity: 0.6;"></p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="reset-lb-btn" class="action-btn hidden"
+                            style="background: #ff4d4d; color: white;">Reset</button>
+                        <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
+                    </div>
                 </div>
-                <button id="upgrade-cloth-score-btn" class="action-btn" style="min-width: 80px;">100 🎯</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3 style="font-size: 0.9rem;">🤖 დამხმარის ძალა (+<span id="score-helper-lvl">0</span>)</h3>
-                    <p style="font-size: 0.75rem; opacity: 0.7;">100 ქულა = +10% სისწრაფე</p>
-                </div>
-                <button id="upgrade-helper-score-btn" class="action-btn" style="min-width: 80px;">100 🎯</button>
             </div>
         </div>
     </div>
