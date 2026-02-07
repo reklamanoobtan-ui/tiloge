@@ -113,6 +113,10 @@ function updateUIValues() {
         }
     }
 
+    if (get('buy-temp-speed-btn')) {
+        get('buy-temp-speed-btn').disabled = coins < 10;
+    }
+
     if (get('buy-karcher-btn')) {
         if (hasKarcher) {
             get('buy-karcher-btn').textContent = "შეძენილია";
@@ -441,6 +445,18 @@ function initUI() {
                 get('buy-speed-btn').textContent = "შეძენილია";
                 get('buy-speed-btn').classList.add('purchased');
             }
+        }
+    };
+
+    get('buy-temp-speed-btn').onclick = () => {
+        if (coins >= 10) {
+            coins -= 10;
+            sessionSpeedBonus += 1000;
+            activeSpeedBonus += 1000;
+            saveStatsToLocal(); updateUIValues(); syncUserData();
+            showStatusUpdate("-1 წამი სისწრაფე (სესიური)!");
+        } else {
+            showStatusUpdate("არ გაქვთ საკმარისი ქოინები! 🪙");
         }
     };
 
