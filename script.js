@@ -636,9 +636,49 @@ function initUI() {
 
 let lastChatId = 0;
 function setupChat() {
+    const chatContainer = get('global-chat');
     const chatInput = get('chat-input');
     const sendBtn = get('send-chat-btn');
-    const msgContainer = get('chat-messages');
+
+    // Drag Logic
+    let isDraggingChat = false;
+    let chatOffsetX, chatOffsetY;
+
+    function onChatDrag(e) {
+        if (!isDraggingChat) return;
+        e.preventDefault();
+
+        let x = e.clientX - chatOffsetX;
+        let y = e.clientY - chatOffsetY;
+
+        // Bounds check
+        x = Math.max(0, Math.min(window.innerWidth - chatContainer.clientWidth, x));
+        y = Math.max(0, Math.min(window.innerHeight - chatContainer.clientHeight, y));
+
+        chatContainer.style.left = `${x}px`;
+        chatContainer.style.top = `${y}px`;
+        chatContainer.style.right = 'auto'; // Clear right if set
+    }
+
+    function stopChatDrag() {
+        isDraggingChat = false;
+        chatContainer.style.cursor = 'move';
+        document.removeEventListener('mousemove', onChatDrag);
+        document.removeEventListener('mouseup', stopChatDrag);
+    }
+
+    chatContainer.addEventListener('mousedown', (e) => {
+        if (e.target === chatInput || e.target === sendBtn) return;
+        isDraggingChat = true;
+        chatOffsetX = e.clientX - chatContainer.offsetLeft;
+        chatOffsetY = e.clientY - chatContainer.offsetTop;
+        chatContainer.style.cursor = 'grabbing';
+
+        document.addEventListener('mousemove', onChatDrag);
+        document.addEventListener('mouseup', stopChatDrag);
+    });
+
+
 
     async function sendMsg() {
         const text = chatInput.value.trim().substring(0, 50);

@@ -9,6 +9,8 @@
     --cloth-color: #ffcc00;
     --font-main: 'Outfit', sans-serif;
     --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --item-bg: rgba(0, 0, 0, 0.03);
+    --input-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-dark {
@@ -17,6 +19,8 @@ body.theme-dark {
     --glass-bg: rgba(30, 30, 30, 0.8);
     --glass-border: rgba(255, 255, 255, 0.1);
     --secondary-text: #aaa;
+    --item-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.1);
 }
 
 body.theme-ocean {
@@ -25,6 +29,8 @@ body.theme-ocean {
     --glass-bg: rgba(12, 20, 69, 0.8);
     --glass-border: rgba(255, 255, 255, 0.2);
     --secondary-text: #b8c1ec;
+    --item-bg: rgba(255, 255, 255, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.15);
 }
 
 body.theme-forest {
@@ -33,6 +39,8 @@ body.theme-forest {
     --glass-bg: rgba(27, 38, 27, 0.8);
     --glass-border: rgba(255, 255, 255, 0.1);
     --secondary-text: #a8bba8;
+    --item-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.1);
 }
 
 * {

@@ -32,7 +32,7 @@
 /* Enhanced shop items in settings */
 .settings-col .shop-item {
     padding: 20px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--item-bg);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
     margin-bottom: 15px;
@@ -45,16 +45,20 @@
 .chat-container {
     position: absolute;
     top: 360px;
-    /* Below leaderboard */
-    right: 20px;
+    left: 20px;
+    /* Force Left Position */
     width: 250px;
     padding: 15px;
     border-radius: 16px;
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease;
+    /* Transformed removed to prevent conflict with JS drag */
     z-index: 90;
+    cursor: move;
+    /* Indicate draggable */
+    user-select: none;
 }
 
 .chat-messages {
@@ -70,8 +74,9 @@
 .chat-msg {
     padding: 5px 8px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--item-bg);
     word-break: break-all;
+    color: var(--text-color);
 }
 
 .chat-msg strong {
@@ -85,7 +90,7 @@
 
 #chat-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--input-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     padding: 5px;
@@ -112,7 +117,7 @@
 }
 
 .settings-col .shop-item:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--input-bg);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
