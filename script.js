@@ -316,12 +316,13 @@ async function syncUserData(force = false) {
 async function fetchLeaderboard() {
     try {
         const result = await sql`
-            SELECT nickname, score, survival_time, is_vip,
-            CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
+            SELECT nickname, best_score, best_survival_time, is_vip,
+            CASE WHEN best_score > 0 THEN CAST(best_survival_time AS FLOAT) / best_score ELSE 999999 END as efficiency
             FROM users 
             WHERE nickname IS NOT NULL 
-              AND score > 0
-            ORDER BY efficiency ASC, score DESC
+              AND best_score > 0
+              AND last_seen > NOW() - INTERVAL '14 days'
+            ORDER BY efficiency ASC, best_score DESC
             LIMIT 10
         `;
         updateMiniLeaderboardUI(result);
@@ -330,6 +331,8 @@ async function fetchLeaderboard() {
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
     } catch (e) {
         console.error("LB Fetch Error:", e);
+        const list = get('mini-lb-list');
+        if (list) list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.7rem; color: #ff4d4d;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
     }
 }
 
@@ -347,17 +350,17 @@ function updateMiniLeaderboardUI(players) {
         const isMe = entry.nickname === nickname;
         const item = document.createElement('div');
         item.className = 'mini-lb-item';
-        if (isMe) item.style.backgroundColor = "rgba(255, 215, 0, 0.05)";
+        if (isMe) item.style.backgroundColor = "rgba(255, 215, 0, 0.15)";
 
-        const timeVal = entry.survival_time || 0;
-        const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : '0.00';
+        const timeVal = entry.best_survival_time || 0;
+        const eff = entry.best_score > 0 ? (timeVal / entry.best_score).toFixed(2) : '0.00';
 
         item.innerHTML = `
             <div class="mini-lb-info">
-                <span class="mini-lb-name">${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
+                <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
                 <span class="mini-lb-stat">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
             </div>
-            <span class="mini-lb-score">${Math.floor(entry.score)} ✨</span>
+            <span class="mini-lb-score">${Math.floor(entry.best_score)} ✨</span>
         `;
         list.appendChild(item);
     });
