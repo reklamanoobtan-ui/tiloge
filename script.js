@@ -336,10 +336,7 @@ async function fetchLeaderboard() {
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
-            ORDER BY d_score DESC, 
-                     (CASE WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
-                      THEN CAST(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END AS FLOAT) / GREATEST(COALESCE(best_score, 0), COALESCE(score, 0))
-                      ELSE 999999 END) ASC
+            ORDER BY d_score DESC, d_time ASC
             LIMIT 10
         `;
 
@@ -375,10 +372,10 @@ function updateMiniLeaderboardUI(players) {
         const eff = scoreVal > 0 ? (timeVal / scoreVal).toFixed(2) : '0.00';
 
         item.innerHTML = `
-            <div class="mini-lb-info">
+            < div class="mini-lb-info" >
                 <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700; font-weight: 800;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
                 <span class="mini-lb-stat">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
-            </div>
+            </div >
             <span class="mini-lb-score">${Math.floor(scoreVal)} ✨</span>
         `;
         list.appendChild(item);
@@ -415,7 +412,7 @@ function showStatusUpdate(text) {
     ds.textContent = text;
     ds.style.color = '#ffcc00';
     setTimeout(() => {
-        ds.textContent = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
+        ds.textContent = nickname ? `მოთამაშე: ${nickname} ` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
         ds.style.color = '';
     }, 2000);
 }
@@ -456,7 +453,7 @@ function initUI() {
     document.querySelectorAll('.buy-coins-btn').forEach(btn => {
         btn.onclick = () => {
             const amount = parseInt(btn.dataset.coins);
-            if (confirm(`გსურთ ${amount} ქოინის ყიდვა?`)) {
+            if (confirm(`გსურთ ${amount} ქოინის ყიდვა ? `)) {
                 coins += amount;
                 saveStatsToLocal();
                 updateUIValues();
@@ -510,7 +507,7 @@ function initUI() {
         opt.onclick = () => {
             const theme = opt.dataset.theme;
             currentTheme = theme;
-            document.body.className = `theme-${theme}`;
+            document.body.className = `theme - ${theme} `;
             localStorage.setItem('tilo_theme', theme);
             document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
@@ -535,8 +532,8 @@ function setupChat() {
         let y = clientY - chatOffsetY;
         x = Math.max(0, Math.min(window.innerWidth - chatContainer.clientWidth, x));
         y = Math.max(0, Math.min(window.innerHeight - chatContainer.clientHeight, y));
-        chatContainer.style.left = `${x}px`;
-        chatContainer.style.top = `${y}px`;
+        chatContainer.style.left = `${x} px`;
+        chatContainer.style.top = `${y} px`;
         chatContainer.style.right = 'auto';
     }
 
@@ -570,7 +567,7 @@ function setupChat() {
         const text = chatInput.value.trim().substring(0, 50);
         if (!text || !nickname) return;
         try {
-            await sql`INSERT INTO chat_messages (nickname, message) VALUES (${nickname}, ${text})`;
+            await sql`INSERT INTO chat_messages(nickname, message) VALUES(${nickname}, ${text})`;
             chatInput.value = '';
             fetchChat();
         } catch (e) { }
@@ -588,7 +585,7 @@ async function fetchChat() {
             LEFT JOIN users u ON LOWER(cm.nickname) = LOWER(u.nickname) 
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
             ORDER BY cm.created_at ASC
-        `;
+            `;
         const container = get('chat-messages');
         if (!container) return;
         container.innerHTML = '';
@@ -600,7 +597,7 @@ async function fetchChat() {
             const nameClass = isVipUser ? 'vip-rainbow-text chat-vip-name' : '';
             const crown = isVipUser ? '👑 ' : '';
 
-            el.innerHTML = `<strong class="${nameClass}">${crown}${m.nickname}:</strong> ${m.message}`;
+            el.innerHTML = `< strong class="${nameClass}" > ${crown}${m.nickname}:</strong > ${m.message} `;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
@@ -621,8 +618,8 @@ function startHelperBot() {
         if (stains.length > 0) {
             const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
-            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
+            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30} px`;
+            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30} px`;
 
             setTimeout(() => {
                 if (target.parentElement) {
@@ -640,8 +637,8 @@ function startHelperBot() {
                 moveBot();
             }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
         } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+            botEl.style.left = `${Math.random() * (window.innerWidth - 60)} px`;
+            botEl.style.top = `${Math.random() * (window.innerHeight - 60)} px`;
             setTimeout(moveBot, 2000);
         }
     }
@@ -696,7 +693,7 @@ function showUpgradeOptions() {
     selectedCards.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'upgrade-card';
-        cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
+        cardEl.innerHTML = `< h3 > ${card.title}</h3 > <p>${card.desc}</p>`;
         cardEl.onclick = () => {
             card.action();
             modal.classList.add('hidden');
@@ -739,9 +736,9 @@ function createStain(isBoss = false) {
 
     let health = isBoss ? 1500 : 100;
     const size = isBoss ? 250 : (Math.random() * 80 + 40);
-    stain.style.width = `${size}px`; stain.style.height = `${size}px`;
-    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
-    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
+    stain.style.width = `${size} px`; stain.style.height = `${size} px`;
+    stain.style.left = `${Math.random() * (window.innerWidth - size)} px`;
+    stain.style.top = `${Math.random() * (window.innerHeight - size)} px`;
     stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
     stain.dataset.health = health; stain.dataset.maxHealth = health;
     if (isBoss) stain.innerHTML = '<div class="boss-title">BOSS</div>';
@@ -827,7 +824,7 @@ function createParticles(x, y, color) {
     const container = get('canvas-container');
     for (let i = 0; i < 4; i++) {
         const p = document.createElement('div');
-        p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
+        p.style.position = 'absolute'; p.style.left = `${x} px`; p.style.top = `${y} px`;
         p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
         p.style.borderRadius = '50%'; p.style.pointerEvents = 'none';
         container.appendChild(p);
@@ -835,7 +832,7 @@ function createParticles(x, y, color) {
         const vel = Math.random() * 40;
         p.animate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
-            { transform: `translate(${Math.cos(angle) * vel}px,${Math.sin(angle) * vel}px) scale(0)`, opacity: 0 }
+            { transform: `translate(${Math.cos(angle) * vel}px, ${Math.sin(angle) * vel}px) scale(0)`, opacity: 0 }
         ], { duration: 600 }).onfinish = () => p.remove();
     }
 }
@@ -896,7 +893,7 @@ window.addEventListener('load', async () => {
     }
     if (userEmail) {
         try {
-            const uData = await sql`SELECT score, survival_time, best_score, best_survival_time FROM users WHERE email = ${userEmail}`;
+            const uData = await sql`SELECT score, survival_time, best_score, best_survival_time FROM users WHERE email = ${userEmail} `;
             if (uData.length > 0) {
                 score = uData[0].score;
                 lastBestScore = {
