@@ -332,11 +332,16 @@ async function fetchLeaderboard() {
             SELECT nickname, 
                    GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
                    CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
+                   CASE 
+                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
+                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
+                       ELSE 0 
+                   END as d_efficiency,
                    is_vip
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
-            ORDER BY d_score DESC, d_time ASC
+            ORDER BY d_efficiency DESC, d_score DESC
             LIMIT 10
         `;
 
@@ -367,15 +372,15 @@ function updateMiniLeaderboardUI(players) {
         item.className = 'mini-lb-item';
         if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
 
-        const scoreVal = entry.d_score || 0;
-        const timeVal = entry.d_time || 0;
-        const eff = scoreVal > 0 ? (timeVal / scoreVal).toFixed(2) : '0.00';
+        const scoreVal = parseFloat(entry.d_score || 0);
+        const timeVal = parseFloat(entry.d_time || 0);
+        const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
 
         item.innerHTML = `
-            < div class="mini-lb-info" >
+            <div class="mini-lb-info">
                 <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700; font-weight: 800;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
-                <span class="mini-lb-stat">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
-            </div >
+                <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}წ)</span>
+            </div>
             <span class="mini-lb-score">${Math.floor(scoreVal)} ✨</span>
         `;
         list.appendChild(item);
@@ -715,7 +720,7 @@ function startHelperBot() {
 }
 
 const UPGRADE_POOL = [
-    { id: 'speed', title: "⚡ ლაქების აჩქარება", desc: "+20% ლაქების სიხშირე", prob: 0.15, action: () => { intervalMultiplier *= 0.8; upgradeCounts.speed++; } },
+    { id: 'speed', title: "⚡ პროგრესი", desc: "+10% სირთულე", prob: 0.15, action: () => { intervalMultiplier *= 0.9; upgradeCounts.speed++; } },
     { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+30% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.3; upgradeCounts.helperSpeed++; } },
     { id: 'helperSpawn', title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => { startHelperBot(); upgradeCounts.helperSpawn++; } },
     { id: 'radius', title: "📏 რადიუსი S", desc: "+30% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.3; upgradeCounts.radius++; updatePowerStats(); } },
