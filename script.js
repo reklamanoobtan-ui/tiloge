@@ -693,12 +693,13 @@ function showUpgradeOptions() {
     selectedCards.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'upgrade-card';
-        cardEl.innerHTML = `< h3 > ${card.title}</h3 > <p>${card.desc}</p>`;
+        cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
         cardEl.onclick = () => {
             card.action();
             modal.classList.add('hidden');
             isUpgradeOpen = false;
             updateUIValues();
+            scheduleNextStain(); // Resume spawn loop
         };
         container.appendChild(cardEl);
     });
