@@ -581,7 +581,7 @@ function initUI() {
         opt.onclick = () => {
             const theme = opt.dataset.theme;
             currentTheme = theme;
-            document.body.className = `theme - ${theme} `;
+            document.body.className = `theme-${theme}`;
             localStorage.setItem('tilo_theme', theme);
             document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
@@ -589,6 +589,90 @@ function initUI() {
         if (opt.dataset.theme === currentTheme) opt.classList.add('active');
     });
 
+    setupAdmin();
+}
+
+function setupAdmin() {
+    const adminBtn = document.getElementById('admin-panel-btn');
+    const adminModal = document.getElementById('admin-modal');
+    if (!adminBtn || !adminModal) return;
+
+    if (nickname === 'unoobi') {
+        adminBtn.classList.remove('hidden');
+    }
+
+    adminBtn.onclick = () => adminModal.classList.remove('hidden');
+    document.getElementById('close-admin').onclick = () => adminModal.classList.add('hidden');
+
+    const statusMsg = document.getElementById('admin-status');
+    const setStatus = (msg, color = 'green') => {
+        if (statusMsg) {
+            statusMsg.textContent = msg;
+            statusMsg.style.color = color;
+            setTimeout(() => statusMsg.textContent = '', 3000);
+        }
+    };
+
+    const getVal = (id) => document.getElementById(id).value.trim();
+
+    document.getElementById('admin-give-coins').onclick = async () => {
+        const nick = getVal('admin-target-nick');
+        if (!nick) return;
+        try {
+            await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${nick}`;
+            setStatus(`1000 Coins sent to ${nick}`);
+        } catch (e) { setStatus('Error', 'red'); }
+    };
+
+    document.getElementById('admin-give-vip').onclick = async () => {
+        const nick = getVal('admin-target-nick');
+        if (!nick) return;
+        try {
+            await sql`UPDATE users SET is_vip = true WHERE nickname = ${nick}`;
+            setStatus(`VIP granted to ${nick}`);
+        } catch (e) { setStatus('Error', 'red'); }
+    };
+
+    document.getElementById('admin-ban-user').onclick = async () => {
+        const nick = getVal('admin-target-nick');
+        if (!nick) return;
+        if (confirm(`Ban ${nick}? This will reset their stats.`)) {
+            try {
+                await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${nick}`;
+                setStatus(`${nick} has been reset/banned`, 'red');
+            } catch (e) { setStatus('Error', 'red'); }
+        }
+    };
+
+    document.getElementById('admin-reset-lb').onclick = async () => {
+        if (confirm("Reset Leaderboard for everyone?")) {
+            try {
+                await sql`UPDATE users SET score = 0, survival_time = 0`;
+                setStatus("Leaderboard reset successful");
+                fetchLeaderboard();
+            } catch (e) { setStatus('Error', 'red'); }
+        }
+    };
+
+    document.getElementById('admin-send-broadcast').onclick = async () => {
+        const msg = getVal('admin-broadcast-msg');
+        if (!msg) return;
+        try {
+            await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+            document.getElementById('admin-broadcast-msg').value = '';
+            setStatus("Broadcast sent");
+        } catch (e) { setStatus('Error', 'red'); }
+    };
+
+    document.getElementById('admin-save-config').onclick = async () => {
+        const speed = document.getElementById('admin-global-speed').value;
+        try {
+            // Need table for this, assume it exists or fail gracefully
+            await sql`INSERT INTO system_config (key, value) VALUES ('global_speed', ${speed})
+                      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
+            setStatus(`Global speed saved: ${speed}`);
+        } catch (e) { setStatus('Error saving config', 'red'); }
+    };
 }
 
 function setupChat() {
