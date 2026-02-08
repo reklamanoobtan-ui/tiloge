@@ -711,76 +711,66 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    let base = 2500;
-    if (score > 50) base = 2000;
-    if (score > 150) base = 1500;
-    if (score > 300) base = 1000;
-    if (score > 500) base = 800;
-    if (score > 1000) base = 500;
-    return base * intervalMultiplier;
+    // Progressive difficulty - starts at 2000ms, gets faster with score
+    return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
 }
 
-function createStain() {
+function createStain(isBoss = false) {
     if (!gameActive) return;
-
-    // Check pause/tab hidden
-    if (document.hidden) return;
-
-    if (document.querySelectorAll('.stain').length >= 15 && !defeatTimer) {
-        showStatusUpdate("⚠️ ძალიან ბევრი ლაქაა! (15)");
-        defeatTimer = setTimeout(() => {
-            if (document.querySelectorAll('.stain').length >= 15) {
-                gameOver();
-            }
-        }, 15000);
-    } else if (document.querySelectorAll('.stain').length < 15 && defeatTimer) {
-        clearTimeout(defeatTimer);
-        defeatTimer = null;
-    }
+    const container = get('canvas-container');
+    if (!container) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
+    if (isBoss) stain.classList.add('boss-stain');
 
-    // Size variation: 60 to 120px
-    const size = 60 + Math.random() * 60;
+    let health = isBoss ? 1500 : 100;
+    const size = isBoss ? 250 : (Math.random() * 80 + 40);
     stain.style.width = `${size}px`;
     stain.style.height = `${size}px`;
-
-    // Position (safe padding)
-    const x = Math.random() * (window.innerWidth - 100);
-    const y = Math.random() * (window.innerHeight - 100);
-    stain.style.left = `${x}px`;
-    stain.style.top = `${y}px`;
-
-    // Color variation
-    const hue = Math.floor(Math.random() * 360);
-    stain.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-
-    // Health by size and score
-    let health = size * 30 + (score * 5);
-    stain.dataset.maxHealth = health;
+    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
+    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
+    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
     stain.dataset.health = health;
+    stain.dataset.maxHealth = health;
 
-    // Boss chance
-    if (score > 500 && Math.random() < 0.05) {
-        stain.classList.add('boss-stain');
-        health *= 5; // 5x health
-        stain.dataset.maxHealth = health;
-        stain.dataset.health = health;
-        stain.style.width = '200px';
-        stain.style.height = '200px';
+    if (isBoss) {
         stain.innerHTML = '<div class="boss-title">BOSS</div>';
         bossCount++;
     }
 
-    document.getElementById('canvas-container').appendChild(stain);
+    container.appendChild(stain);
+    checkDefeatCondition();
 }
-let spawnTimeout;
-function scheduleNextStain() {
-    if (isUpgradeOpen || !gameActive) return;
-    createStain();
-    spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());
+
+function checkDefeatCondition() {
+    if (!gameActive) return;
+    const totalCount = document.querySelectorAll('.stain').length;
+    const bossCountUI = document.querySelectorAll('.boss-stain').length;
+    const inactiveTime = (Date.now() - lastActivityTime) / 1000;
+
+    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20;
+
+    if (isCrisis && !defeatTimer) {
+        let timeLeft = 60;
+        defeatTimer = setInterval(() => {
+            if (!gameActive) { clearInterval(defeatTimer); defeatTimer = null; return; }
+            timeLeft--;
+            if (timeLeft <= 0) { clearInterval(defeatTimer); gameOver(); }
+            else if (timeLeft % 5 === 0) {
+                let reason = "ჭუჭყი ბევრია!";
+                if (inactiveTime > 30) reason = "არააქტიური ხარ!";
+                else if (bossCountUI >= 20) reason = "ბოსების შემოსევა!";
+                showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
+            }
+        }, 1000);
+    } else if (!isCrisis && defeatTimer) {
+        clearInterval(defeatTimer);
+        defeatTimer = null;
+        showStatusUpdate("კრიზისი დაძლეულია! ✅");
+    }
 }
+
 
 function gameOver() {
     gameActive = false;
@@ -835,8 +825,10 @@ setInterval(() => {
     if (!gameActive) return;
     if (currentX && currentY) {
         checkCleaning(currentX, currentY);
+        lastActivityTime = Date.now(); // Track activity for crisis detection
     }
 }, 50); // Check every 50ms for smooth auto-cleaning
+
 
 
 function moveCloth(x, y) {
@@ -950,7 +942,21 @@ function startGameSession() {
     // Start Loops
     gameActive = true;
     startTime = Date.now();
+    lastActivityTime = Date.now(); // Initialize activity tracking
     scheduleNextStain();
+
+    // Boss spawning interval (every 60 seconds)
+    setInterval(() => {
+        if (gameActive) {
+            const bossSpawnCount = Math.floor(score / 500) + 1;
+            for (let i = 0; i < bossSpawnCount; i++) {
+                createStain(true); // Spawn boss
+            }
+        }
+    }, 60000);
+
+    // Defeat condition check
+    setInterval(checkDefeatCondition, 1000);
 
     // Sync loop
     setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
@@ -958,3 +964,11 @@ function startGameSession() {
     fetchLeaderboard();
     setInterval(fetchLeaderboard, 5000);
 }
+
+let spawnTimeout;
+function scheduleNextStain() {
+    if (isUpgradeOpen || !gameActive) return;
+    createStain();
+    spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());
+}
+
