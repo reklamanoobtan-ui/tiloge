@@ -325,28 +325,31 @@ async function syncUserData(force = false) {
 }
 
 async function fetchLeaderboard() {
-    console.log("Leaderboard: Fetching data...");
+    console.log("Leaderboard: Starting fetch...");
+    const list = get('mini-lb-list');
     try {
-        // Fallback to 'score' if 'best_score' is not yet set (during migration transition)
         const result = await sql`
             SELECT nickname, 
-                   GREATEST(COALESCE(best_score, 0), score) as display_score, 
-                   CASE WHEN best_score > 0 THEN best_survival_time ELSE survival_time END as display_time,
+                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
+                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
                    is_vip
             FROM users 
-            WHERE nickname IS NOT NULL AND (score > 0 OR best_score > 0)
-            ORDER BY display_score DESC
+            WHERE nickname IS NOT NULL 
+              AND nickname != ''
+              AND (COALESCE(score, 0) > 0 OR COALESCE(best_score, 0) > 0)
+            ORDER BY (CASE WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
+                      THEN CAST(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END AS FLOAT) / GREATEST(COALESCE(best_score, 0), COALESCE(score, 0))
+                      ELSE 999999 END) ASC
             LIMIT 10
         `;
 
-        console.log("Leaderboard: Data received:", result);
+        console.log("Leaderboard: Received " + result.length + " players");
         updateMiniLeaderboardUI(result);
 
-        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '60 seconds'`;
+        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '2 minutes'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
     } catch (e) {
         console.error("Leaderboard Error:", e);
-        const list = get('mini-lb-list');
         if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
     }
 }
@@ -356,28 +359,19 @@ function updateMiniLeaderboardUI(players) {
     if (!list) return;
 
     if (!players || players.length === 0) {
-        console.warn("Leaderboard: No players found in query results.");
-        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">ჯერჯერობით ცარიელია...</p>';
+        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">მოთამაშეები ვერ მოიძებნა</p>';
         return;
     }
 
     list.innerHTML = '';
-
-    // Calculate efficiency on the fly for display
-    const sorted = [...players].sort((a, b) => {
-        const effA = a.display_score > 0 ? a.display_time / a.display_score : 999999;
-        const effB = b.display_score > 0 ? b.display_time / b.display_score : 999999;
-        return effA - effB; // Lower is better (Efficiency)
-    });
-
-    sorted.forEach((entry, i) => {
-        const isMe = entry.nickname === nickname;
+    players.forEach((entry, i) => {
+        const isMe = nickname && entry.nickname === nickname;
         const item = document.createElement('div');
         item.className = 'mini-lb-item';
-        if (isMe) item.style.backgroundColor = "rgba(255, 215, 0, 0.15)";
+        if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
 
-        const scoreVal = entry.display_score || 0;
-        const timeVal = entry.display_time || 0;
+        const scoreVal = entry.d_score || 0;
+        const timeVal = entry.d_time || 0;
         const eff = scoreVal > 0 ? (timeVal / scoreVal).toFixed(2) : '0.00';
 
         item.innerHTML = `
