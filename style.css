@@ -156,6 +156,48 @@ body {
     pointer-events: none;
 }
 
+/* Skins */
+.skin-fire {
+    background: linear-gradient(45deg, #ff4d4d, #ffcc00) !important;
+    box-shadow: 0 0 30px rgba(255, 77, 77, 0.5) !important;
+}
+
+.skin-ice {
+    background: linear-gradient(45deg, #4facfe, #00f2fe) !important;
+    box-shadow: 0 0 30px rgba(79, 172, 254, 0.5) !important;
+}
+
+.skin-jungle {
+    background: linear-gradient(45deg, #11998e, #38ef7d) !important;
+    box-shadow: 0 0 30px rgba(56, 239, 125, 0.5) !important;
+}
+
+.skin-electric {
+    background: linear-gradient(45deg, #6a11cb, #2575fc) !important;
+    box-shadow: 0 0 30px rgba(106, 17, 203, 0.5) !important;
+}
+
+.skin-rainbow {
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important;
+    background-size: 400% 400% !important;
+    animation: rainbow-bg 5s linear infinite !important;
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.4) !important;
+}
+
+@keyframes rainbow-bg {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .header-ui {
     position: fixed;
     top: 0;
@@ -505,23 +547,19 @@ body {
 /* Helper Bot */
 .helper-bot {
     position: absolute;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    width: 50px;
+    height: 50px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
     border-radius: 50%;
-    box-shadow: 0 0 30px rgba(79, 172, 254, 0.6);
+    box-shadow: 0 0 20px rgba(79, 172, 254, 0.4);
     z-index: 5;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--glass-border);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 1s ease-in-out, top 1s ease-in-out;
-}
-
-.helper-bot::before {
-    content: '👁️👁️';
-    font-size: 0.9rem;
-    filter: drop-shadow(0 0 5px white);
+    font-size: 1.5rem;
 }
 
 .helper-bot.vip-rainbow-trail {

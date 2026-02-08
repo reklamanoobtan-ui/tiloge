@@ -47,7 +47,10 @@ let upgradeCounts = {
     'bot': 0,       // Max 5
     'radius': 0,    // Max 5
     'strength': 0,  // Max 5
-    'karcher': 0    // Max 1
+    'karcher': 0,   // Max 1
+    'bomb': 0,      // Max 1
+    'coin_buff': 0, // Max 5
+    'magnet': 0     // Max 1
 };
 
 // Helper Bot State (Roguelike only)
@@ -83,7 +86,7 @@ function updatePowerStats() {
 
     // Apply Current Skin
     if (clothEl) {
-        clothEl.classList.remove('skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric');
+        clothEl.classList.remove('skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric', 'skin-rainbow');
         if (currentSkin !== 'default') clothEl.classList.add(`skin-${currentSkin}`);
     }
 }
@@ -542,6 +545,7 @@ function initUI() {
     get('buy-skin-ice').onclick = () => handleSkinAction('ice');
     get('buy-skin-jungle').onclick = () => handleSkinAction('jungle');
     get('buy-skin-electric').onclick = () => handleSkinAction('electric');
+    get('buy-skin-rainbow').onclick = () => handleSkinAction('rainbow');
 
     // UI Toggle Logic
     get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
@@ -885,10 +889,10 @@ function setupChat() {
 async function fetchChat() {
     try {
         const msgs = await sql`
-            SELECT DISTINCT ON (cm.id) cm.*, u.is_vip 
-            FROM chat_messages cm 
-            LEFT JOIN users u ON cm.nickname = u.nickname 
-            WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
+            SELECT DISTINCT ON (cm.id) cm.*, u.is_vip
+            FROM chat_messages cm
+            LEFT JOIN users u ON cm.nickname = u.nickname
+            WHERE cm.created_at > NOW() - INTERVAL '30 seconds'
             ORDER BY cm.id, cm.created_at ASC
     `;
         const container = get('chat-messages');
@@ -914,6 +918,7 @@ function startHelperBot() {
     const container = get('canvas-container');
     const botEl = document.createElement('div');
     botEl.className = 'helper-bot';
+    botEl.innerHTML = '🤖';
     if (isVip) botEl.classList.add('vip-rainbow-trail');
     container.appendChild(botEl);
 
@@ -1013,7 +1018,7 @@ function applyUpgrade(id) {
         case 'strength': strengthMultiplier *= 1.25; updatePowerStats(); break;
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
-        case 'coin_buff': coinBonusMultiplier += 0.5; break;
+        case 'coin_buff': coinBonusMultiplier += 0.1; break;
         case 'magnet': hasMagnetUpgrade = true; break;
     }
     updateUIValues();
@@ -1037,15 +1042,16 @@ function showUpgradeOptions() {
         { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
         { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
         { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
-        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+50% ქოინების მოგება', type: 'multi' },
+        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+10% ქოინების მოგება (Max 5)', type: 'multi' },
         { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' }
     ];
 
     // Filter available upgrades based on limits
     const available = UPGRADE_POOL.filter(u => {
-        if (u.id === 'karcher') return upgradeCounts[u.id] < 1;
-        // Strict limit of 5 per repeatable upgrade (1,2,3,4,5)
-        return upgradeCounts[u.id] < 5;
+        if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
+        if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 15;
+        // Strict limit of 5 per repeatable upgrade
+        return (upgradeCounts[u.id] || 0) < 5;
     });
 
     // If no upgrades available, close and return
@@ -1176,11 +1182,11 @@ function createStain(isBoss = false, isTriangle = false) {
         stain.classList.add('boss-stain');
         stain.classList.add('pulse-animation');
 
-        // 10,000 score scaling
+        // Every 10,000 score scaling (doubles at each milestone)
+        let scalingFactor = Math.pow(2, Math.floor(score / 10000));
         let baseHealth = isTriangle ? 4500 : 1500;
-        if (score >= 10000) baseHealth *= 2;
 
-        health = baseHealth;
+        health = baseHealth * scalingFactor;
         size = isTriangle ? 300 : 250;
 
         if (isTriangle) {
