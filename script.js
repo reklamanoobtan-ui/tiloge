@@ -1175,7 +1175,8 @@ function checkDefeatCondition() {
     const triangleBossCountUI = document.querySelectorAll('.triangle-boss').length;
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
-    const isCrisis = totalCount >= 200 || inactiveTime > 30 || bossCountUI >= 20 || triangleBossCountUI >= 10;
+    // Trigger crisis only if screen is actually dirty AND player is inactive
+    const isCrisis = totalCount >= 200 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 20 || triangleBossCountUI >= 10;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = 60;
@@ -1234,6 +1235,7 @@ function gameOver() {
 // User Interaction (Mouse/Touch)
 document.addEventListener('mousemove', (e) => {
     if (!gameActive) return;
+    lastActivityTime = Date.now();
     currentX = e.clientX;
     currentY = e.clientY;
     moveCloth(currentX, currentY);
@@ -1241,6 +1243,7 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('touchmove', (e) => {
     if (!gameActive) return;
+    lastActivityTime = Date.now();
     e.preventDefault();
     currentX = e.touches[0].clientX;
     currentY = e.touches[0].clientY;
