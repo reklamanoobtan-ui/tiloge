@@ -418,13 +418,27 @@ function initUI() {
         };
     }
 
-    // Chat Collapse Toggle
+    // End Game Button
+    get('end-game-btn').onclick = () => {
+        if (confirm("ნამდვილად გსურთ თამაშის დასრულება?")) {
+            gameOver();
+        }
+    };
+
+    // Chat Side Toggle
+    const chatSideToggle = get('chat-side-toggle');
     const chatToggleBtn = get('chat-toggle-btn');
     const globalChat = get('global-chat');
+
+    if (chatSideToggle && globalChat) {
+        chatSideToggle.onclick = () => {
+            globalChat.classList.toggle('side-collapsed');
+        };
+    }
+
     if (chatToggleBtn && globalChat) {
         chatToggleBtn.onclick = () => {
-            globalChat.classList.toggle('collapsed');
-            chatToggleBtn.textContent = globalChat.classList.contains('collapsed') ? '+' : '−';
+            globalChat.classList.add('side-collapsed');
         };
     }
 

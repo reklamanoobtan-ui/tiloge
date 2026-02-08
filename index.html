@@ -38,35 +38,38 @@
             <div class="stat-box">🟢 <span id="online-count">1</span> ონლაინ</div>
             <div id="vip-tag" class="stat-box vip-hidden">👑 VIP</div>
         </div>
-        <div class="info-text">
-            <h1 id="diff-status">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
-        </div>
-        <div class="actions">
-            <button id="shop-btn" class="glass-btn">🛒 მაღაზია</button>
-            <button id="settings-btn" class="glass-btn">⚙️ პარამეტრები</button>
-            <button id="themes-btn" class="glass-btn">🖼️ თემები</button>
-            <button id="ratings-btn" class="glass-btn">📊 რეიტინგები</button>
-            <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
-            <!-- Removed Donate/VIP Buttons -->
-
-            <button id="ui-toggle-btn" class="glass-btn" style="background: rgba(255, 255, 255, 0.15);">👁️ UI</button>
-        </div>
+        <h1 id="diff-status">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
+        <button id="end-game-btn" class="glass-btn"
+            style="margin-top: 10px; background: rgba(255, 77, 77, 0.2); color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">🏁
+            თამაშის დასრულება</button>
     </div>
+    <div class="actions">
+        <button id="shop-btn" class="glass-btn">🛒 მაღაზია</button>
+        <button id="settings-btn" class="glass-btn">⚙️ პარამეტრები</button>
+        <button id="themes-btn" class="glass-btn">🖼️ თემები</button>
+        <button id="ratings-btn" class="glass-btn">📊 რეიტინგები</button>
+        <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
+        <!-- Removed Donate/VIP Buttons -->
 
+        <button id="ui-toggle-btn" class="glass-btn" style="background: rgba(255, 255, 255, 0.15);">👁️ UI</button>
+    </div>
 
     <!-- Global Chat -->
     <div id="global-chat" class="chat-container glass">
-        <div class="chat-header">
-            <span>💬 ჩატი</span>
-            <button id="chat-toggle-btn" class="chat-toggle">−</button>
-        </div>
-        <div id="chat-messages" class="chat-messages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="გაგზავნე მესიჯი..." maxlength="50">
-            <button id="send-chat-btn">➤</button>
-        </div>
-        <div style="font-size: 0.65rem; color: #888; text-align: center; margin-top: 5px;">
-            შეტყობინებები იშლება 10 წამში
+        <button id="chat-side-toggle" class="chat-toggle-side">💬</button>
+        <div class="chat-content-wrapper">
+            <div class="chat-header">
+                <span>💬 ჩატი</span>
+                <button id="chat-toggle-btn" class="chat-toggle">✕</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="გაგზავნე მესიჯი..." maxlength="50">
+                <button id="send-chat-btn">➤</button>
+            </div>
+            <div style="font-size: 0.65rem; color: #888; text-align: center; margin-top: 5px; padding-bottom: 10px;">
+                შეტყობინებები იშლება 10 წამში
+            </div>
         </div>
     </div>
 
