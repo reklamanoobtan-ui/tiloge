@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <div id="output">Loading...</div>
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+        const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
+
+        async function run() {
+            try {
+                const users = await sql`SELECT nickname, score, best_score, last_seen FROM users WHERE nickname IS NOT NULL LIMIT 20`;
+                document.getElementById('output').textContent = JSON.stringify(users, null, 2);
+            } catch (e) {
+                document.getElementById('output').textContent = "Error: " + e.message;
+            }
+        }
+        run();
+    </script>
+</body>
+
+</html>

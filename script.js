@@ -314,25 +314,29 @@ async function syncUserData(force = false) {
 }
 
 async function fetchLeaderboard() {
+    console.log("Leaderboard: Fetching data...");
     try {
+        // Fallback to 'score' if 'best_score' is not yet set (during migration transition)
         const result = await sql`
-            SELECT nickname, best_score, best_survival_time, is_vip,
-            CASE WHEN best_score > 0 THEN CAST(best_survival_time AS FLOAT) / best_score ELSE 999999 END as efficiency
+            SELECT nickname, 
+                   GREATEST(COALESCE(best_score, 0), score) as display_score, 
+                   CASE WHEN best_score > 0 THEN best_survival_time ELSE survival_time END as display_time,
+                   is_vip
             FROM users 
-            WHERE nickname IS NOT NULL 
-              AND best_score > 0
-              AND last_seen > NOW() - INTERVAL '14 days'
-            ORDER BY efficiency ASC, best_score DESC
+            WHERE nickname IS NOT NULL AND (score > 0 OR best_score > 0)
+            ORDER BY display_score DESC
             LIMIT 10
         `;
+
+        console.log("Leaderboard: Data received:", result);
         updateMiniLeaderboardUI(result);
 
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '60 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
     } catch (e) {
-        console.error("LB Fetch Error:", e);
+        console.error("Leaderboard Error:", e);
         const list = get('mini-lb-list');
-        if (list) list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.7rem; color: #ff4d4d;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
+        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
     }
 }
 
@@ -341,26 +345,36 @@ function updateMiniLeaderboardUI(players) {
     if (!list) return;
 
     if (!players || players.length === 0) {
+        console.warn("Leaderboard: No players found in query results.");
         list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">ჯერჯერობით ცარიელია...</p>';
         return;
     }
 
     list.innerHTML = '';
-    players.forEach((entry, i) => {
+
+    // Calculate efficiency on the fly for display
+    const sorted = [...players].sort((a, b) => {
+        const effA = a.display_score > 0 ? a.display_time / a.display_score : 999999;
+        const effB = b.display_score > 0 ? b.display_time / b.display_score : 999999;
+        return effA - effB; // Lower is better (Efficiency)
+    });
+
+    sorted.forEach((entry, i) => {
         const isMe = entry.nickname === nickname;
         const item = document.createElement('div');
         item.className = 'mini-lb-item';
         if (isMe) item.style.backgroundColor = "rgba(255, 215, 0, 0.15)";
 
-        const timeVal = entry.best_survival_time || 0;
-        const eff = entry.best_score > 0 ? (timeVal / entry.best_score).toFixed(2) : '0.00';
+        const scoreVal = entry.display_score || 0;
+        const timeVal = entry.display_time || 0;
+        const eff = scoreVal > 0 ? (timeVal / scoreVal).toFixed(2) : '0.00';
 
         item.innerHTML = `
             <div class="mini-lb-info">
-                <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
+                <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700; font-weight: 800;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
                 <span class="mini-lb-stat">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
             </div>
-            <span class="mini-lb-score">${Math.floor(entry.best_score)} ✨</span>
+            <span class="mini-lb-score">${Math.floor(scoreVal)} ✨</span>
         `;
         list.appendChild(item);
     });
