@@ -35,14 +35,19 @@ let gameActive = true;
 let isUpgradeOpen = false;
 let lastActivityTime = Date.now();
 
-// Upgrade tracking
+// Session tracking for sidebar
+let bossesDefeated = 0;
+let totalStainsCleanedRel = 0;
+let totalRepeatablePicked = 0; // Cap at 10
+
+// Upgrades Tracking
 let upgradeCounts = {
-    speed: 0,
-    helperSpeed: 0,
-    helperSpawn: 0,
-    radius: 0,
-    strength: 0,
-    karcher: 0
+    'diff': 0,      // Max 5
+    'speed': 0,     // Max 5
+    'bot': 0,       // Max 5
+    'radius': 0,    // Max 5
+    'strength': 0,  // Max 5
+    'karcher': 0    // Max 1
 };
 
 // Helper Bot State (Roguelike only)
@@ -254,11 +259,11 @@ async function fetchSharedScores() {
     try {
         grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
 
-        // Fetch shared scores - Limit to 20 and only visible for 30 seconds
+        // Fetch shared scores - Limit to 20 and only visible for 60 seconds
         const result = await sql`
             SELECT nickname, score, survival_time, efficiency, is_vip, shared_at
             FROM shared_scores
-            WHERE shared_at > NOW() - INTERVAL '30 seconds'
+            WHERE shared_at > NOW() - INTERVAL '1 minute'
             ORDER BY shared_at DESC
             LIMIT 20
         `;
@@ -282,7 +287,7 @@ async function fetchSharedScores() {
             // Calc remaining time for the card
             const sharedAt = new Date(player.shared_at).getTime();
             const nowTime = Date.now();
-            const expiresAt = sharedAt + 30000;
+            const expiresAt = sharedAt + 60000;
             const remaining = Math.max(0, Math.ceil((expiresAt - nowTime) / 1000));
 
             card.innerHTML = `
@@ -338,6 +343,15 @@ async function shareScore(scoreVal, timeVal) {
         get('restricted-modal').classList.remove('hidden');
         return;
     }
+
+    // Limit check
+    try {
+        const countRes = await sql`SELECT COUNT(*) as count FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute'`;
+        if (countRes[0].count >= 20) {
+            showStatusUpdate('ველის ლიმიტი (20) შევსებულია! 🚫');
+            return;
+        }
+    } catch (e) { }
 
     // Rate Limit Check: 5 minutes
     const lastShare = parseInt(localStorage.getItem('tilo_last_share')) || 0;
@@ -435,7 +449,38 @@ function updateScore(points) {
 
         updateUIValues();
         syncUserData();
+        updateStatsSidebar();
     }
+}
+
+function updateStatsSidebar() {
+    get('session-bosses').textContent = bossesDefeated;
+    get('session-cleaned').textContent = totalStainsCleanedRel;
+
+    const list = get('active-upgrades-list');
+    list.innerHTML = '';
+
+    const names = {
+        'diff': 'სირთულე (⚡)',
+        'speed': 'რობოტის სიჩქარე (🤖)',
+        'bot': 'რობოტების რაოდენობა (🤖)',
+        'radius': 'წმენდის რადიუსი (📏)',
+        'strength': 'წმენდის ძალა (💪)',
+        'karcher': 'კერხერი (🚿)'
+    };
+
+    let hasAny = false;
+    for (const [id, count] of Object.entries(upgradeCounts)) {
+        if (count > 0) {
+            hasAny = true;
+            const item = document.createElement('div');
+            item.className = 'upgrade-stat-item';
+            const cap = (id === 'karcher') ? 1 : 5;
+            item.innerHTML = `<span>${names[id]}</span> <span>${count}/${cap}</span>`;
+            list.appendChild(item);
+        }
+    }
+    if (!hasAny) list.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
 }
 
 
@@ -445,7 +490,8 @@ function showStatusUpdate(text) {
     ds.textContent = text;
     ds.style.color = '#ffcc00';
     setTimeout(() => {
-        ds.textContent = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
+        const baseMsg = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
+        ds.textContent = baseMsg;
         ds.style.color = '';
     }, 2000);
 }
@@ -850,95 +896,135 @@ function startHelperBot() {
 
     function moveBot() {
         if (!botEl.parentElement || !gameActive) return;
+
         const stains = document.querySelectorAll('.stain');
         if (stains.length > 0) {
-            const target = stains[Math.floor(Math.random() * stains.length)];
-            const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
-            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
+            // Find closest stain
+            let closest = null;
+            let minDist = Infinity;
+            const botRect = botEl.getBoundingClientRect();
+            const bx = botRect.left + botRect.width / 2;
+            const by = botRect.top + botRect.height / 2;
 
-            setTimeout(() => {
-                if (target.parentElement) {
-                    let h = parseFloat(target.dataset.health);
-                    h -= 50;
-                    target.dataset.health = h;
-                    target.style.opacity = Math.max(0.2, h / parseFloat(target.dataset.maxHealth));
-                    if (h <= 0 && target.dataset.cleaning !== 'true') {
-                        target.dataset.cleaning = 'true';
-                        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, target.style.backgroundColor);
-                        setTimeout(() => target.remove(), 800);
-                        updateScore(target.classList.contains('boss-stain') ? 10 : 1);
-                    }
+            stains.forEach(s => {
+                const sRect = s.getBoundingClientRect();
+                const sx = sRect.left + sRect.width / 2;
+                const sy = sRect.top + sRect.height / 2;
+                const d = Math.hypot(bx - sx, by - sy);
+                if (d < minDist) {
+                    minDist = d;
+                    closest = s;
                 }
-                moveBot();
-            }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
+            });
+
+            if (closest) {
+                const rect = closest.getBoundingClientRect();
+                botEl.style.left = `${rect.left + rect.width / 2 - 30}px`;
+                botEl.style.top = `${rect.top + rect.height / 2 - 30}px`;
+
+                setTimeout(() => {
+                    if (closest.parentElement) {
+                        let h = parseFloat(closest.dataset.health);
+                        h -= 80; // Improved robot cleaning power
+                        closest.dataset.health = h;
+                        closest.style.opacity = Math.max(0.2, h / parseFloat(closest.dataset.maxHealth));
+                        if (h <= 0 && closest.dataset.cleaning !== 'true') {
+                            closest.dataset.cleaning = 'true';
+                            createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, closest.style.backgroundColor);
+
+                            const isBoss = closest.classList.contains('boss-stain');
+                            if (isBoss) {
+                                bossesDefeated++;
+                                updateScore(10);
+                            } else {
+                                totalStainsCleanedRel++;
+                                updateScore(1);
+                            }
+
+                            setTimeout(() => closest.remove(), 400); // Faster cleanup animation
+                        }
+                    }
+                    moveBot();
+                }, (1000 / helperSpeedMultiplier)); // Faster base transition
+            } else {
+                setTimeout(moveBot, 500);
+            }
         } else {
             botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
             botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
-
-            setTimeout(moveBot, 2000);
+            setTimeout(moveBot, 1000);
         }
     }
     moveBot();
 }
 
-const UPGRADE_POOL = [
-    { id: 'speed', title: "⚡ სირთულე", desc: "+10% სირთულე", prob: 0.15, action: () => { intervalMultiplier *= 0.9; upgradeCounts.speed++; } },
-    { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+30% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.3; upgradeCounts.helperSpeed++; } },
-    { id: 'helperSpawn', title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => { startHelperBot(); upgradeCounts.helperSpawn++; } },
-    { id: 'radius', title: "📏 რადიუსი S", desc: "+30% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.3; upgradeCounts.radius++; updatePowerStats(); } },
-    { id: 'strength', title: "💪 ტილოს ძალა", desc: "+30% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.3; upgradeCounts.strength++; updatePowerStats(); } },
-    { id: 'karcher', title: "🚿 კერხერი", desc: "ორმაგი სიმძლავრე და რადიუსი", prob: 0.03, action: () => { strengthMultiplier *= 2; radiusMultiplier *= 2; upgradeCounts.karcher++; updatePowerStats(); } },
-];
+function applyUpgrade(id) {
+    switch (id) {
+        case 'diff': intervalMultiplier *= 0.85; break; // Balanced
+        case 'speed': helperSpeedMultiplier *= 1.25; break;
+        case 'bot': startHelperBot(); break;
+        case 'radius': radiusMultiplier *= 1.25; updatePowerStats(); break;
+        case 'strength': strengthMultiplier *= 1.25; updatePowerStats(); break;
+        case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
+    }
+    updateUIValues();
+    scheduleNextStain(); // Resume spawn loop
+}
+
+function closeUpgradeModal() {
+    get('upgrade-modal').classList.add('hidden');
+    isUpgradeOpen = false;
+}
 
 function showUpgradeOptions() {
-    const modal = get('upgrade-modal');
-    const container = get('upgrade-cards-container');
-    if (!modal || !container) return;
-
     isUpgradeOpen = true;
-    container.innerHTML = '';
-    modal.classList.remove('hidden');
+    get('upgrade-modal').classList.remove('hidden');
 
-    let availableUpgrades = UPGRADE_POOL.filter(u => {
-        if (u.id === 'karcher') return upgradeCounts.karcher < 1;
-        if (u.id === 'helperSpawn') return upgradeCounts.helperSpawn < 10;
-        if (u.id === 'strength') return strengthMultiplier < 3.0;
-        if (u.id === 'radius') return radiusMultiplier < 3.0;
-        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0;
-        if (u.id === 'speed') return intervalMultiplier > 0.01; // Hide when reaching 0.01
-        return true;
+    const UPGRADE_POOL = [
+        { id: 'diff', icon: '⚡', title: 'სირთულე', desc: '+10% სირთულე', type: 'multi' },
+        { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: '+30% სისწრაფე', type: 'multi' },
+        { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
+        { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
+        { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
+        { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' }
+    ];
+
+    // Filter available upgrades based on limits
+    const available = UPGRADE_POOL.filter(u => {
+        if (u.id === 'karcher') return upgradeCounts[u.id] < 1;
+        // Strict limit of 5 per repeatable upgrade (1,2,3,4,5)
+        return upgradeCounts[u.id] < 5;
     });
 
-    if (availableUpgrades.length === 0) {
-        modal.classList.add('hidden');
-        isUpgradeOpen = false;
-        triggerEndgame();
+    // If no upgrades available, close and return
+    if (available.length === 0) {
+        closeUpgradeModal();
+        triggerEndgame(); // If no upgrades, trigger endgame
         return;
     }
 
-    let selectedCards = [];
-    let attempts = 0;
-    while (selectedCards.length < Math.min(3, availableUpgrades.length) && attempts < 50) {
-        const card = weightedRandom(availableUpgrades);
-        if (!selectedCards.some(c => c.id === card.id)) {
-            selectedCards.push(card);
-        }
-        attempts++;
-    }
+    const shuffled = available.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
 
-    selectedCards.forEach(card => {
-        const cardEl = document.createElement('div');
-        cardEl.className = 'upgrade-card';
-        cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
-        cardEl.onclick = () => {
-            card.action();
-            modal.classList.add('hidden');
-            isUpgradeOpen = false;
-            updateUIValues();
-            scheduleNextStain(); // Resume spawn loop
+    const container = get('upgrade-cards-container');
+    container.innerHTML = '';
+
+    selected.forEach(upg => {
+        const card = document.createElement('div');
+        card.className = 'upgrade-card';
+        card.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 15px;">${upg.icon}</div>
+            <h3 style="margin-bottom: 10px;">${upg.title}</h3>
+            <p style="font-size: 0.9rem; opacity: 0.8;">${upg.desc}</p>
+        `;
+        card.onclick = () => {
+            applyUpgrade(upg.id);
+            if (upg.type === 'multi') totalRepeatablePicked++;
+            upgradeCounts[upg.id]++;
+            closeUpgradeModal();
+            updateStatsSidebar();
         };
-        container.appendChild(cardEl);
+        container.appendChild(card);
     });
 }
 let bossScalingInterval;
@@ -1001,8 +1087,8 @@ function weightedRandom(items) {
 }
 
 
-function createParticles(x, y, color) {
-    for (let i = 0; i < 15; i++) {
+function createParticles(x, y, color, count = 15) {
+    for (let i = 0; i < count; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
         p.style.backgroundColor = color;
@@ -1020,28 +1106,56 @@ function getSpawnInterval() {
     return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
 }
 
-function createStain(isBoss = false) {
-    if (!gameActive) return;
+function createStain(isBoss = false, isTriangle = false) {
     const container = get('canvas-container');
-    if (!container) return;
+    if (!container || !gameActive) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
-    if (isBoss) stain.classList.add('boss-stain');
 
-    let health = isBoss ? 1500 : 100;
-    const size = isBoss ? 250 : (Math.random() * 80 + 40);
+    let health = 100;
+    let size = Math.random() * 100 + 50;
+
+    if (isBoss) {
+        stain.classList.add('boss-stain');
+        stain.classList.add('pulse-animation');
+        health = 1500;
+        size = 250;
+
+        if (isTriangle) {
+            stain.classList.add('triangle-boss');
+            health = 4500; // 3x stronger
+            size = 300;
+            stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
+        } else {
+            stain.innerHTML = '<div class="boss-title">BOSS</div>';
+        }
+    } else {
+        // Random shape and color behavior
+        const type = Math.random();
+        if (type < 0.2) { // 20% Circle Blue
+            stain.classList.add('stain-circle');
+            stain.style.backgroundColor = 'rgba(0, 102, 255, 0.4)';
+        } else if (type < 0.4) { // 20% Triangle Yellow
+            stain.classList.add('stain-triangle');
+            stain.style.backgroundColor = 'rgba(255, 204, 0, 0.4)';
+        } else { // 60% Square (randomish colors)
+            const colors = ['rgba(255, 77, 77, 0.3)', 'rgba(77, 255, 77, 0.3)', 'rgba(155, 77, 255, 0.3)'];
+            stain.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        }
+    }
+
     stain.style.width = `${size}px`;
     stain.style.height = `${size}px`;
     stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
     stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
-    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
     stain.dataset.health = health;
     stain.dataset.maxHealth = health;
 
-    if (isBoss) {
-        stain.innerHTML = '<div class="boss-title">BOSS</div>';
+    if (isBoss && !isTriangle) { // Only increment bossCount for regular bosses
         bossCount++;
+    } else if (isTriangle) {
+        bossCount++; // Also count triangle bosses in general boss count
     }
 
     container.appendChild(stain);
@@ -1051,10 +1165,11 @@ function createStain(isBoss = false) {
 function checkDefeatCondition() {
     if (!gameActive) return;
     const totalCount = document.querySelectorAll('.stain').length;
-    const bossCountUI = document.querySelectorAll('.boss-stain').length;
+    const bossCountUI = document.querySelectorAll('.boss-stain:not(.triangle-boss)').length;
+    const triangleBossCountUI = document.querySelectorAll('.triangle-boss').length;
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
-    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20;
+    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20 || triangleBossCountUI >= 10;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = 60;
@@ -1066,6 +1181,7 @@ function checkDefeatCondition() {
                 let reason = "ჭუჭყი ბევრია!";
                 if (inactiveTime > 30) reason = "არააქტიური ხარ!";
                 else if (bossCountUI >= 20) reason = "ბოსების შემოსევა!";
+                else if (triangleBossCountUI >= 10) reason = "სამკუთხედი ბოსების ალყა! ⚠️";
                 showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
             }
         }, 1000);
@@ -1125,14 +1241,14 @@ document.addEventListener('touchmove', (e) => {
     moveCloth(currentX, currentY);
 }, { passive: false });
 
-// Auto-cleaning loop - continuously clean nearby stains
+// Auto-cleaning loop
 setInterval(() => {
     if (!gameActive) return;
     if (currentX && currentY) {
         checkCleaning(currentX, currentY);
-        lastActivityTime = Date.now(); // Track activity for crisis detection
+        // lastActivityTime handled in mouse/touch move
     }
-}, 50); // Check every 50ms for smooth auto-cleaning
+}, 50);
 
 
 
@@ -1155,18 +1271,12 @@ function checkCleaning(bx, by) {
         const sy = rect.top + rect.height / 2;
         const dist = Math.hypot(bx - sx, by - sy);
 
-        // Radius check (base radius is roughly 50px visual, but we use logic)
+        // Radius check
         const hitRadius = (50 * cleaningRadius) + (rect.width / 2);
 
         if (dist < hitRadius) {
             let h = parseFloat(stain.dataset.health);
-            // Damage calculation
             let effectiveDmg = clothStrength;
-
-            // Type bonus logic (simple random crit for now or based on color later)
-            if (stain.classList.contains('boss-stain')) {
-                effectiveDmg *= 0.8; // Boss resistance
-            }
 
             h -= effectiveDmg;
             stain.dataset.health = h;
@@ -1177,11 +1287,18 @@ function checkCleaning(bx, by) {
 
             if (h <= 0 && stain.dataset.cleaning !== 'true') {
                 stain.dataset.cleaning = 'true';
-                createParticles(sx, sy, stain.style.backgroundColor);
 
-                // Score depends on size/type
-                let pts = stain.classList.contains('boss-stain') ? 50 : 1;
-                updateScore(pts);
+                const isBoss = stain.classList.contains('boss-stain');
+                if (isBoss) {
+                    bossesDefeated++;
+                    updateScore(10);
+                    showStatusUpdate('ბოსი დამარცხებულია! +10 ✨');
+                    createParticles(sx, sy, '#ff4d4d', 30);
+                } else {
+                    totalStainsCleanedRel++;
+                    updateScore(1);
+                    createParticles(sx, sy, stain.style.backgroundColor || '#fff', 10);
+                }
 
                 setTimeout(() => stain.remove(), 100);
             }
@@ -1205,6 +1322,14 @@ window.onload = async () => {
     } else {
         document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
     }
+
+    // Statistics Sidebar Logic
+    get('stats-side-toggle').onclick = () => get('stats-sidebar').classList.toggle('side-collapsed');
+    get('stats-close-btn').onclick = () => get('stats-sidebar').classList.add('side-collapsed');
+
+    // Chat Sidebar Logic
+    get('chat-side-toggle').onclick = () => get('global-chat').classList.toggle('side-collapsed');
+    get('chat-toggle-btn').onclick = () => get('global-chat').classList.add('side-collapsed');
 
     // Modal Closers
     const closeAuth = () => {
@@ -1345,6 +1470,10 @@ function startGameSession(dontReset = false) {
         ownedSkins = [];
         currentSkin = 'default';
         coins = 0;
+        bossesDefeated = 0;
+        totalStainsCleanedRel = 0;
+        totalRepeatablePicked = 0;
+        upgradeCounts = { 'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0 };
 
         // Reset Upgrades
         intervalMultiplier = 1.0;
@@ -1372,9 +1501,18 @@ function startGameSession(dontReset = false) {
     // Boss spawning interval
     setInterval(() => {
         if (gameActive) {
+            // General Bosses
             const bossSpawnCount = Math.floor(score / 500) + 1;
             for (let i = 0; i < bossSpawnCount; i++) {
                 createStain(true);
+            }
+
+            // Triangle Elite Bosses (scaling every 1000 score)
+            if (score >= 1000) {
+                const triangleCount = Math.floor((score - 1000) / 1000) + 1;
+                for (let i = 0; i < triangleCount; i++) {
+                    createStain(true, true);
+                }
             }
         }
     }, 60000);

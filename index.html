@@ -62,7 +62,7 @@
         </div>
     </div>
 
-    <!-- Global Chat -->
+    <!-- Global Chat (Left) -->
     <div id="global-chat" class="chat-container glass">
         <button id="chat-side-toggle" class="chat-toggle-side">💬</button>
         <div class="chat-content-wrapper">
@@ -77,6 +77,31 @@
             </div>
             <div style="font-size: 0.65rem; color: #888; text-align: center; margin-top: 5px; padding-bottom: 10px;">
                 შეტყობინებები იშლება 10 წამში
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Sidebar (Right) -->
+    <div id="stats-sidebar" class="stats-sidebar glass">
+        <button id="stats-side-toggle" class="stats-toggle-side">📊</button>
+        <div class="stats-content-wrapper">
+            <div class="stats-header">
+                <span>📊 სტატისტიკა</span>
+                <button id="stats-close-btn" class="stats-toggle">✕</button>
+            </div>
+            <div class="sidebar-section">
+                <h4 style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase;">აქტიური
+                    გაძლიერებები</h4>
+                <div id="active-upgrades-list" class="active-upgrades-list">
+                    <p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>
+                </div>
+            </div>
+            <div class="sidebar-section"
+                style="margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                <div class="session-stats">
+                    <div class="s-stat"><span>👾 ბოსები:</span> <strong id="session-bosses">0</strong></div>
+                    <div class="s-stat"><span>🧼 გასუფთავებული:</span> <strong id="session-cleaned">0</strong></div>
+                </div>
             </div>
         </div>
     </div>
