@@ -125,6 +125,7 @@ function updateUIValues() {
     }
 }
 
+
 // --- Database & Auth ---
 
 async function initDatabase() {
@@ -136,26 +137,11 @@ async function initDatabase() {
             nickname TEXT UNIQUE,
             score INTEGER DEFAULT 0,
             survival_time INTEGER DEFAULT 0,
-            best_score INTEGER DEFAULT 0,
-            best_survival_time INTEGER DEFAULT 0,
-            coins INTEGER DEFAULT 0,
-            is_vip BOOLEAN DEFAULT false,
-            owned_skins TEXT DEFAULT '[]',
-            current_skin TEXT DEFAULT 'default',
             last_seen TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
-        // Migration for existing users
-        try {
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_score INTEGER DEFAULT 0`;
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`;
-        } catch (e) { }
-
-        await sql`CREATE TABLE IF NOT EXISTS system_config (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        )`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
 
         await sql`CREATE TABLE IF NOT EXISTS chat_messages (
             id SERIAL PRIMARY KEY,
@@ -163,228 +149,75 @@ async function initDatabase() {
             message TEXT,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
-
-        await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
-                  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
-
-        checkWeeklyReset();
-
     } catch (e) { console.error("DB Init Error", e); }
 }
 
-async function checkWeeklyReset() {
+async function syncUserData() {
+    if (!userEmail) return;
     try {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        // Reset happens Sunday 00:00 (Saturday 24:00)
-        const day = now.getDay();
-        const sundayTimestamp = new Date(now.setDate(now.getDate() - day)).getTime();
-
-        const config = await sql`SELECT value FROM system_config WHERE key = 'last_lb_reset'`;
-        const lastReset = config.length > 0 ? parseInt(config[0].value) : 0;
-
-        if (lastReset < sundayTimestamp) {
-            console.log("Weekly Leaderboard Reset Triggered...");
-            const result = await sql`INSERT INTO system_config (key, value) 
-                                    VALUES ('last_lb_reset', ${sundayTimestamp})
-                                    ON CONFLICT (key) DO UPDATE 
-                                    SET value = ${sundayTimestamp} 
-                                    WHERE system_config.value IS NULL OR CAST(system_config.value AS BIGINT) < ${sundayTimestamp}
-                                    RETURNING *`;
-
-            if (result.length > 0) {
-                await sql`UPDATE users SET score = 0, survival_time = 0`;
-                console.log("Database reset complete.");
-            }
-        }
-    } catch (e) { console.error("Reset Check Error", e); }
-}
-
-async function checkForUpdates() {
-    try {
-        const result = await sql`SELECT value FROM system_config WHERE key = 'app_version'`;
-        if (result.length > 0 && result[0].value !== APP_VERSION) {
-            location.reload();
-        }
+        const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
+        // Live Update: Overwrite stats with current session values
+        await sql`UPDATE users SET 
+            score = ${Math.floor(score)},
+            survival_time = ${currentSurvival},
+            last_seen = NOW()
+            WHERE email = ${userEmail}`;
     } catch (e) { }
 }
 
-async function handleRegister() {
-    const email = get('auth-email').value.trim();
-    const pass = get('auth-password').value.trim();
-    const nick = get('nickname-input').value.trim();
-    const err = get('auth-error');
-
-    if (!email || !pass || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
-
-    try {
-        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, owned_skins, current_skin) 
-                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${JSON.stringify(ownedSkins)}, ${currentSkin})`;
-
-        nickname = nick;
-        userEmail = email;
-        localStorage.setItem('tilo_nick', nickname);
-        localStorage.setItem('tilo_email', userEmail);
-
-        err.style.color = "#4caf50";
-        err.textContent = "რეგისტრაცია წარმატებულია! შევდივარ...";
-
-        setTimeout(() => location.reload(), 1500);
-    } catch (e) {
-        err.style.color = "#ff4d4d";
-        err.textContent = "ელ-ფოსტა ან ნიკნეიმი უკვე დაკავებულია.";
-    }
-}
-
-async function handleLogin() {
-    const email = get('auth-email').value.trim();
-    const pass = get('auth-password').value.trim();
-    const err = get('auth-error');
-
-    try {
-        const result = await sql`SELECT * FROM users WHERE email = ${email} AND password = ${pass}`;
-        if (result.length > 0) {
-            const user = result[0];
-            nickname = user.nickname;
-            userEmail = user.email;
-            score = user.score;
-            coins = user.coins;
-            isVip = user.is_vip;
-            ownedSkins = JSON.parse(user.owned_skins || '[]');
-            currentSkin = user.current_skin || 'default';
-
-            // Fetch personal bests from DB
-            lastBestScore = {
-                score: user.best_score || 0,
-                time: user.best_survival_time || 0
-            };
-            localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
-
-            localStorage.setItem('tilo_nick', nickname);
-            localStorage.setItem('tilo_email', userEmail);
-            localStorage.setItem('tilo_coins', coins);
-            localStorage.setItem('tilo_vip', isVip);
-            localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
-            localStorage.setItem('tilo_current_skin', currentSkin);
-
-            updateUIValues();
-            location.reload();
-        } else {
-            err.textContent = "არასწორი მონაცემები!";
-        }
-    } catch (e) {
-        err.textContent = "შეცდომა ბაზასთან კავშირისას.";
-    }
-}
-
-let syncTimeout;
-async function syncUserData(force = false) {
-    if (!userEmail) return;
-
-    if (force) {
-        try {
-            const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
-            const currentEff = score > 0 ? (currentSurvival / score) : 999999;
-
-            await sql`UPDATE users SET 
-                score = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${score} ELSE GREATEST(score, ${score}) END,
-                survival_time = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${currentSurvival} ELSE survival_time END,
-                best_score = GREATEST(best_score, ${lastBestScore.score}),
-                best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
-                coins = ${coins}, 
-                is_vip = ${isVip},
-                owned_skins = ${JSON.stringify(ownedSkins)},
-                current_skin = ${currentSkin},
-                last_seen = NOW()
-                WHERE email = ${userEmail}`;
-            return;
-        } catch (e) { return; }
-    }
-
-    if (!gameActive) return;
-
-    clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(async () => {
-        try {
-            const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
-            const currentEff = score > 0 ? (currentSurvival / score) : 999999;
-
-            await sql`UPDATE users SET 
-                score = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${score} ELSE GREATEST(score, ${score}) END,
-                survival_time = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${currentSurvival} ELSE survival_time END,
-                best_score = GREATEST(best_score, ${lastBestScore.score}),
-                best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
-                coins = ${coins}, 
-                is_vip = ${isVip},
-                owned_skins = ${JSON.stringify(ownedSkins)},
-                current_skin = ${currentSkin},
-                last_seen = NOW()
-                WHERE email = ${userEmail}`;
-        } catch (e) { }
-    }, 1000);
-}
-
 async function fetchLeaderboard() {
-    console.log("Leaderboard: Starting fetch...");
     const list = get('mini-lb-list');
     try {
+        // Fetch Top 10 Active Players (sorted by Efficiency: score / time)
         const result = await sql`
-            SELECT nickname, 
-                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
-                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
+            SELECT nickname, score, survival_time, is_vip,
                    CASE 
-                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
-                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
+                       WHEN score > 0 THEN CAST(score AS FLOAT) / NULLIF(survival_time, 0)
                        ELSE 0 
-                   END as d_efficiency,
-                   is_vip
+                   END as d_efficiency
             FROM users 
-            WHERE nickname IS NOT NULL 
-              AND nickname != ''
-            ORDER BY d_efficiency DESC, d_score DESC
+            WHERE last_seen > NOW() - INTERVAL '5 minutes'
+            AND score > 0
+            ORDER BY d_efficiency DESC, score DESC
             LIMIT 10
         `;
 
-        console.log("Leaderboard: Received " + result.length + " players");
-        updateMiniLeaderboardUI(result);
+        if (list) {
+            list.innerHTML = '';
+            if (result.length === 0) {
+                list.innerHTML = '<p style="text-align:center; opacity:0.5; font-size:0.8rem;">No active players</p>';
+            } else {
+                result.forEach((user, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'mini-lb-item';
 
+                    if (user.nickname === nickname) div.style.background = "rgba(255, 215, 0, 0.2)";
+
+                    const safeNick = user.nickname.substring(0, 10);
+                    const ld = user.d_efficiency ? parseFloat(user.d_efficiency).toFixed(2) : '0.00';
+                    const crown = user.is_vip ? '👑 ' : '';
+                    const nameColor = user.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+
+                    div.innerHTML = `
+                        <div class="mini-lb-info">
+                            <span class="mini-lb-name" style="${nameColor}">${index + 1}. ${crown}${safeNick}</span>
+                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${user.survival_time}s)</span>
+                        </div>
+                        <span class="mini-lb-score">${user.score} ✨</span>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        // Update Online Count
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '2 minutes'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
+
     } catch (e) {
-        console.error("Leaderboard Error:", e);
-        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
+        console.error("LB Error", e);
+        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem;">Connection Error</p>';
     }
-}
-
-function updateMiniLeaderboardUI(players) {
-    const list = get('mini-lb-list');
-    if (!list) return;
-
-    if (!players || players.length === 0) {
-        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">მოთამაშეები ვერ მოიძებნა</p>';
-        return;
-    }
-
-    list.innerHTML = '';
-    players.forEach((entry, i) => {
-        const isMe = nickname && entry.nickname === nickname;
-        const item = document.createElement('div');
-        item.className = 'mini-lb-item';
-        if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
-
-        const scoreVal = parseFloat(entry.d_score || 0);
-        const timeVal = parseFloat(entry.d_time || 0);
-        const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
-
-        item.innerHTML = `
-            <div class="mini-lb-info">
-                <span class="mini-lb-name" style="${entry.is_vip ? 'color: #ffd700; font-weight: 800;' : ''}">${i + 1}. ${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
-                <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}წ)</span>
-            </div>
-            <span class="mini-lb-score">${Math.floor(scoreVal)} ✨</span>
-        `;
-        list.appendChild(item);
-    });
 }
 
 // --- Game Logic ---
@@ -411,13 +244,14 @@ function updateScore(points) {
     }
 }
 
+
 function showStatusUpdate(text) {
     const ds = get('diff-status');
     if (!ds) return;
     ds.textContent = text;
     ds.style.color = '#ffcc00';
     setTimeout(() => {
-        ds.textContent = nickname ? `მოთამაშე: ${nickname} ` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
+        ds.textContent = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
         ds.style.color = '';
     }, 2000);
 }
@@ -450,22 +284,6 @@ function initUI() {
     get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
     get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
 
-    const toggleElement = (id, show) => {
-        const el = get(id); // Use 'get' for consistent ID selection, but classes need generic handling
-        if (el) {
-            if (show) el.classList.remove('hidden-ui');
-            else el.classList.add('hidden-ui');
-        } else {
-            // Handle class-based elements like header-ui user-stats
-            // Actually user-stats is inside header-ui. 
-            // We'll target specific IDs where possible or use querySelector for classes
-            if (id === 'user-stats') {
-                const stats = document.querySelector('.user-stats');
-                if (stats) show ? stats.style.display = 'flex' : stats.style.display = 'none';
-            }
-        }
-    };
-
     const loadUIState = () => {
         const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, lb: true, chat: true };
         get('toggle-stats').checked = uiState.stats;
@@ -473,7 +291,6 @@ function initUI() {
         get('toggle-chat').checked = uiState.chat;
 
         const statsEl = document.querySelector('.user-stats');
-        if (statsEl) statsEl.style.visibility = uiState.stats ? 'visible' : 'hidden'; // Use visibility to keep layout or display: none? User said hide.
         if (statsEl) statsEl.style.display = uiState.stats ? 'flex' : 'none';
 
         const lb = get('mini-leaderboard');
@@ -524,55 +341,7 @@ function initUI() {
         location.reload();
     };
 
-    document.querySelectorAll('.buy-coins-btn').forEach(btn => {
-        btn.onclick = () => {
-            const amount = parseInt(btn.dataset.coins);
-            if (confirm(`გსურთ ${amount} ქოინის ყიდვა ? `)) {
-                coins += amount;
-                saveStatsToLocal();
-                updateUIValues();
-                syncUserData();
-                alert("ქოინები დაემატა!");
-            }
-        };
-    });
-
-    get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
-    get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
-
-    get('apply-promo-btn').onclick = () => {
-        const input = get('promo-input').value.trim().toLowerCase();
-        const msg = get('promo-msg');
-        if (input === 'baro') {
-            const usedPromos = JSON.parse(localStorage.getItem('tilo_used_promos') || "[]");
-            if (usedPromos.includes('baro')) {
-                msg.textContent = "კოდი უკვე გამოყენებულია!";
-                msg.style.color = "#ff4d4d";
-            } else {
-                coins += 5000;
-                usedPromos.push('baro');
-                localStorage.setItem('tilo_used_promos', JSON.stringify(usedPromos));
-                saveStatsToLocal();
-                updateUIValues();
-                syncUserData();
-                msg.textContent = "კოდი გააქტიურდა! +5000 🪙";
-                msg.style.color = "#4caf50";
-                get('promo-input').value = "";
-            }
-        } else {
-            msg.textContent = "არასწორი კოდი!";
-            msg.style.color = "#ff4d4d";
-        }
-    };
-
-    get('register-btn').onclick = handleRegister;
-    get('login-btn').onclick = handleLogin;
-    get('logout-btn').onclick = () => {
-        if (confirm("ნამდვილად გსურთ გასვლა?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    };
+    /* Donation logic removed */
 
     get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
     get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');
@@ -619,8 +388,8 @@ function setupAdmin() {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         try {
-            await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${nick}`;
-            setStatus(`1000 Coins sent to ${nick}`);
+            await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${nick} `;
+            setStatus(`1000 Coins sent to ${nick} `);
         } catch (e) { setStatus('Error', 'red'); }
     };
 
@@ -628,8 +397,8 @@ function setupAdmin() {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         try {
-            await sql`UPDATE users SET is_vip = true WHERE nickname = ${nick}`;
-            setStatus(`VIP granted to ${nick}`);
+            await sql`UPDATE users SET is_vip = true WHERE nickname = ${nick} `;
+            setStatus(`VIP granted to ${nick} `);
         } catch (e) { setStatus('Error', 'red'); }
     };
 
@@ -638,8 +407,8 @@ function setupAdmin() {
         if (!nick) return;
         if (confirm(`Ban ${nick}? This will reset their stats.`)) {
             try {
-                await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${nick}`;
-                setStatus(`${nick} has been reset/banned`, 'red');
+                await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${nick} `;
+                setStatus(`${nick} has been reset / banned`, 'red');
             } catch (e) { setStatus('Error', 'red'); }
         }
     };
@@ -658,7 +427,7 @@ function setupAdmin() {
         const msg = getVal('admin-broadcast-msg');
         if (!msg) return;
         try {
-            await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+            await sql`INSERT INTO chat_messages(nickname, message) VALUES('📢 SYSTEM', ${msg})`;
             document.getElementById('admin-broadcast-msg').value = '';
             setStatus("Broadcast sent");
         } catch (e) { setStatus('Error', 'red'); }
@@ -668,9 +437,9 @@ function setupAdmin() {
         const speed = document.getElementById('admin-global-speed').value;
         try {
             // Need table for this, assume it exists or fail gracefully
-            await sql`INSERT INTO system_config (key, value) VALUES ('global_speed', ${speed})
-                      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
-            setStatus(`Global speed saved: ${speed}`);
+            await sql`INSERT INTO system_config(key, value) VALUES('global_speed', ${speed})
+                      ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value`;
+            setStatus(`Global speed saved: ${speed} `);
         } catch (e) { setStatus('Error saving config', 'red'); }
     };
 }
@@ -743,7 +512,7 @@ async function fetchChat() {
             LEFT JOIN users u ON LOWER(cm.nickname) = LOWER(u.nickname) 
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
             ORDER BY cm.created_at ASC
-            `;
+    `;
         const container = get('chat-messages');
         if (!container) return;
         container.innerHTML = '';
@@ -776,8 +545,8 @@ function startHelperBot() {
         if (stains.length > 0) {
             const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
-            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
+            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30} px`;
+            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30} px`;
 
             setTimeout(() => {
                 if (target.parentElement) {
@@ -795,8 +564,8 @@ function startHelperBot() {
                 moveBot();
             }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
         } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+            botEl.style.left = `${Math.random() * (window.innerWidth - 60)} px`;
+            botEl.style.top = `${Math.random() * (window.innerHeight - 60)} px`;
             setTimeout(moveBot, 2000);
         }
     }
@@ -824,10 +593,10 @@ function showUpgradeOptions() {
     let availableUpgrades = UPGRADE_POOL.filter(u => {
         if (u.id === 'karcher') return upgradeCounts.karcher < 1;
         if (u.id === 'helperSpawn') return upgradeCounts.helperSpawn < 10;
-        if (u.id === 'strength') return strengthMultiplier < 3.0;    // Max 200% boost (Base 1.0 + 2.0)
-        if (u.id === 'radius') return radiusMultiplier < 3.0;        // Max 200% boost
-        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0; // Max 200% boost
-        if (u.id === 'speed') return intervalMultiplier > 0.01;      // Cap speed at 0.01s
+        if (u.id === 'strength') return strengthMultiplier < 3.0;
+        if (u.id === 'radius') return radiusMultiplier < 3.0;
+        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0;
+        if (u.id === 'speed') return intervalMultiplier > 0.01;
         return true;
     });
 
@@ -875,7 +644,6 @@ function triggerEndgame() {
         stain.dataset.maxHealth = 1500 * bossHealthMultiplier;
         stain.innerHTML = '<div class="boss-title">BOSS</div>';
         stain.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
-        // Reset size for boss visual
         stain.style.width = '250px';
         stain.style.height = '250px';
     });
@@ -886,7 +654,7 @@ function triggerEndgame() {
         if (!gameActive) { clearInterval(bossScalingInterval); return; }
 
         bossHealthMultiplier *= 2;
-        showStatusUpdate(`ბოსები გაძლიერდნენ! (x${bossHealthMultiplier}) ☠️`);
+        showStatusUpdate(`ბოსები გაძლიერდნენ!(x${bossHealthMultiplier}) ☠️`);
 
         // Upgrade existing bosses
         document.querySelectorAll('.boss-stain').forEach(boss => {
@@ -902,13 +670,14 @@ function triggerEndgame() {
 
             // Visual growth
             let curSize = parseFloat(boss.style.width);
-            let newSize = curSize * 1.2; // slight growth
+            let newSize = curSize * 1.2;
             boss.style.width = `${newSize}px`;
             boss.style.height = `${newSize}px`;
         });
 
-    }, 60000); // 1 minute
+    }, 60000);
 }
+
 
 function weightedRandom(items) {
     let totalProb = items.reduce((acc, item) => acc + item.prob, 0);
@@ -921,282 +690,263 @@ function weightedRandom(items) {
     return items[0];
 }
 
-function createStain(isBoss = false) {
-    if (!gameActive) return;
-    const container = get('canvas-container');
-    if (!container) return;
-    const stain = document.createElement('div');
-    stain.className = 'stain';
-
-    // In endgame (when upgrade pool empty), EVERYTHING is a boss
-    if (availableUpgradesEmpty || isBoss) {
-        stain.classList.add('boss-stain');
-        isBoss = true;
-    }
-
-    let health = isBoss ? (1500 * bossHealthMultiplier) : 100;
-    const size = isBoss ? 250 : (Math.random() * 80 + 40);
-
-    stain.style.width = `${size}px`; stain.style.height = `${size}px`;
-    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
-    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
-    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
-    stain.dataset.health = health; stain.dataset.maxHealth = health;
-    if (isBoss) stain.innerHTML = '<div class="boss-title">BOSS</div>';
-    container.appendChild(stain);
-    checkDefeatCondition();
-}
-
-function checkDefeatCondition() {
-    if (!gameActive) return;
-    const totalCount = document.querySelectorAll('.stain').length;
-    const bossCountUI = document.querySelectorAll('.boss-stain').length;
-    const inactiveTime = (Date.now() - lastActivityTime) / 1000;
-
-    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20;
-
-    if (isCrisis && !defeatTimer) {
-        let timeLeft = 60;
-        defeatTimer = setInterval(() => {
-            if (!gameActive) { clearInterval(defeatTimer); defeatTimer = null; return; }
-            timeLeft--;
-            if (timeLeft <= 0) { clearInterval(defeatTimer); handleGameOver(); }
-            else if (timeLeft % 5 === 0) {
-                let reason = "ჭუჭყი ბევრია!";
-                if (inactiveTime > 30) reason = "არააქტიური ხარ!";
-                else if (bossCountUI >= 20) reason = "ბოსების შემოსევა!";
-                showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
-            }
-        }, 1000);
-    } else if (!isCrisis && defeatTimer) {
-        clearInterval(defeatTimer);
-        defeatTimer = null;
-        showStatusUpdate("კრიზისი დაძლეულია! ✅");
-    }
-}
-
-async function handleGameOver() {
-    gameActive = false;
-    const finalScore = score;
-    const finalTime = Math.floor((Date.now() - startTime) / 1000);
-    lastPrevScore = { score: finalScore, time: finalTime };
-    localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
-    if (finalScore > lastBestScore.score) {
-        lastBestScore = { score: finalScore, time: finalTime };
-        localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
-    }
-
-    // Force final sync
-    await syncUserData(true);
-    fetchLeaderboard(); // Immediate update after game over
-
-    get('final-stains').textContent = Math.floor(finalScore);
-    get('final-time').textContent = finalTime;
-    get('defeat-modal').classList.remove('hidden');
-}
-
-function checkCleaning() {
-    const cloth = get('cloth');
-    if (!cloth) return;
-    const rect = cloth.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const radius = (rect.width / 2) * cleaningRadius;
-    document.querySelectorAll('.stain').forEach(stain => {
-        if (stain.dataset.cleaning === 'true') return;
-        const sRect = stain.getBoundingClientRect();
-        const sx = sRect.left + sRect.width / 2;
-        const sy = sRect.top + sRect.height / 2;
-        if (Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2)) < radius + sRect.width / 2) {
-            let h = parseFloat(stain.dataset.health) - clothStrength;
-            stain.dataset.health = h;
-            stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
-            if (h <= 0) {
-                stain.dataset.cleaning = 'true';
-                createParticles(sx, sy, stain.style.backgroundColor);
-                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
-                setTimeout(() => stain.remove(), 800);
-            }
-        }
-    });
-}
 
 function createParticles(x, y, color) {
-    const container = get('canvas-container');
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 15; i++) {
         const p = document.createElement('div');
-        p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
-        p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
-        p.style.borderRadius = '50%'; p.style.pointerEvents = 'none';
-        container.appendChild(p);
-        const angle = Math.random() * Math.PI * 2;
-        const vel = Math.random() * 40;
-        p.animate([
-            { transform: 'translate(0,0) scale(1)', opacity: 1 },
-            { transform: `translate(${Math.cos(angle) * vel}px, ${Math.sin(angle) * vel}px) scale(0)`, opacity: 0 }
-        ], { duration: 600 }).onfinish = () => p.remove();
+        p.className = 'particle';
+        p.style.backgroundColor = color;
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        p.style.setProperty('--tx', `${(Math.random() - 0.5) * 200}px`);
+        p.style.setProperty('--ty', `${(Math.random() - 0.5) * 200}px`);
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
     }
 }
 
 function getSpawnInterval() {
-    // Virtually no limit - reduced to 10ms for technical safety only (to avoid browser freeze)
-    return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
+    let base = 2500;
+    if (score > 50) base = 2000;
+    if (score > 150) base = 1500;
+    if (score > 300) base = 1000;
+    if (score > 500) base = 800;
+    if (score > 1000) base = 500;
+    return base * intervalMultiplier;
 }
 
-function scheduleNextStain() {
-    if (!gameActive || isUpgradeOpen) return;
-    createStain();
-    setTimeout(scheduleNextStain, getSpawnInterval());
-}
+function createStain() {
+    if (!gameActive) return;
 
-function centerCloth() {
-    const cloth = get('cloth');
-    if (!cloth) return;
-    xOffset = window.innerWidth / 2 - cloth.clientWidth / 2;
-    yOffset = window.innerHeight / 2 - cloth.clientHeight / 2;
-    cloth.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
-}
+    // Check pause/tab hidden
+    if (document.hidden) return;
 
-function dragStart(e) {
-    const cx = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-    const cy = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-    initialX = cx - xOffset; initialY = cy - yOffset;
-    if (e.target === get('cloth') || get('cloth').contains(e.target)) {
-        isDragging = true;
-        lastActivityTime = Date.now();
+    if (document.querySelectorAll('.stain').length >= 15 && !defeatTimer) {
+        showStatusUpdate("⚠️ ძალიან ბევრი ლაქაა! (15)");
+        defeatTimer = setTimeout(() => {
+            if (document.querySelectorAll('.stain').length >= 15) {
+                gameOver();
+            }
+        }, 15000);
+    } else if (document.querySelectorAll('.stain').length < 15 && defeatTimer) {
+        clearTimeout(defeatTimer);
+        defeatTimer = null;
     }
-}
 
-function drag(e) {
-    if (isDragging) {
-        e.preventDefault();
-        const cx = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-        const cy = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-        currentX = cx - initialX; currentY = cy - initialY;
-        xOffset = currentX; yOffset = currentY;
-        const cloth = get('cloth');
-        if (cloth) {
-            cloth.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-            lastActivityTime = Date.now();
-        }
-        checkCleaning();
-    }
-}
+    const stain = document.createElement('div');
+    stain.className = 'stain';
 
-// Event Listeners (UI-independent)
-get('play-game-btn').onclick = startGameSession;
-get('player-nick').onkeypress = (e) => { if (e.key === 'Enter') startGameSession(); };
+    // Size variation: 60 to 120px
+    const size = 60 + Math.random() * 60;
+    stain.style.width = `${size}px`;
+    stain.style.height = `${size}px`;
 
-// Drag/Touch Events
-const canvas = get('canvas-container');
-canvas.addEventListener("mousedown", dragStart);
-canvas.addEventListener("touchstart", dragStart, { passive: false });
-window.addEventListener("mouseup", () => isDragging = false);
-window.addEventListener("touchend", () => isDragging = false);
-window.addEventListener("mousemove", drag);
-window.addEventListener("touchmove", drag, { passive: false });
-window.addEventListener("resize", centerCloth);
+    // Position (safe padding)
+    const x = Math.random() * (window.innerWidth - 100);
+    const y = Math.random() * (window.innerHeight - 100);
+    stain.style.left = `${x}px`;
+    stain.style.top = `${y}px`;
 
-// Initial Setup
-centerCloth();
-initUI();
-setupChat();
+    // Color variation
+    const hue = Math.floor(Math.random() * 360);
+    stain.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
 
-// Game is paused initially
-gameActive = false;
+    // Health by size and score
+    let health = size * 30 + (score * 5);
+    stain.dataset.maxHealth = health;
+    stain.dataset.health = health;
 
-// Auto-fill nick if present
-if (nickname) get('player-nick').value = nickname;
-
-// Background interval updates (Leaderboard, Version)
-setInterval(fetchLeaderboard, 10000);
-setInterval(checkForUpdates, 30000);
-
-// Boss Spawner (Checking gameActive internally)
-setInterval(() => {
-    if (gameActive) {
+    // Boss chance
+    if (score > 500 && Math.random() < 0.05) {
+        stain.classList.add('boss-stain');
+        health *= 5; // 5x health
+        stain.dataset.maxHealth = health;
+        stain.dataset.health = health;
+        stain.style.width = '200px';
+        stain.style.height = '200px';
+        stain.innerHTML = '<div class="boss-title">BOSS</div>';
         bossCount++;
-        const bossSpawnCount = Math.floor(score / 500) + 1;
-        for (let i = 0; i < bossSpawnCount; i++) createStain(true);
     }
-}, 60000);
 
-// Defeat check
-setInterval(checkDefeatCondition, 1000);
-// Cleaning loop always runs but does nothing if not dragging or paused? 
-// Actually cleaning loop depends on dragging, which is fine.
-setInterval(checkCleaning, 200);
+    document.getElementById('canvas-container').appendChild(stain);
+}
+let spawnTimeout;
+function scheduleNextStain() {
+    if (isUpgradeOpen || !gameActive) return;
+    createStain();
+    spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());
+}
+
+function gameOver() {
+    gameActive = false;
+    clearTimeout(spawnTimeout);
+    if (bossScalingInterval) clearInterval(bossScalingInterval);
+
+    // Survival calc
+    let survival = Math.floor((Date.now() - startTime) / 1000);
+
+    get('defeat-modal').classList.remove('hidden');
+    get('final-stains').textContent = Math.floor(score);
+    if (get('final-time')) get('final-time').textContent = survival;
+
+    // Survival bonus
+    coins += Math.floor(score * 0.5) + Math.floor(survival * 0.2);
+
+
+    // Check Best Score (Local)
+    if (score > lastBestScore.score) {
+        lastBestScore.score = Math.floor(score);
+        lastBestScore.time = survival;
+        localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
+    }
+
+    // Save Last Score as "Prev Score"
+    lastPrevScore.score = Math.floor(score);
+    lastPrevScore.time = survival;
+    localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
+
+    saveStatsToLocal();
+    syncUserData(true); // Final sync
+}
+
+// User Interaction (Mouse/Touch)
+document.addEventListener('mousemove', (e) => {
+    if (!gameActive) return;
+    currentX = e.clientX;
+    currentY = e.clientY;
+    moveCloth(currentX, currentY);
+    checkCleaning(currentX, currentY);
 });
 
-async function startGameSession() {
-    const nickInput = get('player-nick');
-    const nick = nickInput.value.trim();
-    const err = get('star-error');
+document.addEventListener('touchmove', (e) => {
+    if (!gameActive) return;
+    e.preventDefault();
+    currentX = e.touches[0].clientX;
+    currentY = e.touches[0].clientY;
+    moveCloth(currentX, currentY);
+    checkCleaning(currentX, currentY);
+}, { passive: false });
 
-    if (!nick) {
-        err.textContent = "გთხოვთ ჩაწეროთ ნიკნეიმი!";
-        return;
+function moveCloth(x, y) {
+    const cloth = get('cloth');
+    if (cloth) {
+        cloth.style.left = `${x}px`;
+        cloth.style.top = `${y}px`;
     }
-    if (nick.length > 15) {
-        err.textContent = "ტექსტი ძალიან გრძელია!";
-        return;
-    }
+}
 
-    nickname = nick;
-    localStorage.setItem('tilo_nick', nickname);
-    err.textContent = "";
+function checkCleaning(bx, by) {
+    const stains = document.querySelectorAll('.stain');
+    stains.forEach(stain => {
+        const rect = stain.getBoundingClientRect();
+        const sx = rect.left + rect.width / 2;
+        const sy = rect.top + rect.height / 2;
+        const dist = Math.hypot(bx - sx, by - sy);
 
-    // Determine user status (returning vs new guest)
-    try {
-        const uData = await sql`SELECT * FROM users WHERE nickname = ${nick}`;
-        if (uData.length > 0) {
-            // Returning user found
-            const u = uData[0];
-            userEmail = u.email;
-            score = u.score;
-            coins = u.coins;
-            isVip = u.is_vip;
-            ownedSkins = JSON.parse(u.owned_skins || '[]');
-            currentSkin = u.current_skin || 'default';
-            lastBestScore = { score: u.best_score || 0, time: u.best_survival_time || 0 };
-            console.log("Welcome back, " + nick);
-        } else {
-            // New user registration (Auto-generated credentials for seamless play)
-            const dummyId = Date.now();
-            userEmail = `player_${dummyId}@tilo.ge`;
-            const pass = `pass_${dummyId}`;
-            await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${userEmail}, ${pass}, ${nick}, 0)`;
-            console.log("New player created: " + nick);
-            score = 0;
-            coins = 0;
+        // Radius check (base radius is roughly 50px visual, but we use logic)
+        const hitRadius = (50 * cleaningRadius) + (rect.width / 2);
+
+        if (dist < hitRadius) {
+            let h = parseFloat(stain.dataset.health);
+            // Damage calculation
+            let effectiveDmg = clothStrength;
+
+            // Type bonus logic (simple random crit for now or based on color later)
+            if (stain.classList.contains('boss-stain')) {
+                effectiveDmg *= 0.8; // Boss resistance
+            }
+
+            h -= effectiveDmg;
+            stain.dataset.health = h;
+
+            // Visual fade
+            const maxH = parseFloat(stain.dataset.maxHealth);
+            stain.style.opacity = Math.max(0.2, h / maxH);
+
+            if (h <= 0 && stain.dataset.cleaning !== 'true') {
+                stain.dataset.cleaning = 'true';
+                createParticles(sx, sy, stain.style.backgroundColor);
+
+                // Score depends on size/type
+                let pts = stain.classList.contains('boss-stain') ? 50 : 1;
+                updateScore(pts);
+
+                setTimeout(() => stain.remove(), 100);
+            }
         }
-    } catch (e) {
-        console.warn("DB Connection issue, playing offline/guest mode", e);
-    }
+    });
+}
 
-    // Apply User State
-    if (isVip) {
-        if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
-        if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
-        if (get('cloth')) get('cloth').classList.add('vip-cloth');
-    }
+// Init
+window.onload = async () => {
+    initUI();
+    await initDatabase();
+
+    // Slither.io Style Start
+    // Hide UI initially
+    document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+
+    // Setup Play Button
+    // Setup Play Button
+    get('play-game-btn').onclick = async () => {
+        const inputNick = get('player-nick').value.trim();
+        if (!inputNick) {
+            alert("შეიყვანეთ ნიკნეიმი!");
+            return;
+        }
+
+        nickname = inputNick;
+        // Generate temp email/pass for session
+        const sessionID = Date.now();
+        userEmail = `guest_${sessionID}@tilo.ge`;
+        const sessionPass = `pass_${sessionID}`;
+
+        // Create temp user in DB
+        try {
+            await sql`INSERT INTO users(email, password, nickname, coins) VALUES(${userEmail}, ${sessionPass}, ${nickname}, 0)
+                      ON CONFLICT (nickname) DO UPDATE SET email = ${userEmail}, password = ${sessionPass}, score = 0, survival_time = 0, last_seen = NOW()`;
+            // Note: On conflict nickname, we might steal session? 
+            // Better to append checks, but for now simple.
+
+            startGameSession();
+        } catch (e) {
+            console.error("Login Error", e);
+            alert("ნიკნეიმი დაკავებულია ან შეცდომაა!");
+        }
+    };
+
+    setupChat(); // Initialize chat polling
+};
+
+function startGameSession() {
+    isVip = false; // Reset VIP status for new session logic (or keep if desired)
+    ownedSkins = [];
+    currentSkin = 'default';
+    coins = 0;
+    score = 0;
+
+    // Reset Upgrades
+    intervalMultiplier = 1.0;
+    radiusMultiplier = 1.0;
+    strengthMultiplier = 1.0;
     updatePowerStats();
-    updateUIValues();
-    fetchLeaderboard();
 
-    // Reveal UI
+    // Apply UI
     get('game-start-overlay').classList.add('hidden');
     document.querySelectorAll('.hidden-game-ui').forEach(el => {
         el.classList.remove('hidden-game-ui');
-        el.style.opacity = '1';
-        el.style.pointerEvents = 'all';
+        // If we applied 'hidden' class manually in onload:
+        el.classList.remove('hidden');
     });
 
-    // Start Game Loops
+    // Start Loops
     gameActive = true;
     startTime = Date.now();
     scheduleNextStain();
 
     // Sync loop
-    setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 5000);
+    setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
+    // Leaderboard loop
+    fetchLeaderboard();
+    setInterval(fetchLeaderboard, 5000);
 }
