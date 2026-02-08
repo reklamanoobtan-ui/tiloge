@@ -559,6 +559,25 @@ body {
     margin-bottom: 10px;
 }
 
+.auth-field {
+    margin-bottom: 15px;
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: var(--input-bg);
+    color: var(--text-color);
+    outline: none;
+}
+
+#auth-mode-toggle button {
+    flex: 1;
+    margin: 0;
+}
+
 .switch {
     position: relative;
     display: inline-block;

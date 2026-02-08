@@ -310,6 +310,12 @@ async function shareScore(scoreVal, timeVal) {
         return;
     }
 
+    // Restriction Check
+    if (userEmail && userEmail.startsWith('guest_')) {
+        get('restricted-modal').classList.remove('hidden');
+        return;
+    }
+
     try {
         const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
 
@@ -450,6 +456,12 @@ function initUI() {
 
     // Update Profile Info in Settings
     get('settings-btn').onclick = () => {
+        // Restriction Check for Profile
+        if (userEmail && userEmail.startsWith('guest_')) {
+            get('restricted-modal').classList.remove('hidden');
+            return;
+        }
+
         get('settings-modal').classList.remove('hidden');
         get('settings-user-name').textContent = nickname || 'სტუმარი';
         if (userEmail && !userEmail.startsWith('guest_')) {
@@ -470,6 +482,12 @@ function initUI() {
     get('share-rating-btn').onclick = async () => {
         const survival = Math.floor((Date.now() - startTime) / 1000);
 
+        // Restriction Check
+        if (userEmail && userEmail.startsWith('guest_')) {
+            get('restricted-modal').classList.remove('hidden');
+            return;
+        }
+
         // Disable button to prevent double clicks
         const btn = get('share-rating-btn');
         if (btn) {
@@ -481,11 +499,18 @@ function initUI() {
 
         showStatusUpdate('შედეგი გაზიარდა! ვრესტარტდებით... 🔄');
         setTimeout(() => {
-            location.reload();
+            if (userEmail && !userEmail.startsWith('guest_')) {
+                // If registered, just restart logic without reload or check persistence
+                startGameSession(true);
+                get('defeat-modal').classList.add('hidden');
+                get('ratings-modal').classList.add('hidden');
+                // We need to clear stains though
+                document.querySelectorAll('.stain').forEach(s => s.remove());
+            } else {
+                location.reload();
+            }
         }, 2000);
     };
-
-
 
     // Share Best Score Button
     get('share-best-btn').onclick = () => {
@@ -534,18 +559,22 @@ function initUI() {
         localStorage.setItem('tilo_ui_state', JSON.stringify(state));
     };
 
+    // Initialize UI State
     loadUIState();
 
     get('shop-btn').onclick = () => get('shop-modal').classList.remove('hidden');
     get('close-shop').onclick = () => get('shop-modal').classList.add('hidden');
-    get('settings-btn').onclick = () => get('settings-modal').classList.remove('hidden');
     get('close-settings').onclick = () => get('settings-modal').classList.add('hidden');
 
     get('restart-game-btn').onclick = () => {
-        location.reload();
+        if (userEmail && !userEmail.startsWith('guest_')) {
+            startGameSession(true);
+            get('defeat-modal').classList.add('hidden');
+            document.querySelectorAll('.stain').forEach(s => s.remove());
+        } else {
+            location.reload();
+        }
     };
-
-    /* Donation logic removed */
 
     get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
     get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');

@@ -233,18 +233,45 @@
     <!-- Authentication Modal -->
     <div id="auth-modal" class="modal hidden">
         <div class="modal-content glass">
-            <h2 id="auth-title">ავტორიზაცია</h2>
-            <div id="auth-forms">
-                <input type="email" id="auth-email" placeholder="ელ-ფოსტა">
-                <input type="password" id="auth-password" placeholder="პაროლი">
-                <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
+            <span class="close-modal" id="close-auth">&times;</span>
+            <div id="auth-mode-toggle" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="show-login-btn" class="action-btn" style="background: var(--cloth-color);">შესვლა</button>
+                <button id="show-register-btn" class="action-btn second-btn">რეგისტრაცია</button>
+            </div>
 
-                <div id="auth-buttons">
-                    <button id="login-btn" class="action-btn">შესვლა</button>
-                    <button id="register-btn" class="action-btn second-btn">რეგისტრაცია</button>
+            <h2 id="auth-title">ავტორიზაცია</h2>
+
+            <div id="auth-forms" style="margin-top: 20px;">
+                <div id="nick-field" class="auth-field">
+                    <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
+                </div>
+                <div id="email-field" class="auth-field">
+                    <input type="text" id="auth-email" placeholder="ელ-ფოსტა / ნიკნეიმი">
+                </div>
+                <div id="pass-field" class="auth-field">
+                    <input type="password" id="auth-password" placeholder="პაროლი">
+                </div>
+
+                <div id="auth-action-container" style="margin-top: 20px;">
+                    <button id="auth-submit-btn" class="action-btn">შესვლა</button>
                 </div>
                 <p id="auth-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 10px;"></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Restricted Feature Modal -->
+    <div id="restricted-modal" class="modal hidden">
+        <div class="modal-content glass" style="border: 2px solid var(--cloth-color);">
+            <span class="close-modal" id="close-restricted">&times;</span>
+            <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+            <h2 style="margin-bottom: 15px;">ფუნქცია შეზღუდულია</h2>
+            <p style="opacity: 0.8; margin-bottom: 25px; line-height: 1.6;">
+                ეს ფუნქცია ხელმისაწვდომია მხოლოდ დარეგისტრირებული მომხმარებლებისთვის. <br>
+                დარეგისტრირდით უფასოდ, რათა შეინახოთ თქვენი შედეგები და ქოინები!
+            </p>
+            <button id="go-to-register-btn" class="action-btn">✨ რეგისტრაცია</button>
+            <button id="not-now-btn" class="action-btn second-btn" style="margin-top: 10px;">არა, მადლობა</button>
         </div>
     </div>
 
