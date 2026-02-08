@@ -20,8 +20,6 @@ let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
 let isVip = localStorage.getItem('tilo_vip') === 'true';
-let onlinePlayers = [];
-let lbTimeLeft = 10;
 let currentTheme = localStorage.getItem('tilo_theme') || 'light';
 document.body.className = `theme-${currentTheme}`;
 
@@ -157,39 +155,9 @@ async function initDatabase() {
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
 
-        checkWeeklyReset();
-
     } catch (e) { console.error("DB Init Error", e); }
 }
 
-async function checkWeeklyReset() {
-    try {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        // Reset happens Sunday 00:00 (Saturday 24:00)
-        const day = now.getDay();
-        const sundayTimestamp = new Date(now.setDate(now.getDate() - day)).getTime();
-
-        const config = await sql`SELECT value FROM system_config WHERE key = 'last_lb_reset'`;
-        const lastReset = config.length > 0 ? parseInt(config[0].value) : 0;
-
-        if (lastReset < sundayTimestamp) {
-            console.log("Weekly Leaderboard Reset Triggered...");
-            // Only one client should succeed in updating the timestamp
-            const result = await sql`INSERT INTO system_config (key, value) 
-                                    VALUES ('last_lb_reset', ${sundayTimestamp})
-                                    ON CONFLICT (key) DO UPDATE 
-                                    SET value = ${sundayTimestamp} 
-                                    WHERE system_config.value IS NULL OR CAST(system_config.value AS BIGINT) < ${sundayTimestamp}
-                                    RETURNING *`;
-
-            if (result.length > 0) {
-                await sql`UPDATE users SET score = 0, survival_time = 0`;
-                console.log("Database reset complete.");
-            }
-        }
-    } catch (e) { console.error("Reset Check Error", e); }
-}
 
 async function checkForUpdates() {
     try {
@@ -311,67 +279,11 @@ async function syncUserData(force = false) {
     }, 1000);
 }
 
-async function fetchLeaderboard() {
+async function fetchOnlineCount() {
     try {
-        const result = await sql`
-            SELECT nickname, score, survival_time, is_vip,
-            CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
-            FROM users 
-            WHERE nickname IS NOT NULL
-            ORDER BY score DESC, efficiency ASC
-            LIMIT 50
-        `;
-        onlinePlayers = Array.isArray(result) ? result : [];
-        updateLeaderboardUI();
-
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '60 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
-    } catch (e) {
-        console.error("LB Fetch Error:", e);
-    }
-}
-
-function updateLeaderboardUI() {
-    const list = get('leaderboard-list');
-    if (!list) return;
-
-    if (!onlinePlayers || onlinePlayers.length === 0) {
-        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">ჯერჯერობით მოთამაშეები არ არიან...</p>';
-        return;
-    }
-
-    const combined = [...onlinePlayers].sort((a, b) => {
-        // First sort by score (descending)
-        if (b.score !== a.score) return b.score - a.score;
-        // Then by efficiency (ascending - lower is better)
-        let effA = a.score > 0 ? a.survival_time / a.score : 999999;
-        let effB = b.score > 0 ? b.survival_time / b.score : 999999;
-        return effA - effB;
-    });
-
-    list.innerHTML = '';
-    combined.forEach((entry, i) => {
-        const isMe = entry.nickname === nickname;
-        const item = document.createElement('div');
-        item.className = 'lb-item';
-        if (isMe) item.style.background = "rgba(255, 215, 0, 0.1)";
-        if (entry.is_vip) item.classList.add('vip-rainbow-text');
-
-        const timeVal = entry.survival_time || 0;
-        const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : '0.00';
-
-        item.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="lb-rank">#${i + 1}</span>
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 700;">${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
-                    <span style="font-size: 0.7rem; opacity: 0.6;">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
-                </div>
-            </div>
-            <span style="font-weight: 800;">${Math.floor(entry.score)} ✨</span>
-        `;
-        list.appendChild(item);
-    });
+    } catch (e) { }
 }
 
 // --- Game Logic ---
@@ -507,11 +419,6 @@ function initUI() {
         if (opt.dataset.theme === currentTheme) opt.classList.add('active');
     });
 
-    get('leaderboard-btn').onclick = () => {
-        fetchLeaderboard();
-        get('leaderboard-modal').classList.remove('hidden');
-    };
-    get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
 }
 
 function setupChat() {
@@ -741,9 +648,8 @@ async function handleGameOver() {
         localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
     }
 
-    // Force final sync and refresh LB
+    // Force final sync
     await syncUserData(true);
-    fetchLeaderboard();
 
     get('final-stains').textContent = Math.floor(finalScore);
     get('final-time').textContent = finalTime;
@@ -856,13 +762,9 @@ window.addEventListener('load', async () => {
         get('auth-modal').classList.add('hidden');
     } else get('auth-modal').classList.remove('hidden');
 
-    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchLeaderboard();
+    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchOnlineCount();
 
-    setInterval(() => {
-        lbTimeLeft--;
-        if (lbTimeLeft <= 0) { fetchLeaderboard(); lbTimeLeft = 10; }
-        if (get('lb-timer')) get('lb-timer').textContent = `(${lbTimeLeft}წ)`;
-    }, 1000);
+    setInterval(fetchOnlineCount, 10000);
 
     setInterval(checkForUpdates, 30000);
     setInterval(() => { if (userEmail) syncUserData(); }, 5000);
