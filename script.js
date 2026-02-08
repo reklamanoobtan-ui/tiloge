@@ -148,11 +148,20 @@ async function initDatabase() {
             password TEXT,
             nickname TEXT,
             score INTEGER DEFAULT 0,
+            coins INTEGER DEFAULT 0,
             survival_time INTEGER DEFAULT 0,
+            best_score INTEGER DEFAULT 0,
+            best_survival_time INTEGER DEFAULT 0,
+            total_survival_time INTEGER DEFAULT 0,
             last_seen TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW()
+            created_at TIMESTAMP DEFAULT NOW(),
+            is_vip BOOLEAN DEFAULT FALSE
         )`;
 
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_score INTEGER DEFAULT 0`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
 
         // Drop UNIQUE constraint on nickname if it exists (for existing databases)
@@ -180,14 +189,19 @@ async function initDatabase() {
     } catch (e) { console.error("DB Init Error", e); }
 }
 
-async function syncUserData() {
+async function syncUserData(isFinal = false) {
     if (!userEmail) return;
     try {
         const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
         // Live Update: Overwrite stats with current session values
+        // Accumulate total time: we update last_seen and diff
         await sql`UPDATE users SET 
             score = ${Math.floor(score)},
+            coins = ${coins},
             survival_time = ${currentSurvival},
+            best_score = GREATEST(best_score, ${Math.floor(score)}),
+            best_survival_time = GREATEST(best_survival_time, ${currentSurvival}),
+            total_survival_time = total_survival_time + (CASE WHEN last_seen > NOW() - INTERVAL '30 seconds' THEN EXTRACT(EPOCH FROM (NOW() - last_seen)) ELSE 0 END),
             last_seen = NOW()
             WHERE email = ${userEmail}`;
     } catch (e) { }
@@ -335,14 +349,52 @@ async function fetchSharedScores() {
         if (window.cardTimerInterval) clearInterval(window.cardTimerInterval);
         window.cardTimerInterval = setInterval(updateCardsTime, 1000);
 
-        // Auto-refresh every 10 seconds (slower refresh, cards handle local decay)
+        // Auto-refresh every 15 seconds
         if (get('ratings-modal').classList.contains('hidden')) return;
         setTimeout(fetchSharedScores, 15000);
-
+        fetchGlobalRankings(); // Also fetch global ones
     } catch (e) {
         console.error("Shared Scores Error:", e);
         grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
     }
+}
+
+async function fetchGlobalRankings() {
+    if (get('ratings-modal').classList.contains('hidden')) return;
+
+    const renderList = (id, data, suffix, statKey) => {
+        const list = get(id);
+        if (!list) return;
+        list.innerHTML = '';
+        data.forEach((u, i) => {
+            const item = document.createElement('div');
+            item.className = 'mini-lb-item';
+            const val = u[statKey] || 0;
+            const crown = u.is_vip ? '👑 ' : '';
+            const nameColor = u.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+            item.innerHTML = `
+                <div class="mini-lb-info">
+                    <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${u.nickname.substring(0, 10)}</span>
+                </div>
+                <span class="mini-lb-score">${val}${suffix}</span>
+            `;
+            list.appendChild(item);
+        });
+    };
+
+    try {
+        // Top Scores
+        const topScores = await sql`SELECT nickname, best_score, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY best_score DESC LIMIT 10`;
+        renderList('top-scores-list', topScores, '✨', 'best_score');
+
+        // Top Coins
+        const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY coins DESC LIMIT 10`;
+        renderList('top-coins-list', topCoins, '🪙', 'coins');
+
+        // Top Total Time
+        const topTime = await sql`SELECT nickname, total_survival_time, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY total_survival_time DESC LIMIT 10`;
+        renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
+    } catch (e) { console.error("Global Rankings Error:", e); }
 }
 
 async function shareScore(scoreVal, timeVal) {
@@ -624,8 +676,28 @@ function initUI() {
     get('ratings-btn').onclick = () => {
         get('ratings-modal').classList.remove('hidden');
         fetchSharedScores();
+        fetchGlobalRankings();
     };
     get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
+
+    get('show-shared-scores').onclick = () => {
+        get('shared-scores-view').classList.remove('hidden');
+        get('global-rankings-view').classList.add('hidden');
+        get('show-shared-scores').style.opacity = "1";
+        get('show-shared-scores').style.borderBottom = "3px solid var(--cloth-color)";
+        get('show-global-best').style.opacity = "0.6";
+        get('show-global-best').style.borderBottom = "none";
+    };
+
+    get('show-global-best').onclick = () => {
+        get('shared-scores-view').classList.add('hidden');
+        get('global-rankings-view').classList.remove('hidden');
+        get('show-global-best').style.opacity = "1";
+        get('show-global-best').style.borderBottom = "3px solid var(--cloth-color)";
+        get('show-shared-scores').style.opacity = "0.6";
+        get('show-shared-scores').style.borderBottom = "none";
+        fetchGlobalRankings();
+    };
 
     // Share Rating Button (from Game Over modal)
     get('share-rating-btn').onclick = async () => {
@@ -1618,6 +1690,16 @@ function startGameSession(dontReset = false) {
 
     // Defeat condition check
     setInterval(checkDefeatCondition, 1000);
+
+    // Round Timer
+    setInterval(() => {
+        if (gameActive) {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(elapsed / 60);
+            const s = elapsed % 60;
+            if (get('round-timer-val')) get('round-timer-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+    }, 1000);
 
     // Sync loop
     setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
