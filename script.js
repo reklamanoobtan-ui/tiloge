@@ -965,6 +965,7 @@ function startHelperBot() {
 }
 
 function applyUpgrade(id) {
+    isUpgradeOpen = false; // Clear flag before resuming loop
     switch (id) {
         case 'diff': intervalMultiplier *= 0.85; break; // Balanced
         case 'speed': helperSpeedMultiplier *= 1.25; break;
