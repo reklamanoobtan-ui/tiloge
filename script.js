@@ -1243,7 +1243,7 @@ function getSpawnInterval() {
     return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
 }
 
-function createStain(isBoss = false, isTriangle = false) {
+function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0) {
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
@@ -1265,7 +1265,7 @@ function createStain(isBoss = false, isTriangle = false) {
         let scalingFactor = Math.pow(2, Math.floor(score / 10000));
         let baseHealth = isTriangle ? 9000 : 3000;
 
-        health = baseHealth * scalingFactor;
+        health = baseHealth * scalingFactor * healthMultiplier;
         size = isTriangle ? 300 : 250;
 
         if (isTriangle) {
@@ -1710,17 +1710,23 @@ function startGameSession(dontReset = false) {
     // Boss spawning interval
     setInterval(() => {
         if (gameActive) {
-            // General Bosses
-            const bossSpawnCount = Math.floor(score / 500) + 1;
-            for (let i = 0; i < bossSpawnCount; i++) {
-                createStain(true);
+            // General Bosses (Cap at 20, scale health for overflow)
+            const rawBossCount = Math.floor(score / 500) + 1;
+            const finalBossSpawn = Math.min(rawBossCount, 20);
+            const bossHealthMult = rawBossCount > 20 ? (rawBossCount / 20) : 1.0;
+
+            for (let i = 0; i < finalBossSpawn; i++) {
+                createStain(true, false, bossHealthMult);
             }
 
-            // Triangle Elite Bosses (scaling every 1000 score)
+            // Triangle Elite Bosses (Cap at 10, scale health for overflow)
             if (score >= 1000) {
-                const triangleCount = Math.floor((score - 1000) / 1000) + 1;
-                for (let i = 0; i < triangleCount; i++) {
-                    createStain(true, true);
+                const rawTriangleCount = Math.floor((score - 1000) / 1000) + 1;
+                const finalTriangleSpawn = Math.min(rawTriangleCount, 10);
+                const triangleHealthMult = rawTriangleCount > 10 ? (rawTriangleCount / 10) : 1.0;
+
+                for (let i = 0; i < finalTriangleSpawn; i++) {
+                    createStain(true, true, triangleHealthMult);
                 }
             }
         }
