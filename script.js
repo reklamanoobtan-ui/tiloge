@@ -441,6 +441,75 @@ function initUI() {
     get('buy-skin-jungle').onclick = () => handleSkinAction('jungle');
     get('buy-skin-electric').onclick = () => handleSkinAction('electric');
 
+    // UI Toggle Logic
+    get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
+    get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
+
+    const toggleElement = (id, show) => {
+        const el = get(id); // Use 'get' for consistent ID selection, but classes need generic handling
+        if (el) {
+            if (show) el.classList.remove('hidden-ui');
+            else el.classList.add('hidden-ui');
+        } else {
+            // Handle class-based elements like header-ui user-stats
+            // Actually user-stats is inside header-ui. 
+            // We'll target specific IDs where possible or use querySelector for classes
+            if (id === 'user-stats') {
+                const stats = document.querySelector('.user-stats');
+                if (stats) show ? stats.style.display = 'flex' : stats.style.display = 'none';
+            }
+        }
+    };
+
+    const loadUIState = () => {
+        const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, lb: true, chat: true };
+        get('toggle-stats').checked = uiState.stats;
+        get('toggle-lb').checked = uiState.lb;
+        get('toggle-chat').checked = uiState.chat;
+
+        const statsEl = document.querySelector('.user-stats');
+        if (statsEl) statsEl.style.visibility = uiState.stats ? 'visible' : 'hidden'; // Use visibility to keep layout or display: none? User said hide.
+        if (statsEl) statsEl.style.display = uiState.stats ? 'flex' : 'none';
+
+        const lb = get('mini-leaderboard');
+        if (lb) lb.style.display = uiState.lb ? 'block' : 'none';
+
+        const chat = get('global-chat');
+        if (chat) chat.style.display = uiState.chat ? 'flex' : 'none';
+    };
+
+    get('toggle-stats').onchange = (e) => {
+        const show = e.target.checked;
+        const statsEl = document.querySelector('.user-stats');
+        if (statsEl) statsEl.style.display = show ? 'flex' : 'none';
+        saveUIState();
+    };
+
+    get('toggle-lb').onchange = (e) => {
+        const show = e.target.checked;
+        const lb = get('mini-leaderboard');
+        if (lb) lb.style.display = show ? 'block' : 'none';
+        saveUIState();
+    };
+
+    get('toggle-chat').onchange = (e) => {
+        const show = e.target.checked;
+        const chat = get('global-chat');
+        if (chat) chat.style.display = show ? 'flex' : 'none';
+        saveUIState();
+    };
+
+    const saveUIState = () => {
+        const state = {
+            stats: get('toggle-stats').checked,
+            lb: get('toggle-lb').checked,
+            chat: get('toggle-chat').checked
+        };
+        localStorage.setItem('tilo_ui_state', JSON.stringify(state));
+    };
+
+    loadUIState();
+
     get('shop-btn').onclick = () => get('shop-modal').classList.remove('hidden');
     get('close-shop').onclick = () => get('shop-modal').classList.add('hidden');
     get('settings-btn').onclick = () => get('settings-modal').classList.remove('hidden');
@@ -666,10 +735,10 @@ function showUpgradeOptions() {
     let availableUpgrades = UPGRADE_POOL.filter(u => {
         if (u.id === 'karcher') return upgradeCounts.karcher < 1;
         if (u.id === 'helperSpawn') return upgradeCounts.helperSpawn < 10;
-        if (u.id === 'strength') return strengthMultiplier < 3.0;
-        if (u.id === 'radius') return radiusMultiplier < 3.0;
-        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0;
-        if (u.id === 'speed') return intervalMultiplier > 0.1;
+        if (u.id === 'strength') return strengthMultiplier < 2.0;    // Max 100% boost (Base 1.0 + 1.0)
+        if (u.id === 'radius') return radiusMultiplier < 2.0;        // Max 100% boost
+        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 2.0; // Max 100% boost
+        if (u.id === 'speed') return intervalMultiplier > 0.2;       // Cap speed earlier
         return true;
     });
 
