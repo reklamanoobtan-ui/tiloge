@@ -596,7 +596,7 @@ function startHelperBot() {
 }
 
 const UPGRADE_POOL = [
-    { id: 'speed', title: "⚡ პროგრესი", desc: "+10% სირთულე", prob: 0.15, action: () => { intervalMultiplier *= 0.9; upgradeCounts.speed++; } },
+    { id: 'speed', title: "⚡ სირთულე", desc: "+10% სირთულე", prob: 0.15, action: () => { intervalMultiplier *= 0.9; upgradeCounts.speed++; } },
     { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+30% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.3; upgradeCounts.helperSpeed++; } },
     { id: 'helperSpawn', title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => { startHelperBot(); upgradeCounts.helperSpawn++; } },
     { id: 'radius', title: "📏 რადიუსი S", desc: "+30% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.3; upgradeCounts.radius++; updatePowerStats(); } },
@@ -619,7 +619,7 @@ function showUpgradeOptions() {
         if (u.id === 'strength') return strengthMultiplier < 3.0;
         if (u.id === 'radius') return radiusMultiplier < 3.0;
         if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0;
-        if (u.id === 'speed') return intervalMultiplier > 0.01;
+        if (u.id === 'speed') return intervalMultiplier > 0.01; // Hide when reaching 0.01
         return true;
     });
 
