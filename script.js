@@ -1083,50 +1083,120 @@ function drag(e) {
     }
 }
 
-window.addEventListener('load', async () => {
-    await initDatabase();
-    await checkForUpdates();
-    score = 0; startTime = Date.now();
+// Event Listeners (UI-independent)
+get('play-game-btn').onclick = startGameSession;
+get('player-nick').onkeypress = (e) => { if (e.key === 'Enter') startGameSession(); };
+
+// Drag/Touch Events
+const canvas = get('canvas-container');
+canvas.addEventListener("mousedown", dragStart);
+canvas.addEventListener("touchstart", dragStart, { passive: false });
+window.addEventListener("mouseup", () => isDragging = false);
+window.addEventListener("touchend", () => isDragging = false);
+window.addEventListener("mousemove", drag);
+window.addEventListener("touchmove", drag, { passive: false });
+window.addEventListener("resize", centerCloth);
+
+// Initial Setup
+centerCloth();
+initUI();
+setupChat();
+
+// Game is paused initially
+gameActive = false;
+
+// Auto-fill nick if present
+if (nickname) get('player-nick').value = nickname;
+
+// Background interval updates (Leaderboard, Version)
+setInterval(fetchLeaderboard, 10000);
+setInterval(checkForUpdates, 30000);
+
+// Boss Spawner (Checking gameActive internally)
+setInterval(() => {
+    if (gameActive) {
+        bossCount++;
+        const bossSpawnCount = Math.floor(score / 500) + 1;
+        for (let i = 0; i < bossSpawnCount; i++) createStain(true);
+    }
+}, 60000);
+
+// Defeat check
+setInterval(checkDefeatCondition, 1000);
+// Cleaning loop always runs but does nothing if not dragging or paused? 
+// Actually cleaning loop depends on dragging, which is fine.
+setInterval(checkCleaning, 200);
+});
+
+async function startGameSession() {
+    const nickInput = get('player-nick');
+    const nick = nickInput.value.trim();
+    const err = get('star-error');
+
+    if (!nick) {
+        err.textContent = "გთხოვთ ჩაწეროთ ნიკნეიმი!";
+        return;
+    }
+    if (nick.length > 15) {
+        err.textContent = "ტექსტი ძალიან გრძელია!";
+        return;
+    }
+
+    nickname = nick;
+    localStorage.setItem('tilo_nick', nickname);
+    err.textContent = "";
+
+    // Determine user status (returning vs new guest)
+    try {
+        const uData = await sql`SELECT * FROM users WHERE nickname = ${nick}`;
+        if (uData.length > 0) {
+            // Returning user found
+            const u = uData[0];
+            userEmail = u.email;
+            score = u.score;
+            coins = u.coins;
+            isVip = u.is_vip;
+            ownedSkins = JSON.parse(u.owned_skins || '[]');
+            currentSkin = u.current_skin || 'default';
+            lastBestScore = { score: u.best_score || 0, time: u.best_survival_time || 0 };
+            console.log("Welcome back, " + nick);
+        } else {
+            // New user registration (Auto-generated credentials for seamless play)
+            const dummyId = Date.now();
+            userEmail = `player_${dummyId}@tilo.ge`;
+            const pass = `pass_${dummyId}`;
+            await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${userEmail}, ${pass}, ${nick}, 0)`;
+            console.log("New player created: " + nick);
+            score = 0;
+            coins = 0;
+        }
+    } catch (e) {
+        console.warn("DB Connection issue, playing offline/guest mode", e);
+    }
+
+    // Apply User State
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
-    if (userEmail) {
-        try {
-            const uData = await sql`SELECT score, survival_time, best_score, best_survival_time FROM users WHERE email = ${userEmail} `;
-            if (uData.length > 0) {
-                score = uData[0].score;
-                lastBestScore = {
-                    score: uData[0].best_score || 0,
-                    time: uData[0].best_survival_time || 0
-                };
-                localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
-            }
-        } catch (e) { }
-        get('auth-modal').classList.add('hidden');
-    } else get('auth-modal').classList.remove('hidden');
+    updatePowerStats();
+    updateUIValues();
+    fetchLeaderboard();
 
-    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchLeaderboard();
+    // Reveal UI
+    get('game-start-overlay').classList.add('hidden');
+    document.querySelectorAll('.hidden-game-ui').forEach(el => {
+        el.classList.remove('hidden-game-ui');
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'all';
+    });
 
-    setInterval(fetchLeaderboard, 10000); // Check every 10s for updates
-
-    setInterval(checkForUpdates, 30000);
-    setInterval(() => { if (userEmail) syncUserData(); }, 5000);
-
-    setInterval(() => {
-        if (gameActive) {
-            bossCount++;
-            const bossSpawnCount = Math.floor(score / 500) + 1;
-            for (let i = 0; i < bossSpawnCount; i++) createStain(true);
-        }
-    }, 60000);
-
+    // Start Game Loops
+    gameActive = true;
+    startTime = Date.now();
     scheduleNextStain();
-    setInterval(checkCleaning, 200);
-    setInterval(checkDefeatCondition, 1000);
-});
 
-window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", () => isDragging = false); window.addEventListener("mousemove", drag);
-window.addEventListener("touchstart", dragStart); window.addEventListener("touchend", () => isDragging = false); window.addEventListener("touchmove", drag);
-window.addEventListener('resize', centerCloth);
+    // Sync loop
+    setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 5000);
+}

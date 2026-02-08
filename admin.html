@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tilo.ge - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .admin-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff4d4d;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            width: 60%;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .btn-red {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .btn-gold {
+            background: #ffd700;
+            color: black;
+        }
+
+        .btn-blue {
+            background: #4facfe;
+            color: white;
+        }
+
+        .status {
+            margin-top: 10px;
+            height: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-container">
+        <h1>🛡️ ADMIN CONTROL</h1>
+
+        <div class="section">
+            <h3>Player Management</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="target-nick" placeholder="Enter Nickname...">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-gold" id="give-coins">+1000 Coins</button>
+                <button class="btn-blue" id="give-vip">Grant VIP</button>
+                <button class="btn-red" id="ban-user">BAN / RESET</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>System Control</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="broadcast-msg" placeholder="System Message..." style="width: 70%;">
+                <button class="btn-blue" id="send-broadcast">Broadcast</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="btn-red" id="reset-lb" style="width: 100%;">⚠ RESET LEADERBOARD ⚠</button>
+            </div>
+        </div>
+
+        <div class="status" id="status-msg"></div>
+    </div>
+
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+        const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
+
+        const get = (id) => document.getElementById(id);
+        const status = get('status-msg');
+
+        function log(msg, color = 'green') {
+            status.textContent = msg;
+            status.style.color = color;
+            setTimeout(() => status.textContent = '', 3000);
+        }
+
+        // Auth Check (Simple client-side for now as requested, ideally should be server-side)
+        const nick = localStorage.getItem('tilo_nick');
+        if (nick !== 'unoobi') {
+            document.body.innerHTML = '<h1 style="color:red">ACCESS DENIED</h1>';
+        }
+
+        get('give-coins').onclick = async () => {
+            const name = get('target-nick').value.trim();
+            if (!name) return;
+            try {
+                await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${name}`;
+                log(`Sent 1000 coins to ${name}`);
+            } catch (e) { log('Error updating database', 'red'); }
+        };
+
+        get('give-vip').onclick = async () => {
+            const name = get('target-nick').value.trim();
+            if (!name) return;
+            try {
+                await sql`UPDATE users SET is_vip = true WHERE nickname = ${name}`;
+                log(`Given VIP to ${name}`);
+            } catch (e) { log('Error updating database', 'red'); }
+        };
+
+        get('ban-user').onclick = async () => {
+            const name = get('target-nick').value.trim();
+            if (!name) return;
+            if (confirm(`Are you sure you want to BAN ${name}?`)) {
+                try {
+                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${name}`;
+                    log(`Banned/Reset ${name}`, 'red');
+                } catch (e) { log('Error updating database', 'red'); }
+            }
+        };
+
+        get('reset-lb').onclick = async () => {
+            if (confirm("RESET ENTIRE LEADERBOARD?")) {
+                try {
+                    await sql`UPDATE users SET score = 0, survival_time = 0`;
+                    log("Leaderboard Reset!", 'red');
+                } catch (e) { log('Error', 'red'); }
+            }
+        };
+
+        get('send-broadcast').onclick = async () => {
+            const msg = get('broadcast-msg').value.trim();
+            if (!msg) return;
+            try {
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+                get('broadcast-msg').value = '';
+                log("Broadcast sent!");
+            } catch (e) { log('Error', 'red'); }
+        };
+
+    </script>
+</body>
+
+</html>

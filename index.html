@@ -13,15 +13,29 @@
 </head>
 
 <body>
-    <!-- Sidebar Leaderboard -->
-    <div id="mini-leaderboard" class="mini-lb glass">
+    <!-- Game Start Overlay (Slither Style) -->
+    <div id="game-start-overlay" class="game-overlay">
+        <div class="start-container">
+            <h1 class="game-title">TILO.GE</h1>
+            <input type="text" id="player-nick" class="nick-input" placeholder="ნიკნეიმი..." maxlength="15" autofocus>
+            <button id="play-game-btn" class="play-btn">თამაშის დაწყება</button>
+            <p id="star-error" style="color: #ff4d4d; margin-top: 10px; font-size: 0.9rem;"></p>
+        </div>
+        <div style="margin-top: 20px; color: rgba(255,255,255,0.3); font-size: 0.8rem;">
+            v2.3 | By ReklamaNoobTan
+        </div>
+    </div>
+
+    <!-- Sidebar Leaderboard (Hidden Initially) -->
+    <div id="mini-leaderboard" class="mini-lb glass hidden-game-ui">
         <h3>🏆 TOP 10 (ეფექტურობა)</h3>
         <div id="mini-lb-list">
             <p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">იტვირთება...</p>
         </div>
     </div>
 
-    <div class="header-ui">
+    <!-- Main Game HUD (Hidden Initially) -->
+    <div id="game-hud" class="header-ui hidden-game-ui">
         <div class="user-stats">
             <div class="stat-box">✨ <span id="score-val">0</span> ქულა</div>
             <div class="stat-box">🪙 <span id="coins-val">0</span> ქოინი</div>
@@ -39,57 +53,9 @@
             <button id="donate-btn" class="glass-btn donate-btn">💎 დონაცია</button>
             <button id="buy-vip-btn" class="glass-btn vip-btn">👑 VIP (2 ₾)</button>
             <button id="ui-toggle-btn" class="glass-btn" style="background: rgba(255, 255, 255, 0.15);">👁️ UI</button>
-            <button id="admin-panel-btn" class="glass-btn hidden" style="background: #ff4d4d; color: white;">🛡️
-                ADMIN</button>
         </div>
     </div>
 
-    <!-- Admin Modal -->
-    <div id="admin-modal" class="modal hidden">
-        <div class="modal-content glass wide-modal" style="max-width: 500px;">
-            <span class="close-modal" id="close-admin">&times;</span>
-            <h2 style="color: #ff4d4d;">🛡️ ადმინ პანელი</h2>
-
-            <div class="settings-layout">
-                <div class="settings-col">
-                    <h3 class="section-title">მომხმარებლის მართვა</h3>
-                    <input type="text" id="admin-target-nick" placeholder="ნიკნეიმი"
-                        style="width: 100%; padding: 8px; margin-bottom: 5px;">
-                    <div style="display: flex; gap: 5px;">
-                        <button id="admin-give-coins" class="action-btn" style="font-size: 0.8rem;">+1000 🪙</button>
-                        <button id="admin-give-vip" class="action-btn"
-                            style="font-size: 0.8rem; background: #ffd700;">VIP</button>
-                        <button id="admin-ban-user" class="action-btn"
-                            style="font-size: 0.8rem; background: #333;">BAN</button>
-                    </div>
-                </div>
-
-                <div class="settings-col">
-                    <h3 class="section-title">სისტემა</h3>
-                    <button id="admin-reset-lb" class="action-btn" style="background: #ff4d4d; margin-bottom: 5px;">🏆
-                        რეიტინგის განულება</button>
-                    <input type="text" id="admin-broadcast-msg" placeholder="სისტემური შეტყობინება..."
-                        style="width: 100%; padding: 8px; margin-bottom: 5px;">
-                    <button id="admin-send-broadcast" class="action-btn" style="background: #4facfe;">📢
-                        გაგზავნა</button>
-                </div>
-
-                <div class="settings-col">
-                    <h3 class="section-title">თამაშის პარამეტრები</h3>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>⚡ გლობალური სიჩქარე</h3>
-                            <p>ნაკლები = უფრო ჩქარი</p>
-                        </div>
-                        <input type="number" id="admin-global-speed" value="1.0" step="0.1"
-                            style="width: 60px; padding: 5px;">
-                        <button id="admin-save-config" class="small-btn" style="padding: 5px 10px;">შენახვა</button>
-                    </div>
-                </div>
-            </div>
-            <p id="admin-status" style="margin-top: 10px; font-size: 0.8rem;"></p>
-        </div>
-    </div>
 
     <!-- Global Chat -->
     <div id="global-chat" class="chat-container glass">
