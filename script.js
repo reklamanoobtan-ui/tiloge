@@ -32,6 +32,7 @@ let lastBestScore = JSON.parse(localStorage.getItem('tilo_best_score')) || { sco
 let lastPrevScore = JSON.parse(localStorage.getItem('tilo_prev_score')) || { score: 0, time: 0 };
 let nextUpgradeScore = 10;
 let gameActive = true;
+let lastActivityTime = Date.now();
 
 // Helper Bot State (Roguelike only)
 let activeHelpers = 0;
@@ -701,16 +702,26 @@ function createStain(isBoss = false) {
 }
 
 function checkDefeatCondition() {
+    if (!gameActive) return;
     const totalCount = document.querySelectorAll('.stain').length;
-    if (totalCount >= 200 && !defeatTimer) {
+    const inactiveTime = (Date.now() - lastActivityTime) / 1000;
+    const isCrisis = totalCount >= 300 || inactiveTime > 30;
+
+    if (isCrisis && !defeatTimer) {
         let timeLeft = 60;
         defeatTimer = setInterval(() => {
+            if (!gameActive) { clearInterval(defeatTimer); defeatTimer = null; return; }
             timeLeft--;
             if (timeLeft <= 0) { clearInterval(defeatTimer); handleGameOver(); }
-            else if (timeLeft % 5 === 0) showStatusUpdate(`კრიზისი! ${timeLeft}წ დარჩა! ⚠️`);
+            else if (timeLeft % 5 === 0) {
+                const reason = totalCount >= 300 ? "ჭუჭყი ბევრია!" : "არააქტიური ხარ!";
+                showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
+            }
         }, 1000);
-    } else if (totalCount < 200 && defeatTimer) {
-        clearInterval(defeatTimer); defeatTimer = null; showStatusUpdate("კრიზისი დაძლეულია! ✅");
+    } else if (!isCrisis && defeatTimer) {
+        clearInterval(defeatTimer);
+        defeatTimer = null;
+        showStatusUpdate("კრიზისი დაძლეულია! ✅");
     }
 }
 
@@ -800,7 +811,10 @@ function dragStart(e) {
     const cx = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
     const cy = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
     initialX = cx - xOffset; initialY = cy - yOffset;
-    if (e.target === get('cloth') || get('cloth').contains(e.target)) isDragging = true;
+    if (e.target === get('cloth') || get('cloth').contains(e.target)) {
+        isDragging = true;
+        lastActivityTime = Date.now();
+    }
 }
 
 function drag(e) {
@@ -811,7 +825,10 @@ function drag(e) {
         currentX = cx - initialX; currentY = cy - initialY;
         xOffset = currentX; yOffset = currentY;
         const cloth = get('cloth');
-        if (cloth) cloth.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        if (cloth) {
+            cloth.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            lastActivityTime = Date.now();
+        }
         checkCleaning();
     }
 }
@@ -857,6 +874,7 @@ window.addEventListener('load', async () => {
 
     scheduleNextStain();
     setInterval(checkCleaning, 200);
+    setInterval(checkDefeatCondition, 1000);
 });
 
 window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", () => isDragging = false); window.addEventListener("mousemove", drag);
