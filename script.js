@@ -659,8 +659,17 @@ function showUpgradeOptions() {
 
     let selectedCards = [];
     let attempts = 0;
+    const currentInterval = getSpawnInterval();
+
     while (selectedCards.length < 3 && attempts < 50) {
         const card = weightedRandom(UPGRADE_POOL);
+
+        // Skip speed card if already at minimum speed
+        if (card.title === "⚡ ლაქების აჩქარება" && currentInterval <= 10) {
+            attempts++;
+            continue;
+        }
+
         if (!selectedCards.some(c => c.title === card.title)) {
             selectedCards.push(card);
         }
