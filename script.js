@@ -745,6 +745,9 @@ function initUI() {
         shareScore(prevData.score, prevData.time);
     };
 
+    // Revive Button
+    get('revive-btn').onclick = () => reviveGame();
+
     const loadUIState = () => {
         const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, chat: true };
         get('toggle-stats').checked = uiState.stats;
@@ -1260,7 +1263,7 @@ function createStain(isBoss = false, isTriangle = false) {
 
         // Every 10,000 score scaling (doubles at each milestone)
         let scalingFactor = Math.pow(2, Math.floor(score / 10000));
-        let baseHealth = isTriangle ? 4500 : 1500;
+        let baseHealth = isTriangle ? 9000 : 3000;
 
         health = baseHealth * scalingFactor;
         size = isTriangle ? 300 : 250;
@@ -1365,6 +1368,37 @@ function gameOver() {
 
     saveStatsToLocal();
     syncUserData(true); // Final sync
+}
+
+async function reviveGame() {
+    if (coins < 1000) {
+        showStatusUpdate('არ გაქვს საკმარისი ქოინები! (1000 🪙) ❌');
+        return;
+    }
+
+    if (confirm('ნამდვილად გსურთ 1000 ქოინის დახარჯვა და თამაშის გაგრძელება?')) {
+        coins -= 1000;
+        saveStatsToLocal();
+        updateUIValues();
+
+        // Clear all stains
+        document.querySelectorAll('.stain').forEach(s => s.remove());
+
+        // Reset defeat timer and state
+        if (defeatTimer) {
+            clearInterval(defeatTimer);
+            defeatTimer = null;
+        }
+
+        get('defeat-modal').classList.add('hidden');
+        gameActive = true;
+
+        // Resume loops
+        lastActivityTime = Date.now();
+        scheduleNextStain();
+        showStatusUpdate('თამაში გაგრძელდა! ✨💪');
+        syncUserData(true);
+    }
 }
 
 // User Interaction (Mouse/Touch)
