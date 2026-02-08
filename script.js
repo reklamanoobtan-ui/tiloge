@@ -245,74 +245,7 @@ async function fetchLeaderboard() {
     }
 }
 
-async function fetchRatings() {
-    const grid = get('ratings-grid');
-    if (!grid) return;
 
-    try {
-        grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
-
-        // Fetch all players with their best achievements
-        const result = await sql`
-            SELECT nickname, 
-                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
-                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
-                   CASE 
-                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
-                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
-                       ELSE 0 
-                   END as d_efficiency,
-                   is_vip,
-                   last_seen
-            FROM users 
-            WHERE nickname IS NOT NULL 
-              AND nickname != ''
-              AND GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0
-            ORDER BY d_efficiency ASC, d_score ASC
-            LIMIT 100
-        `;
-
-        if (result.length === 0) {
-            grid.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">მოთამაშეები ვერ მოიძებნა</p>';
-            return;
-        }
-
-        grid.innerHTML = '';
-        result.forEach((player) => {
-            const card = document.createElement('div');
-            card.className = 'rating-card';
-            if (player.is_vip) card.classList.add('vip-card');
-
-            const scoreVal = parseFloat(player.d_score || 0);
-            const timeVal = parseFloat(player.d_time || 0);
-            const ld = player.d_efficiency ? parseFloat(player.d_efficiency).toFixed(2) : '0.00';
-            const crown = player.is_vip ? '👑 ' : '';
-
-            card.innerHTML = `
-                <h3>${crown}${player.nickname}</h3>
-                <div class="rating-stats">
-                    <div class="rating-stat">
-                        <span>ქულა:</span>
-                        <strong>${scoreVal} ✨</strong>
-                    </div>
-                    <div class="rating-stat">
-                        <span>დრო:</span>
-                        <strong>${timeVal}წმ ⏱️</strong>
-                    </div>
-                    <div class="rating-stat">
-                        <span>ეფექტურობა:</span>
-                        <strong>LD ${ld}</strong>
-                    </div>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-
-    } catch (e) {
-        console.error("Ratings Error:", e);
-        grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
-    }
-}
 
 async function fetchSharedScores() {
     const grid = get('ratings-grid');
@@ -385,10 +318,11 @@ async function shareScore(scoreVal, timeVal) {
 
         showStatusUpdate('შედეგი გაზიარდა! ✅');
 
-        // Open ratings modal and show shared tab
+        // Always show the ratings list after sharing
         get('settings-modal').classList.add('hidden');
+        get('defeat-modal').classList.add('hidden');
         get('ratings-modal').classList.remove('hidden');
-        switchToSharedTab();
+        fetchSharedScores();
 
     } catch (e) {
         console.error("Share Error:", e);
@@ -396,17 +330,7 @@ async function shareScore(scoreVal, timeVal) {
     }
 }
 
-function switchToSharedTab() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = 'rgba(255,255,255,0.1)';
-        btn.style.fontWeight = 'normal';
-    });
-    get('tab-shared').classList.add('active');
-    get('tab-shared').style.background = 'rgba(255,255,255,0.2)';
-    get('tab-shared').style.fontWeight = '600';
-    fetchSharedScores();
-}
+
 
 // --- Game Logic ---
 
@@ -507,41 +431,30 @@ function initUI() {
     // Ratings Modal
     get('ratings-btn').onclick = () => {
         get('ratings-modal').classList.remove('hidden');
-        fetchRatings();
+        fetchSharedScores();
     };
     get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
 
     // Share Rating Button (from Game Over modal)
-    get('share-rating-btn').onclick = () => {
-        get('defeat-modal').classList.add('hidden');
-        get('ratings-modal').classList.remove('hidden');
-        fetchRatings();
+    get('share-rating-btn').onclick = async () => {
+        const survival = Math.floor((Date.now() - startTime) / 1000);
+
+        // Disable button to prevent double clicks
+        const btn = get('share-rating-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'ზიარდება... ⌛';
+        }
+
+        await shareScore(Math.floor(score), survival);
+
+        showStatusUpdate('შედეგი გაზიარდა! ვრესტარტდებით... 🔄');
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
     };
 
-    // Ratings Tabs
-    get('tab-all-ratings').onclick = () => {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            btn.style.fontWeight = 'normal';
-        });
-        get('tab-all-ratings').classList.add('active');
-        get('tab-all-ratings').style.background = 'rgba(255,255,255,0.2)';
-        get('tab-all-ratings').style.fontWeight = '600';
-        fetchRatings();
-    };
 
-    get('tab-shared').onclick = () => {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            btn.style.fontWeight = 'normal';
-        });
-        get('tab-shared').classList.add('active');
-        get('tab-shared').style.background = 'rgba(255,255,255,0.2)';
-        get('tab-shared').style.fontWeight = '600';
-        fetchSharedScores();
-    };
 
     // Share Best Score Button
     get('share-best-btn').onclick = () => {
@@ -1159,6 +1072,8 @@ window.onload = async () => {
         }
 
         nickname = inputNick;
+        localStorage.setItem('tilo_nick', nickname);
+
         // Generate temp email/pass for session
         const sessionID = Date.now();
         userEmail = `guest_${sessionID}@tilo.ge`;
