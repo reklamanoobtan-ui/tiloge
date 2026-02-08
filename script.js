@@ -294,7 +294,14 @@ async function syncUserData(force = false) {
 
 async function fetchLeaderboard() {
     try {
-        const result = await sql`SELECT nickname, score, survival_time, is_vip FROM users ORDER BY score DESC, survival_time DESC LIMIT 50`;
+        const result = await sql`
+            SELECT nickname, score, survival_time, is_vip,
+            CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
+            FROM users 
+            WHERE score > 0
+            ORDER BY efficiency ASC, score DESC 
+            LIMIT 50
+        `;
         onlinePlayers = result;
         updateLeaderboardUI();
 
@@ -304,7 +311,12 @@ async function fetchLeaderboard() {
 }
 
 function updateLeaderboardUI() {
-    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
+    const combined = [...onlinePlayers].sort((a, b) => {
+        let effA = a.score > 0 ? a.survival_time / a.score : 999999;
+        let effB = b.score > 0 ? b.survival_time / b.score : 999999;
+        if (effA !== effB) return effA - effB;
+        return b.score - a.score;
+    });
     const list = get('leaderboard-list');
     if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
         list.innerHTML = '';
@@ -315,12 +327,13 @@ function updateLeaderboardUI() {
             if (isMe) item.style.fontWeight = "bold";
             if (entry.is_vip) item.classList.add('vip-rainbow-text');
             const timeVal = entry.survival_time || 0;
+            const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : 'N/A';
             item.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span class="lb-rank">#${i + 1}</span>
                     <div style="display: flex; flex-direction: column;">
                         <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
-                        <span style="font-size: 0.7rem; opacity: 0.6;">${timeVal}წ გადარჩენა</span>
+                        <span style="font-size: 0.7rem; opacity: 0.6;">${timeVal}წ / ${eff}წ ლაქაზე</span>
                     </div>
                 </div>
                 <span>${Math.floor(entry.score)} ✨</span>
