@@ -322,7 +322,7 @@ function updateScore(points) {
 
         if (score >= nextUpgradeScore) {
             showUpgradeOptions();
-            nextUpgradeScore *= 2;
+            nextUpgradeScore = Math.ceil(nextUpgradeScore * 1.3);
         }
 
         updateUIValues();
