@@ -13,10 +13,7 @@ let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 let score = 0;
-let currentInterval = 10000; // Base: 10 seconds
-let sessionSpeedBonus = parseInt(localStorage.getItem('tilo_session_bonus')) || 0;
-let activeSpeedBonus = parseInt(localStorage.getItem('tilo_active_speed_bonus'));
-if (isNaN(activeSpeedBonus)) activeSpeedBonus = sessionSpeedBonus;
+
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
@@ -28,39 +25,50 @@ let lbTimeLeft = 10;
 let currentTheme = localStorage.getItem('tilo_theme') || 'light';
 document.body.className = `theme-${currentTheme}`;
 
+// Game State (Survival & Bosses)
+let startTime = Date.now();
+let totalStainsCleaned = 0;
+let bossCount = 0;
+let defeatTimer = null;
+let lastBestScore = JSON.parse(localStorage.getItem('tilo_best_score')) || { score: 0, time: 0 };
+let lastPrevScore = JSON.parse(localStorage.getItem('tilo_prev_score')) || { score: 0, time: 0 };
+let nextUpgradeScore = 10;
+let gameActive = true;
+
 // Shop State
 let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
 let activeHelpers = parseInt(localStorage.getItem('tilo_active_helpers')) || 0;
-let totalClothOwned = parseInt(localStorage.getItem('tilo_total_cloth')) || 0;
-let activeCloth = parseInt(localStorage.getItem('tilo_active_cloth')) || 0;
+let hasSpinUpgrade = localStorage.getItem('tilo_has_spin') === 'true';
 let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
 let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
 
-let hasSpeedUp = localStorage.getItem('tilo_has_speedup') === 'true';
-let scoreClothLvl = 0;
-let scoreHelperLvl = 0;
+// New Shop Levels (Permanent)
+let clothPowerLevel = parseInt(localStorage.getItem('tilo_strength_lvl')) || 0;
+let permSpeedLevel = parseInt(localStorage.getItem('tilo_speed_lvl')) || 0;
 
-// Bounds checks
-if (activeHelpers > totalHelpersOwned) activeHelpers = totalHelpersOwned;
-if (activeCloth > totalClothOwned) activeCloth = totalClothOwned;
+// Scaling Multipliers (from cards)
+let intervalMultiplier = 1.0;
+let radiusMultiplier = 1.0;
+let strengthMultiplier = 1.0;
+let helperSpeedMultiplier = 1.0;
 
 // Base stats
 let baseClothStrength = 20;
 let clothStrength = 0;
 let cleaningRadius = 1;
 
-function updatePowerStats() {
-    let power = (baseClothStrength + (activeCloth * 15)) * (isVip ? 2 : 1);
-    // Score based bonus: +10% per level
-    power *= (1 + (scoreClothLvl * 0.1));
+// --- Helper Functions ---
 
+function updatePowerStats() {
+    let power = baseClothStrength * strengthMultiplier * (1 + (clothPowerLevel * 0.1));
     const clothEl = get('cloth');
+
     if (hasKarcher && karcherEnabled) {
         power *= 2;
-        cleaningRadius = 3;
+        cleaningRadius = 3 * radiusMultiplier;
         if (clothEl) clothEl.classList.add('karcher-active');
     } else {
-        cleaningRadius = 1;
+        cleaningRadius = 1 * radiusMultiplier;
         if (clothEl) clothEl.classList.remove('karcher-active');
     }
     clothStrength = power;
@@ -70,196 +78,76 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_coins', coins);
     localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
     localStorage.setItem('tilo_active_helpers', activeHelpers);
-    localStorage.setItem('tilo_total_cloth', totalClothOwned);
-    localStorage.setItem('tilo_active_cloth', activeCloth);
-    localStorage.setItem('tilo_has_speedup', hasSpeedUp);
-    localStorage.setItem('tilo_session_bonus', sessionSpeedBonus);
-    localStorage.setItem('tilo_active_speed_bonus', activeSpeedBonus);
     localStorage.setItem('tilo_vip', isVip);
-    localStorage.setItem('tilo_has_karcher', hasKarcher);
-    localStorage.setItem('tilo_karcher_enabled', karcherEnabled);
+    localStorage.setItem('tilo_has_spin', hasSpinUpgrade);
+    localStorage.setItem('tilo_strength_lvl', clothPowerLevel);
+    localStorage.setItem('tilo_speed_lvl', permSpeedLevel);
 }
 
 function updateUIValues() {
     if (get('coins-val')) get('coins-val').textContent = coins;
     if (get('score-val')) get('score-val').textContent = score;
-    if (get('score-cloth-lvl')) get('score-cloth-lvl').textContent = scoreClothLvl;
-    if (get('score-helper-lvl')) get('score-helper-lvl').textContent = scoreHelperLvl;
 
     // Settings UI
     if (get('active-helpers')) get('active-helpers').textContent = activeHelpers;
     if (get('total-helpers')) get('total-helpers').textContent = totalHelpersOwned;
-    if (get('active-cloth')) get('active-cloth').textContent = activeCloth;
-    if (get('total-cloth')) get('total-cloth').textContent = totalClothOwned;
 
-    // Shop UI
-    if (get('helper-count')) get('helper-count').textContent = totalHelpersOwned;
-    if (get('cloth-level')) get('cloth-level').textContent = totalClothOwned;
+    // Stats UI
+    if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
+    if (get('prev-score-stat')) get('prev-score-stat').textContent = `${lastPrevScore.score} stain / ${lastPrevScore.time}s`;
 
-    if (get('karcher-status')) {
-        if (!hasKarcher) get('karcher-status').textContent = "არ გაქვთ";
-        else get('karcher-status').textContent = karcherEnabled ? "ჩართულია" : "გამორთულია";
-    }
-
-    // Shop Items - One time purchases
-    if (get('buy-speed-btn')) {
-        if (!hasSpeedUp) {
-            get('buy-speed-btn').textContent = "50 🪙";
-            get('buy-speed-btn').disabled = coins < 50;
-            get('buy-speed-btn').classList.remove('purchased');
+    const updateBtn = (id, price, owned = false) => {
+        const btn = get(id);
+        if (!btn) return;
+        if (owned) {
+            btn.textContent = "შეძენილია";
+            btn.disabled = true;
+            btn.classList.add('purchased');
         } else {
-            get('buy-speed-btn').textContent = "შეძენილია";
-            get('buy-speed-btn').disabled = true;
-            get('buy-speed-btn').classList.add('purchased');
+            btn.textContent = `${price} 🪙`;
+            btn.disabled = coins < price;
+            btn.classList.remove('purchased');
         }
-    }
+    };
 
-    if (get('buy-temp-speed-btn')) {
-        get('buy-temp-speed-btn').disabled = coins < 10;
-    }
-
-    if (get('buy-karcher-btn')) {
-        if (hasKarcher) {
-            get('buy-karcher-btn').textContent = "შეძენილია";
-            get('buy-karcher-btn').disabled = true;
-            get('buy-karcher-btn').classList.add('purchased');
-        } else {
-            get('buy-karcher-btn').textContent = "1000 🪙";
-            get('buy-karcher-btn').disabled = false;
-            get('buy-karcher-btn').classList.remove('purchased');
-        }
-    }
-
-    if (get('buy-vip-btn')) {
-        if (isVip) {
-            get('buy-vip-btn').style.display = 'none';
-        } else {
-            get('buy-vip-btn').style.display = 'block';
-        }
-    }
-
-    if (get('active-speed-bonus')) get('active-speed-bonus').textContent = activeSpeedBonus / 1000;
+    updateBtn('buy-spin-btn', 500, hasSpinUpgrade);
+    updateBtn('buy-helper-btn', 2000, totalHelpersOwned >= 10);
+    updateBtn('buy-strength-btn', 1000 + (clothPowerLevel * 500), clothPowerLevel >= 10);
+    updateBtn('buy-perm-speed-btn', 5000 + (permSpeedLevel * 1000), permSpeedLevel >= 10);
 
     if (get('interval-val')) {
         let interval = getSpawnInterval();
-        get('interval-val').textContent = (interval / 1000).toFixed(6);
-    }
-
-    // Admin Access
-    if (get('reset-lb-btn')) {
-        if (nickname === 'unoobi') get('reset-lb-btn').classList.remove('hidden');
-        else get('reset-lb-btn').classList.add('hidden');
-    }
-
-    // Profile in Settings
-    if (get('settings-user-name')) get('settings-user-name').textContent = nickname || "სტუმარი";
-    if (get('settings-user-email')) get('settings-user-email').textContent = userEmail || "";
-
-    if (get('score-cloth-lvl')) get('score-cloth-lvl').textContent = scoreClothLvl;
-    if (get('score-helper-lvl')) get('score-helper-lvl').textContent = scoreHelperLvl;
-
-    updateLeaderboardUI();
-}
-
-function updateLeaderboardUI() {
-    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
-
-    const getTitle = (score) => {
-        if (score >= 5000) return "🏆 ლეგენდა";
-        if (score >= 1000) return "💎 ექსპერტი";
-        if (score >= 500) return "✨ ოსტატი";
-        if (score >= 100) return "🧼 მწმენდავი";
-        return "🌱 დამწყები";
-    };
-
-    const getAchvIcons = (p) => {
-        let i = '';
-        if (p.has_karcher) i += ' 💦';
-        if (p.total_helpers > 0) i += ' 🧹';
-        if (p.total_cloth > 0) i += ' 🧽';
-        return i;
-    };
-
-    // Mini HUD Update
-    const miniList = get('mini-lb-list');
-    if (miniList) {
-        miniList.innerHTML = '';
-        const top10 = combined.slice(0, 10);
-        top10.forEach((entry, i) => {
-            const isMe = entry.nickname === nickname;
-            const item = document.createElement('div');
-            item.className = 'mini-lb-item';
-            if (isMe) item.style.background = "rgba(255, 204, 0, 0.2)";
-
-            let rankSymbol = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `#${i + 1}`));
-            item.innerHTML = `
-                <div class="mini-lb-content" style="display: flex; flex-direction: column;">
-                    <span class="mini-lb-name">${rankSymbol} ${entry.is_vip ? '👑' : ''}${entry.nickname}${getAchvIcons(entry)}</span>
-                    <span class="mini-lb-title" style="font-size: 0.6rem; opacity: 0.7; margin-left: 25px;">${getTitle(entry.score)}</span>
-                </div>
-                <span class="mini-lb-score">${Math.floor(entry.score)}</span>
-            `;
-            miniList.appendChild(item);
-        });
-    }
-
-    // Modal List
-    const list = get('leaderboard-list');
-    if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
-        list.innerHTML = '';
-        combined.slice(0, 10).forEach((entry, i) => {
-            const isMe = entry.nickname === nickname;
-            const item = document.createElement('div');
-            item.className = 'lb-item';
-            if (isMe) item.style.fontWeight = "bold";
-
-            if (i === 0) item.style.color = "#FFD700";
-            else if (i === 1) item.style.color = "#C0C0C0";
-            else if (i === 2) item.style.color = "#CD7F32";
-            else if (entry.is_vip) item.style.color = "#ff8c00";
-
-            item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="lb-rank">#${i + 1}</span>
-                    <div style="display: flex; flex-direction: column;">
-                        <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}${getAchvIcons(entry)}</span>
-                        <span style="font-size: 0.7rem; opacity: 0.6;">${getTitle(entry.score)}</span>
-                    </div>
-                </div>
-                <span>${Math.floor(entry.score)}</span>
-            `;
-            list.appendChild(item);
-        });
+        get('interval-val').textContent = (interval / 1000).toFixed(2);
     }
 }
 
-// Database Initialization & Config
+// --- Database & Auth ---
+
 async function initDatabase() {
     try {
-        // 1. Ensure schema is correct (Reset Complete)
-        // await sql`DROP TABLE IF EXISTS users CASCADE`;
-
         await sql`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE,
             password TEXT,
             nickname TEXT UNIQUE,
             score INTEGER DEFAULT 0,
+            survival_time INTEGER DEFAULT 0,
             coins INTEGER DEFAULT 0,
             is_vip BOOLEAN DEFAULT false,
             total_helpers INTEGER DEFAULT 0,
-            total_cloth INTEGER DEFAULT 0,
             has_karcher BOOLEAN DEFAULT false,
-            has_speedup BOOLEAN DEFAULT false,
+            has_spin BOOLEAN DEFAULT false,
+            strength_lvl INTEGER DEFAULT 0,
+            speed_lvl INTEGER DEFAULT 0,
             last_seen TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
         try {
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS strength_lvl INTEGER DEFAULT 0`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS speed_lvl INTEGER DEFAULT 0`;
             await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
         } catch (e) { }
-
-        // Score levels are now session-based, no ALTER needed
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
             key TEXT PRIMARY KEY,
@@ -273,7 +161,6 @@ async function initDatabase() {
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
-        // 3. Update Sync Version in DB
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
 
@@ -287,7 +174,7 @@ async function checkForUpdates() {
             console.log("New version detected! Reloading...");
             location.reload();
         }
-    } catch (e) { console.error("Update Check Error", e); }
+    } catch (e) { }
 }
 
 async function handleRegister() {
@@ -299,10 +186,9 @@ async function handleRegister() {
     if (!email || !pass || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
 
     try {
-        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, total_helpers, total_cloth, has_karcher, has_speedup) 
-                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${totalHelpersOwned}, ${totalClothOwned}, ${hasKarcher}, ${hasSpeedUp})`;
+        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, total_helpers, has_karcher, has_spin, strength_lvl, speed_lvl) 
+                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${totalHelpersOwned}, ${hasKarcher}, ${hasSpinUpgrade}, ${clothPowerLevel}, ${permSpeedLevel})`;
 
-        // Auto-login after registration
         nickname = nick;
         userEmail = email;
         localStorage.setItem('tilo_nick', nickname);
@@ -334,21 +220,20 @@ async function handleLogin() {
             coins = user.coins;
             isVip = user.is_vip;
             totalHelpersOwned = user.total_helpers;
-            totalClothOwned = user.total_cloth;
             hasKarcher = user.has_karcher;
-            hasSpeedUp = user.has_speedup;
+            hasSpinUpgrade = user.has_spin;
+            clothPowerLevel = user.strength_lvl || 0;
+            permSpeedLevel = user.speed_lvl || 0;
 
-            // Update Local Storage
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
             localStorage.setItem('tilo_vip', isVip);
             localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
-            localStorage.setItem('tilo_active_helpers', totalHelpersOwned);
-            localStorage.setItem('tilo_total_cloth', totalClothOwned);
-            localStorage.setItem('tilo_active_cloth', totalClothOwned);
             localStorage.setItem('tilo_has_karcher', hasKarcher);
-            localStorage.setItem('tilo_has_speedup', hasSpeedUp);
+            localStorage.setItem('tilo_has_spin', hasSpinUpgrade);
+            localStorage.setItem('tilo_strength_lvl', clothPowerLevel);
+            localStorage.setItem('tilo_speed_lvl', permSpeedLevel);
 
             updateUIValues();
             location.reload();
@@ -362,20 +247,22 @@ async function handleLogin() {
 
 let syncTimeout;
 async function syncUserData() {
-    if (!userEmail) return;
+    if (!userEmail || !gameActive) return;
 
-    // Debounce sync to prevent lag
     clearTimeout(syncTimeout);
     syncTimeout = setTimeout(async () => {
         try {
+            const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
             await sql`UPDATE users SET 
-                score = ${score}, 
+                score = GREATEST(score, ${score}), 
+                survival_time = GREATEST(survival_time, ${currentSurvival}),
                 coins = ${coins}, 
                 is_vip = ${isVip},
                 total_helpers = ${totalHelpersOwned},
-                total_cloth = ${totalClothOwned},
                 has_karcher = ${hasKarcher},
-                has_speedup = ${hasSpeedUp},
+                has_spin = ${hasSpinUpgrade},
+                strength_lvl = ${clothPowerLevel},
+                speed_lvl = ${permSpeedLevel},
                 last_seen = NOW()
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
@@ -384,26 +271,56 @@ async function syncUserData() {
 
 async function fetchLeaderboard() {
     try {
-        const result = await sql`SELECT nickname, score, is_vip, total_helpers, total_cloth, has_karcher FROM users ORDER BY score DESC LIMIT 20`;
+        const result = await sql`SELECT nickname, score, survival_time, is_vip FROM users ORDER BY score DESC, survival_time DESC LIMIT 50`;
         onlinePlayers = result;
         updateLeaderboardUI();
 
-        // Fetch online count (seen in last 30s)
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '30 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
-    } catch (e) { console.error("Neon Fetch Error", e); }
+    } catch (e) { console.error("LB Fetch Error", e); }
 }
 
-function updateScore(points) {
-    if (points > 0) {
-        const oldScore = score;
-        score += points;
+function updateLeaderboardUI() {
+    const combined = [...onlinePlayers].sort((a, b) => b.score - a.score);
+    const list = get('leaderboard-list');
+    if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
+        list.innerHTML = '';
+        combined.slice(0, 50).forEach((entry, i) => {
+            const isMe = entry.nickname === nickname;
+            const item = document.createElement('div');
+            item.className = 'lb-item';
+            if (isMe) item.style.fontWeight = "bold";
+            if (entry.is_vip) item.classList.add('vip-rainbow-text');
+            const timeVal = entry.survival_time || 0;
+            item.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="lb-rank">#${i + 1}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
+                        <span style="font-size: 0.7rem; opacity: 0.6;">${timeVal}წ გადარჩენა</span>
+                    </div>
+                </div>
+                <span>${Math.floor(entry.score)} ✨</span>
+            `;
+            list.appendChild(item);
+        });
+    }
+}
 
-        if (Math.floor(score / 1000) > Math.floor(oldScore / 1000)) {
-            coins += Math.floor(score / 1000) - Math.floor(oldScore / 1000);
-            saveStatsToLocal();
-            showStatusUpdate("+1 🪙 ქულებისათვის!");
+// --- Game Logic ---
+
+function updateScore(points) {
+    if (!gameActive) return;
+    if (points > 0) {
+        score += points;
+        totalStainsCleaned += points;
+
+        // Upgrade Check (10, 20, 40, 80...)
+        if (score >= nextUpgradeScore) {
+            showUpgradeOptions();
+            nextUpgradeScore *= 2;
         }
+
         updateUIValues();
         syncUserData();
     }
@@ -417,17 +334,56 @@ function showStatusUpdate(text) {
     setTimeout(() => {
         ds.textContent = nickname ? `მოთამაშე: ${nickname}` : 'გამოიყენეთ ტილო საიტის გასაწმენდად';
         ds.style.color = '';
-    }, 3000);
+    }, 2000);
 }
 
 function initUI() {
-    get('buy-vip-btn').onclick = () => {
-        if (confirm("გსურთ VIP სტატუსის შეძენა 2 ლარად?")) {
-            isVip = true; updatePowerStats(); saveStatsToLocal(); syncUserData();
-            if (get('cloth')) get('cloth').classList.add('vip-cloth');
-            if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
-            get('buy-vip-btn').style.display = 'none';
+    get('buy-spin-btn').onclick = () => {
+        if (coins >= 500 && !hasSpinUpgrade) {
+            coins -= 500;
+            hasSpinUpgrade = true;
+            saveStatsToLocal();
             updateUIValues();
+            syncUserData();
+            showStatusUpdate("სატრიალო ფუნქცია შეძენილია! 🌀");
+        }
+    };
+
+    get('buy-helper-btn').onclick = () => {
+        if (coins >= 2000 && totalHelpersOwned < 10) {
+            coins -= 2000;
+            totalHelpersOwned++;
+            activeHelpers++;
+            startHelperBot();
+            saveStatsToLocal();
+            updateUIValues();
+            syncUserData();
+            showStatusUpdate("დამხმარე რობოტი შეძენილია! 🤖");
+        }
+    };
+
+    get('buy-strength-btn').onclick = () => {
+        const price = 1000 + (clothPowerLevel * 500);
+        if (coins >= price && clothPowerLevel < 10) {
+            coins -= price;
+            clothPowerLevel++;
+            updatePowerStats();
+            saveStatsToLocal();
+            updateUIValues();
+            syncUserData();
+            showStatusUpdate("ტილო გაძლიერდა! 💪");
+        }
+    };
+
+    get('buy-perm-speed-btn').onclick = () => {
+        const price = 5000 + (permSpeedLevel * 1000);
+        if (coins >= price && permSpeedLevel < 10) {
+            coins -= price;
+            permSpeedLevel++;
+            saveStatsToLocal();
+            updateUIValues();
+            syncUserData();
+            showStatusUpdate("მუდმივი აჩქარება გააქტიურდა! ⏩");
         }
     };
 
@@ -436,130 +392,28 @@ function initUI() {
     get('settings-btn').onclick = () => get('settings-modal').classList.remove('hidden');
     get('close-settings').onclick = () => get('settings-modal').classList.add('hidden');
 
-    get('buy-helper-btn').onclick = () => {
-        if (coins >= 100 && totalHelpersOwned < 10) {
-            coins -= 100; totalHelpersOwned++; activeHelpers++;
-            saveStatsToLocal(); updateUIValues(); syncUserData(); startHelperBot();
-        }
+    get('restart-game-btn').onclick = () => {
+        location.reload();
     };
-
-    get('buy-speed-btn').onclick = () => {
-        if (!hasSpeedUp) {
-            // First time permanent buy
-            if (coins >= 50) {
-                coins -= 50; hasSpeedUp = true;
-                saveStatsToLocal(); updateUIValues(); syncUserData();
-                showStatusUpdate("მუდმივი აჩქარება მიღებულია!");
-                get('buy-speed-btn').textContent = "შეძენილია";
-                get('buy-speed-btn').classList.add('purchased');
-            }
-        }
-    };
-
-    get('buy-temp-speed-btn').onclick = () => {
-        if (coins >= 10) {
-            coins -= 10;
-            sessionSpeedBonus += 1000;
-            activeSpeedBonus += 1000;
-            saveStatsToLocal(); updateUIValues(); syncUserData();
-            showStatusUpdate("-1 წამი სისწრაფე (სესიური)!");
-        } else {
-            showStatusUpdate("არ გაქვთ საკმარისი ქოინები! 🪙");
-        }
-    };
-
-    get('buy-cloth-power-btn').onclick = () => {
-        if (coins >= 70 && totalClothOwned < 10) {
-            coins -= 70; totalClothOwned++; activeCloth++;
-            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
-        }
-    };
-
-    get('buy-karcher-btn').onclick = () => {
-        if (coins >= 1000 && !hasKarcher) {
-            coins -= 1000; hasKarcher = true; karcherEnabled = true;
-            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
-            get('buy-karcher-btn').textContent = "შეძენილია"; get('buy-karcher-btn').disabled = true;
-        }
-    };
-
-
 
     // Settings adjustments
     get('set-dec-helper').onclick = () => {
         if (activeHelpers > 0) {
-            activeHelpers--; saveStatsToLocal(); updateUIValues();
+            activeHelpers--;
+            saveStatsToLocal();
+            updateUIValues();
             const bots = document.querySelectorAll('.helper-bot');
             if (bots.length > 0) bots[bots.length - 1].remove();
         }
     };
     get('set-inc-helper').onclick = () => {
-        if (activeHelpers < totalHelpersOwned) { activeHelpers++; saveStatsToLocal(); updateUIValues(); startHelperBot(); }
-    };
-    get('set-dec-cloth').onclick = () => { if (activeCloth > 0) { activeCloth--; updatePowerStats(); saveStatsToLocal(); updateUIValues(); } };
-    get('set-inc-cloth').onclick = () => {
-        if (activeCloth < totalClothOwned) { activeCloth++; updatePowerStats(); saveStatsToLocal(); updateUIValues(); }
-    };
-
-    get('set-dec-speed').onclick = () => {
-        if (activeSpeedBonus >= 1000) { activeSpeedBonus -= 1000; saveStatsToLocal(); updateUIValues(); }
-    };
-    get('set-inc-speed').onclick = () => {
-        if (activeSpeedBonus < sessionSpeedBonus) {
-            activeSpeedBonus += 1000; saveStatsToLocal(); updateUIValues();
-        } else {
-            // Direct Purchase from Settings
-            if (coins >= 10) {
-                if (confirm("გსურთ დროებითი აჩქარების ყიდვა 10 ქოინად? (იკარგება გასვლისას)")) {
-                    coins -= 10;
-                    sessionSpeedBonus += 1000;
-                    activeSpeedBonus += 1000;
-                    saveStatsToLocal(); updateUIValues(); syncUserData();
-                    showStatusUpdate("-1 წამი (სესიური)!");
-                }
-            } else {
-                showStatusUpdate("არ გაქვთ საკმარისი ქოინები!");
-            }
+        if (activeHelpers < totalHelpersOwned) {
+            activeHelpers++;
+            saveStatsToLocal();
+            updateUIValues();
+            startHelperBot();
         }
     };
-
-    get('toggle-karcher-btn').onclick = () => {
-        if (hasKarcher) { karcherEnabled = !karcherEnabled; updatePowerStats(); saveStatsToLocal(); updateUIValues(); }
-    };
-
-    get('reset-lb-btn').onclick = async () => {
-        if (nickname === 'unoobi' && confirm("ნამდვილად გსურთ რეიტინგის გასუფთავება?")) {
-            try {
-                await sql`UPDATE users SET score = 0`;
-                // Force global reload
-                const nextVer = (parseFloat(APP_VERSION) + 0.01).toFixed(2);
-                await sql`UPDATE system_config SET value = ${nextVer} WHERE key = 'app_version'`;
-                alert("რეიტინგი გასუფთავდა! ყველა მომხმარებელი დარეფრეშდება.");
-                location.reload();
-            } catch (e) { alert("შეცდომა!"); }
-        }
-    };
-
-    get('upgrade-cloth-score-btn').onclick = () => {
-        if (score >= 100) {
-            score -= 100; scoreClothLvl++;
-            updatePowerStats(); saveStatsToLocal(); updateUIValues(); syncUserData();
-            showStatusUpdate("ტილო გაძლიერდა! 💪");
-        } else {
-            showStatusUpdate("არ გაქვთ საკმარისი ქულები! 🎯");
-        }
-    };
-
-    get('upgrade-helper-score-btn').onclick = () => {
-        if (score >= 100) {
-            score -= 100; scoreHelperLvl++;
-            saveStatsToLocal(); updateUIValues(); syncUserData();
-            showStatusUpdate("დამხმარეები გაძლიერდნენ! 🤖");
-        } else {
-            showStatusUpdate("არ გაქვთ საკმარისი ქულები! 🎯");
-        }
-    };
-
 
     // Donation logic
     document.querySelectorAll('.buy-coins-btn').forEach(btn => {
@@ -567,7 +421,9 @@ function initUI() {
             const amount = parseInt(btn.dataset.coins);
             if (confirm(`გსურთ ${amount} ქოინის ყიდვა?`)) {
                 coins += amount;
-                saveStatsToLocal(); updateUIValues(); syncUserData();
+                saveStatsToLocal();
+                updateUIValues();
+                syncUserData();
                 alert("ქოინები დაემატა!");
             }
         };
@@ -623,21 +479,19 @@ function initUI() {
             document.body.className = `theme-${theme}`;
             localStorage.setItem('tilo_theme', theme);
 
-            // UI Update
             document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
         };
-        // Set initial active
         if (opt.dataset.theme === currentTheme) opt.classList.add('active');
     });
 
-    get('leaderboard-btn').onclick = () => { updateLeaderboardUI(); get('leaderboard-modal').classList.remove('hidden'); };
+    get('leaderboard-btn').onclick = () => {
+        updateLeaderboardUI();
+        get('leaderboard-modal').classList.remove('hidden');
+    };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
-
-    setupChat();
 }
 
-let lastChatId = 0;
 function setupChat() {
     const chatContainer = get('global-chat');
     const chatInput = get('chat-input');
@@ -650,17 +504,18 @@ function setupChat() {
     function onChatDrag(e) {
         if (!isDraggingChat) return;
         e.preventDefault();
+        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
 
-        let x = e.clientX - chatOffsetX;
-        let y = e.clientY - chatOffsetY;
+        let x = clientX - chatOffsetX;
+        let y = clientY - chatOffsetY;
 
-        // Bounds check
         x = Math.max(0, Math.min(window.innerWidth - chatContainer.clientWidth, x));
         y = Math.max(0, Math.min(window.innerHeight - chatContainer.clientHeight, y));
 
         chatContainer.style.left = `${x}px`;
         chatContainer.style.top = `${y}px`;
-        chatContainer.style.right = 'auto'; // Clear right if set
+        chatContainer.style.right = 'auto';
     }
 
     function stopChatDrag() {
@@ -668,6 +523,8 @@ function setupChat() {
         chatContainer.style.cursor = 'move';
         document.removeEventListener('mousemove', onChatDrag);
         document.removeEventListener('mouseup', stopChatDrag);
+        document.removeEventListener('touchmove', onChatDrag);
+        document.removeEventListener('touchend', stopChatDrag);
     }
 
     chatContainer.addEventListener('mousedown', (e) => {
@@ -676,12 +533,18 @@ function setupChat() {
         chatOffsetX = e.clientX - chatContainer.offsetLeft;
         chatOffsetY = e.clientY - chatContainer.offsetTop;
         chatContainer.style.cursor = 'grabbing';
-
         document.addEventListener('mousemove', onChatDrag);
         document.addEventListener('mouseup', stopChatDrag);
     });
 
-
+    chatContainer.addEventListener('touchstart', (e) => {
+        if (e.target === chatInput || e.target === sendBtn) return;
+        isDraggingChat = true;
+        chatOffsetX = e.touches[0].clientX - chatContainer.offsetLeft;
+        chatOffsetY = e.touches[0].clientY - chatContainer.offsetTop;
+        document.addEventListener('touchmove', onChatDrag, { passive: false });
+        document.addEventListener('touchend', stopChatDrag);
+    });
 
     async function sendMsg() {
         const text = chatInput.value.trim().substring(0, 50);
@@ -699,21 +562,24 @@ function setupChat() {
     chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
 
     // Poll for chat
-    setInterval(fetchChat, 2000);
+    setInterval(fetchChat, 3000);
 }
 
 async function fetchChat() {
     try {
-        // Fetch messages from last 10 seconds
-        const msgs = await sql`SELECT * FROM chat_messages WHERE created_at > NOW() - INTERVAL '10 seconds' ORDER BY created_at ASC`;
+        const msgs = await sql`SELECT * FROM chat_messages WHERE created_at > NOW() - INTERVAL '30 seconds' ORDER BY created_at ASC`;
         const container = get('chat-messages');
+        if (!container) return;
         container.innerHTML = '';
         msgs.forEach(m => {
             const el = document.createElement('div');
             el.className = 'chat-msg';
-            const isMe = m.nickname === nickname;
-            if (isMe) el.style.background = "rgba(255, 204, 0, 0.1)";
-            el.innerHTML = `<strong>${m.nickname}:</strong> ${m.message}`;
+
+            const sender = onlinePlayers.find(p => p.nickname === m.nickname);
+            const isVipUser = sender ? sender.is_vip : false;
+            if (isVipUser) el.classList.add('vip-rainbow-text');
+
+            el.innerHTML = `<strong>${isVipUser ? '👑 ' : ''}${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
@@ -724,17 +590,15 @@ function startHelperBot() {
     const container = get('canvas-container');
     const botEl = document.createElement('div');
     botEl.className = 'helper-bot';
+    if (isVip) botEl.classList.add('vip-rainbow-trail');
     container.appendChild(botEl);
 
     function moveBot() {
-        if (!botEl.parentElement) return;
+        if (!botEl.parentElement || !gameActive) return;
         const stains = document.querySelectorAll('.stain');
         if (stains.length > 0) {
-            // Pick a random stain from available ones to avoid clumping
             const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-
-            // Add slight randomness to target position
             const rX = (Math.random() - 0.5) * 30;
             const rY = (Math.random() - 0.5) * 30;
 
@@ -742,14 +606,21 @@ function startHelperBot() {
             botEl.style.top = `${rect.top + rY}px`;
 
             const baseDelay = 1500;
-            const delay = baseDelay / (1 + (scoreHelperLvl * 0.1));
-            // Randomize delay slightly
+            const delay = baseDelay / (1 * helperSpeedMultiplier);
             const randomDelay = delay + (Math.random() * 800);
 
             setTimeout(() => {
                 if (target.parentElement) {
-                    target.dataset.health = 0;
-                    checkCleaningAtPos(rect.left + 30, rect.top + 30);
+                    let h = parseFloat(target.dataset.health);
+                    h -= 50;
+                    target.dataset.health = h;
+                    target.style.opacity = Math.max(0.2, h / parseFloat(target.dataset.maxHealth));
+                    if (h <= 0 && target.dataset.cleaning !== 'true') {
+                        target.dataset.cleaning = 'true';
+                        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, target.style.backgroundColor);
+                        setTimeout(() => target.remove(), 800);
+                        updateScore(target.classList.contains('boss-stain') ? 10 : 1);
+                    }
                 }
                 moveBot();
             }, randomDelay);
@@ -762,106 +633,97 @@ function startHelperBot() {
     moveBot();
 }
 
-function spawnSpinner() {
-    if (!get('canvas-container')) return;
-    const spinner = document.createElement('div');
-    spinner.className = 'spin-cloth';
+const UPGRADE_POOL = [
+    { title: "⚡ აჩქარება (Speed)", desc: "+10% სისწრაფე", prob: 0.02, action: () => intervalMultiplier *= 0.9 },
+    { title: "🐢 ნელი სისწრაფე", desc: "+1% სისწრაფე", prob: 0.20, action: () => intervalMultiplier *= 0.99 },
+    { title: "💨 სუპერ აჩქარება", desc: "+50% სისწრაფე", prob: 0.002, action: () => intervalMultiplier *= 0.5 },
+    { title: "🤖 დამხმარე", desc: "+1 დამხმარე", prob: 0.01, action: () => { totalHelpersOwned++; activeHelpers++; startHelperBot(); saveStatsToLocal(); } },
+    { title: "🤖🤖 დამხმარეები", desc: "+2 დამხმარე", prob: 0.005, action: () => { totalHelpersOwned += 2; activeHelpers += 2; startHelperBot(); startHelperBot(); saveStatsToLocal(); } },
+    { title: "🤖🔥 დამხმარე რაზმი", desc: "+3 დამხმარე", prob: 0.0007, action: () => { totalHelpersOwned += 3; activeHelpers += 3; startHelperBot(); startHelperBot(); startHelperBot(); saveStatsToLocal(); } },
+    { title: "📏 რადიუსი S", desc: "+10% რადიუსი", prob: 0.05, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
+    { title: "📏 რადიუსი M", desc: "+20% რადიუსი", prob: 0.025, action: () => { radiusMultiplier *= 1.2; updatePowerStats(); } },
+    { title: "📏 რადიუსი L", desc: "+30% რადიუსი", prob: 0.01, action: () => { radiusMultiplier *= 1.3; updatePowerStats(); } },
+    { title: "💦 კერხერი", desc: "გაძლიერებული წმენდა", prob: 0.001, action: () => { hasKarcher = true; updatePowerStats(); } },
+    { title: "🤖⚡ რობოტების სისწრაფე", desc: "+10% სიჩქარე", prob: 0.05, action: () => helperSpeedMultiplier *= 1.1 },
+    { title: "🤖🔥🔥 რობოტების სისწრაფე", desc: "+20% სიჩქარე", prob: 0.025, action: () => helperSpeedMultiplier *= 1.2 },
+    { title: "🤖🚀 რობოტების სისწრაფე", desc: "+30% სიჩქარე", prob: 0.01, action: () => helperSpeedMultiplier *= 1.3 },
+    { title: "💪 ტილოს ძალა 10%", desc: "+10% ძალა", prob: 0.05, action: () => { strengthMultiplier *= 1.1; updatePowerStats(); } },
+    { title: "💪💪 ტილოს ძალა 20%", desc: "+20% ძალა", prob: 0.025, action: () => { strengthMultiplier *= 1.2; updatePowerStats(); } },
+];
 
-    // Center positioning
-    const centerX = window.innerWidth / 2 - 75;
-    const centerY = window.innerHeight / 2 - 75;
-    spinner.style.left = `${centerX}px`;
-    spinner.style.top = `${centerY}px`;
+function showUpgradeOptions() {
+    const modal = get('upgrade-modal');
+    if (!modal) return;
+    const container = get('upgrade-cards-container');
+    container.innerHTML = '';
+    modal.classList.remove('hidden');
 
-    let isDraggingSpinner = false;
-    let dragStartX, dragStartY;
-    let sOffsetX, sOffsetY;
-
-    function onMouseDown(e) {
-        isDraggingSpinner = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        sOffsetX = e.clientX - spinner.getBoundingClientRect().left;
-        sOffsetY = e.clientY - spinner.getBoundingClientRect().top;
-        spinner.style.cursor = 'grabbing';
-        e.preventDefault();
-        e.stopPropagation();
+    for (let i = 0; i < 3; i++) {
+        const card = weightedRandom(UPGRADE_POOL);
+        const cardEl = document.createElement('div');
+        cardEl.className = 'upgrade-card';
+        cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
+        cardEl.onclick = () => {
+            card.action();
+            modal.classList.add('hidden');
+            updateUIValues();
+        };
+        container.appendChild(cardEl);
     }
+}
 
-    function onMouseMove(e) {
-        if (isDraggingSpinner) {
-            spinner.style.left = `${e.clientX - sOffsetX}px`;
-            spinner.style.top = `${e.clientY - sOffsetY}px`;
-        }
+function weightedRandom(items) {
+    let totalProb = items.reduce((acc, item) => acc + item.prob, 0);
+    let r = Math.random() * totalProb;
+    let sum = 0;
+    for (let item of items) {
+        sum += item.prob;
+        if (r <= sum) return item;
     }
+    return items[0];
+}
 
-    function onMouseUp(e) {
-        if (isDraggingSpinner) {
-            isDraggingSpinner = false;
-            spinner.style.cursor = 'pointer';
+function handleSpin(spinner) {
+    if (!hasSpinUpgrade) return;
+    let spinSpeed = parseInt(spinner.dataset.spinSpeed || '0');
+    spinSpeed += 5;
+    spinner.dataset.spinSpeed = spinSpeed;
 
-            // Check if this was a click (not a drag)
-            const dragDistance = Math.sqrt(
-                Math.pow(e.clientX - dragStartX, 2) +
-                Math.pow(e.clientY - dragStartY, 2)
-            );
+    spinner.classList.add('spinning');
+    spinner.style.animationDuration = `${Math.max(0.1, 1 - (spinSpeed * 0.05))}s`;
 
-            // If moved less than 5 pixels, treat as click
-            if (dragDistance < 5) {
-                handleSpin();
+    const rect = spinner.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = 150 + (spinSpeed * 10);
+
+    const stains = document.querySelectorAll('.stain');
+    stains.forEach(stain => {
+        if (stain.dataset.cleaning === 'true') return;
+        const sRect = stain.getBoundingClientRect();
+        const sx = sRect.left + sRect.width / 2;
+        const sy = sRect.top + sRect.height / 2;
+        const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
+
+        if (dist < radius) {
+            let h = parseFloat(stain.dataset.health);
+            h -= (20 + spinSpeed * 2);
+            stain.dataset.health = h;
+            stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
+            if (h <= 0 && stain.dataset.cleaning !== 'true') {
+                stain.dataset.cleaning = 'true';
+                createParticles(sx, sy, stain.style.backgroundColor);
+                setTimeout(() => stain.remove(), 800);
+                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
             }
         }
-    }
+    });
 
-    function handleSpin() {
-        let spinSpeed = parseInt(spinner.dataset.spinSpeed || '0');
-        spinSpeed += 5;
-        spinner.dataset.spinSpeed = spinSpeed;
-
-        spinner.classList.add('spinning');
-        spinner.style.animationDuration = `${Math.max(0.1, 1 - (spinSpeed * 0.05))}s`;
-
-        const rect = spinner.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const radius = 150 + (spinSpeed * 10);
-
-        const stains = document.querySelectorAll('.stain');
-        stains.forEach(stain => {
-            const sRect = stain.getBoundingClientRect();
-            const sx = sRect.left + sRect.width / 2;
-            const sy = sRect.top + sRect.height / 2;
-            const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
-
-            if (dist < radius) {
-                let h = parseFloat(stain.dataset.health);
-                h -= (20 + spinSpeed * 2);
-                stain.dataset.health = h;
-                stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
-
-                if (h <= 0) {
-                    stain.dataset.cleaning = 'true'; stain.style.opacity = '0';
-                    createParticles(sx, sy, stain.style.backgroundColor);
-                    setTimeout(() => stain.remove(), 800);
-                    updateScore(1);
-                }
-            }
-        });
-
-        setTimeout(() => {
-            spinSpeed -= 2;
-            spinner.dataset.spinSpeed = Math.max(0, spinSpeed);
-            if (spinSpeed <= 0) {
-                spinner.classList.remove('spinning');
-            }
-        }, 1000);
-    }
-
-    spinner.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-
-    get('canvas-container').appendChild(spinner);
+    setTimeout(() => {
+        spinSpeed -= 2;
+        spinner.dataset.spinSpeed = Math.max(0, spinSpeed);
+        if (spinSpeed <= 0) spinner.classList.remove('spinning');
+    }, 1000);
 }
 
 function checkCleaningAtPos(x, y) {
@@ -870,36 +732,94 @@ function checkCleaningAtPos(x, y) {
         if (stain.dataset.cleaning === 'true') return;
         const rect = stain.getBoundingClientRect();
         if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
-            stain.dataset.cleaning = 'true'; stain.style.opacity = '0';
-            createParticles(x, y, stain.style.backgroundColor);
-            setTimeout(() => stain.remove(), 800);
-            updateScore(1);
+            let h = parseFloat(stain.dataset.health);
+            h -= clothStrength;
+            stain.dataset.health = h;
+            stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
+            if (h <= 0) {
+                stain.dataset.cleaning = 'true';
+                createParticles(x, y, stain.style.backgroundColor);
+                setTimeout(() => stain.remove(), 800);
+                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
+            }
         }
     });
 }
 
-function createStain() {
-    if (document.querySelectorAll('.stain').length >= 250) return;
+function createStain(isBoss = false) {
+    if (!gameActive) return;
     const container = get('canvas-container');
+    if (!container) return;
     const stain = document.createElement('div');
     stain.className = 'stain';
-    let health = 100;
+    if (isBoss) stain.classList.add('boss-stain');
+
+    let health = isBoss ? 1500 : 100;
     const types = [
         { name: 'coffee', color: 'rgba(111, 78, 55, 0.4)', blur: '10px' },
         { name: 'ink', color: 'rgba(0, 0, 128, 0.3)', blur: '5px' },
         { name: 'grease', color: 'rgba(150, 150, 100, 0.2)', blur: '15px' }
     ];
     const type = types[Math.floor(Math.random() * types.length)];
-    const size = Math.random() * 80 + 40;
+    const size = isBoss ? 250 : (Math.random() * 80 + 40);
     const posX = Math.random() * (window.innerWidth - size);
     const posY = Math.random() * (window.innerHeight - size);
+
     stain.style.width = `${size}px`; stain.style.height = `${size}px`;
     stain.style.left = `${posX}px`; stain.style.top = `${posY}px`;
-    stain.style.backgroundColor = type.color;
-    stain.style.filter = `blur(${type.blur})`;
+    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : type.color;
+    stain.style.filter = `blur(${isBoss ? '20px' : type.blur})`;
     stain.style.borderRadius = `${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}%`;
     stain.dataset.health = health; stain.dataset.maxHealth = health;
+    if (isBoss) stain.innerHTML = '<div class="boss-title">BOSS</div>';
+
     container.appendChild(stain);
+    checkDefeatCondition();
+}
+
+function checkDefeatCondition() {
+    const totalCount = document.querySelectorAll('.stain').length;
+    if (totalCount >= 200) {
+        if (!defeatTimer) {
+            let timeLeft = 60;
+            showStatusUpdate("გაფრთხილება: ძალიან ბევრი ჭუჭყია! ⚠️");
+            defeatTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(defeatTimer);
+                    handleGameOver();
+                } else if (timeLeft % 5 === 0 || timeLeft < 10) {
+                    showStatusUpdate(`კრიზისი! ${timeLeft}წ დარჩა გასაწმენდად! ⚠️`);
+                }
+            }, 1000);
+        }
+    } else {
+        if (defeatTimer) {
+            clearInterval(defeatTimer);
+            defeatTimer = null;
+            showStatusUpdate("კრიზისი თავიდან აცილებულია! ✅");
+        }
+    }
+}
+
+function handleGameOver() {
+    gameActive = false;
+    const finalScore = score;
+    const finalTime = Math.floor((Date.now() - startTime) / 1000);
+
+    lastPrevScore = { score: finalScore, time: finalTime };
+    localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
+
+    if (finalScore > lastBestScore.score) {
+        lastBestScore = { score: finalScore, time: finalTime };
+        localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
+    }
+
+    syncUserData();
+
+    get('final-stains').textContent = finalScore;
+    get('final-time').textContent = finalTime;
+    get('defeat-modal').classList.remove('hidden');
 }
 
 function checkCleaning() {
@@ -917,13 +837,14 @@ function checkCleaning() {
         const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
         if (dist < radius + rect.width / 2) {
             let h = parseFloat(stain.dataset.health);
-            h -= clothStrength; stain.dataset.health = h;
+            h -= clothStrength;
+            stain.dataset.health = h;
             stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
             if (h <= 0) {
-                stain.dataset.cleaning = 'true'; stain.style.opacity = '0';
+                stain.dataset.cleaning = 'true';
                 createParticles(sx, sy, stain.style.backgroundColor);
                 setTimeout(() => stain.remove(), 800);
-                updateScore(1);
+                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
             }
         }
     });
@@ -945,7 +866,8 @@ function createParticles(x, y, color) {
             p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
             p.style.borderRadius = '50%';
         }
-        p.style.pointerEvents = 'none'; container.appendChild(p);
+        p.style.pointerEvents = 'none';
+        container.appendChild(p);
         const angle = Math.random() * Math.PI * 2;
         const velocity = Math.random() * (isKarcherActive ? 100 : 40);
         const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
@@ -957,29 +879,22 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    // Start at 10s. If hasSpeedUp, start at 5s.
-    let base = hasSpeedUp ? 5000 : 10000;
-
-    // Every 10 points, decrease speed by 0.1 second (100ms)
-    let speedBonus = Math.floor(score / 10) * 100;
-    let interval = base - speedBonus - activeSpeedBonus;
-
-    // Apply VIP bonus (half interval)
-    if (isVip) interval = interval / 2;
-
-    // Minimum cap: 0.05 seconds (50ms)
-    return Math.max(50, interval);
+    let base = 2000 * intervalMultiplier * (1 - (permSpeedLevel * 0.05));
+    return Math.max(200, base - (score * 2));
 }
 
 function scheduleNextStain() {
-    setTimeout(() => { createStain(); scheduleNextStain(); }, getSpawnInterval());
+    if (!gameActive) return;
+    createStain();
+    setTimeout(scheduleNextStain, getSpawnInterval());
 }
 
 function centerCloth() {
     const cloth = get('cloth');
     if (!cloth) return;
     const r = cloth.getBoundingClientRect();
-    xOffset = window.innerWidth / 2 - r.width / 2; yOffset = window.innerHeight / 2 - r.height / 2;
+    xOffset = window.innerWidth / 2 - r.width / 2;
+    yOffset = window.innerHeight / 2 - r.height / 2;
     setTranslate(xOffset, yOffset, cloth);
 }
 
@@ -1024,24 +939,27 @@ function drag(e) {
     }
 }
 
+// --- Initialization ---
+
 window.addEventListener('load', async () => {
     await initDatabase();
+    await checkForUpdates();
 
-    // Reset score on refresh (Session-based leaderboard)
     score = 0;
-    sessionSpeedBonus = 0;
-    activeSpeedBonus = 0; // Reset all session speed bonuses
-    scoreClothLvl = 0;
-    scoreHelperLvl = 0; // Reset score-based upgrades on refresh
-    localStorage.setItem('tilo_session_bonus', 0);
-    localStorage.setItem('tilo_active_speed_bonus', 0);
-    localStorage.setItem('tilo_score_cloth_lvl', 0);
-    localStorage.setItem('tilo_score_helper_lvl', 0);
+    totalStainsCleaned = 0;
+    startTime = Date.now();
+
+    if (isVip) {
+        if (get('cloth')) get('cloth').classList.add('vip-rainbow-trail');
+        if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
+        if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
+        if (get('cloth')) get('cloth').classList.add('vip-cloth');
+    }
 
     if (userEmail) {
         try {
             await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`;
-        } catch (e) { console.error("Score Reset Error", e); }
+        } catch (e) { }
         get('auth-modal').classList.add('hidden');
     } else {
         get('auth-modal').classList.remove('hidden');
@@ -1049,16 +967,11 @@ window.addEventListener('load', async () => {
 
     updatePowerStats();
     initUI();
+    setupChat();
     centerCloth();
     updateUIValues();
-
-    if (isVip) {
-        if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
-        if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
-        if (get('cloth')) get('cloth').classList.add('vip-cloth');
-    }
-
     fetchLeaderboard();
+
     setInterval(() => {
         lbTimeLeft--;
         if (lbTimeLeft <= 0) {
@@ -1067,16 +980,36 @@ window.addEventListener('load', async () => {
         }
         if (get('lb-timer')) get('lb-timer').textContent = `(${lbTimeLeft}წ)`;
     }, 1000);
-    setInterval(checkForUpdates, 30000); // Check for global updates every 30s
-    setInterval(() => { if (userEmail) syncUserData(); }, 15000); // Heartbeat for online status
+
+    setInterval(checkForUpdates, 30000);
+    setInterval(() => { if (userEmail) syncUserData(); }, 15000);
+
+    // Boss Spawner Every 1 Minute
+    setInterval(() => {
+        if (!gameActive) return;
+        bossCount++;
+        const bossSpawnCount = Math.floor(bossCount / 10) + 1;
+        for (let i = 0; i < bossSpawnCount; i++) {
+            createStain(true);
+        }
+    }, 60000);
 
     for (let i = 0; i < activeHelpers; i++) startHelperBot();
     scheduleNextStain();
 
-    // Continuous cleaning loop (runs even if not dragging)
     setInterval(checkCleaning, 200);
+
+    get('cloth').onclick = (e) => {
+        if (hasSpinUpgrade) {
+            handleSpin(get('cloth'));
+        }
+    };
 });
 
-window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", dragEnd); window.addEventListener("mousemove", drag);
-window.addEventListener("touchstart", dragStart); window.addEventListener("touchend", dragEnd); window.addEventListener("touchmove", drag);
+window.addEventListener("mousedown", dragStart);
+window.addEventListener("mouseup", dragEnd);
+window.addEventListener("mousemove", drag);
+window.addEventListener("touchstart", dragStart);
+window.addEventListener("touchend", dragEnd);
+window.addEventListener("touchmove", drag);
 window.addEventListener('resize', centerCloth);

@@ -14,7 +14,7 @@
         <div class="user-stats">
             <div class="stat-box">✨ <span id="score-val">0</span> ქულა</div>
             <div class="stat-box">🪙 <span id="coins-val">0</span> ქოინი</div>
-            <div class="stat-box">⏱️ <span id="interval-val">10.00</span>წმ</div>
+            <div class="stat-box">⏱️ <span id="interval-val">2.00</span>წმ</div>
             <div class="stat-box">🟢 <span id="online-count">1</span> ონლაინ</div>
             <div id="vip-tag" class="stat-box vip-hidden">👑 VIP</div>
         </div>
@@ -27,12 +27,8 @@
             <button id="themes-btn" class="glass-btn">🖼️ თემები</button>
             <button id="donate-btn" class="glass-btn donate-btn">💎 დონაცია</button>
             <button id="buy-vip-btn" class="glass-btn vip-btn">👑 VIP (2 ₾)</button>
-            <button id="leaderboard-btn" class="glass-btn">🏆 რეიტინგი</button>
-        </div>
-        <div id="mini-leaderboard" class="mini-lb glass">
-            <h3>📊 LIVE TOP 10 <span id="lb-timer"
-                    style="font-size: 0.7rem; opacity: 0.6; font-weight: normal; margin-left: 10px;">(10წ)</span></h3>
-            <div id="mini-lb-list"></div>
+            <button id="leaderboard-btn" class="glass-btn">🏆 რეიტინგი <span id="lb-timer"
+                    style="font-size: 0.7rem; opacity: 0.7;">(10წ)</span></button>
         </div>
 
         <!-- Global Chat -->
@@ -55,7 +51,6 @@
             <h2 style="margin-bottom: 30px;">⚙️ მართვა</h2>
 
             <div class="settings-layout">
-                <!-- Left Column: General Settings -->
                 <div class="settings-col">
                     <h3 class="section-title">ზოგადი პარამეტრები</h3>
                     <div class="shop-item">
@@ -68,52 +63,21 @@
                             <button id="set-inc-helper" class="small-btn">+</button>
                         </div>
                     </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>ნაჭრის ძალა</h3>
-                            <p>აქტიური: <span id="active-cloth">0</span> / <span id="total-cloth">0</span></p>
-                        </div>
-                        <div class="btn-group">
-                            <button id="set-dec-cloth" class="small-btn">-</button>
-                            <button id="set-inc-cloth" class="small-btn">+</button>
-                        </div>
-                    </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>კერხერი</h3>
-                            <p>სტატუსი: <span id="karcher-status">გამორთულია</span></p>
-                        </div>
-                        <button id="toggle-karcher-btn" class="action-btn">შეცვლა</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>დამატებითი აჩქარება</h3>
-                            <p>აქტიური: <span id="active-speed-bonus">0</span> წმ</p>
-                        </div>
-                        <div class="btn-group">
-                            <button id="set-dec-speed" class="small-btn">-</button>
-                            <button id="set-inc-speed" class="small-btn">+</button>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Right Column: Upgrades & Stats -->
                 <div class="settings-col">
-                    <h3 class="section-title">გაძლიერება და სტატისტიკა</h3>
+                    <h3 class="section-title">სტატისტიკა</h3>
                     <div class="shop-item">
                         <div class="shop-info">
-                            <h3>💪 ტილოს ძალა (+<span id="score-cloth-lvl">0</span>)</h3>
-                            <p>100 ქულა = +10% სიმძლავრე</p>
+                            <h3>🏆 საუკეთესო შედეგი</h3>
+                            <p id="best-score-stat">0 stain / 0s</p>
                         </div>
-                        <button id="upgrade-cloth-score-btn" class="action-btn" style="min-width: 80px;">100 🎯</button>
                     </div>
                     <div class="shop-item">
                         <div class="shop-info">
-                            <h3>🤖 დამხმარის ძალა (+<span id="score-helper-lvl">0</span>)</h3>
-                            <p>100 ქულა = +10% სისწრაფე</p>
+                            <h3>⏮️ წინა ხელი</h3>
+                            <p id="prev-score-stat">0 stain / 0s</p>
                         </div>
-                        <button id="upgrade-helper-score-btn" class="action-btn" style="min-width: 80px;">100
-                            🎯</button>
                     </div>
                 </div>
 
@@ -135,44 +99,72 @@
 
     <!-- Shop Modal -->
     <div id="shop-modal" class="modal hidden">
-        <div class="modal-content glass">
+        <div class="modal-content glass wide-modal">
             <span class="close-modal" id="close-shop">&times;</span>
-            <h2>🛒 მაღაზია</h2>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>დამხმარე (<span id="helper-count">0</span>/10)</h3>
-                    <p>ავტომატურად ასუფთავებს ლაქებს</p>
+            <h2 style="margin-bottom: 30px;">🛒 მაღაზია</h2>
+
+            <div class="settings-layout">
+                <div class="settings-col">
+                    <h3 class="section-title">ნივთები</h3>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>🤖 დამხმარე (Robot)</h3>
+                            <p>ავტომატურად ასუფთავებს ლაქებს</p>
+                        </div>
+                        <button id="buy-helper-btn" class="action-btn">2000 🪙</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>სატრიალო ტილო (Spin)</h3>
+                            <p>დააკლიკეთ ტილოს ტრიალისთვის</p>
+                        </div>
+                        <button id="buy-spin-btn" class="action-btn">500 🪙</button>
+                    </div>
                 </div>
-                <button id="buy-helper-btn" class="action-btn">100 🪙</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>მუდმივი აჩქარება</h3>
-                    <p>ლაქები 5 წამით მალე ჩნდება (მუდმივი)</p>
+                <div class="settings-col">
+                    <h3 class="section-title">გაძლიერებები</h3>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>💪 ტილოს ძალა (Cloth)</h3>
+                            <p>ნაჭერი 10%-ით მალე შლის ლაქას</p>
+                        </div>
+                        <button id="buy-strength-btn" class="action-btn">1000 🪙</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-info">
+                            <h3>⏩ მუდმივი აჩქარება</h3>
+                            <p>ლაქები უფრო მალე ჩნდება</p>
+                        </div>
+                        <button id="buy-perm-speed-btn" class="action-btn">5000 🪙</button>
+                    </div>
                 </div>
-                <button id="buy-speed-btn" class="action-btn">50 🪙</button>
             </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>დროებითი აჩქარება</h3>
-                    <p>სესიური: -1 წამი (იკარგება გასვლისას)</p>
-                </div>
-                <button id="buy-temp-speed-btn" class="action-btn">10 🪙</button>
+        </div>
+    </div>
+
+    <!-- Upgrade Cards Modal -->
+    <div id="upgrade-modal" class="modal hidden">
+        <div class="modal-content glass wide-modal" style="background: rgba(0,0,0,0.8); border: 2px solid #FFD700;">
+            <h2 style="color: #FFD700; text-align: center; margin-bottom: 30px; font-size: 2rem;">აირჩიე გაძლიერება! ✨
+            </h2>
+            <div id="upgrade-cards-container" style="display: flex; gap: 20px; justify-content: center; padding: 20px;">
+                <!-- Cards will be injected here -->
             </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>ნაჭრის გაძლიერება (<span id="cloth-level">0</span>/10)</h3>
-                    <p>ნაჭერი უფრო სწრაფად შლის ლაქას</p>
-                </div>
-                <button id="buy-cloth-power-btn" class="action-btn">70 🪙</button>
+        </div>
+    </div>
+
+    <!-- Defeat Modal -->
+    <div id="defeat-modal" class="modal hidden">
+        <div class="modal-content glass" style="max-width: 400px; text-align: center; border: 2px solid #ff4d4d;">
+            <h1 style="color: #ff4d4d; font-size: 3rem; margin-bottom: 20px;">დამარცხდით! 💀</h1>
+            <div style="margin-bottom: 30px; line-height: 1.6;">
+                <p style="font-size: 1.2rem;">გაწმენდილი: <span id="final-stains"
+                        style="font-weight: bold; color: #ffdb4d;">0</span></p>
+                <p style="font-size: 1.2rem;">დრო: <span id="final-time"
+                        style="font-weight: bold; color: #4facfe;">0</span> წამი</p>
             </div>
-            <div class="shop-item">
-                <div class="shop-info">
-                    <h3>კერხერი (Karcher)</h3>
-                    <p>+100% ძალა და დიდი რადიუსი</p>
-                </div>
-                <button id="buy-karcher-btn" class="action-btn">1000 🪙</button>
-            </div>
+            <button id="restart-game-btn" class="action-btn"
+                style="width: 100%; font-size: 1.2rem; padding: 15px;">თავიდან დაწყება 🔄</button>
         </div>
     </div>
 
@@ -230,10 +222,13 @@
         </div>
     </div>
 
+    <!-- Weekly Leaderboard Modal -->
     <div id="leaderboard-modal" class="modal hidden">
-        <div class="modal-content glass">
+        <div class="modal-content glass wide-modal">
             <span class="close-modal" id="close-leaderboard">&times;</span>
-            <h2>კვირის რეიტინგი</h2>
+            <h2>🏆 კვირის რეიტინგი</h2>
+            <p style="text-align: center; margin-bottom: 20px; opacity: 0.7; font-size: 0.9rem;">რეიტინგი დგინდება
+                გაწმენდილი ლაქების რაოდენობით და გადარჩენის დროით</p>
             <div id="leaderboard-list">
                 <!-- Data will be injected here -->
             </div>
