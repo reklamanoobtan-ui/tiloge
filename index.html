@@ -10,6 +10,7 @@
     <title>ტილო - გამწმენდი</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" href="ratings.css">
 </head>
 
 <body>
@@ -26,13 +27,7 @@
         </div>
     </div>
 
-    <!-- Sidebar Leaderboard (Hidden Initially) -->
-    <div id="mini-leaderboard" class="mini-lb glass hidden-game-ui">
-        <h3>🏆 TOP 10 (ეფექტურობა)</h3>
-        <div id="mini-lb-list">
-            <p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">იტვირთება...</p>
-        </div>
-    </div>
+
 
     <!-- Main Game HUD (Hidden Initially) -->
     <div id="game-hud" class="header-ui hidden-game-ui">
@@ -50,6 +45,7 @@
             <button id="shop-btn" class="glass-btn">🛒 მაღაზია</button>
             <button id="settings-btn" class="glass-btn">⚙️ პარამეტრები</button>
             <button id="themes-btn" class="glass-btn">🖼️ თემები</button>
+            <button id="ratings-btn" class="glass-btn">📊 რეიტინგები</button>
             <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
             <!-- Removed Donate/VIP Buttons -->
 
@@ -60,6 +56,10 @@
 
     <!-- Global Chat -->
     <div id="global-chat" class="chat-container glass">
+        <div class="chat-header">
+            <span>💬 ჩატი</span>
+            <button id="chat-toggle-btn" class="chat-toggle">−</button>
+        </div>
         <div id="chat-messages" class="chat-messages"></div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="გაგზავნე მესიჯი..." maxlength="50">
@@ -182,6 +182,8 @@
             </div>
             <button id="restart-game-btn" class="action-btn"
                 style="width: 100%; font-size: 1.2rem; padding: 15px;">თავიდან დაწყება 🔄</button>
+            <button id="share-rating-btn" class="action-btn second-btn"
+                style="width: 100%; font-size: 1rem; padding: 12px; margin-top: 10px;">გაუზიარე სხვებს 📊</button>
         </div>
     </div>
 
@@ -200,6 +202,19 @@
     </div>
 
     <!-- Donation Modal -->
+
+
+    <!-- Ratings Modal -->
+    <div id="ratings-modal" class="modal hidden">
+        <div class="modal-content glass wide-modal" style="max-width: 900px;">
+            <span class="close-modal" id="close-ratings">&times;</span>
+            <h2 style="margin-bottom: 30px;">📊 მოთამაშეთა რეიტინგები</h2>
+
+            <div id="ratings-grid" class="ratings-grid">
+                <p style="text-align: center; padding: 20px;">იტვირთება...</p>
+            </div>
+        </div>
+    </div>
 
 
     <!-- Authentication Modal -->

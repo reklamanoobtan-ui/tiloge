@@ -234,6 +234,74 @@ async function fetchLeaderboard() {
     }
 }
 
+async function fetchRatings() {
+    const grid = get('ratings-grid');
+    if (!grid) return;
+
+    try {
+        grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
+
+        // Fetch all players with their best achievements
+        const result = await sql`
+            SELECT nickname, 
+                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
+                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
+                   CASE 
+                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
+                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
+                       ELSE 0 
+                   END as d_efficiency,
+                   is_vip,
+                   last_seen
+            FROM users 
+            WHERE nickname IS NOT NULL 
+              AND nickname != ''
+              AND GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0
+            ORDER BY d_efficiency DESC, d_score DESC
+            LIMIT 100
+        `;
+
+        if (result.length === 0) {
+            grid.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">მოთამაშეები ვერ მოიძებნა</p>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        result.forEach((player) => {
+            const card = document.createElement('div');
+            card.className = 'rating-card';
+            if (player.is_vip) card.classList.add('vip-card');
+
+            const scoreVal = parseFloat(player.d_score || 0);
+            const timeVal = parseFloat(player.d_time || 0);
+            const ld = player.d_efficiency ? parseFloat(player.d_efficiency).toFixed(2) : '0.00';
+            const crown = player.is_vip ? '👑 ' : '';
+
+            card.innerHTML = `
+                <h3>${crown}${player.nickname}</h3>
+                <div class="rating-stats">
+                    <div class="rating-stat">
+                        <span>ქულა:</span>
+                        <strong>${scoreVal} ✨</strong>
+                    </div>
+                    <div class="rating-stat">
+                        <span>დრო:</span>
+                        <strong>${timeVal}წმ ⏱️</strong>
+                    </div>
+                    <div class="rating-stat">
+                        <span>ეფექტურობა:</span>
+                        <strong>LD ${ld}</strong>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error("Ratings Error:", e);
+        grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
+    }
+}
 
 // --- Game Logic ---
 
@@ -321,17 +389,37 @@ function initUI() {
         };
     }
 
+    // Chat Collapse Toggle
+    const chatToggleBtn = get('chat-toggle-btn');
+    const globalChat = get('global-chat');
+    if (chatToggleBtn && globalChat) {
+        chatToggleBtn.onclick = () => {
+            globalChat.classList.toggle('collapsed');
+            chatToggleBtn.textContent = globalChat.classList.contains('collapsed') ? '+' : '−';
+        };
+    }
+
+    // Ratings Modal
+    get('ratings-btn').onclick = () => {
+        get('ratings-modal').classList.remove('hidden');
+        fetchRatings();
+    };
+    get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
+
+    // Share Rating Button (from Game Over modal)
+    get('share-rating-btn').onclick = () => {
+        get('defeat-modal').classList.add('hidden');
+        get('ratings-modal').classList.remove('hidden');
+        fetchRatings();
+    };
+
     const loadUIState = () => {
-        const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, lb: true, chat: true };
+        const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, chat: true };
         get('toggle-stats').checked = uiState.stats;
-        get('toggle-lb').checked = uiState.lb;
         get('toggle-chat').checked = uiState.chat;
 
         const statsEl = document.querySelector('.user-stats');
         if (statsEl) statsEl.style.display = uiState.stats ? 'flex' : 'none';
-
-        const lb = get('mini-leaderboard');
-        if (lb) lb.style.display = uiState.lb ? 'block' : 'none';
 
         const chat = get('global-chat');
         if (chat) chat.style.display = uiState.chat ? 'flex' : 'none';
@@ -341,13 +429,6 @@ function initUI() {
         const show = e.target.checked;
         const statsEl = document.querySelector('.user-stats');
         if (statsEl) statsEl.style.display = show ? 'flex' : 'none';
-        saveUIState();
-    };
-
-    get('toggle-lb').onchange = (e) => {
-        const show = e.target.checked;
-        const lb = get('mini-leaderboard');
-        if (lb) lb.style.display = show ? 'block' : 'none';
         saveUIState();
     };
 
@@ -996,9 +1077,6 @@ function startGameSession() {
 
     // Sync loop
     setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
-    // Leaderboard loop (updates every 10 seconds)
-    fetchLeaderboard();
-    setInterval(fetchLeaderboard, 10000);
 }
 
 let spawnTimeout;
