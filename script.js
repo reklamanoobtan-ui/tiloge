@@ -722,7 +722,7 @@ function initUI() {
         setTimeout(() => {
             if (userEmail && !userEmail.startsWith('guest_')) {
                 // If registered, just restart logic without reload or check persistence
-                startGameSession(true);
+                startGameSession(); // Default resets round
                 get('defeat-modal').classList.add('hidden');
                 get('ratings-modal').classList.add('hidden');
                 // We need to clear stains though
@@ -792,7 +792,7 @@ function initUI() {
 
     get('restart-game-btn').onclick = () => {
         if (userEmail && !userEmail.startsWith('guest_')) {
-            startGameSession(true);
+            startGameSession(); // Default resets round state
             get('defeat-modal').classList.add('hidden');
             document.querySelectorAll('.stain').forEach(s => s.remove());
         } else {
@@ -1665,10 +1665,7 @@ window.onload = async () => {
 
 function startGameSession(dontReset = false) {
     if (!dontReset) {
-        isVip = false;
-        ownedSkins = [];
-        currentSkin = 'default';
-        coins = 0;
+        // Meta-progress (isVip, coins, skins) is kept from global loads
         bossesDefeated = 0;
         totalStainsCleanedRel = 0;
         totalRepeatablePicked = 0;
