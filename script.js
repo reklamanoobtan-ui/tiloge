@@ -933,9 +933,15 @@ function startHelperBot() {
                             createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, closest.style.backgroundColor);
 
                             const isBoss = closest.classList.contains('boss-stain');
-                            if (isBoss) {
+                            const isTriangle = closest.classList.contains('triangle-boss');
+                            if (isTriangle) {
+                                bossesDefeated++;
+                                updateScore(20);
+                                showStatusUpdate('ელიტარული ბოსი დამარცხებულია! +20 ✨');
+                            } else if (isBoss) {
                                 bossesDefeated++;
                                 updateScore(10);
+                                showStatusUpdate('ბოსი დამარცხებულია! +10 ✨');
                             } else {
                                 totalStainsCleanedRel++;
                                 updateScore(1);
@@ -1289,7 +1295,14 @@ function checkCleaning(bx, by) {
                 stain.dataset.cleaning = 'true';
 
                 const isBoss = stain.classList.contains('boss-stain');
-                if (isBoss) {
+                const isTriangle = stain.classList.contains('triangle-boss');
+
+                if (isTriangle) {
+                    bossesDefeated++;
+                    updateScore(20);
+                    showStatusUpdate('ელიტარული ბოსი დამარცხებულია! +20 ✨');
+                    createParticles(sx, sy, '#ffd700', 40);
+                } else if (isBoss) {
                     bossesDefeated++;
                     updateScore(10);
                     showStatusUpdate('ბოსი დამარცხებულია! +10 ✨');
