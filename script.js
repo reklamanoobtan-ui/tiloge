@@ -171,40 +171,55 @@ async function syncUserData() {
 }
 
 async function fetchLeaderboard() {
+    console.log("Leaderboard: Starting fetch...");
     const list = get('mini-lb-list');
     try {
-        // Fetch Top 10 Players by Score (Slither.io style)
         const result = await sql`
-            SELECT nickname, score, is_vip
+            SELECT nickname, 
+                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
+                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
+                   CASE 
+                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
+                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
+                       ELSE 0 
+                   END as d_efficiency,
+                   is_vip
             FROM users 
-            WHERE last_seen > NOW() - INTERVAL '5 minutes'
-            AND score > 0
-            ORDER BY score DESC
+            WHERE nickname IS NOT NULL 
+              AND nickname != ''
+            ORDER BY d_efficiency DESC, d_score DESC
             LIMIT 10
         `;
+
+        console.log("Leaderboard: Received " + result.length + " players");
 
         if (list) {
             list.innerHTML = '';
             if (result.length === 0) {
-                list.innerHTML = '<p style="text-align:center; opacity:0.5; font-size:0.8rem;">No active players</p>';
+                list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">მოთამაშეები ვერ მოიძებნა</p>';
             } else {
-                result.forEach((user, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'mini-lb-item';
+                result.forEach((entry, i) => {
+                    const isMe = nickname && entry.nickname === nickname;
+                    const item = document.createElement('div');
+                    item.className = 'mini-lb-item';
+                    if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
 
-                    if (user.nickname === nickname) div.style.background = "rgba(255, 215, 0, 0.2)";
+                    const scoreVal = parseFloat(entry.d_score || 0);
+                    const timeVal = parseFloat(entry.d_time || 0);
+                    const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
 
-                    const safeNick = user.nickname.substring(0, 12);
-                    const crown = user.is_vip ? '👑 ' : '';
-                    const nameColor = user.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+                    const crown = entry.is_vip ? '👑 ' : '';
+                    const nameColor = entry.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+                    const safeNick = entry.nickname.substring(0, 10);
 
-                    div.innerHTML = `
+                    item.innerHTML = `
                         <div class="mini-lb-info">
-                            <span class="mini-lb-name" style="${nameColor}">${index + 1}. ${crown}${safeNick}</span>
+                            <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${safeNick}</span>
+                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}s)</span>
                         </div>
-                        <span class="mini-lb-score">${user.score} ✨</span>
+                        <span class="mini-lb-score">${scoreVal} ✨</span>
                     `;
-                    list.appendChild(div);
+                    list.appendChild(item);
                 });
             }
         }
@@ -214,8 +229,8 @@ async function fetchLeaderboard() {
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
 
     } catch (e) {
-        console.error("LB Error", e);
-        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem;">Connection Error</p>';
+        console.error("Leaderboard Error:", e);
+        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
     }
 }
 
