@@ -254,8 +254,26 @@ async function handleLogin() {
 }
 
 let syncTimeout;
-async function syncUserData() {
-    if (!userEmail || !gameActive) return;
+async function syncUserData(force = false) {
+    if (!userEmail) return;
+
+    if (force) {
+        try {
+            const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
+            await sql`UPDATE users SET 
+                score = GREATEST(score, ${score}), 
+                survival_time = GREATEST(survival_time, ${currentSurvival}),
+                coins = ${coins}, 
+                is_vip = ${isVip},
+                owned_skins = ${JSON.stringify(ownedSkins)},
+                current_skin = ${currentSkin},
+                last_seen = NOW()
+                WHERE email = ${userEmail}`;
+            return;
+        } catch (e) { return; }
+    }
+
+    if (!gameActive) return;
 
     clearTimeout(syncTimeout);
     syncTimeout = setTimeout(async () => {
@@ -652,7 +670,7 @@ function checkDefeatCondition() {
     }
 }
 
-function handleGameOver() {
+async function handleGameOver() {
     gameActive = false;
     const finalScore = score;
     const finalTime = Math.floor((Date.now() - startTime) / 1000);
@@ -662,7 +680,11 @@ function handleGameOver() {
         lastBestScore = { score: finalScore, time: finalTime };
         localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
     }
-    syncUserData();
+
+    // Force final sync and refresh LB
+    await syncUserData(true);
+    fetchLeaderboard();
+
     get('final-stains').textContent = Math.floor(finalScore);
     get('final-time').textContent = finalTime;
     get('defeat-modal').classList.remove('hidden');
