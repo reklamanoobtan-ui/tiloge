@@ -134,7 +134,7 @@ async function initDatabase() {
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE,
             password TEXT,
-            nickname TEXT UNIQUE,
+            nickname TEXT,
             score INTEGER DEFAULT 0,
             survival_time INTEGER DEFAULT 0,
             last_seen TIMESTAMP DEFAULT NOW(),
@@ -142,6 +142,11 @@ async function initDatabase() {
         )`;
 
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
+
+        // Drop UNIQUE constraint on nickname if it exists (for existing databases)
+        try {
+            await sql`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_nickname_key`;
+        } catch (e) { /* Constraint might not exist */ }
 
         await sql`CREATE TABLE IF NOT EXISTS chat_messages (
             id SERIAL PRIMARY KEY,
@@ -903,15 +908,11 @@ window.onload = async () => {
 
         // Create temp user in DB
         try {
-            await sql`INSERT INTO users(email, password, nickname, coins) VALUES(${userEmail}, ${sessionPass}, ${nickname}, 0)
-                      ON CONFLICT (nickname) DO UPDATE SET email = ${userEmail}, password = ${sessionPass}, score = 0, survival_time = 0, last_seen = NOW()`;
-            // Note: On conflict nickname, we might steal session? 
-            // Better to append checks, but for now simple.
-
+            await sql`INSERT INTO users(email, password, nickname, coins) VALUES(${userEmail}, ${sessionPass}, ${nickname}, 0)`;
             startGameSession();
         } catch (e) {
             console.error("Login Error", e);
-            alert("ნიკნეიმი დაკავებულია ან შეცდომაა!");
+            alert("შეცდომა! თავიდან სცადეთ.");
         }
     };
 

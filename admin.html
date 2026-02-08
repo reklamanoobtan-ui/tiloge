@@ -146,20 +146,12 @@
             if (!pass) return;
             status.textContent = "Checking...";
 
-            try {
-                // Verify against DB (Assuming 'unoobi' is the admin user)
-                const result = await sql`SELECT * FROM users WHERE nickname = 'unoobi' AND password = ${pass}`;
-
-                if (result.length > 0) {
-                    get('login-section').style.display = 'none';
-                    get('admin-controls').style.display = 'block';
-                } else {
-                    status.textContent = "Access Denied";
-                    status.style.color = "red";
-                }
-            } catch (e) {
-                console.error(e);
-                status.textContent = "DB Connection Error";
+            // Simple hardcoded password check
+            if (pass === "123") {
+                get('login-section').style.display = 'none';
+                get('admin-controls').style.display = 'block';
+            } else {
+                status.textContent = "Access Denied";
                 status.style.color = "red";
             }
         };
