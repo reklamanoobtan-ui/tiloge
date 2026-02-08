@@ -1041,14 +1041,18 @@ function startHelperBot() {
 
                             const isBoss = closest.classList.contains('boss-stain');
                             const isTriangle = closest.classList.contains('triangle-boss');
+                            const rMult = parseFloat(closest.dataset.rewardMult || 1.0);
+
                             if (isTriangle) {
                                 bossesDefeated++;
-                                updateScore(20);
-                                showStatusUpdate('ელიტარული ბოსი დამარცხებულია! +20 ✨');
+                                const finalRew = Math.floor(20 * rMult);
+                                updateScore(finalRew);
+                                showStatusUpdate(`ელიტარული ბოსი დამარცხებულია! +${finalRew} ✨`);
                             } else if (isBoss) {
                                 bossesDefeated++;
-                                updateScore(10);
-                                showStatusUpdate('ბოსი დამარცხებულია! +10 ✨');
+                                const finalRew = Math.floor(10 * rMult);
+                                updateScore(finalRew);
+                                showStatusUpdate(`ბოსი დამარცხებულია! +${finalRew} ✨`);
                             } else {
                                 totalStainsCleanedRel++;
                                 updateScore(1);
@@ -1295,6 +1299,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
     stain.dataset.health = health;
     stain.dataset.maxHealth = health;
+    stain.dataset.rewardMult = healthMultiplier;
 
     if (isBoss && !isTriangle) { // Only increment bossCount for regular bosses
         bossCount++;
@@ -1468,16 +1473,19 @@ function checkCleaning(bx, by) {
 
                 const isBoss = stain.classList.contains('boss-stain');
                 const isTriangle = stain.classList.contains('triangle-boss');
+                const rMult = parseFloat(stain.dataset.rewardMult || 1.0);
 
                 if (isTriangle) {
                     bossesDefeated++;
-                    updateScore(20);
-                    showStatusUpdate('ელიტარული ბოსი დამარცხებულია! +20 ✨');
+                    const finalRew = Math.floor(20 * rMult);
+                    updateScore(finalRew);
+                    showStatusUpdate(`ელიტარული ბოსი დამარცხებულია! +${finalRew} ✨`);
                     createParticles(sx, sy, '#ffd700', 40);
                 } else if (isBoss) {
                     bossesDefeated++;
-                    updateScore(10);
-                    showStatusUpdate('ბოსი დამარცხებულია! +10 ✨');
+                    const finalRew = Math.floor(10 * rMult);
+                    updateScore(finalRew);
+                    showStatusUpdate(`ბოსი დამარცხებულია! +${finalRew} ✨`);
                     createParticles(sx, sy, '#ff4d4d', 30);
                 } else {
                     totalStainsCleanedRel++;
