@@ -995,7 +995,11 @@ function startHelperBot() {
     container.appendChild(botEl);
 
     function moveBot() {
-        if (!botEl.parentElement || !gameActive) return;
+        if (!botEl.parentElement) return;
+        if (!gameActive) {
+            setTimeout(moveBot, 500); // Wait for resume
+            return;
+        }
 
         const stains = document.querySelectorAll('.stain');
         if (stains.length > 0) {
