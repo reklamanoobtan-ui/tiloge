@@ -167,6 +167,9 @@ async function syncUserData() {
             survival_time = ${currentSurvival},
             last_seen = NOW()
             WHERE email = ${userEmail}`;
+
+        // Immediately update leaderboard after sync
+        fetchLeaderboard();
     } catch (e) { }
 }
 
@@ -283,6 +286,28 @@ function initUI() {
     // UI Toggle Logic
     get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
     get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
+
+    // Pause Button Logic
+    let isPaused = false;
+    const pauseBtn = get('pause-btn');
+    if (pauseBtn) {
+        pauseBtn.onclick = () => {
+            isPaused = !isPaused;
+            gameActive = !isPaused;
+
+            if (isPaused) {
+                pauseBtn.textContent = '▶️ გაგრძელება';
+                pauseBtn.style.background = 'rgba(76, 175, 80, 0.3)';
+                showStatusUpdate('თამაში დაპაუზებულია ⏸️');
+            } else {
+                pauseBtn.textContent = '⏸️ პაუზა';
+                pauseBtn.style.background = '';
+                showStatusUpdate('თამაში გაგრძელდა ▶️');
+                // Resume stain spawning
+                if (!spawnTimeout) scheduleNextStain();
+            }
+        };
+    }
 
     const loadUIState = () => {
         const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, lb: true, chat: true };
@@ -507,11 +532,11 @@ function setupChat() {
 async function fetchChat() {
     try {
         const msgs = await sql`
-            SELECT cm.*, u.is_vip 
+            SELECT DISTINCT ON (cm.id) cm.*, u.is_vip 
             FROM chat_messages cm 
-            LEFT JOIN users u ON LOWER(cm.nickname) = LOWER(u.nickname) 
+            LEFT JOIN users u ON cm.nickname = u.nickname 
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
-            ORDER BY cm.created_at ASC
+            ORDER BY cm.id, cm.created_at ASC
     `;
         const container = get('chat-messages');
         if (!container) return;
@@ -524,7 +549,7 @@ async function fetchChat() {
             const nameClass = isVipUser ? 'vip-rainbow-text chat-vip-name' : '';
             const crown = isVipUser ? '👑 ' : '';
 
-            el.innerHTML = `< strong class="${nameClass}" > ${crown}${m.nickname}:</strong > ${m.message} `;
+            el.innerHTML = `<strong class="${nameClass}">${crown}${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
@@ -545,8 +570,8 @@ function startHelperBot() {
         if (stains.length > 0) {
             const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30} px`;
-            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30} px`;
+            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
+            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
 
             setTimeout(() => {
                 if (target.parentElement) {
@@ -564,8 +589,9 @@ function startHelperBot() {
                 moveBot();
             }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
         } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)} px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)} px`;
+            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+
             setTimeout(moveBot, 2000);
         }
     }
