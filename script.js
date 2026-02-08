@@ -820,7 +820,6 @@ document.addEventListener('mousemove', (e) => {
     currentX = e.clientX;
     currentY = e.clientY;
     moveCloth(currentX, currentY);
-    checkCleaning(currentX, currentY);
 });
 
 document.addEventListener('touchmove', (e) => {
@@ -829,8 +828,16 @@ document.addEventListener('touchmove', (e) => {
     currentX = e.touches[0].clientX;
     currentY = e.touches[0].clientY;
     moveCloth(currentX, currentY);
-    checkCleaning(currentX, currentY);
 }, { passive: false });
+
+// Auto-cleaning loop - continuously clean nearby stains
+setInterval(() => {
+    if (!gameActive) return;
+    if (currentX && currentY) {
+        checkCleaning(currentX, currentY);
+    }
+}, 50); // Check every 50ms for smooth auto-cleaning
+
 
 function moveCloth(x, y) {
     const cloth = get('cloth');
