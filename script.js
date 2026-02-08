@@ -341,6 +341,12 @@ function updateScore(points) {
         if (score >= nextUpgradeScore) {
             showUpgradeOptions();
             nextUpgradeScore = Math.ceil(nextUpgradeScore * 1.3);
+            syncUserData(true); // Force sync on upgrade
+        }
+
+        // Sync every 20 points for "immediate" reflection
+        if (Math.floor(score) % 20 === 0) {
+            syncUserData(true);
         }
 
         updateUIValues();
@@ -529,7 +535,7 @@ async function fetchChat() {
         const msgs = await sql`
             SELECT cm.*, u.is_vip 
             FROM chat_messages cm 
-            LEFT JOIN users u ON cm.nickname = u.nickname 
+            LEFT JOIN users u ON LOWER(cm.nickname) = LOWER(u.nickname) 
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
             ORDER BY cm.created_at ASC
         `;
@@ -540,8 +546,9 @@ async function fetchChat() {
             const el = document.createElement('div');
             el.className = 'chat-msg';
 
-            const nameClass = m.is_vip ? 'vip-rainbow-text chat-vip-name' : '';
-            const crown = m.is_vip ? '👑 ' : '';
+            const isVipUser = m.is_vip === true;
+            const nameClass = isVipUser ? 'vip-rainbow-text chat-vip-name' : '';
+            const crown = isVipUser ? '👑 ' : '';
 
             el.innerHTML = `<strong class="${nameClass}">${crown}${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
@@ -800,7 +807,7 @@ window.addEventListener('load', async () => {
     }, 1000);
 
     setInterval(checkForUpdates, 30000);
-    setInterval(() => { if (userEmail) syncUserData(); }, 15000);
+    setInterval(() => { if (userEmail) syncUserData(); }, 5000);
 
     setInterval(() => { if (gameActive) { bossCount++; for (let i = 0; i < Math.floor(bossCount / 10) + 1; i++) createStain(true); } }, 60000);
 

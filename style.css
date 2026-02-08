@@ -808,3 +808,18 @@ body {
     font-size: 1.05em;
     margin-right: 4px;
 }
+
+.vip-rainbow-text {
+    background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 400% 400%;
+    animation: rainbow-text-anim 5s ease infinite;
+    font-weight: bold;
+}
+
+@keyframes rainbow-text-anim {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
