@@ -270,8 +270,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 3000;
+    z-index: 6000;
+    /* Higher than game-overlay (5000) */
     backdrop-filter: blur(5px);
+    transition: background 0.3s ease;
 }
 
 .hidden {
@@ -289,6 +291,26 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     position: relative;
     border: 1px solid var(--glass-border);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Side-by-side layout for wide screens when auth is open over start menu */
+@media (min-width: 1000px) {
+    body.auth-visual-open #game-start-overlay .start-container {
+        transform: translateX(-260px);
+    }
+
+    #auth-modal.auth-open-side {
+        background: transparent;
+        backdrop-filter: none;
+        pointer-events: none;
+        /* Let clicks pass through backdrop when side-by-side */
+    }
+
+    .modal.auth-open-side .modal-content {
+        transform: translateX(250px);
+        pointer-events: auto;
+    }
 }
 
 .action-btn {
@@ -647,6 +669,7 @@ input:checked+.slider:before {
     max-width: 400px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .game-title {

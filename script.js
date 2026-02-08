@@ -254,12 +254,13 @@ async function fetchSharedScores() {
     try {
         grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
 
-        // Fetch shared scores
+        // Fetch shared scores - Limit to 20 and only visible for 30 seconds
         const result = await sql`
             SELECT nickname, score, survival_time, efficiency, is_vip, shared_at
             FROM shared_scores
-            ORDER BY efficiency ASC, score ASC
-            LIMIT 100
+            WHERE shared_at > NOW() - INTERVAL '30 seconds'
+            ORDER BY shared_at DESC
+            LIMIT 20
         `;
 
         if (result.length === 0) {
@@ -278,7 +279,14 @@ async function fetchSharedScores() {
             const ld = player.efficiency ? parseFloat(player.efficiency).toFixed(2) : '0.00';
             const crown = player.is_vip ? '👑 ' : '';
 
+            // Calc remaining time for the card
+            const sharedAt = new Date(player.shared_at).getTime();
+            const nowTime = Date.now();
+            const expiresAt = sharedAt + 30000;
+            const remaining = Math.max(0, Math.ceil((expiresAt - nowTime) / 1000));
+
             card.innerHTML = `
+                <div class="rating-timer" id="timer-${sharedAt}">${remaining}წმ</div>
                 <h3>${crown}${player.nickname}</h3>
                 <div class="rating-stats">
                     <div class="rating-stat">
@@ -298,6 +306,21 @@ async function fetchSharedScores() {
             grid.appendChild(card);
         });
 
+        // Start local timer updates for cards
+        const updateCardsTime = () => {
+            document.querySelectorAll('.rating-timer').forEach(t => {
+                let s = parseInt(t.textContent);
+                if (s > 0) t.textContent = (s - 1) + 'წმ';
+                else t.closest('.rating-card').style.opacity = '0.3';
+            });
+        };
+        if (window.cardTimerInterval) clearInterval(window.cardTimerInterval);
+        window.cardTimerInterval = setInterval(updateCardsTime, 1000);
+
+        // Auto-refresh every 10 seconds (slower refresh, cards handle local decay)
+        if (get('ratings-modal').classList.contains('hidden')) return;
+        setTimeout(fetchSharedScores, 15000);
+
     } catch (e) {
         console.error("Shared Scores Error:", e);
         grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
@@ -316,12 +339,25 @@ async function shareScore(scoreVal, timeVal) {
         return;
     }
 
+    // Rate Limit Check: 5 minutes
+    const lastShare = parseInt(localStorage.getItem('tilo_last_share')) || 0;
+    const now = Date.now();
+    const cooldown = 5 * 60 * 1000; // 5 mins
+
+    if (now - lastShare < cooldown) {
+        const remaining = Math.ceil((cooldown - (now - lastShare)) / 1000);
+        showStatusUpdate(`მოიცადეთ ${remaining}წმ ⏳`);
+        return;
+    }
+
     try {
         const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
 
         await sql`INSERT INTO shared_scores (nickname, score, survival_time, efficiency, is_vip)
                   VALUES (${nickname}, ${scoreVal}, ${timeVal}, ${efficiency}, ${isVip})`;
 
+        localStorage.setItem('tilo_last_share', now);
+        updateShareButtonsUI();
         showStatusUpdate('შედეგი გაზიარდა! ✅');
 
         // Always show the ratings list after sharing
@@ -335,6 +371,46 @@ async function shareScore(scoreVal, timeVal) {
         showStatusUpdate('გაზიარება ვერ მოხერხდა! ❌');
     }
 }
+
+function updateShareButtonsUI() {
+    const lastShare = parseInt(localStorage.getItem('tilo_last_share')) || 0;
+    const now = Date.now();
+    const cooldown = 5 * 60 * 1000;
+    const diff = now - lastShare;
+
+    const btns = ['share-rating-btn', 'share-best-btn', 'share-prev-btn'];
+    const profileTimer = get('share-cooldown-timer');
+
+    if (diff < cooldown) {
+        const remaining = Math.ceil((cooldown - diff) / 1000);
+        const min = Math.floor(remaining / 60);
+        const sec = remaining % 60;
+        const timeStr = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+
+        btns.forEach(id => {
+            const b = get(id);
+            if (b) {
+                b.disabled = true;
+                b.dataset.originalText = b.dataset.originalText || b.textContent;
+                b.textContent = `⏳ ${timeStr}`;
+            }
+        });
+        if (profileTimer) {
+            profileTimer.textContent = `გაზიარება: ${timeStr}`;
+            profileTimer.parentElement.classList.remove('hidden');
+        }
+    } else {
+        btns.forEach(id => {
+            const b = get(id);
+            if (b && b.dataset.originalText) {
+                b.disabled = false;
+                b.textContent = b.dataset.originalText;
+            }
+        });
+        if (profileTimer) profileTimer.parentElement.classList.add('hidden');
+    }
+}
+setInterval(updateShareButtonsUI, 1000);
 
 
 
@@ -1131,7 +1207,12 @@ window.onload = async () => {
     }
 
     // Modal Closers
-    get('close-auth').onclick = () => get('auth-modal').classList.add('hidden');
+    const closeAuth = () => {
+        get('auth-modal').classList.add('hidden');
+        get('auth-modal').classList.remove('auth-open-side');
+        document.body.classList.remove('auth-visual-open');
+    };
+    get('close-auth').onclick = closeAuth;
     get('close-restricted').onclick = () => get('restricted-modal').classList.add('hidden');
     get('not-now-btn').onclick = () => get('restricted-modal').classList.add('hidden');
     get('go-to-register-btn').onclick = () => {
@@ -1167,7 +1248,12 @@ window.onload = async () => {
     get('show-login-btn').onclick = switchToLogin;
     get('show-register-btn').onclick = switchToRegister;
     get('open-auth-btn').onclick = () => {
+        const isStartScreen = !get('game-start-overlay').classList.contains('hidden');
         get('auth-modal').classList.remove('hidden');
+        if (isStartScreen) {
+            get('auth-modal').classList.add('auth-open-side');
+            document.body.classList.add('auth-visual-open');
+        }
         switchToLogin();
     };
 
@@ -1207,6 +1293,8 @@ window.onload = async () => {
             localStorage.setItem('tilo_vip', isVip);
 
             get('auth-modal').classList.add('hidden');
+            get('auth-modal').classList.remove('auth-open-side');
+            document.body.classList.remove('auth-visual-open');
             startGameSession(true);
         } catch (e) {
             console.error(e);
