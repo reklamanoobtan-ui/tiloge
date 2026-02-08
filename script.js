@@ -298,49 +298,61 @@ async function fetchLeaderboard() {
             SELECT nickname, score, survival_time, is_vip,
             CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
             FROM users 
-            WHERE score > 0
-            ORDER BY efficiency ASC, score DESC 
+            WHERE nickname IS NOT NULL
+            ORDER BY score DESC, efficiency ASC
             LIMIT 50
         `;
-        onlinePlayers = result;
+        onlinePlayers = Array.isArray(result) ? result : [];
         updateLeaderboardUI();
 
-        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '30 seconds'`;
+        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '60 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
-    } catch (e) { }
+    } catch (e) {
+        console.error("LB Fetch Error:", e);
+    }
 }
 
 function updateLeaderboardUI() {
+    const list = get('leaderboard-list');
+    if (!list) return;
+
+    if (!onlinePlayers || onlinePlayers.length === 0) {
+        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">ჯერჯერობით მოთამაშეები არ არიან...</p>';
+        return;
+    }
+
     const combined = [...onlinePlayers].sort((a, b) => {
+        // First sort by score (descending)
+        if (b.score !== a.score) return b.score - a.score;
+        // Then by efficiency (ascending - lower is better)
         let effA = a.score > 0 ? a.survival_time / a.score : 999999;
         let effB = b.score > 0 ? b.survival_time / b.score : 999999;
-        if (effA !== effB) return effA - effB;
-        return b.score - a.score;
+        return effA - effB;
     });
-    const list = get('leaderboard-list');
-    if (list && get('leaderboard-modal') && !get('leaderboard-modal').classList.contains('hidden')) {
-        list.innerHTML = '';
-        combined.slice(0, 50).forEach((entry, i) => {
-            const isMe = entry.nickname === nickname;
-            const item = document.createElement('div');
-            item.className = 'lb-item';
-            if (isMe) item.style.fontWeight = "bold";
-            if (entry.is_vip) item.classList.add('vip-rainbow-text');
-            const timeVal = entry.survival_time || 0;
-            const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : 'N/A';
-            item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="lb-rank">#${i + 1}</span>
-                    <div style="display: flex; flex-direction: column;">
-                        <span>${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
-                        <span style="font-size: 0.7rem; opacity: 0.6;">${timeVal}წ / ${eff}წ ლაქაზე</span>
-                    </div>
+
+    list.innerHTML = '';
+    combined.forEach((entry, i) => {
+        const isMe = entry.nickname === nickname;
+        const item = document.createElement('div');
+        item.className = 'lb-item';
+        if (isMe) item.style.background = "rgba(255, 215, 0, 0.1)";
+        if (entry.is_vip) item.classList.add('vip-rainbow-text');
+
+        const timeVal = entry.survival_time || 0;
+        const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : '0.00';
+
+        item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="lb-rank">#${i + 1}</span>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 700;">${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
+                    <span style="font-size: 0.7rem; opacity: 0.6;">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
                 </div>
-                <span>${Math.floor(entry.score)} ✨</span>
-            `;
-            list.appendChild(item);
-        });
-    }
+            </div>
+            <span style="font-weight: 800;">${Math.floor(entry.score)} ✨</span>
+        `;
+        list.appendChild(item);
+    });
 }
 
 // --- Game Logic ---
@@ -477,7 +489,7 @@ function initUI() {
     });
 
     get('leaderboard-btn').onclick = () => {
-        updateLeaderboardUI();
+        fetchLeaderboard();
         get('leaderboard-modal').classList.remove('hidden');
     };
     get('close-leaderboard').onclick = () => get('leaderboard-modal').classList.add('hidden');
