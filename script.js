@@ -336,8 +336,8 @@ async function fetchLeaderboard() {
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
-              AND (COALESCE(score, 0) > 0 OR COALESCE(best_score, 0) > 0)
-            ORDER BY (CASE WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
+            ORDER BY d_score DESC, 
+                     (CASE WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
                       THEN CAST(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END AS FLOAT) / GREATEST(COALESCE(best_score, 0), COALESCE(score, 0))
                       ELSE 999999 END) ASC
             LIMIT 10
@@ -650,10 +650,10 @@ function startHelperBot() {
 
 const UPGRADE_POOL = [
     { id: 'speed', title: "⚡ ლაქების აჩქარება", desc: "+20% ლაქების სიხშირე", prob: 0.15, action: () => { intervalMultiplier *= 0.8; upgradeCounts.speed++; } },
-    { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+20% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.2; upgradeCounts.helperSpeed++; } },
+    { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+30% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.3; upgradeCounts.helperSpeed++; } },
     { id: 'helperSpawn', title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => { startHelperBot(); upgradeCounts.helperSpawn++; } },
-    { id: 'radius', title: "📏 რადიუსი S", desc: "+10% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; upgradeCounts.radius++; updatePowerStats(); } },
-    { id: 'strength', title: "💪 ტილოს ძალა", desc: "+15% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.15; upgradeCounts.strength++; updatePowerStats(); } },
+    { id: 'radius', title: "📏 რადიუსი S", desc: "+30% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.3; upgradeCounts.radius++; updatePowerStats(); } },
+    { id: 'strength', title: "💪 ტილოს ძალა", desc: "+30% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.3; upgradeCounts.strength++; updatePowerStats(); } },
     { id: 'karcher', title: "🚿 კერხერი", desc: "ორმაგი სიმძლავრე და რადიუსი", prob: 0.03, action: () => { strengthMultiplier *= 2; radiusMultiplier *= 2; upgradeCounts.karcher++; updatePowerStats(); } },
 ];
 
@@ -668,7 +668,12 @@ function showUpgradeOptions() {
 
     let availableUpgrades = UPGRADE_POOL.filter(u => {
         if (u.id === 'karcher') return upgradeCounts.karcher < 1;
-        return upgradeCounts[u.id] < 10;
+        if (u.id === 'helperSpawn') return upgradeCounts.helperSpawn < 10;
+        if (u.id === 'strength') return strengthMultiplier < 3.0;
+        if (u.id === 'radius') return radiusMultiplier < 3.0;
+        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0;
+        if (u.id === 'speed') return intervalMultiplier > 0.1;
+        return true;
     });
 
     if (availableUpgrades.length === 0) {
