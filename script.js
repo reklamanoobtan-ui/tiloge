@@ -564,7 +564,7 @@ function initUI() {
                 pauseBtn.style.background = '';
                 showStatusUpdate('თამაში გაგრძელდა ▶️');
                 // Resume stain spawning
-                if (!spawnTimeout) scheduleNextStain();
+                scheduleNextStain();
             }
         };
     }
@@ -1619,6 +1619,8 @@ function startGameSession(dontReset = false) {
 
 let spawnTimeout;
 function scheduleNextStain() {
+    clearTimeout(spawnTimeout);
+    spawnTimeout = null;
     if (isUpgradeOpen || !gameActive) return;
     createStain();
     spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());
