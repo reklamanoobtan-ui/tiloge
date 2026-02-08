@@ -218,55 +218,55 @@
                     <button id="login-btn" class="action-btn">შესვლა</button>
                     <button id="register-btn" class="action-btn second-btn">რეგისტრაცია</button>
                 </div>
+                <p id="auth-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 10px;"></p>
             </div>
+        </div>
+    </div>
 
-            <!-- UI Settings Modal -->
-            <div id="ui-modal" class="modal hidden">
-                <div class="modal-content glass">
-                    <span class="close-modal" id="close-ui">&times;</span>
-                    <h2>👁️ ინტერფეისი</h2>
-                    <div class="settings-layout" style="display: block;">
-                        <div class="shop-item">
-                            <div class="shop-info">
-                                <h3>📊 სტატისტიკა</h3>
-                                <p>ქულები და რესურსები</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-stats" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="shop-item">
-                            <div class="shop-info">
-                                <h3>🏆 რეიტინგი</h3>
-                                <p>მარჯვენა პანელი</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-lb" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="shop-item">
-                            <div class="shop-info">
-                                <h3>💬 ჩათი</h3>
-                                <p>გლობალური მიმოწერა</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-chat" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
+    <!-- UI Settings Modal -->
+    <div id="ui-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-ui">&times;</span>
+            <h2>👁️ ინტერფეისი</h2>
+            <div class="settings-layout" style="display: block;">
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <h3>📊 სტატისტიკა</h3>
+                        <p>ქულები და რესურსები</p>
                     </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-stats" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <h3>🏆 რეიტინგი</h3>
+                        <p>მარჯვენა პანელი</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-lb" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <h3>💬 ჩათი</h3>
+                        <p>გლობალური მიმოწერა</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-chat" checked>
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div id="canvas-container"></div>
+    <div id="cloth" class="cloth"></div>
 
-
-            <div id="canvas-container"></div>
-
-            <div id="cloth" class="cloth"></div>
-
-            <script type="module" src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 
 </html>
