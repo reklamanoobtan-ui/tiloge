@@ -737,9 +737,9 @@ function createStain(isBoss = false) {
 
     let health = isBoss ? 1500 : 100;
     const size = isBoss ? 250 : (Math.random() * 80 + 40);
-    stain.style.width = `${size} px`; stain.style.height = `${size} px`;
-    stain.style.left = `${Math.random() * (window.innerWidth - size)} px`;
-    stain.style.top = `${Math.random() * (window.innerHeight - size)} px`;
+    stain.style.width = `${size}px`; stain.style.height = `${size}px`;
+    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
+    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
     stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
     stain.dataset.health = health; stain.dataset.maxHealth = health;
     if (isBoss) stain.innerHTML = '<div class="boss-title">BOSS</div>';
@@ -825,7 +825,7 @@ function createParticles(x, y, color) {
     const container = get('canvas-container');
     for (let i = 0; i < 4; i++) {
         const p = document.createElement('div');
-        p.style.position = 'absolute'; p.style.left = `${x} px`; p.style.top = `${y} px`;
+        p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
         p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
         p.style.borderRadius = '50%'; p.style.pointerEvents = 'none';
         container.appendChild(p);
