@@ -173,17 +173,13 @@ async function syncUserData() {
 async function fetchLeaderboard() {
     const list = get('mini-lb-list');
     try {
-        // Fetch Top 10 Active Players (sorted by Efficiency: score / time)
+        // Fetch Top 10 Players by Score (Slither.io style)
         const result = await sql`
-            SELECT nickname, score, survival_time, is_vip,
-                   CASE 
-                       WHEN score > 0 THEN CAST(score AS FLOAT) / NULLIF(survival_time, 0)
-                       ELSE 0 
-                   END as d_efficiency
+            SELECT nickname, score, is_vip
             FROM users 
             WHERE last_seen > NOW() - INTERVAL '5 minutes'
             AND score > 0
-            ORDER BY d_efficiency DESC, score DESC
+            ORDER BY score DESC
             LIMIT 10
         `;
 
@@ -198,15 +194,13 @@ async function fetchLeaderboard() {
 
                     if (user.nickname === nickname) div.style.background = "rgba(255, 215, 0, 0.2)";
 
-                    const safeNick = user.nickname.substring(0, 10);
-                    const ld = user.d_efficiency ? parseFloat(user.d_efficiency).toFixed(2) : '0.00';
+                    const safeNick = user.nickname.substring(0, 12);
                     const crown = user.is_vip ? '👑 ' : '';
                     const nameColor = user.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
 
                     div.innerHTML = `
                         <div class="mini-lb-info">
                             <span class="mini-lb-name" style="${nameColor}">${index + 1}. ${crown}${safeNick}</span>
-                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${user.survival_time}s)</span>
                         </div>
                         <span class="mini-lb-score">${user.score} ✨</span>
                     `;
@@ -224,6 +218,7 @@ async function fetchLeaderboard() {
         if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem;">Connection Error</p>';
     }
 }
+
 
 // --- Game Logic ---
 
@@ -834,8 +829,11 @@ setInterval(() => {
 function moveCloth(x, y) {
     const cloth = get('cloth');
     if (cloth) {
-        cloth.style.left = `${x}px`;
-        cloth.style.top = `${y}px`;
+        // Center cursor in the middle of cloth
+        const offsetX = cloth.offsetWidth / 2;
+        const offsetY = cloth.offsetHeight / 2;
+        cloth.style.left = `${x - offsetX}px`;
+        cloth.style.top = `${y - offsetY}px`;
     }
 }
 
