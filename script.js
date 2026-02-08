@@ -687,8 +687,8 @@ function startHelperBot() {
         if (stains.length > 0) {
             const target = stains[Math.floor(Math.random() * stains.length)];
             const rect = target.getBoundingClientRect();
-            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30} px`;
-            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30} px`;
+            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
+            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
 
             setTimeout(() => {
                 if (target.parentElement) {
@@ -706,8 +706,8 @@ function startHelperBot() {
                 moveBot();
             }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
         } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)} px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)} px`;
+            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
             setTimeout(moveBot, 2000);
         }
     }
