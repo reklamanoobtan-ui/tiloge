@@ -442,6 +442,23 @@ function initUI() {
         };
     }
 
+    // Logout Logic
+    get('logout-btn').onclick = () => {
+        localStorage.clear();
+        location.reload();
+    };
+
+    // Update Profile Info in Settings
+    get('settings-btn').onclick = () => {
+        get('settings-modal').classList.remove('hidden');
+        get('settings-user-name').textContent = nickname || 'სტუმარი';
+        if (userEmail && !userEmail.startsWith('guest_')) {
+            get('settings-user-email').textContent = userEmail;
+        } else {
+            get('settings-user-email').textContent = 'სტუმრის ანგარიში';
+        }
+    };
+
     // Ratings Modal
     get('ratings-btn').onclick = () => {
         get('ratings-modal').classList.remove('hidden');
@@ -1072,52 +1089,125 @@ window.onload = async () => {
     initUI();
     await initDatabase();
 
-    // Slither.io Style Start
-    // Hide UI initially
+    // Hide HUD initially
     document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
 
-    // Setup Play Button
-    // Setup Play Button
+    // Open Auth Modal
+    get('open-auth-btn').onclick = () => get('auth-modal').classList.remove('hidden');
+    get('auth-modal').onclick = (e) => { if (e.target === get('auth-modal')) get('auth-modal').classList.add('hidden'); };
+
+    // Register Logic
+    get('register-btn').onclick = async () => {
+        const nick = get('nickname-input').value.trim();
+        const email = get('auth-email').value.trim();
+        const pass = get('auth-password').value.trim();
+        const errorEl = get('auth-error');
+
+        if (!nick || !email || !pass) { errorEl.textContent = "შეავსეთ ყველა ველი!"; return; }
+
+        try {
+            // Check if nickname exists
+            const existing = await sql`SELECT nickname FROM users WHERE nickname = ${nick}`;
+            if (existing.length > 0) { errorEl.textContent = "ნიკნეიმი უკვე დაკავებულია!"; return; }
+
+            await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${email}, ${pass}, ${nick}, 0)`;
+
+            nickname = nick;
+            userEmail = email;
+            localStorage.setItem('tilo_nick', nickname);
+            localStorage.setItem('tilo_email', userEmail);
+
+            get('auth-modal').classList.add('hidden');
+            startGameSession();
+        } catch (e) {
+            console.error("Reg Error:", e);
+            errorEl.textContent = "რეგისტრაცია ვერ მოხერხდა (ემაილი შესაძლოა არსებობს)";
+        }
+    };
+
+    // Login Logic
+    get('login-btn').onclick = async () => {
+        const email = get('auth-email').value.trim();
+        const pass = get('auth-password').value.trim();
+        const errorEl = get('auth-error');
+
+        if (!email || !pass) { errorEl.textContent = "შეავსეთ ემაილი და პაროლი!"; return; }
+
+        try {
+            const res = await sql`SELECT * FROM users WHERE email = ${email} AND password = ${pass}`;
+            if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
+
+            const user = res[0];
+            nickname = user.nickname;
+            userEmail = user.email;
+            coins = user.coins || 0;
+            isVip = user.is_vip || false;
+
+            localStorage.setItem('tilo_nick', nickname);
+            localStorage.setItem('tilo_email', userEmail);
+            localStorage.setItem('tilo_coins', coins);
+            localStorage.setItem('tilo_vip', isVip);
+
+            get('auth-modal').classList.add('hidden');
+            startGameSession(true); // Pass true to not reset stats
+        } catch (e) {
+            console.error("Login Error:", e);
+            errorEl.textContent = "ავტორიზაცია ვერ მოხერხდა";
+        }
+    };
+
+    // Guest Play Button
     get('play-game-btn').onclick = async () => {
         const inputNick = get('player-nick').value.trim();
+        const errorEl = get('start-error');
         if (!inputNick) {
-            alert("შეიყვანეთ ნიკნეიმი!");
+            errorEl.textContent = "შეიყვანეთ ნიკნეიმი!";
             return;
         }
 
-        nickname = inputNick;
-        localStorage.setItem('tilo_nick', nickname);
-
-        // Generate temp email/pass for session
-        const sessionID = Date.now();
-        userEmail = `guest_${sessionID}@tilo.ge`;
-        const sessionPass = `pass_${sessionID}`;
-
-        // Create temp user in DB
         try {
+            // Check if this nickname is registered
+            const res = await sql`SELECT email FROM users WHERE nickname = ${inputNick} AND email NOT LIKE 'guest_%'`;
+            if (res.length > 0) {
+                errorEl.textContent = "ეს ნიკნეიმი ეკუთვნის დარეგისტრირებულ მომხმარებელს! 🔐";
+                return;
+            }
+
+            nickname = inputNick;
+            localStorage.setItem('tilo_nick', nickname);
+
+            // Generate temp email/pass for session
+            const sessionID = Date.now();
+            userEmail = `guest_${sessionID}@tilo.ge`;
+            const sessionPass = `pass_${sessionID}`;
+
             await sql`INSERT INTO users(email, password, nickname, coins) VALUES(${userEmail}, ${sessionPass}, ${nickname}, 0)`;
             startGameSession();
         } catch (e) {
             console.error("Login Error", e);
-            alert("შეცდომა! თავიდან სცადეთ.");
+            errorEl.textContent = "შეცდომა! თავიდან სცადეთ.";
         }
     };
 
-    setupChat(); // Initialize chat polling
+    setupChat();
 };
 
-function startGameSession() {
-    isVip = false; // Reset VIP status for new session logic (or keep if desired)
-    ownedSkins = [];
-    currentSkin = 'default';
-    coins = 0;
-    score = 0;
+function startGameSession(dontReset = false) {
+    if (!dontReset) {
+        isVip = false;
+        ownedSkins = [];
+        currentSkin = 'default';
+        coins = 0;
 
-    // Reset Upgrades
-    intervalMultiplier = 1.0;
-    radiusMultiplier = 1.0;
-    strengthMultiplier = 1.0;
+        // Reset Upgrades
+        intervalMultiplier = 1.0;
+        radiusMultiplier = 1.0;
+        strengthMultiplier = 1.0;
+    }
+
+    score = 0;
     updatePowerStats();
+    showStatusUpdate(`მოგესალმებით, ${nickname}! ✨`);
 
     // Apply UI
     get('game-start-overlay').classList.add('hidden');
