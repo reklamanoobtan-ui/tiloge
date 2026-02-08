@@ -1251,9 +1251,9 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit of 500 stains to prevent lag
+    // Strict limit of 300 stains to prevent lag
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= 500) return;
+    if (currentStains >= 300) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
