@@ -53,6 +53,10 @@ let upgradeCounts = {
 // Helper Bot State (Roguelike only)
 let activeHelpers = 0;
 let helperSpeedMultiplier = 1.0;
+let hasBombUpgrade = false;
+let coinBonusMultiplier = 1.0;
+let hasMagnetUpgrade = false;
+let lastMilestoneScore = 0;
 
 // --- Skin System ---
 let ownedSkins = JSON.parse(localStorage.getItem('tilo_owned_skins')) || [];
@@ -450,6 +454,14 @@ function updateScore(points) {
             syncUserData(true); // Force sync on upgrade
         }
 
+        // 1000 score milestone reward
+        if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
+            coins += 1;
+            showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
+            lastMilestoneScore = score;
+            saveStatsToLocal();
+        }
+
         // Sync every 20 points for "immediate" reflection
         if (Math.floor(score) % 20 === 0) {
             syncUserData(true);
@@ -474,7 +486,10 @@ function updateStatsSidebar() {
         'bot': 'რობოტების რაოდენობა (🤖)',
         'radius': 'წმენდის რადიუსი (📏)',
         'strength': 'წმენდის ძალა (💪)',
-        'karcher': 'კერხერი (🚿)'
+        'karcher': 'კერხერი (🚿)',
+        'bomb': 'ბომბი (💣)',
+        'coin_buff': 'ქოინების ბონუსი (💰)',
+        'magnet': 'მაგნიტი (🧲)'
     };
 
     let hasAny = false;
@@ -970,6 +985,22 @@ function startHelperBot() {
         }
     }
     moveBot();
+
+    // Magnet functionality if owned
+    setInterval(() => {
+        if (hasMagnetUpgrade && gameActive) {
+            const stains = document.querySelectorAll('.stain');
+            if (stains.length > 0) {
+                const target = stains[0];
+                const rect = target.getBoundingClientRect();
+                createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
+                let h = parseFloat(target.dataset.health);
+                target.dataset.health = h - 200; // Magnet cleans bit by bit
+                if (h <= 200) target.dataset.health = 0; // Ensure removal
+                checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            }
+        }
+    }, 3000);
 }
 
 function applyUpgrade(id) {
@@ -981,6 +1012,9 @@ function applyUpgrade(id) {
         case 'radius': radiusMultiplier *= 1.25; updatePowerStats(); break;
         case 'strength': strengthMultiplier *= 1.25; updatePowerStats(); break;
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
+        case 'bomb': hasBombUpgrade = true; break;
+        case 'coin_buff': coinBonusMultiplier += 0.5; break;
+        case 'magnet': hasMagnetUpgrade = true; break;
     }
     updateUIValues();
     scheduleNextStain(); // Resume spawn loop
@@ -1001,7 +1035,10 @@ function showUpgradeOptions() {
         { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
         { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
         { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
-        { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' }
+        { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
+        { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
+        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+50% ქოინების მოგება', type: 'multi' },
+        { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' }
     ];
 
     // Filter available upgrades based on limits
@@ -1129,19 +1166,25 @@ function createStain(isBoss = false, isTriangle = false) {
     const currentStains = document.querySelectorAll('.stain').length;
     if (currentStains >= 500) return;
 
+    const stain = document.createElement('div');
+    stain.className = 'stain';
+
     let health = 100;
     let size = Math.random() * 100 + 50;
 
     if (isBoss) {
         stain.classList.add('boss-stain');
         stain.classList.add('pulse-animation');
-        health = 1500;
-        size = 250;
+
+        // 10,000 score scaling
+        let baseHealth = isTriangle ? 4500 : 1500;
+        if (score >= 10000) baseHealth *= 2;
+
+        health = baseHealth;
+        size = isTriangle ? 300 : 250;
 
         if (isTriangle) {
             stain.classList.add('triangle-boss');
-            health = 4500; // 3x stronger
-            size = 300;
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
         } else {
             stain.innerHTML = '<div class="boss-title">BOSS</div>';
@@ -1223,7 +1266,7 @@ function gameOver() {
     if (get('final-time')) get('final-time').textContent = survival;
 
     // Survival bonus
-    coins += Math.floor(score * 0.5) + Math.floor(survival * 0.2);
+    coins += Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier);
 
 
     // Check Best Score (Local)
@@ -1324,6 +1367,20 @@ function checkCleaning(bx, by) {
                     totalStainsCleanedRel++;
                     updateScore(1);
                     createParticles(sx, sy, stain.style.backgroundColor || '#fff', 10);
+                }
+
+                // Bomb Upgrade: Chain Reaction
+                if (hasBombUpgrade) {
+                    const allStains = document.querySelectorAll('.stain');
+                    allStains.forEach(s => {
+                        const sRect = s.getBoundingClientRect();
+                        const distS = Math.hypot(sx - (sRect.left + sRect.width / 2), sy - (sRect.top + sRect.height / 2));
+                        if (distS < 200 && s !== stain) {
+                            let sh = parseFloat(s.dataset.health);
+                            s.dataset.health = sh - 500; // Heavy damage to neighbors
+                            if (sh - 500 <= 0) checkCleaning(currentX, currentY); // Trigger cleanup
+                        }
+                    });
                 }
 
                 setTimeout(() => stain.remove(), 100);
@@ -1499,12 +1556,22 @@ function startGameSession(dontReset = false) {
         bossesDefeated = 0;
         totalStainsCleanedRel = 0;
         totalRepeatablePicked = 0;
-        upgradeCounts = { 'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0 };
+        upgradeCounts = {
+            'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
+            'bomb': 0, 'coin_buff': 0, 'magnet': 0
+        };
 
         // Reset Upgrades
         intervalMultiplier = 1.0;
         radiusMultiplier = 1.0;
         strengthMultiplier = 1.0;
+        activeHelpers = 0;
+        helperSpeedMultiplier = 1.0;
+        hasBombUpgrade = false;
+        coinBonusMultiplier = 1.0;
+        hasMagnetUpgrade = false;
+        lastMilestoneScore = 0;
+        document.querySelectorAll('.helper-bot').forEach(b => b.remove());
     }
 
     score = 0;
