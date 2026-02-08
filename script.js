@@ -588,14 +588,23 @@ function showUpgradeOptions() {
     container.innerHTML = '';
     modal.classList.remove('hidden');
 
-    for (let i = 0; i < 3; i++) {
+    let selectedCards = [];
+    let attempts = 0;
+    while (selectedCards.length < 3 && attempts < 50) {
         const card = weightedRandom(UPGRADE_POOL);
+        if (!selectedCards.some(c => c.title === card.title)) {
+            selectedCards.push(card);
+        }
+        attempts++;
+    }
+
+    selectedCards.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'upgrade-card';
         cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
         cardEl.onclick = () => { card.action(); modal.classList.add('hidden'); updateUIValues(); };
         container.appendChild(cardEl);
-    }
+    });
 }
 
 function weightedRandom(items) {
