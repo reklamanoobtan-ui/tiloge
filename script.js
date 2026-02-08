@@ -1118,59 +1118,88 @@ window.onload = async () => {
     initUI();
     await initDatabase();
 
-    // Hide HUD initially
-    document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+    // Check persistent session for real users only
+    const savedEmail = localStorage.getItem('tilo_email');
+    if (savedEmail && !savedEmail.startsWith('guest_')) {
+        userEmail = savedEmail;
+        nickname = localStorage.getItem('tilo_nick');
+        coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+        isVip = localStorage.getItem('tilo_vip') === 'true';
+        startGameSession(true);
+    } else {
+        document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+    }
 
-    // Open Auth Modal
-    get('open-auth-btn').onclick = () => get('auth-modal').classList.remove('hidden');
-    get('auth-modal').onclick = (e) => { if (e.target === get('auth-modal')) get('auth-modal').classList.add('hidden'); };
-
-    // Register Logic
-    get('register-btn').onclick = async () => {
-        const nick = get('nickname-input').value.trim();
-        const email = get('auth-email').value.trim();
-        const pass = get('auth-password').value.trim();
-        const errorEl = get('auth-error');
-
-        if (!nick || !email || !pass) { errorEl.textContent = "შეავსეთ ყველა ველი!"; return; }
-
-        try {
-            // Check if nickname exists
-            const existing = await sql`SELECT nickname FROM users WHERE nickname = ${nick}`;
-            if (existing.length > 0) { errorEl.textContent = "ნიკნეიმი უკვე დაკავებულია!"; return; }
-
-            await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${email}, ${pass}, ${nick}, 0)`;
-
-            nickname = nick;
-            userEmail = email;
-            localStorage.setItem('tilo_nick', nickname);
-            localStorage.setItem('tilo_email', userEmail);
-
-            get('auth-modal').classList.add('hidden');
-            startGameSession();
-        } catch (e) {
-            console.error("Reg Error:", e);
-            errorEl.textContent = "რეგისტრაცია ვერ მოხერხდა (ემაილი შესაძლოა არსებობს)";
-        }
+    // Modal Closers
+    get('close-auth').onclick = () => get('auth-modal').classList.add('hidden');
+    get('close-restricted').onclick = () => get('restricted-modal').classList.add('hidden');
+    get('not-now-btn').onclick = () => get('restricted-modal').classList.add('hidden');
+    get('go-to-register-btn').onclick = () => {
+        get('restricted-modal').classList.add('hidden');
+        get('auth-modal').classList.remove('hidden');
+        switchToRegister();
     };
 
-    // Login Logic
-    get('login-btn').onclick = async () => {
-        const email = get('auth-email').value.trim();
-        const pass = get('auth-password').value.trim();
+    // Mode Toggle Logic
+    let authMode = 'login';
+    const switchToLogin = () => {
+        authMode = 'login';
+        get('auth-title').textContent = "ავტორიზაცია";
+        get('nick-field').style.display = 'none';
+        get('auth-email').placeholder = "ელ-ფოსტა / ნიკნეიმი";
+        get('auth-submit-btn').textContent = "შესვლა";
+        get('show-login-btn').style.background = 'var(--cloth-color)';
+        get('show-register-btn').style.background = '';
+        get('auth-error').textContent = '';
+    };
+
+    const switchToRegister = () => {
+        authMode = 'register';
+        get('auth-title').textContent = "რეგისტრაცია";
+        get('nick-field').style.display = 'block';
+        get('auth-email').placeholder = "ელ-ფოსტა";
+        get('auth-submit-btn').textContent = "რეგისტრაცია";
+        get('show-register-btn').style.background = 'var(--cloth-color)';
+        get('show-login-btn').style.background = '';
+        get('auth-error').textContent = '';
+    };
+
+    get('show-login-btn').onclick = switchToLogin;
+    get('show-register-btn').onclick = switchToRegister;
+    get('open-auth-btn').onclick = () => {
+        get('auth-modal').classList.remove('hidden');
+        switchToLogin();
+    };
+
+    // Submit Auth
+    get('auth-submit-btn').onclick = async () => {
+        const nickValue = get('nickname-input').value.trim();
+        const identValue = get('auth-email').value.trim();
+        const passValue = get('auth-password').value.trim();
         const errorEl = get('auth-error');
 
-        if (!email || !pass) { errorEl.textContent = "შეავსეთ ემაილი და პაროლი!"; return; }
+        if (!identValue || !passValue) { errorEl.textContent = "შეავსეთ ველები!"; return; }
 
         try {
-            const res = await sql`SELECT * FROM users WHERE email = ${email} AND password = ${pass}`;
-            if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
+            if (authMode === 'register') {
+                if (!nickValue) { errorEl.textContent = "შეიყვანეთ ნიკნეიმი!"; return; }
+                const check = await sql`SELECT id FROM users WHERE nickname = ${nickValue} OR email = ${identValue}`;
+                if (check.length > 0) { errorEl.textContent = "ნიკნეიმი ან ემაილი დაკავებულია!"; return; }
 
-            const user = res[0];
-            nickname = user.nickname;
-            userEmail = user.email;
-            coins = user.coins || 0;
-            isVip = user.is_vip || false;
+                await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${identValue}, ${passValue}, ${nickValue}, 0)`;
+                userEmail = identValue;
+                nickname = nickValue;
+                coins = 0;
+                isVip = false;
+            } else {
+                const res = await sql`SELECT * FROM users WHERE (email = ${identValue} OR nickname = ${identValue}) AND password = ${passValue}`;
+                if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
+                const user = res[0];
+                nickname = user.nickname;
+                userEmail = user.email;
+                coins = user.coins || 0;
+                isVip = user.is_vip || false;
+            }
 
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
@@ -1178,10 +1207,10 @@ window.onload = async () => {
             localStorage.setItem('tilo_vip', isVip);
 
             get('auth-modal').classList.add('hidden');
-            startGameSession(true); // Pass true to not reset stats
+            startGameSession(true);
         } catch (e) {
-            console.error("Login Error:", e);
-            errorEl.textContent = "ავტორიზაცია ვერ მოხერხდა";
+            console.error(e);
+            errorEl.textContent = "შეცდომა ბაზასთან!";
         }
     };
 
@@ -1221,6 +1250,7 @@ window.onload = async () => {
     setupChat();
 };
 
+
 function startGameSession(dontReset = false) {
     if (!dontReset) {
         isVip = false;
@@ -1242,22 +1272,21 @@ function startGameSession(dontReset = false) {
     get('game-start-overlay').classList.add('hidden');
     document.querySelectorAll('.hidden-game-ui').forEach(el => {
         el.classList.remove('hidden-game-ui');
-        // If we applied 'hidden' class manually in onload:
         el.classList.remove('hidden');
     });
 
     // Start Loops
     gameActive = true;
     startTime = Date.now();
-    lastActivityTime = Date.now(); // Initialize activity tracking
+    lastActivityTime = Date.now();
     scheduleNextStain();
 
-    // Boss spawning interval (every 60 seconds)
+    // Boss spawning interval
     setInterval(() => {
         if (gameActive) {
             const bossSpawnCount = Math.floor(score / 500) + 1;
             for (let i = 0; i < bossSpawnCount; i++) {
-                createStain(true); // Spawn boss
+                createStain(true);
             }
         }
     }, 60000);
