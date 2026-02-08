@@ -167,9 +167,6 @@ async function syncUserData() {
             survival_time = ${currentSurvival},
             last_seen = NOW()
             WHERE email = ${userEmail}`;
-
-        // Immediately update leaderboard after sync
-        fetchLeaderboard();
     } catch (e) { }
 }
 
@@ -984,9 +981,9 @@ function startGameSession() {
 
     // Sync loop
     setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
-    // Leaderboard loop
+    // Leaderboard loop (updates every 10 seconds)
     fetchLeaderboard();
-    setInterval(fetchLeaderboard, 5000);
+    setInterval(fetchLeaderboard, 10000);
 }
 
 let spawnTimeout;
