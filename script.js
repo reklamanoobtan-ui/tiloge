@@ -508,16 +508,24 @@ function setupChat() {
 
 async function fetchChat() {
     try {
-        const msgs = await sql`SELECT * FROM chat_messages WHERE created_at > NOW() - INTERVAL '30 seconds' ORDER BY created_at ASC`;
+        const msgs = await sql`
+            SELECT cm.*, u.is_vip 
+            FROM chat_messages cm 
+            LEFT JOIN users u ON cm.nickname = u.nickname 
+            WHERE cm.created_at > NOW() - INTERVAL '30 seconds' 
+            ORDER BY cm.created_at ASC
+        `;
         const container = get('chat-messages');
         if (!container) return;
         container.innerHTML = '';
         msgs.forEach(m => {
             const el = document.createElement('div');
             el.className = 'chat-msg';
-            const sender = onlinePlayers.find(p => p.nickname === m.nickname);
-            if (sender && sender.is_vip) el.classList.add('vip-rainbow-text');
-            el.innerHTML = `<strong>${(sender && sender.is_vip) ? '👑 ' : ''}${m.nickname}:</strong> ${m.message}`;
+
+            const nameClass = m.is_vip ? 'vip-rainbow-text chat-vip-name' : '';
+            const crown = m.is_vip ? '👑 ' : '';
+
+            el.innerHTML = `<strong class="${nameClass}">${crown}${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
