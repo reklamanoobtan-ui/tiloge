@@ -595,6 +595,71 @@ body {
 }
 
 
+
+.mini-lb {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    width: 260px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 15px;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.mini-lb h3 {
+    font-size: 0.8rem;
+    color: var(--secondary-text);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 8px;
+}
+
+.mini-lb-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 0.82rem;
+}
+
+.mini-lb-item:last-child {
+    border: none;
+}
+
+.mini-lb-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.mini-lb-name {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.mini-lb-stat {
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+.mini-lb-score {
+    font-weight: 800;
+    color: var(--cloth-color);
+}
+
+@media (max-width: 1300px) {
+    .mini-lb {
+        display: none;
+    }
+}
+
 .close-modal {
     position: absolute;
     top: 20px;

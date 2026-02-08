@@ -8,7 +8,7 @@ import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.
 const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
 // State & Version Control
-const APP_VERSION = "2.2.0"; // Leaderboard reset update
+const APP_VERSION = "2.2.1"; // Leaderboard Efficiency Update
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
@@ -155,9 +155,38 @@ async function initDatabase() {
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
 
+        checkWeeklyReset();
+
     } catch (e) { console.error("DB Init Error", e); }
 }
 
+async function checkWeeklyReset() {
+    try {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        // Reset happens Sunday 00:00 (Saturday 24:00)
+        const day = now.getDay();
+        const sundayTimestamp = new Date(now.setDate(now.getDate() - day)).getTime();
+
+        const config = await sql`SELECT value FROM system_config WHERE key = 'last_lb_reset'`;
+        const lastReset = config.length > 0 ? parseInt(config[0].value) : 0;
+
+        if (lastReset < sundayTimestamp) {
+            console.log("Weekly Leaderboard Reset Triggered...");
+            const result = await sql`INSERT INTO system_config (key, value) 
+                                    VALUES ('last_lb_reset', ${sundayTimestamp})
+                                    ON CONFLICT (key) DO UPDATE 
+                                    SET value = ${sundayTimestamp} 
+                                    WHERE system_config.value IS NULL OR CAST(system_config.value AS BIGINT) < ${sundayTimestamp}
+                                    RETURNING *`;
+
+            if (result.length > 0) {
+                await sql`UPDATE users SET score = 0, survival_time = 0`;
+                console.log("Database reset complete.");
+            }
+        }
+    } catch (e) { console.error("Reset Check Error", e); }
+}
 
 async function checkForUpdates() {
     try {
@@ -243,9 +272,11 @@ async function syncUserData(force = false) {
     if (force) {
         try {
             const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
+            const currentEff = score > 0 ? (currentSurvival / score) : 999999;
+
             await sql`UPDATE users SET 
-                score = GREATEST(score, ${score}), 
-                survival_time = GREATEST(survival_time, ${currentSurvival}),
+                score = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${score} ELSE GREATEST(score, ${score}) END,
+                survival_time = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${currentSurvival} ELSE survival_time END,
                 best_score = GREATEST(best_score, ${lastBestScore.score}),
                 best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
                 coins = ${coins}, 
@@ -264,9 +295,11 @@ async function syncUserData(force = false) {
     syncTimeout = setTimeout(async () => {
         try {
             const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
+            const currentEff = score > 0 ? (currentSurvival / score) : 999999;
+
             await sql`UPDATE users SET 
-                score = GREATEST(score, ${score}), 
-                survival_time = GREATEST(survival_time, ${currentSurvival}),
+                score = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${score} ELSE GREATEST(score, ${score}) END,
+                survival_time = CASE WHEN (${score} > 0 AND (survival_time = 0 OR ${currentEff} < (CAST(survival_time AS FLOAT) / NULLIF(score, 0)))) THEN ${currentSurvival} ELSE survival_time END,
                 best_score = GREATEST(best_score, ${lastBestScore.score}),
                 best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
                 coins = ${coins}, 
@@ -279,11 +312,55 @@ async function syncUserData(force = false) {
     }, 1000);
 }
 
-async function fetchOnlineCount() {
+async function fetchLeaderboard() {
     try {
+        const result = await sql`
+            SELECT nickname, score, survival_time, is_vip,
+            CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
+            FROM users 
+            WHERE nickname IS NOT NULL 
+              AND last_seen > NOW() - INTERVAL '7 days'
+              AND score > 0
+            ORDER BY efficiency ASC, score DESC
+            LIMIT 10
+        `;
+        updateMiniLeaderboardUI(result);
+
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '60 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
-    } catch (e) { }
+    } catch (e) {
+        console.error("LB Fetch Error:", e);
+    }
+}
+
+function updateMiniLeaderboardUI(players) {
+    const list = get('mini-lb-list');
+    if (!list) return;
+
+    if (!players || players.length === 0) {
+        list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 10px; font-size: 0.8rem;">ჯერჯერობით ცარიელია...</p>';
+        return;
+    }
+
+    list.innerHTML = '';
+    players.forEach((entry, i) => {
+        const isMe = entry.nickname === nickname;
+        const item = document.createElement('div');
+        item.className = 'mini-lb-item';
+        if (isMe) item.style.backgroundColor = "rgba(255, 215, 0, 0.05)";
+
+        const timeVal = entry.survival_time || 0;
+        const eff = entry.score > 0 ? (timeVal / entry.score).toFixed(2) : '0.00';
+
+        item.innerHTML = `
+            <div class="mini-lb-info">
+                <span class="mini-lb-name">${entry.is_vip ? '👑 ' : ''}${entry.nickname}</span>
+                <span class="mini-lb-stat">⏱️ ${timeVal}წ (${eff}წ/ლ)</span>
+            </div>
+            <span class="mini-lb-score">${Math.floor(entry.score)} ✨</span>
+        `;
+        list.appendChild(item);
+    });
 }
 
 // --- Game Logic ---
@@ -650,6 +727,7 @@ async function handleGameOver() {
 
     // Force final sync
     await syncUserData(true);
+    fetchLeaderboard(); // Immediate update after game over
 
     get('final-stains').textContent = Math.floor(finalScore);
     get('final-time').textContent = finalTime;
@@ -762,9 +840,9 @@ window.addEventListener('load', async () => {
         get('auth-modal').classList.add('hidden');
     } else get('auth-modal').classList.remove('hidden');
 
-    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchOnlineCount();
+    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchLeaderboard();
 
-    setInterval(fetchOnlineCount, 10000);
+    setInterval(fetchLeaderboard, 10000); // Check every 10s for updates
 
     setInterval(checkForUpdates, 30000);
     setInterval(() => { if (userEmail) syncUserData(); }, 5000);
