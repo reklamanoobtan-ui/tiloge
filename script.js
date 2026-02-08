@@ -735,9 +735,9 @@ function showUpgradeOptions() {
     let availableUpgrades = UPGRADE_POOL.filter(u => {
         if (u.id === 'karcher') return upgradeCounts.karcher < 1;
         if (u.id === 'helperSpawn') return upgradeCounts.helperSpawn < 10;
-        if (u.id === 'strength') return strengthMultiplier < 2.0;    // Max 100% boost (Base 1.0 + 1.0)
-        if (u.id === 'radius') return radiusMultiplier < 2.0;        // Max 100% boost
-        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 2.0; // Max 100% boost
+        if (u.id === 'strength') return strengthMultiplier < 3.0;    // Max 200% boost (Base 1.0 + 2.0)
+        if (u.id === 'radius') return radiusMultiplier < 3.0;        // Max 200% boost
+        if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0; // Max 200% boost
         if (u.id === 'speed') return intervalMultiplier > 0.2;       // Cap speed earlier
         return true;
     });
