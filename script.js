@@ -785,8 +785,8 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    // Starts at 2000ms. Decreases by 5ms per each score point.
-    return Math.max(50, (2000 * intervalMultiplier) - (score * 5));
+    // Virtually no limit - reduced to 10ms for technical safety only (to avoid browser freeze)
+    return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
 }
 
 function scheduleNextStain() {
