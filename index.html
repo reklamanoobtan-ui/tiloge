@@ -250,7 +250,17 @@
     <div id="ratings-modal" class="modal hidden">
         <div class="modal-content glass wide-modal" style="max-width: 900px;">
             <span class="close-modal" id="close-ratings">&times;</span>
-            <h2 style="margin-bottom: 30px;">📊 გაზიარებული შედეგები</h2>
+            <h2 style="margin-bottom: 20px;">📊 გაზიარებული შედეგები</h2>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+                <label style="font-size: 0.9rem; opacity: 0.7; align-self: center;">დალაგება:</label>
+                <select id="rating-sort-select"
+                    style="background: var(--input-bg); color: var(--text-color); border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px; outline: none;"
+                    onchange="fetchSharedScores()">
+                    <option value="newest">უახლესი</option>
+                    <option value="score">ქულები (High to Low)</option>
+                    <option value="ld">LD (ეფექტურობა)</option>
+                </select>
+            </div>
 
             <div id="ratings-grid" class="ratings-grid">
                 <p style="text-align: center; padding: 20px;">იტვირთება...</p>

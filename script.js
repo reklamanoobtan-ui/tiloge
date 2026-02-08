@@ -259,12 +259,18 @@ async function fetchSharedScores() {
     try {
         grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
 
-        // Fetch shared scores - Limit to 20 and only visible for 60 seconds
+        // Default sort by shared_at DESC (Newest)
+        let orderBy = 'shared_at DESC';
+        const sortType = get('rating-sort-select') ? get('rating-sort-select').value : 'newest';
+
+        if (sortType === 'score') orderBy = 'score DESC';
+        else if (sortType === 'ld') orderBy = 'efficiency DESC';
+
         const result = await sql`
             SELECT nickname, score, survival_time, efficiency, is_vip, shared_at
             FROM shared_scores
             WHERE shared_at > NOW() - INTERVAL '1 minute'
-            ORDER BY shared_at DESC
+            ORDER BY ${sql.unsafe(orderBy)}
             LIMIT 20
         `;
 
@@ -344,12 +350,14 @@ async function shareScore(scoreVal, timeVal) {
         return;
     }
 
-    // Limit check
+    // Circular Limit Check: If there are 20+ active, delete oldest one
     try {
-        const countRes = await sql`SELECT COUNT(*) as count FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute'`;
-        if (countRes[0].count >= 20) {
-            showStatusUpdate('ველის ლიმიტი (20) შევსებულია! 🚫');
-            return;
+        const activeRes = await sql`SELECT COUNT(*) as count FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute'`;
+        if (activeRes[0].count >= 20) {
+            // Delete oldest ACTIVE score to make room
+            await sql`DELETE FROM shared_scores WHERE id = (
+                SELECT id FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute' ORDER BY shared_at ASC LIMIT 1
+            )`;
         }
     } catch (e) { }
 
