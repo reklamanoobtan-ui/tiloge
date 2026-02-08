@@ -1169,7 +1169,7 @@ function checkDefeatCondition() {
     const triangleBossCountUI = document.querySelectorAll('.triangle-boss').length;
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
-    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20 || triangleBossCountUI >= 10;
+    const isCrisis = totalCount >= 200 || inactiveTime > 30 || bossCountUI >= 20 || triangleBossCountUI >= 10;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = 60;
