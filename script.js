@@ -8,7 +8,7 @@ import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.
 const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
 // State & Version Control
-const APP_VERSION = "2.0.0"; // Increment this to force all clients to reload
+const APP_VERSION = "2.1.0"; // Increment for new version
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
@@ -35,22 +35,14 @@ let lastPrevScore = JSON.parse(localStorage.getItem('tilo_prev_score')) || { sco
 let nextUpgradeScore = 10;
 let gameActive = true;
 
-// Shop State
-let totalHelpersOwned = parseInt(localStorage.getItem('tilo_total_helpers')) || 0;
-let activeHelpers = parseInt(localStorage.getItem('tilo_active_helpers')) || 0;
-let hasSpinUpgrade = localStorage.getItem('tilo_has_spin') === 'true';
-let hasKarcher = localStorage.getItem('tilo_has_karcher') === 'true';
-let karcherEnabled = localStorage.getItem('tilo_karcher_enabled') !== 'false';
-
-// New Shop Levels (Permanent)
-let clothPowerLevel = parseInt(localStorage.getItem('tilo_strength_lvl')) || 0;
-let permSpeedLevel = parseInt(localStorage.getItem('tilo_speed_lvl')) || 0;
+// --- Skin System (New) ---
+let ownedSkins = JSON.parse(localStorage.getItem('tilo_owned_skins')) || [];
+let currentSkin = localStorage.getItem('tilo_current_skin') || 'default';
 
 // Scaling Multipliers (from cards)
 let intervalMultiplier = 1.0;
 let radiusMultiplier = 1.0;
 let strengthMultiplier = 1.0;
-let helperSpeedMultiplier = 1.0;
 
 // Base stats
 let baseClothStrength = 20;
@@ -60,60 +52,59 @@ let cleaningRadius = 1;
 // --- Helper Functions ---
 
 function updatePowerStats() {
-    let power = baseClothStrength * strengthMultiplier * (1 + (clothPowerLevel * 0.1));
+    let power = baseClothStrength * strengthMultiplier;
     const clothEl = get('cloth');
 
-    if (hasKarcher && karcherEnabled) {
-        power *= 2;
-        cleaningRadius = 3 * radiusMultiplier;
-        if (clothEl) clothEl.classList.add('karcher-active');
-    } else {
-        cleaningRadius = 1 * radiusMultiplier;
-        if (clothEl) clothEl.classList.remove('karcher-active');
-    }
+    // Remove old effects logic (Karcher removed)
+    cleaningRadius = 1 * radiusMultiplier;
     clothStrength = power;
+
+    // Apply Current Skin
+    if (clothEl) {
+        clothEl.classList.remove('skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric');
+        if (currentSkin !== 'default') clothEl.classList.add(`skin-${currentSkin}`);
+    }
 }
 
 function saveStatsToLocal() {
     localStorage.setItem('tilo_coins', coins);
-    localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
-    localStorage.setItem('tilo_active_helpers', activeHelpers);
     localStorage.setItem('tilo_vip', isVip);
-    localStorage.setItem('tilo_has_spin', hasSpinUpgrade);
-    localStorage.setItem('tilo_strength_lvl', clothPowerLevel);
-    localStorage.setItem('tilo_speed_lvl', permSpeedLevel);
+    localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
+    localStorage.setItem('tilo_current_skin', currentSkin);
 }
 
 function updateUIValues() {
     if (get('coins-val')) get('coins-val').textContent = coins;
     if (get('score-val')) get('score-val').textContent = score;
 
-    // Settings UI
-    if (get('active-helpers')) get('active-helpers').textContent = activeHelpers;
-    if (get('total-helpers')) get('total-helpers').textContent = totalHelpersOwned;
-
     // Stats UI
     if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
     if (get('prev-score-stat')) get('prev-score-stat').textContent = `${lastPrevScore.score} stain / ${lastPrevScore.time}s`;
 
-    const updateBtn = (id, price, owned = false) => {
+    const updateSkinBtn = (id, skinName) => {
         const btn = get(id);
         if (!btn) return;
-        if (owned) {
-            btn.textContent = "შეძენილია";
-            btn.disabled = true;
-            btn.classList.add('purchased');
+        if (ownedSkins.includes(skinName)) {
+            if (currentSkin === skinName) {
+                btn.textContent = "არჩეულია";
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+            } else {
+                btn.textContent = "არჩევა";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
         } else {
-            btn.textContent = `${price} 🪙`;
-            btn.disabled = coins < price;
-            btn.classList.remove('purchased');
+            btn.textContent = `50 🪙`;
+            btn.disabled = coins < 50;
+            btn.style.opacity = coins < 50 ? "0.5" : "1";
         }
     };
 
-    updateBtn('buy-spin-btn', 500, hasSpinUpgrade);
-    updateBtn('buy-helper-btn', 2000, totalHelpersOwned >= 10);
-    updateBtn('buy-strength-btn', 1000 + (clothPowerLevel * 500), clothPowerLevel >= 10);
-    updateBtn('buy-perm-speed-btn', 5000 + (permSpeedLevel * 1000), permSpeedLevel >= 10);
+    updateSkinBtn('buy-skin-fire', 'fire');
+    updateSkinBtn('buy-skin-ice', 'ice');
+    updateSkinBtn('buy-skin-jungle', 'jungle');
+    updateSkinBtn('buy-skin-electric', 'electric');
 
     if (get('interval-val')) {
         let interval = getSpawnInterval();
@@ -134,19 +125,17 @@ async function initDatabase() {
             survival_time INTEGER DEFAULT 0,
             coins INTEGER DEFAULT 0,
             is_vip BOOLEAN DEFAULT false,
-            total_helpers INTEGER DEFAULT 0,
-            has_karcher BOOLEAN DEFAULT false,
-            has_spin BOOLEAN DEFAULT false,
-            strength_lvl INTEGER DEFAULT 0,
-            speed_lvl INTEGER DEFAULT 0,
+            owned_skins TEXT DEFAULT '[]',
+            current_skin TEXT DEFAULT 'default',
             last_seen TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
+        // Reset Table/Stats for current migration if needed (Manual strip)
+        // User asked to strip everyone, so we'll ignore old helper/strength columns
         try {
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS strength_lvl INTEGER DEFAULT 0`;
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS speed_lvl INTEGER DEFAULT 0`;
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS owned_skins TEXT DEFAULT '[]'`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS current_skin TEXT DEFAULT 'default'`;
         } catch (e) { }
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
@@ -186,8 +175,8 @@ async function handleRegister() {
     if (!email || !pass || !nick) { err.textContent = "შეავსეთ ყველა ველი!"; return; }
 
     try {
-        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, total_helpers, has_karcher, has_spin, strength_lvl, speed_lvl) 
-                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${totalHelpersOwned}, ${hasKarcher}, ${hasSpinUpgrade}, ${clothPowerLevel}, ${permSpeedLevel})`;
+        await sql`INSERT INTO users (email, password, nickname, coins, is_vip, owned_skins, current_skin) 
+                  VALUES (${email}, ${pass}, ${nick}, ${coins}, ${isVip}, ${JSON.stringify(ownedSkins)}, ${currentSkin})`;
 
         nickname = nick;
         userEmail = email;
@@ -219,21 +208,23 @@ async function handleLogin() {
             score = user.score;
             coins = user.coins;
             isVip = user.is_vip;
-            totalHelpersOwned = user.total_helpers;
-            hasKarcher = user.has_karcher;
-            hasSpinUpgrade = user.has_spin;
-            clothPowerLevel = user.strength_lvl || 0;
-            permSpeedLevel = user.speed_lvl || 0;
+            ownedSkins = JSON.parse(user.owned_skins || '[]');
+            currentSkin = user.current_skin || 'default';
 
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
             localStorage.setItem('tilo_vip', isVip);
-            localStorage.setItem('tilo_total_helpers', totalHelpersOwned);
-            localStorage.setItem('tilo_has_karcher', hasKarcher);
-            localStorage.setItem('tilo_has_spin', hasSpinUpgrade);
-            localStorage.setItem('tilo_strength_lvl', clothPowerLevel);
-            localStorage.setItem('tilo_speed_lvl', permSpeedLevel);
+            localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
+            localStorage.setItem('tilo_current_skin', currentSkin);
+
+            // Strip old stats from local storage for everyone on login too
+            localStorage.removeItem('tilo_total_helpers');
+            localStorage.removeItem('tilo_active_helpers');
+            localStorage.removeItem('tilo_has_spin');
+            localStorage.removeItem('tilo_has_karcher');
+            localStorage.removeItem('tilo_strength_lvl');
+            localStorage.removeItem('tilo_speed_lvl');
 
             updateUIValues();
             location.reload();
@@ -258,11 +249,8 @@ async function syncUserData() {
                 survival_time = GREATEST(survival_time, ${currentSurvival}),
                 coins = ${coins}, 
                 is_vip = ${isVip},
-                total_helpers = ${totalHelpersOwned},
-                has_karcher = ${hasKarcher},
-                has_spin = ${hasSpinUpgrade},
-                strength_lvl = ${clothPowerLevel},
-                speed_lvl = ${permSpeedLevel},
+                owned_skins = ${JSON.stringify(ownedSkins)},
+                current_skin = ${currentSkin},
                 last_seen = NOW()
                 WHERE email = ${userEmail}`;
         } catch (e) { console.error("Neon Sync Error", e); }
@@ -337,55 +325,29 @@ function showStatusUpdate(text) {
     }, 2000);
 }
 
+function handleSkinAction(name) {
+    if (ownedSkins.includes(name)) {
+        currentSkin = name;
+        showStatusUpdate(`${name} სკინი არჩეულია! ✨`);
+    } else {
+        if (coins >= 50) {
+            coins -= 50;
+            ownedSkins.push(name);
+            currentSkin = name;
+            showStatusUpdate(`${name} სკინი შეძენილია! 🔥`);
+        }
+    }
+    updatePowerStats();
+    saveStatsToLocal();
+    updateUIValues();
+    syncUserData();
+}
+
 function initUI() {
-    get('buy-spin-btn').onclick = () => {
-        if (coins >= 500 && !hasSpinUpgrade) {
-            coins -= 500;
-            hasSpinUpgrade = true;
-            saveStatsToLocal();
-            updateUIValues();
-            syncUserData();
-            showStatusUpdate("სატრიალო ფუნქცია შეძენილია! 🌀");
-        }
-    };
-
-    get('buy-helper-btn').onclick = () => {
-        if (coins >= 2000 && totalHelpersOwned < 10) {
-            coins -= 2000;
-            totalHelpersOwned++;
-            activeHelpers++;
-            startHelperBot();
-            saveStatsToLocal();
-            updateUIValues();
-            syncUserData();
-            showStatusUpdate("დამხმარე რობოტი შეძენილია! 🤖");
-        }
-    };
-
-    get('buy-strength-btn').onclick = () => {
-        const price = 1000 + (clothPowerLevel * 500);
-        if (coins >= price && clothPowerLevel < 10) {
-            coins -= price;
-            clothPowerLevel++;
-            updatePowerStats();
-            saveStatsToLocal();
-            updateUIValues();
-            syncUserData();
-            showStatusUpdate("ტილო გაძლიერდა! 💪");
-        }
-    };
-
-    get('buy-perm-speed-btn').onclick = () => {
-        const price = 5000 + (permSpeedLevel * 1000);
-        if (coins >= price && permSpeedLevel < 10) {
-            coins -= price;
-            permSpeedLevel++;
-            saveStatsToLocal();
-            updateUIValues();
-            syncUserData();
-            showStatusUpdate("მუდმივი აჩქარება გააქტიურდა! ⏩");
-        }
-    };
+    get('buy-skin-fire').onclick = () => handleSkinAction('fire');
+    get('buy-skin-ice').onclick = () => handleSkinAction('ice');
+    get('buy-skin-jungle').onclick = () => handleSkinAction('jungle');
+    get('buy-skin-electric').onclick = () => handleSkinAction('electric');
 
     get('shop-btn').onclick = () => get('shop-modal').classList.remove('hidden');
     get('close-shop').onclick = () => get('shop-modal').classList.add('hidden');
@@ -394,25 +356,6 @@ function initUI() {
 
     get('restart-game-btn').onclick = () => {
         location.reload();
-    };
-
-    // Settings adjustments
-    get('set-dec-helper').onclick = () => {
-        if (activeHelpers > 0) {
-            activeHelpers--;
-            saveStatsToLocal();
-            updateUIValues();
-            const bots = document.querySelectorAll('.helper-bot');
-            if (bots.length > 0) bots[bots.length - 1].remove();
-        }
-    };
-    get('set-inc-helper').onclick = () => {
-        if (activeHelpers < totalHelpersOwned) {
-            activeHelpers++;
-            saveStatsToLocal();
-            updateUIValues();
-            startHelperBot();
-        }
     };
 
     // Donation logic
@@ -586,69 +529,13 @@ async function fetchChat() {
     } catch (e) { }
 }
 
-function startHelperBot() {
-    const container = get('canvas-container');
-    const botEl = document.createElement('div');
-    botEl.className = 'helper-bot';
-    if (isVip) botEl.classList.add('vip-rainbow-trail');
-    container.appendChild(botEl);
-
-    function moveBot() {
-        if (!botEl.parentElement || !gameActive) return;
-        const stains = document.querySelectorAll('.stain');
-        if (stains.length > 0) {
-            const target = stains[Math.floor(Math.random() * stains.length)];
-            const rect = target.getBoundingClientRect();
-            const rX = (Math.random() - 0.5) * 30;
-            const rY = (Math.random() - 0.5) * 30;
-
-            botEl.style.left = `${rect.left + rX}px`;
-            botEl.style.top = `${rect.top + rY}px`;
-
-            const baseDelay = 1500;
-            const delay = baseDelay / (1 * helperSpeedMultiplier);
-            const randomDelay = delay + (Math.random() * 800);
-
-            setTimeout(() => {
-                if (target.parentElement) {
-                    let h = parseFloat(target.dataset.health);
-                    h -= 50;
-                    target.dataset.health = h;
-                    target.style.opacity = Math.max(0.2, h / parseFloat(target.dataset.maxHealth));
-                    if (h <= 0 && target.dataset.cleaning !== 'true') {
-                        target.dataset.cleaning = 'true';
-                        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, target.style.backgroundColor);
-                        setTimeout(() => target.remove(), 800);
-                        updateScore(target.classList.contains('boss-stain') ? 10 : 1);
-                    }
-                }
-                moveBot();
-            }, randomDelay);
-        } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
-            setTimeout(moveBot, 2000);
-        }
-    }
-    moveBot();
-}
-
 const UPGRADE_POOL = [
-    { title: "⚡ აჩქარება (Speed)", desc: "+10% სისწრაფე", prob: 0.02, action: () => intervalMultiplier *= 0.9 },
-    { title: "🐢 ნელი სისწრაფე", desc: "+1% სისწრაფე", prob: 0.20, action: () => intervalMultiplier *= 0.99 },
-    { title: "💨 სუპერ აჩქარება", desc: "+50% სისწრაფე", prob: 0.002, action: () => intervalMultiplier *= 0.5 },
-    { title: "🤖 დამხმარე", desc: "+1 დამხმარე", prob: 0.01, action: () => { totalHelpersOwned++; activeHelpers++; startHelperBot(); saveStatsToLocal(); } },
-    { title: "🤖🤖 დამხმარეები", desc: "+2 დამხმარე", prob: 0.005, action: () => { totalHelpersOwned += 2; activeHelpers += 2; startHelperBot(); startHelperBot(); saveStatsToLocal(); } },
-    { title: "🤖🔥 დამხმარე რაზმი", desc: "+3 დამხმარე", prob: 0.0007, action: () => { totalHelpersOwned += 3; activeHelpers += 3; startHelperBot(); startHelperBot(); startHelperBot(); saveStatsToLocal(); } },
-    { title: "📏 რადიუსი S", desc: "+10% რადიუსი", prob: 0.05, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
-    { title: "📏 რადიუსი M", desc: "+20% რადიუსი", prob: 0.025, action: () => { radiusMultiplier *= 1.2; updatePowerStats(); } },
-    { title: "📏 რადიუსი L", desc: "+30% რადიუსი", prob: 0.01, action: () => { radiusMultiplier *= 1.3; updatePowerStats(); } },
-    { title: "💦 კერხერი", desc: "გაძლიერებული წმენდა", prob: 0.001, action: () => { hasKarcher = true; updatePowerStats(); } },
-    { title: "🤖⚡ რობოტების სისწრაფე", desc: "+10% სიჩქარე", prob: 0.05, action: () => helperSpeedMultiplier *= 1.1 },
-    { title: "🤖🔥🔥 რობოტების სისწრაფე", desc: "+20% სიჩქარე", prob: 0.025, action: () => helperSpeedMultiplier *= 1.2 },
-    { title: "🤖🚀 რობოტების სისწრაფე", desc: "+30% სიჩქარე", prob: 0.01, action: () => helperSpeedMultiplier *= 1.3 },
-    { title: "💪 ტილოს ძალა 10%", desc: "+10% ძალა", prob: 0.05, action: () => { strengthMultiplier *= 1.1; updatePowerStats(); } },
-    { title: "💪💪 ტილოს ძალა 20%", desc: "+20% ძალა", prob: 0.025, action: () => { strengthMultiplier *= 1.2; updatePowerStats(); } },
+    { title: "⚡ აჩქარება (Speed)", desc: "+10% სისწრაფე", prob: 0.1, action: () => intervalMultiplier *= 0.9 },
+    { title: "🐢 ნელი სისწრაფე", desc: "+1% სისწრაფე", prob: 0.30, action: () => intervalMultiplier *= 0.99 },
+    { title: "📏 რადიუსი S", desc: "+10% რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
+    { title: "📏 რადიუსი M", desc: "+20% რადიუსი", prob: 0.1, action: () => { radiusMultiplier *= 1.2; updatePowerStats(); } },
+    { title: "💪 ტილოს ძალა 10%", desc: "+10% ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.1; updatePowerStats(); } },
+    { title: "💪💪 ტილოს ძალა 20%", desc: "+20% ძალა", prob: 0.1, action: () => { strengthMultiplier *= 1.2; updatePowerStats(); } },
 ];
 
 function showUpgradeOptions() {
@@ -683,49 +570,6 @@ function weightedRandom(items) {
     return items[0];
 }
 
-function handleSpin(spinner) {
-    if (!hasSpinUpgrade) return;
-    let spinSpeed = parseInt(spinner.dataset.spinSpeed || '0');
-    spinSpeed += 5;
-    spinner.dataset.spinSpeed = spinSpeed;
-
-    spinner.classList.add('spinning');
-    spinner.style.animationDuration = `${Math.max(0.1, 1 - (spinSpeed * 0.05))}s`;
-
-    const rect = spinner.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const radius = 150 + (spinSpeed * 10);
-
-    const stains = document.querySelectorAll('.stain');
-    stains.forEach(stain => {
-        if (stain.dataset.cleaning === 'true') return;
-        const sRect = stain.getBoundingClientRect();
-        const sx = sRect.left + sRect.width / 2;
-        const sy = sRect.top + sRect.height / 2;
-        const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
-
-        if (dist < radius) {
-            let h = parseFloat(stain.dataset.health);
-            h -= (20 + spinSpeed * 2);
-            stain.dataset.health = h;
-            stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
-            if (h <= 0 && stain.dataset.cleaning !== 'true') {
-                stain.dataset.cleaning = 'true';
-                createParticles(sx, sy, stain.style.backgroundColor);
-                setTimeout(() => stain.remove(), 800);
-                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
-            }
-        }
-    });
-
-    setTimeout(() => {
-        spinSpeed -= 2;
-        spinner.dataset.spinSpeed = Math.max(0, spinSpeed);
-        if (spinSpeed <= 0) spinner.classList.remove('spinning');
-    }, 1000);
-}
-
 function checkCleaningAtPos(x, y) {
     const stains = document.querySelectorAll('.stain');
     stains.forEach(stain => {
@@ -739,8 +583,8 @@ function checkCleaningAtPos(x, y) {
             if (h <= 0) {
                 stain.dataset.cleaning = 'true';
                 createParticles(x, y, stain.style.backgroundColor);
-                setTimeout(() => stain.remove(), 800);
                 updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
+                setTimeout(() => stain.remove(), 800);
             }
         }
     });
@@ -843,8 +687,8 @@ function checkCleaning() {
             if (h <= 0) {
                 stain.dataset.cleaning = 'true';
                 createParticles(sx, sy, stain.style.backgroundColor);
-                setTimeout(() => stain.remove(), 800);
                 updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
+                setTimeout(() => stain.remove(), 800);
             }
         }
     });
@@ -852,34 +696,26 @@ function checkCleaning() {
 
 function createParticles(x, y, color) {
     const container = get('canvas-container');
-    const isKarcherActive = hasKarcher && karcherEnabled;
-    const count = isKarcherActive ? 8 : 4;
+    const count = 4;
     for (let i = 0; i < count; i++) {
         const p = document.createElement('div');
-        if (isKarcherActive) {
-            p.className = 'water-splash';
-            const size = Math.random() * 10 + 5;
-            p.style.width = `${size}px`; p.style.height = `${size}px`;
-            p.style.left = `${x}px`; p.style.top = `${y}px`;
-        } else {
-            p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
-            p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
-            p.style.borderRadius = '50%';
-        }
+        p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
+        p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
+        p.style.borderRadius = '50%';
         p.style.pointerEvents = 'none';
         container.appendChild(p);
         const angle = Math.random() * Math.PI * 2;
-        const velocity = Math.random() * (isKarcherActive ? 100 : 40);
+        const velocity = Math.random() * 40;
         const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
         p.animate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
             { transform: `translate(${tx}px,${ty}px) scale(0)`, opacity: 0 }
-        ], { duration: isKarcherActive ? 800 : 600 }).onfinish = () => p.remove();
+        ], { duration: 600 }).onfinish = () => p.remove();
     }
 }
 
 function getSpawnInterval() {
-    let base = 2000 * intervalMultiplier * (1 - (permSpeedLevel * 0.05));
+    let base = 2000 * intervalMultiplier;
     return Math.max(200, base - (score * 2));
 }
 
@@ -907,7 +743,6 @@ function dragStart(e) {
     const cloth = get('cloth');
     if (e.target === cloth || (cloth && cloth.contains(e.target))) {
         isDragging = true;
-        this.lastX = undefined; this.lastY = undefined;
     }
 }
 function dragEnd() { if (currentX !== undefined) initialX = currentX; if (currentY !== undefined) initialY = currentY; isDragging = false; }
@@ -919,22 +754,7 @@ function drag(e) {
         currentX = cx - initialX; currentY = cy - initialY;
         xOffset = currentX; yOffset = currentY;
         const cloth = get('cloth');
-
-        let transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-
-        if (hasKarcher && karcherEnabled) {
-            if (this.lastX !== undefined) {
-                const dx = cx - this.lastX;
-                const dy = cy - this.lastY;
-                if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    transform += ` rotate(${angle}deg)`;
-                }
-            }
-            this.lastX = cx; this.lastY = cy;
-        }
-
-        if (cloth) cloth.style.transform = transform;
+        if (cloth) cloth.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
         checkCleaning();
     }
 }
@@ -942,6 +762,14 @@ function drag(e) {
 // --- Initialization ---
 
 window.addEventListener('load', async () => {
+    // Strip old stats completely on load (წაართვი ყველას)
+    localStorage.removeItem('tilo_total_helpers');
+    localStorage.removeItem('tilo_active_helpers');
+    localStorage.removeItem('tilo_has_spin');
+    localStorage.removeItem('tilo_has_karcher');
+    localStorage.removeItem('tilo_strength_lvl');
+    localStorage.removeItem('tilo_speed_lvl');
+
     await initDatabase();
     await checkForUpdates();
 
@@ -950,7 +778,6 @@ window.addEventListener('load', async () => {
     startTime = Date.now();
 
     if (isVip) {
-        if (get('cloth')) get('cloth').classList.add('vip-rainbow-trail');
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
@@ -994,16 +821,8 @@ window.addEventListener('load', async () => {
         }
     }, 60000);
 
-    for (let i = 0; i < activeHelpers; i++) startHelperBot();
     scheduleNextStain();
-
     setInterval(checkCleaning, 200);
-
-    get('cloth').onclick = (e) => {
-        if (hasSpinUpgrade) {
-            handleSpin(get('cloth'));
-        }
-    };
 });
 
 window.addEventListener("mousedown", dragStart);
