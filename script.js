@@ -126,6 +126,8 @@ async function initDatabase() {
             nickname TEXT UNIQUE,
             score INTEGER DEFAULT 0,
             survival_time INTEGER DEFAULT 0,
+            best_score INTEGER DEFAULT 0,
+            best_survival_time INTEGER DEFAULT 0,
             coins INTEGER DEFAULT 0,
             is_vip BOOLEAN DEFAULT false,
             owned_skins TEXT DEFAULT '[]',
@@ -133,6 +135,12 @@ async function initDatabase() {
             last_seen TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+
+        // Migration for existing users
+        try {
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_score INTEGER DEFAULT 0`;
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`;
+        } catch (e) { }
 
         await sql`CREATE TABLE IF NOT EXISTS system_config (
             key TEXT PRIMARY KEY,
@@ -236,6 +244,13 @@ async function handleLogin() {
             ownedSkins = JSON.parse(user.owned_skins || '[]');
             currentSkin = user.current_skin || 'default';
 
+            // Fetch personal bests from DB
+            lastBestScore = {
+                score: user.best_score || 0,
+                time: user.best_survival_time || 0
+            };
+            localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
+
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
@@ -263,6 +278,8 @@ async function syncUserData(force = false) {
             await sql`UPDATE users SET 
                 score = GREATEST(score, ${score}), 
                 survival_time = GREATEST(survival_time, ${currentSurvival}),
+                best_score = GREATEST(best_score, ${lastBestScore.score}),
+                best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
                 coins = ${coins}, 
                 is_vip = ${isVip},
                 owned_skins = ${JSON.stringify(ownedSkins)},
@@ -282,6 +299,8 @@ async function syncUserData(force = false) {
             await sql`UPDATE users SET 
                 score = GREATEST(score, ${score}), 
                 survival_time = GREATEST(survival_time, ${currentSurvival}),
+                best_score = GREATEST(best_score, ${lastBestScore.score}),
+                best_survival_time = GREATEST(best_survival_time, ${lastBestScore.time}),
                 coins = ${coins}, 
                 is_vip = ${isVip},
                 owned_skins = ${JSON.stringify(ownedSkins)},
@@ -814,10 +833,14 @@ window.addEventListener('load', async () => {
     }
     if (userEmail) {
         try {
-            const uData = await sql`SELECT score, survival_time FROM users WHERE email = ${userEmail}`;
+            const uData = await sql`SELECT score, survival_time, best_score, best_survival_time FROM users WHERE email = ${userEmail}`;
             if (uData.length > 0) {
                 score = uData[0].score;
-                // Update survival time logic if needed
+                lastBestScore = {
+                    score: uData[0].best_score || 0,
+                    time: uData[0].best_survival_time || 0
+                };
+                localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
             }
         } catch (e) { }
         get('auth-modal').classList.add('hidden');
