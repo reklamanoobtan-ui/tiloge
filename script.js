@@ -8,7 +8,7 @@ import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.
 const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
 // State & Version Control
-const APP_VERSION = "2.1.0"; // Increment for new version
+const APP_VERSION = "2.2.0"; // Leaderboard reset update
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
@@ -35,7 +35,11 @@ let lastPrevScore = JSON.parse(localStorage.getItem('tilo_prev_score')) || { sco
 let nextUpgradeScore = 10;
 let gameActive = true;
 
-// --- Skin System (New) ---
+// Helper Bot State (Roguelike only)
+let activeHelpers = 0;
+let helperSpeedMultiplier = 1.0;
+
+// --- Skin System ---
 let ownedSkins = JSON.parse(localStorage.getItem('tilo_owned_skins')) || [];
 let currentSkin = localStorage.getItem('tilo_current_skin') || 'default';
 
@@ -55,7 +59,6 @@ function updatePowerStats() {
     let power = baseClothStrength * strengthMultiplier;
     const clothEl = get('cloth');
 
-    // Remove old effects logic (Karcher removed)
     cleaningRadius = 1 * radiusMultiplier;
     clothStrength = power;
 
@@ -75,7 +78,7 @@ function saveStatsToLocal() {
 
 function updateUIValues() {
     if (get('coins-val')) get('coins-val').textContent = coins;
-    if (get('score-val')) get('score-val').textContent = score;
+    if (get('score-val')) get('score-val').textContent = Math.floor(score);
 
     // Stats UI
     if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
@@ -131,13 +134,6 @@ async function initDatabase() {
             created_at TIMESTAMP DEFAULT NOW()
         )`;
 
-        // Reset Table/Stats for current migration if needed (Manual strip)
-        // User asked to strip everyone, so we'll ignore old helper/strength columns
-        try {
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS owned_skins TEXT DEFAULT '[]'`;
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS current_skin TEXT DEFAULT 'default'`;
-        } catch (e) { }
-
         await sql`CREATE TABLE IF NOT EXISTS system_config (
             key TEXT PRIMARY KEY,
             value TEXT
@@ -153,14 +149,44 @@ async function initDatabase() {
         await sql`INSERT INTO system_config (key, value) VALUES ('app_version', ${APP_VERSION})
                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
 
+        checkWeeklyReset();
+
     } catch (e) { console.error("DB Init Error", e); }
+}
+
+async function checkWeeklyReset() {
+    try {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        // Reset happens Sunday 00:00 (Saturday 24:00)
+        const day = now.getDay();
+        const sundayTimestamp = new Date(now.setDate(now.getDate() - day)).getTime();
+
+        const config = await sql`SELECT value FROM system_config WHERE key = 'last_lb_reset'`;
+        const lastReset = config.length > 0 ? parseInt(config[0].value) : 0;
+
+        if (lastReset < sundayTimestamp) {
+            console.log("Weekly Leaderboard Reset Triggered...");
+            // Only one client should succeed in updating the timestamp
+            const result = await sql`INSERT INTO system_config (key, value) 
+                                    VALUES ('last_lb_reset', ${sundayTimestamp})
+                                    ON CONFLICT (key) DO UPDATE 
+                                    SET value = ${sundayTimestamp} 
+                                    WHERE system_config.value IS NULL OR CAST(system_config.value AS BIGINT) < ${sundayTimestamp}
+                                    RETURNING *`;
+
+            if (result.length > 0) {
+                await sql`UPDATE users SET score = 0, survival_time = 0`;
+                console.log("Database reset complete.");
+            }
+        }
+    } catch (e) { console.error("Reset Check Error", e); }
 }
 
 async function checkForUpdates() {
     try {
         const result = await sql`SELECT value FROM system_config WHERE key = 'app_version'`;
         if (result.length > 0 && result[0].value !== APP_VERSION) {
-            console.log("New version detected! Reloading...");
             location.reload();
         }
     } catch (e) { }
@@ -188,7 +214,6 @@ async function handleRegister() {
 
         setTimeout(() => location.reload(), 1500);
     } catch (e) {
-        console.error("Register Error:", e);
         err.style.color = "#ff4d4d";
         err.textContent = "ელ-ფოსტა ან ნიკნეიმი უკვე დაკავებულია.";
     }
@@ -218,14 +243,6 @@ async function handleLogin() {
             localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
             localStorage.setItem('tilo_current_skin', currentSkin);
 
-            // Strip old stats from local storage for everyone on login too
-            localStorage.removeItem('tilo_total_helpers');
-            localStorage.removeItem('tilo_active_helpers');
-            localStorage.removeItem('tilo_has_spin');
-            localStorage.removeItem('tilo_has_karcher');
-            localStorage.removeItem('tilo_strength_lvl');
-            localStorage.removeItem('tilo_speed_lvl');
-
             updateUIValues();
             location.reload();
         } else {
@@ -253,7 +270,7 @@ async function syncUserData() {
                 current_skin = ${currentSkin},
                 last_seen = NOW()
                 WHERE email = ${userEmail}`;
-        } catch (e) { console.error("Neon Sync Error", e); }
+        } catch (e) { }
     }, 1000);
 }
 
@@ -265,7 +282,7 @@ async function fetchLeaderboard() {
 
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '30 seconds'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
-    } catch (e) { console.error("LB Fetch Error", e); }
+    } catch (e) { }
 }
 
 function updateLeaderboardUI() {
@@ -303,7 +320,6 @@ function updateScore(points) {
         score += points;
         totalStainsCleaned += points;
 
-        // Upgrade Check (10, 20, 40, 80...)
         if (score >= nextUpgradeScore) {
             showUpgradeOptions();
             nextUpgradeScore *= 2;
@@ -358,7 +374,6 @@ function initUI() {
         location.reload();
     };
 
-    // Donation logic
     document.querySelectorAll('.buy-coins-btn').forEach(btn => {
         btn.onclick = () => {
             const amount = parseInt(btn.dataset.coins);
@@ -375,7 +390,6 @@ function initUI() {
     get('donate-btn').onclick = () => get('donate-modal').classList.remove('hidden');
     get('close-donate').onclick = () => get('donate-modal').classList.add('hidden');
 
-    // Promo Code Logic
     get('apply-promo-btn').onclick = () => {
         const input = get('promo-input').value.trim().toLowerCase();
         const msg = get('promo-msg');
@@ -401,7 +415,6 @@ function initUI() {
         }
     };
 
-    // Auth Actions
     get('register-btn').onclick = handleRegister;
     get('login-btn').onclick = handleLogin;
     get('logout-btn').onclick = () => {
@@ -411,7 +424,6 @@ function initUI() {
         }
     };
 
-    // Theme logic
     get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
     get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');
 
@@ -421,7 +433,6 @@ function initUI() {
             currentTheme = theme;
             document.body.className = `theme-${theme}`;
             localStorage.setItem('tilo_theme', theme);
-
             document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
         };
@@ -439,23 +450,17 @@ function setupChat() {
     const chatContainer = get('global-chat');
     const chatInput = get('chat-input');
     const sendBtn = get('send-chat-btn');
-
-    // Drag Logic
     let isDraggingChat = false;
     let chatOffsetX, chatOffsetY;
 
     function onChatDrag(e) {
         if (!isDraggingChat) return;
-        e.preventDefault();
         const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-
         let x = clientX - chatOffsetX;
         let y = clientY - chatOffsetY;
-
         x = Math.max(0, Math.min(window.innerWidth - chatContainer.clientWidth, x));
         y = Math.max(0, Math.min(window.innerHeight - chatContainer.clientHeight, y));
-
         chatContainer.style.left = `${x}px`;
         chatContainer.style.top = `${y}px`;
         chatContainer.style.right = 'auto';
@@ -463,7 +468,6 @@ function setupChat() {
 
     function stopChatDrag() {
         isDraggingChat = false;
-        chatContainer.style.cursor = 'move';
         document.removeEventListener('mousemove', onChatDrag);
         document.removeEventListener('mouseup', stopChatDrag);
         document.removeEventListener('touchmove', onChatDrag);
@@ -475,7 +479,6 @@ function setupChat() {
         isDraggingChat = true;
         chatOffsetX = e.clientX - chatContainer.offsetLeft;
         chatOffsetY = e.clientY - chatContainer.offsetTop;
-        chatContainer.style.cursor = 'grabbing';
         document.addEventListener('mousemove', onChatDrag);
         document.addEventListener('mouseup', stopChatDrag);
     });
@@ -491,20 +494,15 @@ function setupChat() {
 
     async function sendMsg() {
         const text = chatInput.value.trim().substring(0, 50);
-        if (!text) return;
-        if (!nickname) { alert("ჩათისთვის გაიარეთ ავტორიზაცია!"); return; }
-
+        if (!text || !nickname) return;
         try {
             await sql`INSERT INTO chat_messages (nickname, message) VALUES (${nickname}, ${text})`;
             chatInput.value = '';
             fetchChat();
-        } catch (e) { console.error("Chat Send Error", e); }
+        } catch (e) { }
     }
-
     sendBtn.onclick = sendMsg;
     chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
-
-    // Poll for chat
     setInterval(fetchChat, 3000);
 }
 
@@ -517,31 +515,68 @@ async function fetchChat() {
         msgs.forEach(m => {
             const el = document.createElement('div');
             el.className = 'chat-msg';
-
             const sender = onlinePlayers.find(p => p.nickname === m.nickname);
-            const isVipUser = sender ? sender.is_vip : false;
-            if (isVipUser) el.classList.add('vip-rainbow-text');
-
-            el.innerHTML = `<strong>${isVipUser ? '👑 ' : ''}${m.nickname}:</strong> ${m.message}`;
+            if (sender && sender.is_vip) el.classList.add('vip-rainbow-text');
+            el.innerHTML = `<strong>${(sender && sender.is_vip) ? '👑 ' : ''}${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
     } catch (e) { }
 }
 
+function startHelperBot() {
+    activeHelpers++;
+    const container = get('canvas-container');
+    const botEl = document.createElement('div');
+    botEl.className = 'helper-bot';
+    if (isVip) botEl.classList.add('vip-rainbow-trail');
+    container.appendChild(botEl);
+
+    function moveBot() {
+        if (!botEl.parentElement || !gameActive) return;
+        const stains = document.querySelectorAll('.stain');
+        if (stains.length > 0) {
+            const target = stains[Math.floor(Math.random() * stains.length)];
+            const rect = target.getBoundingClientRect();
+            botEl.style.left = `${rect.left + (Math.random() - 0.5) * 30}px`;
+            botEl.style.top = `${rect.top + (Math.random() - 0.5) * 30}px`;
+
+            setTimeout(() => {
+                if (target.parentElement) {
+                    let h = parseFloat(target.dataset.health);
+                    h -= 50;
+                    target.dataset.health = h;
+                    target.style.opacity = Math.max(0.2, h / parseFloat(target.dataset.maxHealth));
+                    if (h <= 0 && target.dataset.cleaning !== 'true') {
+                        target.dataset.cleaning = 'true';
+                        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, target.style.backgroundColor);
+                        setTimeout(() => target.remove(), 800);
+                        updateScore(target.classList.contains('boss-stain') ? 10 : 1);
+                    }
+                }
+                moveBot();
+            }, (1500 / helperSpeedMultiplier) + (Math.random() * 800));
+        } else {
+            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+            setTimeout(moveBot, 2000);
+        }
+    }
+    moveBot();
+}
+
 const UPGRADE_POOL = [
-    { title: "⚡ აჩქარება (Speed)", desc: "+10% სისწრაფე", prob: 0.1, action: () => intervalMultiplier *= 0.9 },
-    { title: "🐢 ნელი სისწრაფე", desc: "+1% სისწრაფე", prob: 0.30, action: () => intervalMultiplier *= 0.99 },
-    { title: "📏 რადიუსი S", desc: "+10% რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
-    { title: "📏 რადიუსი M", desc: "+20% რადიუსი", prob: 0.1, action: () => { radiusMultiplier *= 1.2; updatePowerStats(); } },
-    { title: "💪 ტილოს ძალა 10%", desc: "+10% ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.1; updatePowerStats(); } },
-    { title: "💪💪 ტილოს ძალა 20%", desc: "+20% ძალა", prob: 0.1, action: () => { strengthMultiplier *= 1.2; updatePowerStats(); } },
+    { title: "⚡ ლაქების აჩქარება", desc: "+10% ლაქების სიხშირე", prob: 0.1, action: () => intervalMultiplier *= 0.9 },
+    { title: "🤖 დამხმარის სიჩქარე", desc: "+20% რობოტების სისწრაფე", prob: 0.15, action: () => helperSpeedMultiplier *= 1.2 },
+    { title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => startHelperBot() },
+    { title: "📏 რადიუსი S", desc: "+10% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
+    { title: "💪 ტილოს ძალა", desc: "+15% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.15; updatePowerStats(); } },
 ];
 
 function showUpgradeOptions() {
     const modal = get('upgrade-modal');
-    if (!modal) return;
     const container = get('upgrade-cards-container');
+    if (!modal || !container) return;
     container.innerHTML = '';
     modal.classList.remove('hidden');
 
@@ -550,11 +585,7 @@ function showUpgradeOptions() {
         const cardEl = document.createElement('div');
         cardEl.className = 'upgrade-card';
         cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
-        cardEl.onclick = () => {
-            card.action();
-            modal.classList.add('hidden');
-            updateUIValues();
-        };
+        cardEl.onclick = () => { card.action(); modal.classList.add('hidden'); updateUIValues(); };
         container.appendChild(cardEl);
     }
 }
@@ -570,26 +601,6 @@ function weightedRandom(items) {
     return items[0];
 }
 
-function checkCleaningAtPos(x, y) {
-    const stains = document.querySelectorAll('.stain');
-    stains.forEach(stain => {
-        if (stain.dataset.cleaning === 'true') return;
-        const rect = stain.getBoundingClientRect();
-        if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
-            let h = parseFloat(stain.dataset.health);
-            h -= clothStrength;
-            stain.dataset.health = h;
-            stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
-            if (h <= 0) {
-                stain.dataset.cleaning = 'true';
-                createParticles(x, y, stain.style.backgroundColor);
-                updateScore(stain.classList.contains('boss-stain') ? 10 : 1);
-                setTimeout(() => stain.remove(), 800);
-            }
-        }
-    });
-}
-
 function createStain(isBoss = false) {
     if (!gameActive) return;
     const container = get('canvas-container');
@@ -599,50 +610,28 @@ function createStain(isBoss = false) {
     if (isBoss) stain.classList.add('boss-stain');
 
     let health = isBoss ? 1500 : 100;
-    const types = [
-        { name: 'coffee', color: 'rgba(111, 78, 55, 0.4)', blur: '10px' },
-        { name: 'ink', color: 'rgba(0, 0, 128, 0.3)', blur: '5px' },
-        { name: 'grease', color: 'rgba(150, 150, 100, 0.2)', blur: '15px' }
-    ];
-    const type = types[Math.floor(Math.random() * types.length)];
     const size = isBoss ? 250 : (Math.random() * 80 + 40);
-    const posX = Math.random() * (window.innerWidth - size);
-    const posY = Math.random() * (window.innerHeight - size);
-
     stain.style.width = `${size}px`; stain.style.height = `${size}px`;
-    stain.style.left = `${posX}px`; stain.style.top = `${posY}px`;
-    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : type.color;
-    stain.style.filter = `blur(${isBoss ? '20px' : type.blur})`;
-    stain.style.borderRadius = `${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}% ${30 + Math.random() * 70}%`;
+    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
+    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
+    stain.style.backgroundColor = isBoss ? 'rgba(255, 0, 0, 0.3)' : 'rgba(111, 78, 55, 0.4)';
     stain.dataset.health = health; stain.dataset.maxHealth = health;
     if (isBoss) stain.innerHTML = '<div class="boss-title">BOSS</div>';
-
     container.appendChild(stain);
     checkDefeatCondition();
 }
 
 function checkDefeatCondition() {
     const totalCount = document.querySelectorAll('.stain').length;
-    if (totalCount >= 200) {
-        if (!defeatTimer) {
-            let timeLeft = 60;
-            showStatusUpdate("გაფრთხილება: ძალიან ბევრი ჭუჭყია! ⚠️");
-            defeatTimer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    clearInterval(defeatTimer);
-                    handleGameOver();
-                } else if (timeLeft % 5 === 0 || timeLeft < 10) {
-                    showStatusUpdate(`კრიზისი! ${timeLeft}წ დარჩა გასაწმენდად! ⚠️`);
-                }
-            }, 1000);
-        }
-    } else {
-        if (defeatTimer) {
-            clearInterval(defeatTimer);
-            defeatTimer = null;
-            showStatusUpdate("კრიზისი თავიდან აცილებულია! ✅");
-        }
+    if (totalCount >= 200 && !defeatTimer) {
+        let timeLeft = 60;
+        defeatTimer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) { clearInterval(defeatTimer); handleGameOver(); }
+            else if (timeLeft % 5 === 0) showStatusUpdate(`კრიზისი! ${timeLeft}წ დარჩა! ⚠️`);
+        }, 1000);
+    } else if (totalCount < 200 && defeatTimer) {
+        clearInterval(defeatTimer); defeatTimer = null; showStatusUpdate("კრიზისი დაძლეულია! ✅");
     }
 }
 
@@ -650,18 +639,14 @@ function handleGameOver() {
     gameActive = false;
     const finalScore = score;
     const finalTime = Math.floor((Date.now() - startTime) / 1000);
-
     lastPrevScore = { score: finalScore, time: finalTime };
     localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
-
     if (finalScore > lastBestScore.score) {
         lastBestScore = { score: finalScore, time: finalTime };
         localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
     }
-
     syncUserData();
-
-    get('final-stains').textContent = finalScore;
+    get('final-stains').textContent = Math.floor(finalScore);
     get('final-time').textContent = finalTime;
     get('defeat-modal').classList.remove('hidden');
 }
@@ -669,19 +654,17 @@ function handleGameOver() {
 function checkCleaning() {
     const cloth = get('cloth');
     if (!cloth) return;
-    const clothRect = cloth.getBoundingClientRect();
-    const cx = clothRect.left + clothRect.width / 2;
-    const cy = clothRect.top + clothRect.height / 2;
-    const radius = (clothRect.width / 2) * cleaningRadius;
-    const stains = document.querySelectorAll('.stain');
-    stains.forEach(stain => {
+    const rect = cloth.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = (rect.width / 2) * cleaningRadius;
+    document.querySelectorAll('.stain').forEach(stain => {
         if (stain.dataset.cleaning === 'true') return;
-        const rect = stain.getBoundingClientRect();
-        const sx = rect.left + rect.width / 2; const sy = rect.top + rect.height / 2;
-        const dist = Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2));
-        if (dist < radius + rect.width / 2) {
-            let h = parseFloat(stain.dataset.health);
-            h -= clothStrength;
+        const sRect = stain.getBoundingClientRect();
+        const sx = sRect.left + sRect.width / 2;
+        const sy = sRect.top + sRect.height / 2;
+        if (Math.sqrt(Math.pow(cx - sx, 2) + Math.pow(cy - sy, 2)) < radius + sRect.width / 2) {
+            let h = parseFloat(stain.dataset.health) - clothStrength;
             stain.dataset.health = h;
             stain.style.opacity = Math.max(0.2, h / parseFloat(stain.dataset.maxHealth));
             if (h <= 0) {
@@ -696,27 +679,23 @@ function checkCleaning() {
 
 function createParticles(x, y, color) {
     const container = get('canvas-container');
-    const count = 4;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 4; i++) {
         const p = document.createElement('div');
         p.style.position = 'absolute'; p.style.left = `${x}px`; p.style.top = `${y}px`;
         p.style.width = '6px'; p.style.height = '6px'; p.style.backgroundColor = color;
-        p.style.borderRadius = '50%';
-        p.style.pointerEvents = 'none';
+        p.style.borderRadius = '50%'; p.style.pointerEvents = 'none';
         container.appendChild(p);
         const angle = Math.random() * Math.PI * 2;
-        const velocity = Math.random() * 40;
-        const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
+        const vel = Math.random() * 40;
         p.animate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
-            { transform: `translate(${tx}px,${ty}px) scale(0)`, opacity: 0 }
+            { transform: `translate(${Math.cos(angle) * vel}px,${Math.sin(angle) * vel}px) scale(0)`, opacity: 0 }
         ], { duration: 600 }).onfinish = () => p.remove();
     }
 }
 
 function getSpawnInterval() {
-    let base = 2000 * intervalMultiplier;
-    return Math.max(200, base - (score * 2));
+    return Math.max(200, (2000 * intervalMultiplier) - (score * 2));
 }
 
 function scheduleNextStain() {
@@ -728,24 +707,18 @@ function scheduleNextStain() {
 function centerCloth() {
     const cloth = get('cloth');
     if (!cloth) return;
-    const r = cloth.getBoundingClientRect();
-    xOffset = window.innerWidth / 2 - r.width / 2;
-    yOffset = window.innerHeight / 2 - r.height / 2;
-    setTranslate(xOffset, yOffset, cloth);
+    xOffset = window.innerWidth / 2 - cloth.clientWidth / 2;
+    yOffset = window.innerHeight / 2 - cloth.clientHeight / 2;
+    cloth.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
 }
-
-function setTranslate(x, y, el) { if (el) el.style.transform = `translate3d(${x}px, ${y}px, 0)`; }
 
 function dragStart(e) {
     const cx = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
     const cy = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
     initialX = cx - xOffset; initialY = cy - yOffset;
-    const cloth = get('cloth');
-    if (e.target === cloth || (cloth && cloth.contains(e.target))) {
-        isDragging = true;
-    }
+    if (e.target === get('cloth') || get('cloth').contains(e.target)) isDragging = true;
 }
-function dragEnd() { if (currentX !== undefined) initialX = currentX; if (currentY !== undefined) initialY = currentY; isDragging = false; }
+
 function drag(e) {
     if (isDragging) {
         e.preventDefault();
@@ -759,76 +732,37 @@ function drag(e) {
     }
 }
 
-// --- Initialization ---
-
 window.addEventListener('load', async () => {
-    // Strip old stats completely on load (წაართვი ყველას)
-    localStorage.removeItem('tilo_total_helpers');
-    localStorage.removeItem('tilo_active_helpers');
-    localStorage.removeItem('tilo_has_spin');
-    localStorage.removeItem('tilo_has_karcher');
-    localStorage.removeItem('tilo_strength_lvl');
-    localStorage.removeItem('tilo_speed_lvl');
-
     await initDatabase();
     await checkForUpdates();
-
-    score = 0;
-    totalStainsCleaned = 0;
-    startTime = Date.now();
-
+    score = 0; startTime = Date.now();
     if (isVip) {
         if (get('vip-tag')) get('vip-tag').classList.remove('vip-hidden');
         if (get('buy-vip-btn')) get('buy-vip-btn').style.display = 'none';
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
-
     if (userEmail) {
-        try {
-            await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`;
-        } catch (e) { }
+        try { await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`; } catch (e) { }
         get('auth-modal').classList.add('hidden');
-    } else {
-        get('auth-modal').classList.remove('hidden');
-    }
+    } else get('auth-modal').classList.remove('hidden');
 
-    updatePowerStats();
-    initUI();
-    setupChat();
-    centerCloth();
-    updateUIValues();
-    fetchLeaderboard();
+    updatePowerStats(); initUI(); setupChat(); centerCloth(); updateUIValues(); fetchLeaderboard();
 
     setInterval(() => {
         lbTimeLeft--;
-        if (lbTimeLeft <= 0) {
-            fetchLeaderboard();
-            lbTimeLeft = 10;
-        }
+        if (lbTimeLeft <= 0) { fetchLeaderboard(); lbTimeLeft = 10; }
         if (get('lb-timer')) get('lb-timer').textContent = `(${lbTimeLeft}წ)`;
     }, 1000);
 
     setInterval(checkForUpdates, 30000);
     setInterval(() => { if (userEmail) syncUserData(); }, 15000);
 
-    // Boss Spawner Every 1 Minute
-    setInterval(() => {
-        if (!gameActive) return;
-        bossCount++;
-        const bossSpawnCount = Math.floor(bossCount / 10) + 1;
-        for (let i = 0; i < bossSpawnCount; i++) {
-            createStain(true);
-        }
-    }, 60000);
+    setInterval(() => { if (gameActive) { bossCount++; for (let i = 0; i < Math.floor(bossCount / 10) + 1; i++) createStain(true); } }, 60000);
 
     scheduleNextStain();
     setInterval(checkCleaning, 200);
 });
 
-window.addEventListener("mousedown", dragStart);
-window.addEventListener("mouseup", dragEnd);
-window.addEventListener("mousemove", drag);
-window.addEventListener("touchstart", dragStart);
-window.addEventListener("touchend", dragEnd);
-window.addEventListener("touchmove", drag);
+window.addEventListener("mousedown", dragStart); window.addEventListener("mouseup", () => isDragging = false); window.addEventListener("mousemove", drag);
+window.addEventListener("touchstart", dragStart); window.addEventListener("touchend", () => isDragging = false); window.addEventListener("touchmove", drag);
 window.addEventListener('resize', centerCloth);
