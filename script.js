@@ -643,7 +643,7 @@ function startHelperBot() {
 }
 
 const UPGRADE_POOL = [
-    { title: "⚡ ლაქების აჩქარება", desc: "+10% ლაქების სიხშირე", prob: 0.1, action: () => intervalMultiplier *= 0.9 },
+    { title: "⚡ ლაქების აჩქარება", desc: "+20% ლაქების სიხშირე", prob: 0.15, action: () => intervalMultiplier *= 0.8 },
     { title: "🤖 დამხმარის სიჩქარე", desc: "+20% რობოტების სისწრაფე", prob: 0.15, action: () => helperSpeedMultiplier *= 1.2 },
     { title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => startHelperBot() },
     { title: "📏 რადიუსი S", desc: "+10% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
@@ -785,7 +785,8 @@ function createParticles(x, y, color) {
 }
 
 function getSpawnInterval() {
-    return Math.max(200, (2000 * intervalMultiplier) - (score * 2));
+    // Starts at 2000ms. Decreases by 5ms per each score point.
+    return Math.max(150, (2000 * intervalMultiplier) - (score * 5));
 }
 
 function scheduleNextStain() {
