@@ -606,8 +606,20 @@ body {
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     padding: 15px;
-    z-index: 100;
+    z-index: 2000;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for mini-lb */
+.mini-lb::-webkit-scrollbar {
+    width: 4px;
+}
+
+.mini-lb::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 .mini-lb h3 {
@@ -619,6 +631,9 @@ body {
     text-align: center;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 8px;
+    position: sticky;
+    top: 0;
+    background: inherit;
 }
 
 .mini-lb-item {
@@ -654,7 +669,7 @@ body {
     color: var(--cloth-color);
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 1024px) {
     .mini-lb {
         display: none;
     }

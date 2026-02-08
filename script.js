@@ -320,7 +320,6 @@ async function fetchLeaderboard() {
             CASE WHEN score > 0 THEN CAST(survival_time AS FLOAT) / score ELSE 999999 END as efficiency
             FROM users 
             WHERE nickname IS NOT NULL 
-              AND last_seen > NOW() - INTERVAL '7 days'
               AND score > 0
             ORDER BY efficiency ASC, score DESC
             LIMIT 10
