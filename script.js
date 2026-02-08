@@ -32,7 +32,18 @@ let lastBestScore = JSON.parse(localStorage.getItem('tilo_best_score')) || { sco
 let lastPrevScore = JSON.parse(localStorage.getItem('tilo_prev_score')) || { score: 0, time: 0 };
 let nextUpgradeScore = 10;
 let gameActive = true;
+let isUpgradeOpen = false;
 let lastActivityTime = Date.now();
+
+// Upgrade tracking
+let upgradeCounts = {
+    speed: 0,
+    helperSpeed: 0,
+    helperSpawn: 0,
+    radius: 0,
+    strength: 0,
+    karcher: 0
+};
 
 // Helper Bot State (Roguelike only)
 let activeHelpers = 0;
@@ -644,34 +655,40 @@ function startHelperBot() {
 }
 
 const UPGRADE_POOL = [
-    { title: "⚡ ლაქების აჩქარება", desc: "+20% ლაქების სიხშირე", prob: 0.15, action: () => intervalMultiplier *= 0.8 },
-    { title: "🤖 დამხმარის სიჩქარე", desc: "+20% რობოტების სისწრაფე", prob: 0.15, action: () => helperSpeedMultiplier *= 1.2 },
-    { title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => startHelperBot() },
-    { title: "📏 რადიუსი S", desc: "+10% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; updatePowerStats(); } },
-    { title: "💪 ტილოს ძალა", desc: "+15% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.15; updatePowerStats(); } },
+    { id: 'speed', title: "⚡ ლაქების აჩქარება", desc: "+20% ლაქების სიხშირე", prob: 0.15, action: () => { intervalMultiplier *= 0.8; upgradeCounts.speed++; } },
+    { id: 'helperSpeed', title: "🤖 დამხმარის სიჩქარე", desc: "+20% რობოტების სისწრაფე", prob: 0.15, action: () => { helperSpeedMultiplier *= 1.2; upgradeCounts.helperSpeed++; } },
+    { id: 'helperSpawn', title: "🤖 რობოტი", desc: "+1 დამხმარე რობოტი", prob: 0.05, action: () => { startHelperBot(); upgradeCounts.helperSpawn++; } },
+    { id: 'radius', title: "📏 რადიუსი S", desc: "+10% წმენდის რადიუსი", prob: 0.2, action: () => { radiusMultiplier *= 1.1; upgradeCounts.radius++; updatePowerStats(); } },
+    { id: 'strength', title: "💪 ტილოს ძალა", desc: "+15% წმენდის ძალა", prob: 0.2, action: () => { strengthMultiplier *= 1.15; upgradeCounts.strength++; updatePowerStats(); } },
+    { id: 'karcher', title: "🚿 კერხერი", desc: "ორმაგი სიმძლავრე და რადიუსი", prob: 0.03, action: () => { strengthMultiplier *= 2; radiusMultiplier *= 2; upgradeCounts.karcher++; updatePowerStats(); } },
 ];
 
 function showUpgradeOptions() {
     const modal = get('upgrade-modal');
     const container = get('upgrade-cards-container');
     if (!modal || !container) return;
+
+    isUpgradeOpen = true;
     container.innerHTML = '';
     modal.classList.remove('hidden');
 
+    let availableUpgrades = UPGRADE_POOL.filter(u => {
+        if (u.id === 'karcher') return upgradeCounts.karcher < 1;
+        return upgradeCounts[u.id] < 10;
+    });
+
+    if (availableUpgrades.length === 0) {
+        modal.classList.add('hidden');
+        isUpgradeOpen = false;
+        triggerEndgame();
+        return;
+    }
+
     let selectedCards = [];
     let attempts = 0;
-    const currentInterval = getSpawnInterval();
-
-    while (selectedCards.length < 3 && attempts < 50) {
-        const card = weightedRandom(UPGRADE_POOL);
-
-        // Skip speed card if already at minimum speed
-        if (card.title === "⚡ ლაქების აჩქარება" && currentInterval <= 10) {
-            attempts++;
-            continue;
-        }
-
-        if (!selectedCards.some(c => c.title === card.title)) {
+    while (selectedCards.length < Math.min(3, availableUpgrades.length) && attempts < 50) {
+        const card = weightedRandom(availableUpgrades);
+        if (!selectedCards.some(c => c.id === card.id)) {
             selectedCards.push(card);
         }
         attempts++;
@@ -681,8 +698,24 @@ function showUpgradeOptions() {
         const cardEl = document.createElement('div');
         cardEl.className = 'upgrade-card';
         cardEl.innerHTML = `<h3>${card.title}</h3><p>${card.desc}</p>`;
-        cardEl.onclick = () => { card.action(); modal.classList.add('hidden'); updateUIValues(); };
+        cardEl.onclick = () => {
+            card.action();
+            modal.classList.add('hidden');
+            isUpgradeOpen = false;
+            updateUIValues();
+        };
         container.appendChild(cardEl);
+    });
+}
+
+function triggerEndgame() {
+    showStatusUpdate("ყველა გაძლიერება ამოიწურა! ბოსების შემოსევა! 🚨");
+    document.querySelectorAll('.stain:not(.boss-stain)').forEach(stain => {
+        stain.classList.add('boss-stain');
+        stain.dataset.health = 1500;
+        stain.dataset.maxHealth = 1500;
+        stain.innerHTML = '<div class="boss-title">BOSS</div>';
+        stain.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
     });
 }
 
@@ -720,8 +753,10 @@ function createStain(isBoss = false) {
 function checkDefeatCondition() {
     if (!gameActive) return;
     const totalCount = document.querySelectorAll('.stain').length;
+    const bossCountUI = document.querySelectorAll('.boss-stain').length;
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
-    const isCrisis = totalCount >= 300 || inactiveTime > 30;
+
+    const isCrisis = totalCount >= 300 || inactiveTime > 30 || bossCountUI >= 20;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = 60;
@@ -730,7 +765,9 @@ function checkDefeatCondition() {
             timeLeft--;
             if (timeLeft <= 0) { clearInterval(defeatTimer); handleGameOver(); }
             else if (timeLeft % 5 === 0) {
-                const reason = totalCount >= 300 ? "ჭუჭყი ბევრია!" : "არააქტიური ხარ!";
+                let reason = "ჭუჭყი ბევრია!";
+                if (inactiveTime > 30) reason = "არააქტიური ხარ!";
+                else if (bossCountUI >= 20) reason = "ბოსების შემოსევა!";
                 showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
             }
         }, 1000);
@@ -810,7 +847,7 @@ function getSpawnInterval() {
 }
 
 function scheduleNextStain() {
-    if (!gameActive) return;
+    if (!gameActive || isUpgradeOpen) return;
     createStain();
     setTimeout(scheduleNextStain, getSpawnInterval());
 }
