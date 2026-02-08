@@ -109,10 +109,18 @@
     font-size: 0.8rem;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
     .chat-container {
-        display: none;
-        /* Hide chat on mobile/small screens for now */
+        width: 180px;
+        top: auto;
+        bottom: 20px;
+        /* Position at bottom on mobile */
+        left: 10px;
+        font-size: 0.7rem;
+    }
+
+    .chat-messages {
+        height: 100px;
     }
 }
 
