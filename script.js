@@ -148,6 +148,17 @@ async function initDatabase() {
             await sql`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_nickname_key`;
         } catch (e) { /* Constraint might not exist */ }
 
+        // Create shared_scores table for shared results
+        await sql`CREATE TABLE IF NOT EXISTS shared_scores (
+            id SERIAL PRIMARY KEY,
+            nickname TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            survival_time INTEGER NOT NULL,
+            efficiency FLOAT,
+            is_vip BOOLEAN DEFAULT FALSE,
+            shared_at TIMESTAMP DEFAULT NOW()
+        )`;
+
         await sql`CREATE TABLE IF NOT EXISTS chat_messages (
             id SERIAL PRIMARY KEY,
             nickname TEXT,
@@ -257,7 +268,7 @@ async function fetchRatings() {
             WHERE nickname IS NOT NULL 
               AND nickname != ''
               AND GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0
-            ORDER BY d_efficiency DESC, d_score DESC
+            ORDER BY d_efficiency ASC, d_score ASC
             LIMIT 100
         `;
 
@@ -301,6 +312,100 @@ async function fetchRatings() {
         console.error("Ratings Error:", e);
         grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
     }
+}
+
+async function fetchSharedScores() {
+    const grid = get('ratings-grid');
+    if (!grid) return;
+
+    try {
+        grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
+
+        // Fetch shared scores
+        const result = await sql`
+            SELECT nickname, score, survival_time, efficiency, is_vip, shared_at
+            FROM shared_scores
+            ORDER BY efficiency ASC, score ASC
+            LIMIT 100
+        `;
+
+        if (result.length === 0) {
+            grid.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">გაზიარებული შედეგები ვერ მოიძებნა</p>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        result.forEach((player) => {
+            const card = document.createElement('div');
+            card.className = 'rating-card';
+            if (player.is_vip) card.classList.add('vip-card');
+
+            const scoreVal = parseFloat(player.score || 0);
+            const timeVal = parseFloat(player.survival_time || 0);
+            const ld = player.efficiency ? parseFloat(player.efficiency).toFixed(2) : '0.00';
+            const crown = player.is_vip ? '👑 ' : '';
+
+            card.innerHTML = `
+                <h3>${crown}${player.nickname}</h3>
+                <div class="rating-stats">
+                    <div class="rating-stat">
+                        <span>ქულა:</span>
+                        <strong>${scoreVal} ✨</strong>
+                    </div>
+                    <div class="rating-stat">
+                        <span>დრო:</span>
+                        <strong>${timeVal}წმ ⏱️</strong>
+                    </div>
+                    <div class="rating-stat">
+                        <span>ეფექტურობა:</span>
+                        <strong>LD ${ld}</strong>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error("Shared Scores Error:", e);
+        grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
+    }
+}
+
+async function shareScore(scoreVal, timeVal) {
+    if (!nickname || scoreVal <= 0) {
+        showStatusUpdate('შედეგი არასწორია! ❌');
+        return;
+    }
+
+    try {
+        const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
+
+        await sql`INSERT INTO shared_scores (nickname, score, survival_time, efficiency, is_vip)
+                  VALUES (${nickname}, ${scoreVal}, ${timeVal}, ${efficiency}, ${isVip})`;
+
+        showStatusUpdate('შედეგი გაზიარდა! ✅');
+
+        // Open ratings modal and show shared tab
+        get('settings-modal').classList.add('hidden');
+        get('ratings-modal').classList.remove('hidden');
+        switchToSharedTab();
+
+    } catch (e) {
+        console.error("Share Error:", e);
+        showStatusUpdate('გაზიარება ვერ მოხერხდა! ❌');
+    }
+}
+
+function switchToSharedTab() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        btn.style.fontWeight = 'normal';
+    });
+    get('tab-shared').classList.add('active');
+    get('tab-shared').style.background = 'rgba(255,255,255,0.2)';
+    get('tab-shared').style.fontWeight = '600';
+    fetchSharedScores();
 }
 
 // --- Game Logic ---
@@ -411,6 +516,43 @@ function initUI() {
         get('defeat-modal').classList.add('hidden');
         get('ratings-modal').classList.remove('hidden');
         fetchRatings();
+    };
+
+    // Ratings Tabs
+    get('tab-all-ratings').onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.fontWeight = 'normal';
+        });
+        get('tab-all-ratings').classList.add('active');
+        get('tab-all-ratings').style.background = 'rgba(255,255,255,0.2)';
+        get('tab-all-ratings').style.fontWeight = '600';
+        fetchRatings();
+    };
+
+    get('tab-shared').onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.fontWeight = 'normal';
+        });
+        get('tab-shared').classList.add('active');
+        get('tab-shared').style.background = 'rgba(255,255,255,0.2)';
+        get('tab-shared').style.fontWeight = '600';
+        fetchSharedScores();
+    };
+
+    // Share Best Score Button
+    get('share-best-btn').onclick = () => {
+        const bestData = JSON.parse(localStorage.getItem('tilo_best_score')) || { score: 0, time: 0 };
+        shareScore(bestData.score, bestData.time);
+    };
+
+    // Share Previous Score Button
+    get('share-prev-btn').onclick = () => {
+        const prevData = JSON.parse(localStorage.getItem('tilo_prev_score')) || { score: 0, time: 0 };
+        shareScore(prevData.score, prevData.time);
     };
 
     const loadUIState = () => {
