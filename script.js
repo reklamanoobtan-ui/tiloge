@@ -862,16 +862,52 @@ function showUpgradeOptions() {
         container.appendChild(cardEl);
     });
 }
+let bossScalingInterval;
+let bossHealthMultiplier = 1;
 
 function triggerEndgame() {
     showStatusUpdate("ყველა გაძლიერება ამოიწურა! ბოსების შემოსევა! 🚨");
+
+    // Convert existing stains to bosses immediately
     document.querySelectorAll('.stain:not(.boss-stain)').forEach(stain => {
         stain.classList.add('boss-stain');
-        stain.dataset.health = 1500;
-        stain.dataset.maxHealth = 1500;
+        stain.dataset.health = 1500 * bossHealthMultiplier;
+        stain.dataset.maxHealth = 1500 * bossHealthMultiplier;
         stain.innerHTML = '<div class="boss-title">BOSS</div>';
         stain.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+        // Reset size for boss visual
+        stain.style.width = '250px';
+        stain.style.height = '250px';
     });
+
+    // Start escalation timer: Every 60s, double stats
+    if (bossScalingInterval) clearInterval(bossScalingInterval);
+    bossScalingInterval = setInterval(() => {
+        if (!gameActive) { clearInterval(bossScalingInterval); return; }
+
+        bossHealthMultiplier *= 2;
+        showStatusUpdate(`ბოსები გაძლიერდნენ! (x${bossHealthMultiplier}) ☠️`);
+
+        // Upgrade existing bosses
+        document.querySelectorAll('.boss-stain').forEach(boss => {
+            let currentMax = parseFloat(boss.dataset.maxHealth);
+            let currentHealth = parseFloat(boss.dataset.health);
+
+            // Scale up proportionally
+            let newMax = currentMax * 2;
+            let newHealth = currentHealth * 2;
+
+            boss.dataset.maxHealth = newMax;
+            boss.dataset.health = newHealth;
+
+            // Visual growth
+            let curSize = parseFloat(boss.style.width);
+            let newSize = curSize * 1.2; // slight growth
+            boss.style.width = `${newSize}px`;
+            boss.style.height = `${newSize}px`;
+        });
+
+    }, 60000); // 1 minute
 }
 
 function weightedRandom(items) {
@@ -891,10 +927,16 @@ function createStain(isBoss = false) {
     if (!container) return;
     const stain = document.createElement('div');
     stain.className = 'stain';
-    if (isBoss) stain.classList.add('boss-stain');
 
-    let health = isBoss ? 1500 : 100;
+    // In endgame (when upgrade pool empty), EVERYTHING is a boss
+    if (availableUpgradesEmpty || isBoss) {
+        stain.classList.add('boss-stain');
+        isBoss = true;
+    }
+
+    let health = isBoss ? (1500 * bossHealthMultiplier) : 100;
     const size = isBoss ? 250 : (Math.random() * 80 + 40);
+
     stain.style.width = `${size}px`; stain.style.height = `${size}px`;
     stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
     stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
