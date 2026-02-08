@@ -809,7 +809,13 @@ window.addEventListener('load', async () => {
     setInterval(checkForUpdates, 30000);
     setInterval(() => { if (userEmail) syncUserData(); }, 5000);
 
-    setInterval(() => { if (gameActive) { bossCount++; for (let i = 0; i < Math.floor(bossCount / 10) + 1; i++) createStain(true); } }, 60000);
+    setInterval(() => {
+        if (gameActive) {
+            bossCount++;
+            const bossSpawnCount = Math.floor(score / 500) + 1;
+            for (let i = 0; i < bossSpawnCount; i++) createStain(true);
+        }
+    }, 60000);
 
     scheduleNextStain();
     setInterval(checkCleaning, 200);
