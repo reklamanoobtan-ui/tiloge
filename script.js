@@ -781,7 +781,13 @@ window.addEventListener('load', async () => {
         if (get('cloth')) get('cloth').classList.add('vip-cloth');
     }
     if (userEmail) {
-        try { await sql`UPDATE users SET score = 0 WHERE email = ${userEmail}`; } catch (e) { }
+        try {
+            const uData = await sql`SELECT score, survival_time FROM users WHERE email = ${userEmail}`;
+            if (uData.length > 0) {
+                score = uData[0].score;
+                // Update survival time logic if needed
+            }
+        } catch (e) { }
         get('auth-modal').classList.add('hidden');
     } else get('auth-modal').classList.remove('hidden');
 
