@@ -738,7 +738,7 @@ function showUpgradeOptions() {
         if (u.id === 'strength') return strengthMultiplier < 3.0;    // Max 200% boost (Base 1.0 + 2.0)
         if (u.id === 'radius') return radiusMultiplier < 3.0;        // Max 200% boost
         if (u.id === 'helperSpeed') return helperSpeedMultiplier < 3.0; // Max 200% boost
-        if (u.id === 'speed') return intervalMultiplier > 0.2;       // Cap speed earlier
+        if (u.id === 'speed') return intervalMultiplier > 0.01;      // Cap speed at 0.01s
         return true;
     });
 
