@@ -219,7 +219,7 @@
         }
 
         // Auth Logic
-        get('login-btn').onclick = async () => {
+        const doLogin = async () => {
             const pass = get('admin-pass').value.trim();
             const status = get('login-status');
 
@@ -230,10 +230,19 @@
             if (pass === "123123") {
                 get('login-section').style.display = 'none';
                 get('admin-controls').style.display = 'block';
+                log("Logged in successfully", "green");
             } else {
                 status.textContent = "Access Denied";
                 status.style.color = "red";
+                console.log("Login failed with pass:", pass);
             }
+        };
+
+        get('login-btn').onclick = doLogin;
+
+        // Support Enter key
+        get('admin-pass').onkeydown = (e) => {
+            if (e.key === 'Enter') doLogin();
         };
 
         get('give-coins').onclick = async () => {
