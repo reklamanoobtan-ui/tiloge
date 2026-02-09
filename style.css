@@ -137,21 +137,15 @@ body {
     position: absolute;
     width: 180px;
     height: 180px;
-    background: #ffdb4d;
-    background-image:
-        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 20%),
-        repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.02) 0px, rgba(0, 0, 0, 0.02) 2px, transparent 2px, transparent 4px);
-    border-radius: 20px;
-    box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.15),
-        0 10px 10px rgba(0, 0, 0, 0.05),
-        inset 0 -5px 15px rgba(0, 0, 0, 0.1),
-        inset 0 5px 15px rgba(255, 255, 255, 0.4);
+    background-image: url('tilo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     pointer-events: none;
+    z-index: 1000;
+    transition: transform 0.1s ease-out, filter 0.3s ease;
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3));
     cursor: grab;
-    transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.1s ease-out;
-    z-index: 10;
     touch-action: none;
     display: flex;
     justify-content: center;
@@ -757,7 +751,37 @@ body {
     text-shadow: 0 0 10px rgba(255, 105, 180, 0.5) !important;
 }
 
-/* Chat Styles */
+/* Skin Overrides for Image-based Cloth */
+.cloth-skin-fire {
+    filter: drop-shadow(0 0 15px #ff4d4d) hue-rotate(-20deg) brightness(1.2);
+}
+
+.cloth-skin-ice {
+    filter: drop-shadow(0 0 15px #4facfe) hue-rotate(160deg) saturate(1.5);
+}
+
+.cloth-skin-rainbow {
+    animation: skin-rainbow-anim 3s linear infinite;
+}
+
+.cloth-skin-jungle {
+    filter: drop-shadow(0 0 15px #2d9300) hue-rotate(80deg) contrast(1.1);
+}
+
+.cloth-skin-electric {
+    filter: drop-shadow(0 0 20px #00f2fe) brightness(1.5) contrast(1.2);
+}
+
+@keyframes skin-rainbow-anim {
+    0% {
+        filter: drop-shadow(0 0 15px red) hue-rotate(0deg);
+    }
+
+    100% {
+        filter: drop-shadow(0 0 15px red) hue-rotate(360deg);
+    }
+}
+
 .chat-container {
     position: fixed;
     bottom: 20px;
@@ -1191,14 +1215,17 @@ input:checked+.slider:before {
 /* Mini-game Styling */
 .minigame-point {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    /* Slightly larger for easier clicking */
+    height: 40px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-    z-index: 10;
+    z-index: 10000;
+    /* Extremely high to be above everything */
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    pointer-events: auto !important;
 }
 
 .minigame-point:hover {

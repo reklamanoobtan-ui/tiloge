@@ -103,10 +103,13 @@ function updatePowerStats() {
     cleaningRadius = 1 * radiusMultiplier;
     clothStrength = power;
 
-    // Apply Current Skin
+    // Apply Current Skin (Now using Image-based overrides)
     if (clothEl) {
-        clothEl.classList.remove('skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric', 'skin-rainbow');
-        if (currentSkin !== 'default') clothEl.classList.add(`skin-${currentSkin}`);
+        // Clear all possible skin classes
+        clothEl.classList.remove('cloth-skin-fire', 'cloth-skin-ice', 'cloth-skin-jungle', 'cloth-skin-electric', 'cloth-skin-rainbow');
+        if (currentSkin !== 'default') {
+            clothEl.classList.add(`cloth-skin-${currentSkin}`);
+        }
     }
 }
 
@@ -125,10 +128,10 @@ function updateUIValues() {
     if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
     if (get('prev-score-stat')) get('prev-score-stat').textContent = `${lastPrevScore.score} stain / ${lastPrevScore.time}s`;
 
-    const updateSkinBtn = (id, skinName) => {
-        const btn = get(id);
+    const updateSkinBtn = (btnId, skinName) => {
+        const btn = get(btnId);
         if (!btn) return;
-        if (ownedSkins.includes(skinName)) {
+        if (skinName === 'default' || ownedSkins.includes(skinName)) {
             if (currentSkin === skinName) {
                 btn.textContent = "არჩეულია";
                 btn.disabled = true;
@@ -144,6 +147,8 @@ function updateUIValues() {
             btn.style.opacity = coins < 50 ? "0.5" : "1";
         }
     };
+
+    updateSkinBtn('buy-skin-default', 'default');
 
     updateSkinBtn('buy-skin-fire', 'fire');
     updateSkinBtn('buy-skin-ice', 'ice');
@@ -630,15 +635,17 @@ function showStatusUpdate(text) {
 }
 
 function handleSkinAction(name) {
-    if (ownedSkins.includes(name)) {
+    if (name === 'default' || ownedSkins.includes(name)) {
         currentSkin = name;
-        showStatusUpdate(`${name} სკინი არჩეულია! ✨`);
+        showStatusUpdate(`${name === 'default' ? 'ჩვეულებრივი' : name} სკინი არჩეულია! ✨`);
     } else {
         if (coins >= 50) {
             coins -= 50;
             ownedSkins.push(name);
             currentSkin = name;
             showStatusUpdate(`${name} სკინი შეძენილია! 🔥`);
+        } else {
+            showStatusUpdate('არ გაქვს საკმარისი ქოინები! ❌');
         }
     }
     updatePowerStats();
@@ -648,6 +655,7 @@ function handleSkinAction(name) {
 }
 
 function initUI() {
+    get('buy-skin-default').onclick = () => handleSkinAction('default');
     get('buy-skin-fire').onclick = () => handleSkinAction('fire');
     get('buy-skin-ice').onclick = () => handleSkinAction('ice');
     get('buy-skin-jungle').onclick = () => handleSkinAction('jungle');
@@ -2271,10 +2279,14 @@ function spawnMinigamePoints() {
         point.style.left = `${x}px`;
         point.style.top = `${y}px`;
 
-        point.onclick = (e) => {
+        // Use mousedown/touchstart for better responsiveness in modals
+        const clickHandler = (e) => {
+            e.preventDefault();
             e.stopPropagation();
             handlePointClick(i);
         };
+        point.addEventListener('mousedown', clickHandler);
+        point.addEventListener('touchstart', clickHandler, { passive: false });
 
         minigamePointsData.push({ x, y, el: point });
         area.appendChild(point);
