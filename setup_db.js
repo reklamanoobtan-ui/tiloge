@@ -35,6 +35,12 @@ async function setup() {
             coins_earned INTEGER NOT NULL,
             played_at TIMESTAMP DEFAULT NOW()
         )`);
+
+        // Ensure 'coins_earned' exists in old tables
+        try {
+            await sql`ALTER TABLE game_results ADD COLUMN IF NOT EXISTS coins_earned INTEGER DEFAULT 0`;
+        } catch (e) { console.log("Note: coins_earned column check failed (might already exist)"); }
+
         console.log("✅ Game Results table ready.");
 
         // Shared Scores Table
@@ -47,6 +53,12 @@ async function setup() {
             is_vip BOOLEAN DEFAULT FALSE,
             shared_at TIMESTAMP DEFAULT NOW()
         )`);
+
+        // Ensure 'efficiency' exists in old tables
+        try {
+            await sql`ALTER TABLE shared_scores ADD COLUMN IF NOT EXISTS efficiency FLOAT DEFAULT 0`;
+        } catch (e) { console.log("Note: efficiency column check failed (might already exist)"); }
+
         console.log("✅ Shared Scores table ready.");
 
         // Chat Table
