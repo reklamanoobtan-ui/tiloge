@@ -391,15 +391,6 @@ async function shareScore(scoreVal, timeVal) {
     // Restriction Check: Guests can share
     if (userEmail && userEmail.startsWith('guest_') && !nickname) return;
 
-    // Circular Limit Check: If there are 20+ active, delete oldest one
-    try {
-        const activeRes = await sql`SELECT COUNT(*) as count FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute'`;
-        if (activeRes[0].count >= 20) {
-            await sql`DELETE FROM shared_scores WHERE id = (
-                SELECT id FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute' ORDER BY shared_at ASC LIMIT 1
-            )`;
-        }
-    } catch (e) { }
 
     try {
         const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
