@@ -44,6 +44,11 @@ let lastSoapMilestone = 0;
 let isSoapActive = false;
 let magnetInterval = 3000;
 let pendingUpgrades = 0;
+let lastMinigameMilestone = 0;
+let isMinigameActive = false;
+let minigameTimer = null;
+let healthHalvedActive = false;
+let halfHealthEndTime = 0;
 
 // Upgrades Tracking
 let upgradeCounts = {
@@ -559,6 +564,12 @@ function updateScore(points) {
         if (Math.floor(score / 10000) > Math.floor(lastSoapMilestone / 10000)) {
             lastSoapMilestone = score;
             createSoap();
+        }
+
+        // 15,000 score mini-game milestone
+        if (Math.floor(score / 15000) > Math.floor(lastMinigameMilestone / 15000)) {
+            lastMinigameMilestone = score;
+            setTimeout(startMinigame, 500); // Small delay
         }
 
         // Sync every 20 points for "immediate" reflection
@@ -1441,7 +1452,6 @@ function showPinkUpgradeOptions() {
 
     const names = {
         'speed': 'რობოტის სიჩქარე',
-        'bot': 'რობოტის რაოდენობა',
         'radius': 'წმენდის რადიუსი',
         'strength': 'ტილოს ძალა',
         'karcher': 'კერხერის სიმძლავრე',
@@ -1452,15 +1462,16 @@ function showPinkUpgradeOptions() {
     };
 
     const icons = {
-        'speed': '🚀', 'bot': '🤖', 'radius': '📏',
+        'speed': '🚀', 'radius': '📏',
         'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲', 'bot_pow': '🦾'
     };
 
-    // Filter upgrades player already has at least one of (Excluding 'diff')
-    const ownedIds = Object.keys(upgradeCounts).filter(id => id !== 'diff' && upgradeCounts[id] > 0);
+    // Filter upgrades player already has at least one of (Excluding 'diff' and 'bot' count)
+    const excludes = ['diff', 'bot'];
+    const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && upgradeCounts[id] > 0);
 
-    // If none owned (unlikely at 10k), offer fallback (Excluding 'diff')
-    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts).filter(id => id !== 'diff');
+    // If none owned, offer fallback
+    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts).filter(id => !excludes.includes(id));
 
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
@@ -1672,6 +1683,8 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         health = baseHealth * scalingFactor * healthMultiplier;
         size = isTriangle ? 300 : 250;
 
+        if (healthHalvedActive) health /= 2;
+
         if (isTriangle) {
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
@@ -1692,6 +1705,8 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
             stain.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         }
     }
+
+    if (healthHalvedActive && !isBoss) health /= 2;
 
     stain.style.width = `${size}px`;
     stain.style.height = `${size}px`;
@@ -2105,6 +2120,8 @@ function startGameSession(dontReset = false) {
         totalStainsCleanedRel = 0;
         totalRepeatablePicked = 0;
         pendingUpgrades = 0;
+        lastMinigameMilestone = 0;
+        healthHalvedActive = false;
         upgradeCounts = {
             'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
             'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0
@@ -2204,3 +2221,152 @@ function scheduleNextStain() {
     spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());
 }
 
+
+// --- Connection Mini-game Mechanic ---
+
+let minigameCurrentIndex = 0;
+let minigamePointsData = [];
+
+function startMinigame() {
+    if (isMinigameActive || isUpgradeOpen) return;
+    isMinigameActive = true;
+    gameActive = false;
+
+    const modal = get('minigame-modal');
+    modal.classList.remove('hidden');
+
+    let localTimeLeft = 10;
+    const timerVal = get('minigame-timer-val');
+    if (timerVal) timerVal.textContent = localTimeLeft;
+
+    spawnMinigamePoints();
+
+    if (minigameTimer) clearInterval(minigameTimer);
+    minigameTimer = setInterval(() => {
+        localTimeLeft--;
+        if (timerVal) timerVal.textContent = localTimeLeft;
+        if (localTimeLeft <= 0) {
+            failMinigame();
+        }
+    }, 1000);
+}
+
+function spawnMinigamePoints() {
+    const area = get('minigame-canvas-area');
+    if (!area) return;
+    area.innerHTML = '';
+    minigameCurrentIndex = 0;
+    minigamePointsData = [];
+
+    const count = 6 + Math.floor(Math.random() * 4); // 6 to 9 points
+    for (let i = 0; i < count; i++) {
+        const point = document.createElement('div');
+        point.className = 'minigame-point ' + (i === count - 1 ? 'green' : 'red');
+
+        // Random position with some padding
+        const pad = 40;
+        const x = pad + Math.random() * (area.clientWidth - pad * 2);
+        const y = pad + Math.random() * (area.clientHeight - pad * 2);
+
+        point.style.left = `${x}px`;
+        point.style.top = `${y}px`;
+
+        point.onclick = (e) => {
+            e.stopPropagation();
+            handlePointClick(i);
+        };
+
+        minigamePointsData.push({ x, y, el: point });
+        area.appendChild(point);
+    }
+
+    // Highlight first point
+    if (minigamePointsData.length > 0) {
+        minigamePointsData[0].el.classList.add('active');
+    }
+}
+
+function handlePointClick(index) {
+    if (index === minigameCurrentIndex) {
+        minigamePointsData[index].el.classList.remove('active');
+        minigamePointsData[index].el.style.opacity = '0.5';
+        minigamePointsData[index].el.style.transform = 'translate(-50%, -50%) scale(0.8)';
+
+        if (index > 0) {
+            const p1 = minigamePointsData[index - 1];
+            const p2 = minigamePointsData[index];
+            drawMinigameLine(p1.x, p1.y, p2.x, p2.y);
+        }
+
+        minigameCurrentIndex++;
+        if (minigameCurrentIndex < minigamePointsData.length) {
+            minigamePointsData[minigameCurrentIndex].el.classList.add('active');
+        } else {
+            successMinigame();
+        }
+    }
+}
+
+function drawMinigameLine(x1, y1, x2, y2) {
+    const area = get('minigame-canvas-area');
+    if (!area) return;
+    const line = document.createElement('div');
+    line.className = 'minigame-line';
+
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+    line.style.width = `${dist}px`;
+    line.style.left = `${x1}px`;
+    line.style.top = `${y1}px`;
+    line.style.transform = `rotate(${angle}deg)`;
+
+    area.appendChild(line);
+}
+
+function successMinigame() {
+    clearInterval(minigameTimer);
+    get('minigame-modal').classList.add('hidden');
+    isMinigameActive = false;
+    showStatusUpdate('ვაშა! 2 წუთი ნახევარი სიცოცხლე ყველას! 💔✨');
+    startHalfHealthEffect();
+}
+
+function failMinigame() {
+    clearInterval(minigameTimer);
+    get('minigame-modal').classList.add('hidden');
+    isMinigameActive = false;
+    showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 15,000 ქულაზე. ⌛');
+    gameActive = true;
+    scheduleNextStain();
+}
+
+function startHalfHealthEffect() {
+    healthHalvedActive = true;
+    halfHealthEndTime = Date.now() + 120000;
+
+    const statusEl = get('half-health-status');
+    if (statusEl) statusEl.classList.remove('hidden');
+
+    // Visually mark existing stains
+    document.querySelectorAll('.stain').forEach(s => {
+        s.style.filter = 'drop-shadow(0 0 10px rgba(255, 77, 77, 0.5))';
+    });
+
+    const halfTimerInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((halfHealthEndTime - Date.now()) / 1000));
+        const timerVal = get('half-health-timer');
+        if (timerVal) timerVal.textContent = remaining;
+
+        if (remaining <= 0 || !gameActive) {
+            clearInterval(halfTimerInterval);
+            healthHalvedActive = false;
+            if (statusEl) statusEl.classList.add('hidden');
+            showStatusUpdate('ნახევარი სიცოცხლის ეფექტი დასრულდა. 🛡️');
+            document.querySelectorAll('.stain').forEach(s => s.style.filter = '');
+        }
+    }, 1000);
+
+    gameActive = true;
+    scheduleNextStain();
+}
