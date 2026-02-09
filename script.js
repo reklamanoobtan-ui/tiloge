@@ -434,7 +434,7 @@ let globalGodMode = false;
 let globalFreezeEnemies = false;
 
 // Video Notification Globals
-let videoChannelId = 'UbralodNoobi';
+let videoChannelId = 'UCycgfC-1XTtOeMLr5Vz77dg';
 let last10Videos = [];
 let videoPopupTimers = [];
 let videoTimings = [10, 30, 60, 300];
