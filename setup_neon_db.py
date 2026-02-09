@@ -7,10 +7,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    'DATABASE_URL',
-    'postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require'
-)
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    print("📋 Using DATABASE_URL from environment secrets.")
+else:
+    print("⚠️ DATABASE_URL secret not found! Using fallback URL.")
+    DATABASE_URL = 'postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require'
 
 async def setup_database():
     """
