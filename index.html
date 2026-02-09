@@ -356,53 +356,39 @@
     <!-- Ratings Modal -->
     <div id="ratings-modal" class="modal hidden">
         <div class="modal-content glass wide-modal"
-            style="max-width: 1000px; height: 90vh; display: flex; flex-direction: column;">
+            style="max-width: 1100px; height: 90vh; display: flex; flex-direction: column; border: 1px solid rgba(255,215,0,0.3);">
             <span class="close-modal" id="close-ratings">&times;</span>
 
-            <div class="rating-tabs"
-                style="display: flex; gap: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;">
-                <button id="show-shared-scores" class="tab-btn active"
-                    style="background:transparent; border:none; color:var(--text-color); cursor:pointer; font-weight:600; font-size:1.1rem; padding: 10px; border-bottom: 3px solid var(--cloth-color);">გაზიარებული</button>
-                <button id="show-global-best" class="tab-btn"
-                    style="background:transparent; border:none; color:var(--text-color); cursor:pointer; font-weight:600; font-size:1.1rem; padding: 10px; opacity: 0.6;">გლობალური
-                    (Top 10)</button>
+            <div class="modal-header-main" style="text-align: center; margin-bottom: 30px;">
+                <h2
+                    style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #ffd700, #fff); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                    🌍 GLOBAL TOP 10</h2>
+                <p style="opacity: 0.5; font-size: 0.9rem;">საუკეთესო მოთამაშეები მთელი მსოფლიოდან</p>
             </div>
 
-            <div id="shared-scores-view">
-                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-                    <label style="font-size: 0.9rem; opacity: 0.7; align-self: center;">დალაგება:</label>
-                    <select id="rating-sort-select"
-                        style="background: var(--input-bg); color: var(--text-color); border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px; outline: none;"
-                        onchange="fetchSharedScores()">
-                        <option value="newest">უახლესი</option>
-                        <option value="score">ქულები (High to Low)</option>
-                        <option value="ld">LD (ეფექტურობა)</option>
-                    </select>
+            <div id="global-rankings-view" class="ratings-grid-global">
+                <div class="global-col">
+                    <h4>🏆 საუკეთესო ქულა</h4>
+                    <div id="top-scores-list" class="mini-lb-list">
+                        <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
+                    </div>
                 </div>
-                <div id="ratings-grid" class="ratings-grid" style="max-height: 60vh;">
-                    <p style="text-align: center; padding: 20px;">იტვირთება...</p>
+                <div class="global-col">
+                    <h4>💰 ყველაზე მეტი ქოინი</h4>
+                    <div id="top-coins-list" class="mini-lb-list">
+                        <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
+                    </div>
+                </div>
+                <div class="global-col">
+                    <h4>⏱️ ყველაზე მეტი დრო</h4>
+                    <div id="top-time-list" class="mini-lb-list">
+                        <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
+                    </div>
                 </div>
             </div>
 
-            <div id="global-rankings-view" class="hidden"
-                style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
-                <div class="global-grids"
-                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; overflow-y: auto; padding: 10px;">
-                    <div class="global-col">
-                        <h4 style="text-align:center; color: #ffd700; margin-bottom: 10px;">🏆 საუკეთესო ქულა</h4>
-                        <div id="top-scores-list" class="mini-lb-list"></div>
-                    </div>
-                    <div class="global-col">
-                        <h4 style="text-align:center; color: #ffd700; margin-bottom: 10px;">💰 ყველაზე მეტი ქოინი</h4>
-                        <div id="top-coins-list" class="mini-lb-list"></div>
-                    </div>
-                    <div class="global-col">
-                        <h4 style="text-align:center; color: #ffd700; margin-bottom: 10px;">⏱️ ყველაზე მეტი დრო</h4>
-                        <div id="top-time-list" class="mini-lb-list"></div>
-                    </div>
-                </div>
-                <p style="font-size: 0.75rem; text-align: center; opacity: 0.5; margin-top: 10px;">რეიტინგი ეხება მხოლოდ
-                    რეგისტრირებულ მომხმარებლებს და ახლდება ავტომატურად</p>
+            <div style="margin-top: 20px; text-align: center; font-size: 0.8rem; opacity: 0.6; color: #ffd700;">
+                ✨ რეიტინგი ეხება მხოლოდ რეგისტრირებულ მომხმარებლებს
             </div>
         </div>
     </div>

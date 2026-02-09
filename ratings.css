@@ -1,78 +1,135 @@
-/* Ratings Grid */
-.ratings-grid {
+/* Global Ratings Premium Diamond Styling */
+.ratings-grid-global {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
     padding: 20px;
-    max-height: 600px;
+    flex: 1;
     overflow-y: auto;
 }
 
-.rating-card {
-    background: var(--item-bg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
+.global-col {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
     padding: 20px;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.rating-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.rating-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.rating-card .rating-stats {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: var(--secondary-text);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.rating-card .rating-stat {
+.global-col h4 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mini-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mini-lb-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.rating-card .rating-stat strong {
-    color: var(--text-color);
+.mini-lb-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    transform: scale(1.02);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-.rating-card.vip-card {
-    border: 2px solid #ffd700;
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+/* Rank Colors */
+.mini-lb-item:nth-child(1) {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
 }
 
-.rating-card.vip-card h3 {
-    color: #ffd700;
+.mini-lb-item:nth-child(2) {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%);
+    border-color: rgba(192, 192, 192, 0.3);
+}
+
+.mini-lb-item:nth-child(3) {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%);
+    border-color: rgba(205, 127, 50, 0.3);
+}
+
+.mini-lb-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mini-lb-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.mini-lb-score {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--cloth-color);
+}
+
+/* Diamond Effect for VIPs */
+.vip-lb-item {
+    border-color: #ffd700 !important;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%) !important;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15) !important;
+}
+
+/* Scrollbar */
+.ratings-grid-global::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ratings-grid-global::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* Top 3 Special Style */
+.top-rank-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
     font-weight: 800;
 }
 
-.rating-card {
-    position: relative;
-    overflow: hidden;
+.rank-1 {
+    background: #ffd700;
+    color: #000;
+    box-shadow: 0 0 10px #ffd700;
 }
 
-.rating-timer {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--cloth-color);
-    background: rgba(0, 0, 0, 0.2);
-    padding: 3px 8px;
-    border-radius: 10px;
+.rank-2 {
+    background: #c0c0c0;
+    color: #000;
+}
+
+.rank-3 {
+    background: #cd7f32;
+    color: #000;
 }

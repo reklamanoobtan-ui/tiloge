@@ -321,91 +321,7 @@ async function fetchLeaderboard() {
 
 
 
-async function fetchSharedScores() {
-    const grid = get('ratings-grid');
-    if (!grid) return;
-
-    try {
-        grid.innerHTML = '<p style="text-align: center; padding: 20px;">იტვირთება...</p>';
-
-        // Default sort by shared_at DESC (Newest)
-        let orderBy = 'shared_at DESC';
-        const sortType = get('rating-sort-select') ? get('rating-sort-select').value : 'newest';
-
-        if (sortType === 'score') orderBy = 'score DESC';
-        else if (sortType === 'ld') orderBy = 'efficiency DESC';
-
-        const result = await sql`
-            SELECT nickname, score, survival_time, efficiency, is_vip, shared_at
-            FROM shared_scores
-            WHERE shared_at > NOW() - INTERVAL '1 minute'
-            ORDER BY ${sql.unsafe(orderBy)}
-            LIMIT 20
-        `;
-
-        if (result.length === 0) {
-            grid.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">გაზიარებული შედეგები ვერ მოიძებნა</p>';
-            return;
-        }
-
-        grid.innerHTML = '';
-        result.forEach((player) => {
-            const card = document.createElement('div');
-            card.className = 'rating-card';
-            if (player.is_vip) card.classList.add('vip-card');
-
-            const scoreVal = parseFloat(player.score || 0);
-            const timeVal = parseFloat(player.survival_time || 0);
-            const ld = player.efficiency ? parseFloat(player.efficiency).toFixed(2) : '0.00';
-            const crown = player.is_vip ? '👑 ' : '';
-
-            // Calc remaining time for the card
-            const sharedAt = new Date(player.shared_at).getTime();
-            const nowTime = Date.now();
-            const expiresAt = sharedAt + 60000;
-            const remaining = Math.max(0, Math.ceil((expiresAt - nowTime) / 1000));
-
-            card.innerHTML = `
-                <div class="rating-timer" id="timer-${sharedAt}">${remaining}წმ</div>
-                <h3>${crown}${player.nickname}</h3>
-                <div class="rating-stats">
-                    <div class="rating-stat">
-                        <span>ქულა:</span>
-                        <strong>${scoreVal} ✨</strong>
-                    </div>
-                    <div class="rating-stat">
-                        <span>დრო:</span>
-                        <strong>${timeVal}წმ ⏱️</strong>
-                    </div>
-                    <div class="rating-stat">
-                        <span>ეფექტურობა:</span>
-                        <strong>LD ${ld}</strong>
-                    </div>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-
-        // Start local timer updates for cards
-        const updateCardsTime = () => {
-            document.querySelectorAll('.rating-timer').forEach(t => {
-                let s = parseInt(t.textContent);
-                if (s > 0) t.textContent = (s - 1) + 'წმ';
-                else t.closest('.rating-card').style.opacity = '0.3';
-            });
-        };
-        if (window.cardTimerInterval) clearInterval(window.cardTimerInterval);
-        window.cardTimerInterval = setInterval(updateCardsTime, 1000);
-
-        // Auto-refresh every 15 seconds
-        if (get('ratings-modal').classList.contains('hidden')) return;
-        setTimeout(fetchSharedScores, 15000);
-        fetchGlobalRankings(); // Also fetch global ones
-    } catch (e) {
-        console.error("Shared Scores Error:", e);
-        grid.innerHTML = '<p style="text-align: center; color: #ff4d4d; padding: 20px;">შეცდომა მონაცემების ჩატვირთვისას</p>';
-    }
-}
+// fetchSharedScores removed
 
 async function fetchGlobalRankings() {
     if (get('ratings-modal').classList.contains('hidden')) return;
@@ -417,12 +333,23 @@ async function fetchGlobalRankings() {
         data.forEach((u, i) => {
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
+            if (u.is_vip) item.classList.add('vip-lb-item');
+
             const val = u[statKey] || 0;
             const crown = u.is_vip ? '👑 ' : '';
             const nameColor = u.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+
+            let rankBadge = '';
+            if (i < 3) {
+                rankBadge = `<span class="top-rank-badge rank-${i + 1}">${i + 1}</span>`;
+            } else {
+                rankBadge = `<span style="width: 24px; text-align: center; font-size: 0.8rem; opacity: 0.5;">${i + 1}</span>`;
+            }
+
             item.innerHTML = `
                 <div class="mini-lb-info">
-                    <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${u.nickname.substring(0, 10)}</span>
+                    ${rankBadge}
+                    <span class="mini-lb-name" style="${nameColor}">${crown}${u.nickname.substring(0, 10)}</span>
                 </div>
                 <span class="mini-lb-score">${val}${suffix}</span>
             `;
@@ -431,15 +358,12 @@ async function fetchGlobalRankings() {
     };
 
     try {
-        // Top Scores
         const topScores = await sql`SELECT nickname, best_score, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        // Top Coins
         const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'coins');
 
-        // Top Total Time
         const topTime = await sql`SELECT nickname, total_survival_time, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
     } catch (e) { console.error("Global Rankings Error:", e); }
@@ -802,29 +726,9 @@ function initUI() {
     // Ratings Modal
     get('ratings-btn').onclick = () => {
         get('ratings-modal').classList.remove('hidden');
-        fetchSharedScores();
         fetchGlobalRankings();
     };
     get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
-
-    get('show-shared-scores').onclick = () => {
-        get('shared-scores-view').classList.remove('hidden');
-        get('global-rankings-view').classList.add('hidden');
-        get('show-shared-scores').style.opacity = "1";
-        get('show-shared-scores').style.borderBottom = "3px solid var(--cloth-color)";
-        get('show-global-best').style.opacity = "0.6";
-        get('show-global-best').style.borderBottom = "none";
-    };
-
-    get('show-global-best').onclick = () => {
-        get('shared-scores-view').classList.add('hidden');
-        get('global-rankings-view').classList.remove('hidden');
-        get('show-global-best').style.opacity = "1";
-        get('show-global-best').style.borderBottom = "3px solid var(--cloth-color)";
-        get('show-shared-scores').style.opacity = "0.6";
-        get('show-shared-scores').style.borderBottom = "none";
-        fetchGlobalRankings();
-    };
 
     // Share Rating Button (from Game Over modal)
     get('share-rating-btn').onclick = async () => {
