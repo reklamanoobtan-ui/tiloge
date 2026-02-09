@@ -603,6 +603,25 @@ function initUI() {
     get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
     get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
 
+    // Side Menus Logic
+    const statsMenu = get('top-stats-menu');
+    const actionsMenu = get('top-actions-menu');
+
+    get('top-stats-toggle').onclick = () => {
+        statsMenu.classList.toggle('menu-open');
+    };
+
+    get('top-actions-toggle').onclick = () => {
+        actionsMenu.classList.toggle('menu-open');
+    };
+
+    // Close side menus when clicking actions inside them
+    document.querySelectorAll('.menu-action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            actionsMenu.classList.remove('menu-open');
+        });
+    });
+
     // Pause Button Logic
     let isPaused = false;
     const pauseBtn = get('pause-btn');
@@ -1705,6 +1724,10 @@ function startGameSession(dontReset = false) {
         el.classList.remove('hidden-game-ui');
         el.classList.remove('hidden');
     });
+
+    // Reset Side Menus
+    get('top-stats-menu').classList.remove('menu-open');
+    get('top-actions-menu').classList.remove('menu-open');
 
     // Start Loops
     gameActive = true;

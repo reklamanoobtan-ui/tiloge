@@ -36,30 +36,43 @@
 
 
     <!-- Main Game HUD (Hidden Initially) -->
-    <div id="game-hud" class="header-ui hidden-game-ui">
-        <div class="user-stats">
-            <div class="stat-box">✨ <span id="score-val">0</span> ქულა</div>
-            <div class="stat-box">🪙 <span id="coins-val">0</span> ქოინი</div>
-            <div class="stat-box">⏱️ <span id="interval-val">2.00</span>წმ</div>
-            <div class="stat-box">🕒 <span id="round-timer-val">0:00</span></div>
-            <div class="stat-box">🟢 <span id="online-count">1</span> ონლაინ</div>
-            <div id="vip-tag" class="stat-box vip-hidden">👑 VIP</div>
+    <div id="game-hud" class="hidden-game-ui">
+        <!-- Top Left: Statistics Sidebar-style Toggle -->
+        <div id="top-stats-menu" class="side-menu-container glass left-menu">
+            <button id="top-stats-toggle" class="side-menu-toggle">📊</button>
+            <div class="side-menu-content">
+                <div class="side-menu-header">სტატისტიკა</div>
+                <div class="menu-stat-item">✨ ქულა: <span id="score-val">0</span></div>
+                <div class="menu-stat-item">🪙 ქოინი: <span id="coins-val">0</span></div>
+                <div class="menu-stat-item">⏱️ სპაუნი: <span id="interval-val">2.00</span>წმ</div>
+                <div class="menu-stat-item">🕒 დრო: <span id="round-timer-val">0:00</span></div>
+                <div class="menu-stat-item">🟢 ონლაინი: <span id="online-count">1</span></div>
+                <div id="vip-tag" class="menu-stat-item vip-hidden" style="color:#ffd700; font-weight:bold;">👑 VIP
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Right: Menu Sidebar-style Toggle -->
+        <div id="top-actions-menu" class="side-menu-container glass right-menu">
+            <button id="top-actions-toggle" class="side-menu-toggle">⚙️</button>
+            <div class="side-menu-content">
+                <div class="side-menu-header">მენიუ</div>
+                <button id="shop-btn" class="menu-action-btn">🛒 მაღაზია</button>
+                <button id="settings-btn" class="menu-action-btn">⚙️ პარამეტრები</button>
+                <button id="themes-btn" class="menu-action-btn">🖼️ თემები</button>
+                <button id="ratings-btn" class="menu-action-btn">📊 რეიტინგი</button>
+                <button id="ui-toggle-btn" class="menu-action-btn">👁️ UI ოპციები</button>
+            </div>
         </div>
 
         <div class="info-text">
             <h1 id="diff-status">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
-            <button id="end-game-btn" class="glass-btn"
-                style="margin-top: 10px; background: rgba(255, 77, 77, 0.2); color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">🏁
-                თამაშის დასრულება</button>
-        </div>
-
-        <div class="actions">
-            <button id="shop-btn" class="glass-btn">🛒 მაღაზია</button>
-            <button id="settings-btn" class="glass-btn">⚙️ პარამეტრები</button>
-            <button id="themes-btn" class="glass-btn">🖼️ თემები</button>
-            <button id="ratings-btn" class="glass-btn">📊 რეიტინგები</button>
-            <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
-            <button id="ui-toggle-btn" class="glass-btn" style="background: rgba(255, 255, 255, 0.15);">👁️ UI</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
+                <button id="end-game-btn" class="glass-btn"
+                    style="background: rgba(255, 77, 77, 0.2); color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">🏁
+                    დასრულება</button>
+            </div>
         </div>
     </div>
 
@@ -82,13 +95,13 @@
         </div>
     </div>
 
-    <!-- Statistics Sidebar (Right) -->
-    <div id="stats-sidebar" class="stats-sidebar glass">
-        <button id="stats-side-toggle" class="stats-toggle-side">📊</button>
+    <!-- Statistics Sidebar (Right) - Renamed to Progress -->
+    <div id="stats-sidebar" class="stats-sidebar glass side-collapsed">
+        <button id="stats-side-toggle" class="stats-toggle-side">📈</button>
         <div class="stats-content-wrapper">
             <div class="stats-header">
-                <span>📊 სტატისტიკა</span>
-                <button id="stats-close-btn" class="stats-toggle">✕</button>
+                📊 პროგრესი
+                <button id="stats-close-btn" class="stats-toggle">×</button>
             </div>
             <div class="sidebar-section">
                 <h4 style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase;">აქტიური
