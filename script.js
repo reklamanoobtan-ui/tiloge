@@ -457,14 +457,14 @@ function updateScore(points) {
             saveStatsToLocal();
         }
 
-        // 5,000 score soap milestone
-        if (Math.floor(score / 5000) > Math.floor(lastSoapMilestone / 5000)) {
+        // 2,500 score soap milestone
+        if (Math.floor(score / 2500) > Math.floor(lastSoapMilestone / 2500)) {
             lastSoapMilestone = score;
             createSoap();
         }
 
-        // 7,500 score mini-game milestone
-        if (Math.floor(score / 7500) > Math.floor(lastMinigameMilestone / 7500)) {
+        // 3,750 score mini-game milestone
+        if (Math.floor(score / 3750) > Math.floor(lastMinigameMilestone / 3750)) {
             lastMinigameMilestone = score;
             setTimeout(startMinigame, 500); // Small delay
         }
@@ -2288,7 +2288,7 @@ function failMinigame() {
     clearInterval(minigameTimer);
     get('minigame-modal').classList.add('hidden');
     isMinigameActive = false;
-    showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 7,500 ქულაზე. ⌛');
+    showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 3,750 ქულაზე. ⌛');
     gameActive = true;
     scheduleNextStain();
 }
