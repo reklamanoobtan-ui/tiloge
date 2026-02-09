@@ -124,12 +124,24 @@
 
         <div class="section">
             <h3>Global Events (5 Min)</h3>
+            <div id="active-bonus-timer"
+                style="background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none;">
+                <strong style="color: #ffd700;">🎉 აქტიური ბონუსი:</strong> <span id="bonus-name"></span><br>
+                <strong>დარჩენილი დრო:</strong> <span id="bonus-time-left">0:00</span>
+            </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                 <button class="btn-blue" id="mult-2">2X Score</button>
                 <button class="btn-blue" id="mult-4">4X Score</button>
                 <button class="btn-blue" id="mult-6">6X Score</button>
                 <button class="btn-blue" id="mult-8">8X Score</button>
                 <button class="btn-gold" id="btn-rainbow">🌈 Rainbow</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⚠️ Critical Actions</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-red" id="restart-site" style="flex: 1;">🔄 RESTART SITE</button>
             </div>
         </div>
 
@@ -233,6 +245,70 @@
         get('mult-6').onclick = () => triggerEvent('multiplier', 6);
         get('mult-8').onclick = () => triggerEvent('multiplier', 8);
         get('btn-rainbow').onclick = () => triggerEvent('rainbow', 'on');
+
+        // Site Restart Function
+        get('restart-site').onclick = async () => {
+            if (confirm("⚠️ ნამდვილად გსურთ მთელი საიტის რესტარტი? ყველა მოთამაშე გადატვირთულ იქნება!")) {
+                try {
+                    // Clear all active events
+                    await sql`DELETE FROM global_events`;
+
+                    // Send restart notification
+                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 საიტი რესტარტდება 5 წამში...')`;
+
+                    log("Restarting site in 5 seconds...", 'red');
+
+                    // Trigger restart for all clients
+                    localStorage.setItem('tilo_force_reload', Date.now().toString());
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } catch (e) {
+                    console.error(e);
+                    log('Error restarting site', 'red');
+                }
+            }
+        };
+
+        // Bonus Timer Monitoring
+        async function updateBonusTimer() {
+            try {
+                const events = await sql`SELECT event_type, event_value, expires_at FROM global_events WHERE expires_at > NOW() LIMIT 1`;
+
+                const timerDiv = get('active-bonus-timer');
+                const bonusName = get('bonus-name');
+                const timeLeft = get('bonus-time-left');
+
+                if (events.length > 0) {
+                    const event = events[0];
+                    const expiresAt = new Date(event.expires_at);
+                    const now = new Date();
+                    const remainingMs = expiresAt - now;
+
+                    if (remainingMs > 0) {
+                        const minutes = Math.floor(remainingMs / 60000);
+                        const seconds = Math.floor((remainingMs % 60000) / 1000);
+
+                        bonusName.textContent = event.event_type === 'multiplier'
+                            ? `${event.event_value}X Score Multiplier`
+                            : 'Rainbow Event';
+                        timeLeft.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        timerDiv.style.display = 'block';
+                    } else {
+                        timerDiv.style.display = 'none';
+                    }
+                } else {
+                    timerDiv.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Timer update error:', e);
+            }
+        }
+
+        // Update timer every second
+        setInterval(updateBonusTimer, 1000);
+        updateBonusTimer(); // Initial call
 
     </script>
 </body>
