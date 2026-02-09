@@ -168,24 +168,24 @@
         </div>
 
         <div class="section">
-            <h3>👥 Players Database</h3>
+            <h3>👥 მომხმარებლების ბაზა</h3>
             <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="search-player" placeholder="Search by nickname or email..." style="flex: 1;">
+                <input type="text" id="search-player" placeholder="ძებნა ნიკნეიმით ან იმეილით..." style="flex: 1;">
                 <select id="sort-players"
                     style="background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px;">
-                    <option value="score">Sort by Score</option>
-                    <option value="coins">Sort by Coins</option>
-                    <option value="time">Sort by Time</option>
-                    <option value="nickname">Sort by Nickname</option>
+                    <option value="score">დაალაგე ქულებით</option>
+                    <option value="coins">დაალაგე ქოინებით</option>
+                    <option value="time">დაალაგე დროით</option>
+                    <option value="nickname">დაალაგე ნიკნეიმით</option>
                 </select>
-                <button class="btn-blue" id="refresh-players">🔄 Refresh</button>
+                <button class="btn-blue" id="refresh-players">🔄 განახლება</button>
             </div>
             <div id="players-list"
                 style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;">
-                <p style="text-align: center; opacity: 0.5;">Loading players...</p>
+                <p style="text-align: center; opacity: 0.5;">მოთამაშეები იტვირთება...</p>
             </div>
             <div style="margin-top: 10px; text-align: center; font-size: 0.9rem; opacity: 0.7;">
-                Total Players: <span id="total-players">0</span>
+                სულ მომხმარებელი: <span id="total-players">0</span>
             </div>
         </div>
 
@@ -446,12 +446,12 @@
                             📧 ${player.email}
                         </div>
                         <div>
-                            <span class="player-stat">⭐ Score: <strong>${player.score}</strong></span>
-                            <span class="player-stat">⏱️ Time: <strong>${timeFormatted}</strong></span>
-                            <span class="player-stat">🪙 Coins: <strong>${player.coins}</strong></span>
+                            <span class="player-stat">⭐ ქულა: <strong>${player.score}</strong></span>
+                            <span class="player-stat">⏱️ დრო: <strong>${timeFormatted}</strong></span>
+                            <span class="player-stat">🪙 ქოინი: <strong>${player.coins}</strong></span>
                         </div>
                         <div style="margin-top: 5px; font-size: 0.75rem; opacity: 0.5;">
-                            Last Active: ${lastActive}
+                            ბოლოს აქტიური: ${lastActive}
                         </div>
                     </div>
                 `;
