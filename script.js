@@ -43,6 +43,7 @@ let soapClickCount = 0;
 let lastSoapMilestone = 0;
 let isSoapActive = false;
 let magnetInterval = 3000;
+let pendingUpgrades = 0;
 
 // Upgrades Tracking
 let upgradeCounts = {
@@ -526,10 +527,15 @@ function updateScore(points) {
         score += finalPoints;
         totalStainsCleaned += finalPoints;
 
-        if (score >= nextUpgradeScore) {
-            showUpgradeOptions();
+        // Queue all earned upgrades
+        while (score >= nextUpgradeScore) {
+            pendingUpgrades++;
             nextUpgradeScore = Math.ceil(nextUpgradeScore * 1.3);
-            syncUserData(true); // Force sync on upgrade
+        }
+
+        if (pendingUpgrades > 0 && !isUpgradeOpen) {
+            showUpgradeOptions();
+            syncUserData(true);
         }
 
         // 1000 score milestone reward
@@ -1279,7 +1285,6 @@ function triggerMagnet() {
 }
 
 function applyUpgrade(id) {
-    isUpgradeOpen = false; // Clear flag before resuming loop
     switch (id) {
         case 'diff': intervalMultiplier *= 0.85; break; // Balanced
         case 'speed': helperSpeedMultiplier *= 1.25; break;
@@ -1297,7 +1302,14 @@ function applyUpgrade(id) {
             break;
     }
     updateUIValues();
-    scheduleNextStain(); // Resume spawn loop
+
+    pendingUpgrades--;
+    if (pendingUpgrades > 0) {
+        showUpgradeOptions();
+    } else {
+        isUpgradeOpen = false;
+        scheduleNextStain(); // Resume spawn loop
+    }
 }
 
 // --- Pink Soap Special Mechanic ---
