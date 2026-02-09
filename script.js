@@ -184,20 +184,22 @@ async function initDatabase() {
             nickname TEXT,
             score INTEGER DEFAULT 0,
             coins INTEGER DEFAULT 0,
+            total_coins INTEGER DEFAULT 0,
             survival_time INTEGER DEFAULT 0,
             best_score INTEGER DEFAULT 0,
             best_survival_time INTEGER DEFAULT 0,
             total_survival_time INTEGER DEFAULT 0,
-            last_seen TIMESTAMP DEFAULT NOW(),
+            last_active TIMESTAMP DEFAULT NOW(),
             created_at TIMESTAMP DEFAULT NOW(),
             is_vip BOOLEAN DEFAULT FALSE
         )`;
 
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_score INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW()`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT NOW()`;
 
         // Drop UNIQUE constraint on nickname if it exists (for existing databases)
         try {
@@ -249,8 +251,8 @@ async function syncUserData(isFinal = false) {
             survival_time = ${currentSurvival},
             best_score = GREATEST(best_score, ${Math.floor(score)}),
             best_survival_time = GREATEST(best_survival_time, ${currentSurvival}),
-            total_survival_time = total_survival_time + (CASE WHEN last_seen > NOW() - INTERVAL '30 seconds' THEN EXTRACT(EPOCH FROM (NOW() - last_seen)) ELSE 0 END),
-            last_seen = NOW()
+            total_survival_time = total_survival_time + (CASE WHEN last_active > NOW() - INTERVAL '30 seconds' THEN EXTRACT(EPOCH FROM (NOW() - last_active)) ELSE 0 END),
+            last_active = NOW()
             WHERE email = ${userEmail}`;
 
         // If game is over, record this achievement in history and update total_coins
@@ -324,7 +326,7 @@ async function fetchLeaderboard() {
         }
 
         // Update Online Count
-        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_seen > NOW() - INTERVAL '2 minutes'`;
+        const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_active > NOW() - INTERVAL '2 minutes'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
 
     } catch (e) {
