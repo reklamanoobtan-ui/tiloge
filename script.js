@@ -381,100 +381,32 @@ async function fetchGlobalRankings() {
 }
 
 async function shareScore(scoreVal, timeVal) {
-    if (!nickname || scoreVal <= 0) {
-        showStatusUpdate('შედეგი არასწორია! ❌');
-        return;
-    }
+    if (!nickname || scoreVal <= 0) return;
 
-    // Restriction Check
-    if (userEmail && userEmail.startsWith('guest_')) {
-        get('restricted-modal').classList.remove('hidden');
-        return;
-    }
+    // Restriction Check: Guests can share
+    if (userEmail && userEmail.startsWith('guest_') && !nickname) return;
 
     // Circular Limit Check: If there are 20+ active, delete oldest one
     try {
         const activeRes = await sql`SELECT COUNT(*) as count FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute'`;
         if (activeRes[0].count >= 20) {
-            // Delete oldest ACTIVE score to make room
             await sql`DELETE FROM shared_scores WHERE id = (
                 SELECT id FROM shared_scores WHERE shared_at > NOW() - INTERVAL '1 minute' ORDER BY shared_at ASC LIMIT 1
             )`;
         }
     } catch (e) { }
 
-    // Rate Limit Check: 5 minutes
-    const lastShare = parseInt(localStorage.getItem('tilo_last_share')) || 0;
-    const now = Date.now();
-    const cooldown = 5 * 60 * 1000; // 5 mins
-
-    if (now - lastShare < cooldown) {
-        const remaining = Math.ceil((cooldown - (now - lastShare)) / 1000);
-        showStatusUpdate(`მოიცადეთ ${remaining}წმ ⏳`);
-        return;
-    }
-
     try {
         const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
-
         await sql`INSERT INTO shared_scores (nickname, score, survival_time, efficiency, is_vip)
                   VALUES (${nickname}, ${scoreVal}, ${timeVal}, ${efficiency}, ${isVip})`;
 
-        localStorage.setItem('tilo_last_share', now);
-        updateShareButtonsUI();
-        showStatusUpdate('შედეგი გაზიარდა! ✅');
-
-        // Always show the ratings list after sharing
-        get('settings-modal').classList.add('hidden');
-        get('defeat-modal').classList.add('hidden');
-        get('ratings-modal').classList.remove('hidden');
-        fetchSharedScores();
-
+        console.log("Match automatically shared to global rankings.");
     } catch (e) {
-        console.error("Share Error:", e);
-        showStatusUpdate('გაზიარება ვერ მოხერხდა! ❌');
+        console.error("Auto-Share Error:", e);
     }
 }
 
-function updateShareButtonsUI() {
-    const lastShare = parseInt(localStorage.getItem('tilo_last_share')) || 0;
-    const now = Date.now();
-    const cooldown = 5 * 60 * 1000;
-    const diff = now - lastShare;
-
-    const btns = ['share-rating-btn', 'share-best-btn', 'share-prev-btn'];
-    const profileTimer = get('share-cooldown-timer');
-
-    if (diff < cooldown) {
-        const remaining = Math.ceil((cooldown - diff) / 1000);
-        const min = Math.floor(remaining / 60);
-        const sec = remaining % 60;
-        const timeStr = `${min}:${sec < 10 ? '0' : ''}${sec}`;
-
-        btns.forEach(id => {
-            const b = get(id);
-            if (b) {
-                b.disabled = true;
-                b.dataset.originalText = b.dataset.originalText || b.textContent;
-                b.textContent = `⏳ ${timeStr}`;
-            }
-        });
-        if (profileTimer) {
-            profileTimer.textContent = `გაზიარება: ${timeStr}`;
-            profileTimer.parentElement.classList.remove('hidden');
-        }
-    } else {
-        btns.forEach(id => {
-            const b = get(id);
-            if (b && b.dataset.originalText) {
-                b.disabled = false;
-                b.textContent = b.dataset.originalText;
-            }
-        });
-        if (profileTimer) profileTimer.parentElement.classList.add('hidden');
-    }
-}
-setInterval(updateShareButtonsUI, 1000);
 
 
 
@@ -689,7 +621,7 @@ function initUI() {
 
     // End Game Button
     get('end-game-btn').onclick = () => {
-        if (confirm("ნამდვილად გსურთ თამაშის დასრულება?")) {
+        if (confirm("ნამდვილად გსურთ თამაშის დასრულება? შედეგი ავტომატურად შეინახება.")) {
             gameOver();
         }
     };
@@ -741,39 +673,17 @@ function initUI() {
     };
     get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
 
-    // Share Rating Button (from Game Over modal)
-    get('share-rating-btn').onclick = async () => {
-        const survival = Math.floor((Date.now() - startTime) / 1000);
-
-        // Restriction Check
-        if (userEmail && userEmail.startsWith('guest_')) {
-            get('restricted-modal').classList.remove('hidden');
-            return;
+    // Restart Logic
+    const handleRestart = () => {
+        if (userEmail && !userEmail.startsWith('guest_')) {
+            startGameSession();
+            get('defeat-modal').classList.add('hidden');
+            document.querySelectorAll('.stain').forEach(s => s.remove());
+        } else {
+            location.reload();
         }
-
-        // Disable button to prevent double clicks
-        const btn = get('share-rating-btn');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'ზიარდება... ⌛';
-        }
-
-        await shareScore(Math.floor(score), survival);
-
-        showStatusUpdate('შედეგი გაზიარდა! ვრესტარტდებით... 🔄');
-        setTimeout(() => {
-            if (userEmail && !userEmail.startsWith('guest_')) {
-                // If registered, just restart logic without reload or check persistence
-                startGameSession(); // Default resets round
-                get('defeat-modal').classList.add('hidden');
-                get('ratings-modal').classList.add('hidden');
-                // We need to clear stains though
-                document.querySelectorAll('.stain').forEach(s => s.remove());
-            } else {
-                location.reload();
-            }
-        }, 2000);
     };
+    get('restart-game-btn').onclick = handleRestart;
 
     // --- Profile Management Listeners ---
 
@@ -965,15 +875,7 @@ function initUI() {
     get('close-shop').onclick = () => get('shop-modal').classList.add('hidden');
     get('close-settings').onclick = () => get('settings-modal').classList.add('hidden');
 
-    get('restart-game-btn').onclick = () => {
-        if (userEmail && !userEmail.startsWith('guest_')) {
-            startGameSession(); // Default resets round state
-            get('defeat-modal').classList.add('hidden');
-            document.querySelectorAll('.stain').forEach(s => s.remove());
-        } else {
-            location.reload();
-        }
-    };
+    // Redundant restart removed
 
     get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
     get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');
@@ -1840,6 +1742,9 @@ function gameOver() {
 
     saveStatsToLocal();
     syncUserData(true); // Final sync
+
+    // 📊 Auto-share result to global rankings
+    shareScore(Math.floor(score), survival);
 }
 
 async function reviveGame() {
