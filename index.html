@@ -65,9 +65,10 @@
             </div>
         </div>
 
-        <div class="info-text">
-            <h1 id="diff-status">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <div class="info-text"
+            style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 4000;">
+            <h1 id="diff-status" style="margin-bottom: 10px;">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
+            <div style="display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
                 <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
                 <button id="end-game-btn" class="glass-btn"
                     style="background: rgba(255, 77, 77, 0.2); color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">🏁
@@ -77,7 +78,7 @@
     </div>
 
     <!-- Global Chat (Left) -->
-    <div id="global-chat" class="chat-container glass">
+    <div id="global-chat" class="chat-container glass side-collapsed">
         <button id="chat-side-toggle" class="chat-toggle-side">💬</button>
         <div class="chat-content-wrapper">
             <div class="chat-header">
