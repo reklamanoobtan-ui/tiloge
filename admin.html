@@ -518,20 +518,26 @@
             <!-- EVENTS TAB -->
             <div id="tab-events" class="tab-content">
                 <div class="header-bar">
-                    <h2>🎉 Global Events (5 წუთი)</h2>
+                    <h2>🎉 Global Events Management</h2>
                 </div>
                 <div class="card" style="margin-bottom: 25px;">
-                    <h3>🌍 Multiplier Events</h3>
-                    <div class="flex-row mt-10" style="flex-wrap: wrap;">
-                        <button class="btn btn-primary" id="mult-2">2X Score</button>
-                        <button class="btn btn-primary" id="mult-4">4X Score</button>
-                        <button class="btn btn-primary" id="mult-6">6X Score</button>
-                        <button class="btn btn-primary" id="mult-8">8X Score</button>
+                    <h3>🌍 Custom Multiplier Configuration</h3>
+                    <div style="margin-top: 15px;">
+                        <label style="display:block; margin-bottom:5px; opacity:0.8;">Multiplier Amount (X):</label>
+                        <input type="number" id="event-mult" class="search-input"
+                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"
+                            value="2" min="1">
+
+                        <label style="display:block; margin-bottom:5px; opacity:0.8;">Duration (Minutes):</label>
+                        <input type="number" id="event-duration" class="search-input"
+                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"
+                            value="10" min="1">
+
+                        <button class="btn btn-gold full-width" id="start-custom-event"
+                            style="font-weight: bold; font-size: 1.1rem;">🚀 START EVENT</button>
+                        <button class="btn btn-danger full-width mt-10" id="stop-events"
+                            style="margin-top: 10px; opacity: 0.8;">🛑 STOP ALL EVENTS</button>
                     </div>
-                </div>
-                <div class="card">
-                    <h3>🎭 Visual Events</h3>
-                    <button class="btn btn-gold mt-10" id="btn-rainbow" style="width: 200px;">🌈 Rainbow Mode</button>
                 </div>
             </div>
 
@@ -672,24 +678,34 @@
             } catch (e) { log('Error', 'red'); }
         };
 
-        const triggerEvent = async (type, val) => {
+        const triggerEvent = async (type, val, duration) => {
             try {
+                const expireDate = new Date(Date.now() + duration * 60000);
                 await sql`DELETE FROM global_events WHERE event_type = ${type}`;
                 await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                          VALUES (${type}, ${val.toString()}, NOW() + INTERVAL '5 minutes')`;
+                          VALUES (${type}, ${val.toString()}, ${expireDate.toISOString()})`;
 
-                const msg = type === 'multiplier' ? `🌍 GLOBAL ${val}X SCORE ACTIVE! ✨` : `🌈 GLOBAL RAINBOW EVENT ACTIVE! ✨`;
+                const msg = `🌍 GLOBAL ${val}X SCORE ACTIVE FOR ${duration} MINUTES! ✨`;
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
-                log(`Triggered ${type} ${val}`);
+                log(`Triggered ${val}X for ${duration}m`);
                 updateBonusTimer();
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
         };
 
-        get('mult-2').onclick = () => triggerEvent('multiplier', 2);
-        get('mult-4').onclick = () => triggerEvent('multiplier', 4);
-        get('mult-6').onclick = () => triggerEvent('multiplier', 6);
-        get('mult-8').onclick = () => triggerEvent('multiplier', 8);
-        get('btn-rainbow').onclick = () => triggerEvent('rainbow', 'on');
+        get('start-custom-event').onclick = () => {
+            const mult = parseInt(get('event-mult').value) || 2;
+            const dur = parseInt(get('event-duration').value) || 10;
+            triggerEvent('multiplier', mult, dur);
+        };
+
+        get('stop-events').onclick = async () => {
+            if (!confirm('Stop all active events?')) return;
+            try {
+                await sql`DELETE FROM global_events`;
+                log('🛑 Events Stopped', 'orange');
+                updateBonusTimer();
+            } catch (e) { log('Error', 'red'); }
+        };
 
         get('restart-site').onclick = async () => {
             if (confirm("⚠️ ნამდვილად გსურთ მთელი საიტის რესტარტი? ყველა მოთამაშე გადატვირთულ იქნება!")) {
