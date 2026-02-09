@@ -520,41 +520,144 @@
                 <div class="header-bar">
                     <h2>🎉 Global Events Management</h2>
                 </div>
-                <div class="card" style="margin-bottom: 25px;">
-                    <h3>🌍 თამაშის წესები და ივენთები</h3>
-                    <div style="margin-top: 15px;">
-                        <label style="display:block; margin-bottom:5px; opacity:0.8;">აირჩიე წესი / ივენთი:</label>
-                        <select id="event-type" class="search-input"
-                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
-                            <option value="multiplier">ქულების მამრავლი (X)</option>
-                            <option value="player_strength">მოთამაშის ძალა (X)</option>
-                            <option value="player_radius">მოთამაშის რადიუსი (X)</option>
-                            <option value="coin_mult">ქოინების მამრავლი (X)</option>
-                            <option value="crisis_time">კრიზისის დრო (წამები)</option>
-                            <option value="spawn_interval">გაჩენის სიჩქარე (MS - ნაკლები=სწრაფი)</option>
-                            <option value="boss_limit">ბოსების ლიმიტი (რაოდენობა)</option>
-                            <option value="stain_limit">ლაქების ლიმიტი (რაოდენობა)</option>
-                            <option value="boss_hp">ბოსის სიცოცხლე (HP)</option>
-                            <option value="soap_thresh">საპნის სიხშირე (ქულები)</option>
-                            <option value="minigame_thresh">მინი-თამაშის სიხშირე (ქულები)</option>
-                            <option value="rainbow">🌈 Rainbow რეჟიმი</option>
-                        </select>
+                <style>
+                    .dashboard-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 15px;
+                    }
 
-                        <label style="display:block; margin-bottom:5px; opacity:0.8;">მნიშვნელობა (Value):</label>
-                        <input type="text" id="event-value" class="search-input"
-                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"
-                            placeholder="მაგ: 2 (X), 500 (MS), 5000 (HP)...">
+                    .mini-card {
+                        padding: 15px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 10px;
+                    }
 
-                        <label style="display:block; margin-bottom:5px; opacity:0.8;">ხანგრძლივობა (წუთებში):</label>
-                        <input type="number" id="event-duration" class="search-input"
-                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"
-                            value="10" min="1">
+                    .mini-label {
+                        display: block;
+                        font-size: 0.8rem;
+                        opacity: 0.7;
+                        margin-bottom: 5px;
+                    }
+                </style>
 
-                        <button class="btn btn-gold full-width" id="start-custom-event"
-                            style="font-weight: bold; font-size: 1.1rem;">🚀 წესის გაშვება</button>
-                        <button class="btn btn-danger full-width mt-10" id="stop-events"
-                            style="margin-top: 10px; opacity: 0.8;">🛑 ყველა ცვლილების გაუქმება</button>
+                <div class="card" style="margin-bottom: 25px; background: rgba(0,0,0,0.3);">
+                    <h3>🌍 გლობალური მართვის პანელი</h3>
+
+                    <div
+                        style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; gap: 10px;">
+                        <label>⏱️ ყველას ხანგრძლივობა (წუთები):</label>
+                        <input type="number" id="global-duration" class="search-input" value="10"
+                            style="width: 80px; text-align: center; padding: 5px;">
                     </div>
+
+                    <!-- Player & Economy -->
+                    <h4
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ffd700;">
+                        👤 მოთამაშე & ეკონომიკა</h4>
+                    <div class="dashboard-grid">
+                        <div class="mini-card">
+                            <span class="mini-label">💪 ძალა (X)</span>
+                            <input type="number" id="val-strength" class="search-input" value="2"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">📏 რადიუსი (X)</span>
+                            <input type="number" id="val-radius" class="search-input" value="2"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">💰 ქოინები (X)</span>
+                            <input type="number" id="val-coin" class="search-input" value="2"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-gold full-width"
+                                onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">🌍 ქულები (X)</span>
+                            <input type="number" id="val-score" class="search-input" value="2"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-gold full-width"
+                                onclick="quickTrigger('multiplier', 'val-score')">SET</button>
+                        </div>
+                    </div>
+
+                    <!-- Enemies -->
+                    <h4
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff4d4d;">
+                        ☠️ მტრები & გარემო</h4>
+                    <div class="dashboard-grid">
+                        <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
+                            <span class="mini-label">☠️ ბოსის HP</span>
+                            <input type="number" id="val-bosshp" class="search-input" value="10000"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-danger full-width"
+                                onclick="quickTrigger('boss_hp', 'val-bosshp')">SET HP</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
+                            <span class="mini-label">⚡ გაჩენის დრო (ms)</span>
+                            <input type="number" id="val-spawn" class="search-input" value="500" placeholder="Low=Fast"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-danger full-width"
+                                onclick="quickTrigger('spawn_interval', 'val-spawn')">SPEED</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
+                            <span class="mini-label">🔢 ბოსების ლიმიტი</span>
+                            <input type="number" id="val-bosslimit" class="search-input" value="20"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-danger full-width"
+                                onclick="quickTrigger('boss_limit', 'val-bosslimit')">LIMIT</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
+                            <span class="mini-label">🧹 ლაქების ლიმიტი</span>
+                            <input type="number" id="val-stainlimit" class="search-input" value="200"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-danger full-width"
+                                onclick="quickTrigger('stain_limit', 'val-stainlimit')">LIMIT</button>
+                        </div>
+                    </div>
+
+                    <!-- Logic -->
+                    <h4
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe;">
+                        🎮 ლოგიკა & ივენთები</h4>
+                    <div class="dashboard-grid">
+                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                            <span class="mini-label">⚠️ კრიზისის დრო (წმ)</span>
+                            <input type="number" id="val-crisis" class="search-input" value="10"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                            <span class="mini-label">🧼 საპნის სიხშირე</span>
+                            <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('soap_thresh', 'val-soap')">THRESH</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                            <span class="mini-label">🎮 მინი-თამაში</span>
+                            <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('minigame_thresh', 'val-minigame')">THRESH</button>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">🌈 ივენთი</span>
+                            <button class="btn btn-gold full-width" style="margin-top:28px;"
+                                onclick="quickTrigger('rainbow', '1')">🌈 RAINBOW</button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger full-width mt-20" id="stop-events"
+                        style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ცვლილების გაუქმება
+                        (RESET)</button>
                 </div>
             </div>
 
@@ -724,10 +827,9 @@
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
         };
 
-        get('start-custom-event').onclick = () => {
-            const type = get('event-type').value;
-            const val = get('event-value').value || '0';
-            const dur = parseInt(get('event-duration').value) || 10;
+        window.quickTrigger = (type, inputId) => {
+            const val = inputId === '1' ? '1' : (get(inputId)?.value || '0');
+            const dur = parseInt(get('global-duration').value) || 10;
             triggerEvent(type, val, dur);
         };
 
