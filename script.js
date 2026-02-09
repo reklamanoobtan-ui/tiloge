@@ -443,6 +443,7 @@ let last10Videos = [];
 let videoPopupTimers = [];
 let videoTimings = [10, 30, 60, 300];
 let videoLoopInterval = 300;
+let globalForcedVideo = null; // {id, title, thumb, link}
 
 function updateScore(points) {
     if (!gameActive) return;
@@ -2132,6 +2133,7 @@ async function checkGlobalEvents() {
         globalBossImage = null;
         globalBossScale = 1.0;
         globalUpgradeFactor = 1.3;
+        globalForcedVideo = null;
 
         document.body.classList.remove('global-rainbow');
         // Clear all site effects before re-applying
@@ -2181,6 +2183,9 @@ async function checkGlobalEvents() {
             }
             if (ev.event_type === 'video_timings') { videoTimings = ev.event_value.split(',').map(Number); startVideoScheduler(); }
             if (ev.event_type === 'video_loop') { videoLoopInterval = parseInt(ev.event_value); startVideoScheduler(); }
+            if (ev.event_type === 'forced_video') {
+                try { globalForcedVideo = JSON.parse(ev.event_value); } catch (e) { }
+            }
 
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
@@ -2353,8 +2358,17 @@ function showVideoPopup() {
         rand -= ch.weight;
     }
 
-    const videos = allChannelVideos[selectedChannelId];
-    const vid = videos[Math.floor(Math.random() * videos.length)];
+    let vid;
+    if (globalForcedVideo) {
+        vid = {
+            guid: `forced:${globalForcedVideo.id}`,
+            title: globalForcedVideo.title || "საინტერესო ვიდეო",
+            link: globalForcedVideo.link || `https://www.youtube.com/watch?v=${globalForcedVideo.id}`
+        };
+    } else {
+        const videos = allChannelVideos[selectedChannelId];
+        vid = videos[Math.floor(Math.random() * videos.length)];
+    }
 
     const popup = get('video-notification');
     const thumb = get('video-thumb');

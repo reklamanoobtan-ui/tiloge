@@ -929,6 +929,19 @@
                     </div>
                     <button class="btn btn-danger full-width" onclick="saveVideoConfig()">🚀 UPDATE MULTI-CHANNEL
                         CONFIG</button>
+
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px dashed rgba(255, 0, 0, 0.3);">
+                        <span class="mini-label">🎯 კონკრეტული ვიდეოს ლინკი (პრიორიტეტი) <span id="cur-forced-video"
+                                class="cur-val" style="color: lime;"></span></span>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="val-forced-video" class="search-input"
+                                placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
+                            <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET VIDEO</button>
+                        </div>
+                        <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">გათიშვა (BACK TO
+                            CHANNELS)</button>
+                    </div>
                 </div>
 
                 <div class="dashboard-grid mt-10">
@@ -1228,6 +1241,7 @@
                     if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
                     if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
                     if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
+                    if (ev.event_type === 'forced_video') get('cur-forced-video').textContent = `(ACTIVE)`;
                     if (ev.event_type === 'upgrade_config') get('val-upgrade-factor').value = ev.event_value;
                 });
             } catch (e) { }
@@ -1270,6 +1284,24 @@
             const dur = parseInt(get('global-duration').value) || 60;
             const config = { img, scale };
             triggerEvent('boss_config', JSON.stringify(config), dur);
+        };
+
+        window.saveForcedVideo = async () => {
+            const url = get('val-forced-video').value.trim();
+            if (!url) return alert("შეიყვანეთ ლინკი");
+
+            let videoId = '';
+            try {
+                if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+                else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+                else videoId = url; // assume raw ID
+            } catch (e) { return alert("არასწორი ლინკი"); }
+
+            if (!videoId) return alert("ID ვერ მოიძებნა");
+
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { id: videoId, link: url };
+            triggerEvent('forced_video', JSON.stringify(config), dur);
         };
 
         get('stop-events').onclick = async () => {
