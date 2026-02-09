@@ -16,7 +16,7 @@ from datetime import datetime
 OLD_DB_URL = "postgresql://old_user:old_pass@old-host/old_db?sslmode=require"
 
 # NEW DATABASE (ახალი)
-NEW_DB_URL = "postgresql://new_user:new_pass@new-host/new_db?sslmode=require"
+NEW_DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 
 async def migrate_users(old_conn, new_conn):
