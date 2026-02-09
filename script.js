@@ -1945,6 +1945,7 @@ window.onload = async () => {
         document.body.classList.remove('auth-visual-open');
     };
     get('close-auth').onclick = closeAuth;
+    if (get('skip-minigame')) get('skip-minigame').onclick = skipMinigame;
     get('close-restricted').onclick = () => get('restricted-modal').classList.add('hidden');
     get('not-now-btn').onclick = () => get('restricted-modal').classList.add('hidden');
     get('go-to-register-btn').onclick = () => {
@@ -2363,6 +2364,15 @@ function failMinigame() {
     get('minigame-modal').classList.add('hidden');
     isMinigameActive = false;
     showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 3,750 ქულაზე. ⌛');
+    gameActive = true;
+    scheduleNextStain();
+}
+
+function skipMinigame() {
+    clearInterval(minigameTimer);
+    get('minigame-modal').classList.add('hidden');
+    isMinigameActive = false;
+    showStatusUpdate('გამოტოვებულია ⏩');
     gameActive = true;
     scheduleNextStain();
 }
