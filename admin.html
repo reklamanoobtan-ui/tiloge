@@ -1,209 +1,563 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tilo.life - Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
+        :root {
+            --primary: #4facfe;
+            --secondary: #00f2fe;
+            --accent: #ffd700;
+            --danger: #ff4d4d;
+            --bg: #0a0a0c;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'Outfit', sans-serif;
         }
 
-        .admin-container {
+        body {
+            background: var(--bg);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Login Section --- */
+        #login-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a2e 100%);
+        }
+
+        .login-card {
             background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
             width: 100%;
-            max-width: 600px;
-        }
-
-        h1 {
+            max-width: 450px;
             text-align: center;
-            color: #ff4d4d;
-            margin-bottom: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
 
-        .section {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .login-card h1 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         input {
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            width: 60%;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+            outline: none;
+            transition: 0.3s;
         }
 
-        button {
+        input:focus {
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Admin Layout --- */
+        #admin-controls {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            border-radius: 12px;
             cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 8px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: rgba(79, 172, 254, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(79, 172, 254, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+        }
+
+        .header-bar {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-bar h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        /* Cards & Grids */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+
+        /* Tabs Logic */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Buttons Custom */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
             border: none;
-            font-weight: bold;
-            transition: 0.2s;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
         }
 
-        button:hover {
-            opacity: 0.8;
-        }
-
-        .btn-red {
-            background: #ff4d4d;
-            color: white;
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
         }
 
         .btn-gold {
-            background: #ffd700;
-            color: black;
+            background: var(--accent);
+            color: #000;
         }
 
-        .btn-blue {
-            background: #4facfe;
-            color: white;
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
         }
 
-        .status {
-            margin-top: 10px;
-            height: 20px;
-            font-size: 0.9rem;
-            text-align: center;
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #fff;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Player List & Database */
+        .search-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .players-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .player-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            transition: 0.2s;
-        }
-
-        .player-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
         .player-card.vip {
-            border-color: #ffd700;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
         }
 
-        .player-stat {
+        .player-details {
+            margin-bottom: 15px;
+        }
+
+        .player-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-badge {
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 8px;
+            margin-right: 5px;
+            margin-top: 5px;
             display: inline-block;
-            margin-right: 15px;
-            font-size: 0.85rem;
         }
 
-        .player-stat strong {
-            color: #4facfe;
+        .stat-badge strong {
+            color: var(--primary);
+        }
+
+        /* Status Toast */
+        #status-msg {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border: 1px solid var(--border);
+            display: none;
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* UI Helpers */
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mt-10 {
+            margin-top: 10px;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            outline: none;
         }
     </style>
 </head>
 
 <body>
 
-
-    <div id="login-section" class="admin-container" style="text-align: center;">
-        <h1>🛡️ ADMIN LOGIN</h1>
-        <input type="password" id="admin-pass" placeholder="Enter Admin Password"
-            style="width: 80%; margin-bottom: 20px;">
-        <br>
-        <button class="btn-red" id="login-btn">LOGIN</button>
-        <p id="login-status" style="margin-top: 10px;"></p>
+    <!-- LOGIN SECTION -->
+    <div id="login-section">
+        <div class="login-card">
+            <h1>🛡️ TILO ADMIN</h1>
+            <input type="password" id="admin-pass" placeholder="შეიყვანეთ პაროლი">
+            <button class="btn btn-primary full-width" id="login-btn">შესვლა</button>
+            <p id="login-status" style="margin-top: 20px; color: var(--danger); font-size: 0.9rem;"></p>
+        </div>
     </div>
 
-    <div id="admin-controls" class="admin-container" style="display: none;">
-        <h1>🛡️ ADMIN CONTROL</h1>
-
-        <div class="section">
-            <h3>Player Management</h3>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="text" id="target-nick" placeholder="Enter Nickname...">
+    <!-- MAIN ADMIN PANEL -->
+    <div id="admin-controls" style="display: none;">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">T</div>
+                <h2 style="font-size: 1.2rem;">ADMIN PANEL</h2>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn-gold" id="give-coins">+1000 Coins</button>
-                <button class="btn-blue" id="give-vip">Grant VIP</button>
-                <button class="btn-red" id="ban-user">BAN / RESET</button>
+
+            <div class="nav-items">
+                <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
+                <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
+                <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
+                <div class="nav-item" data-tab="events">🎉 ივენთები</div>
+                <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
+            </div>
+
+            <div style="margin-top: auto;">
+                <button class="btn btn-outline full-width" onclick="location.reload()">🔒 გამოსვლა</button>
             </div>
         </div>
 
-        <div class="section">
-            <h3>System Control</h3>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="text" id="broadcast-msg" placeholder="System Message..." style="width: 70%;">
-                <button class="btn-blue" id="send-broadcast">Broadcast</button>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="header-bar">
+                    <h2>📊 Dashboard</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>⚡ სწრაფი მართვა</h3>
+                        <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.9rem;">მოთამაშის მონაცემების სწრაფი
+                            ცვლილება</p>
+                        <input type="text" id="target-nick" placeholder="მოთამაშის ნიკნეიმი...">
+                        <div class="flex-row mt-10" style="flex-wrap: wrap;">
+                            <button class="btn btn-gold" id="give-coins">🪙 +1000 Coins</button>
+                            <button class="btn btn-primary" id="give-vip">👑 Grant VIP</button>
+                            <button class="btn btn-danger" id="ban-user">🚫 BAN ACCOUNT</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>💬 Broadcast Message</h3>
+                        <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.9rem;">გაგზავნეთ შეტყობინება
+                            ყველასთვის ჩატში</p>
+                        <input type="text" id="broadcast-msg" placeholder="რა დავწეროთ?">
+                        <button class="btn btn-primary full-width mt-10" id="send-broadcast">🚀 გაგზავნა</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>📉 აქტიური ბონუსი</h3>
+                        <div id="active-bonus-timer"
+                            style="display: none; background: rgba(255,215,0,0.1); padding: 20px; border-radius: 15px; border: 1px solid var(--accent);">
+                            <p style="color: var(--accent); font-weight: 800; font-size: 1.1rem;" id="bonus-name">
+                                Multiplier Active</p>
+                            <p style="font-size: 2rem; font-weight: 800;" id="bonus-time-left">0:00</p>
+                        </div>
+                        <div id="no-bonus-msg" style="text-align: center; opacity: 0.3; padding: 20px;">
+                            ამჟამად აქტიური ბონუსი არ არის
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="margin-top: 15px;">
-                <button class="btn-red" id="reset-lb" style="width: 100%;">⚠ RESET LEADERBOARD ⚠</button>
+
+            <!-- PLAYERS TAB -->
+            <div id="tab-players" class="tab-content">
+                <div class="header-bar">
+                    <h2>👥 მომხმარებლების ბაზა</h2>
+                    <div class="flex-row">
+                        <span>სულ: <strong id="total-players" style="color: var(--primary);">0</strong></span>
+                        <button class="btn btn-outline" id="refresh-players">🔄 განახლება</button>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="search-player" placeholder="ძებნა ნიკნეიმით ან იმეილით..."
+                        style="margin-bottom: 0;">
+                    <select id="sort-players">
+                        <option value="score">დაალაგე ქულებით</option>
+                        <option value="coins">დაალაგე ქოინებით</option>
+                        <option value="time">დაალაგე დროით</option>
+                        <option value="nickname">დაალაგე ნიკნეიმით</option>
+                    </select>
+                </div>
+
+                <div id="players-list" class="players-container">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- SYSTEMS TAB -->
+            <div id="tab-systems" class="tab-content">
+                <div class="header-bar">
+                    <h2>⚙️ სისტემური მართვა</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>🧹 მონაცემების გასუფთავება</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ამ მოქმედების გაუქმება შეუძლებელია!</p>
+                        <button class="btn btn-danger full-width" id="reset-lb">⚠ RESET LEADERBOARD ⚠</button>
+                    </div>
+                    <div class="card">
+                        <h3>📡 კავშირის ტესტი</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">შეამოწმეთ Database-თან კავშირი და ცხრილების
+                            მდგომარეობა</p>
+                        <button class="btn btn-outline full-width" id="test-db-btn">🔍 DATABASE TEST</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS TAB -->
+            <div id="tab-events" class="tab-content">
+                <div class="header-bar">
+                    <h2>🎉 Global Events (5 წუთი)</h2>
+                </div>
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🌍 Multiplier Events</h3>
+                    <div class="flex-row mt-10" style="flex-wrap: wrap;">
+                        <button class="btn btn-primary" id="mult-2">2X Score</button>
+                        <button class="btn btn-primary" id="mult-4">4X Score</button>
+                        <button class="btn btn-primary" id="mult-6">6X Score</button>
+                        <button class="btn btn-primary" id="mult-8">8X Score</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>🎭 Visual Events</h3>
+                    <button class="btn btn-gold mt-10" id="btn-rainbow" style="width: 200px;">🌈 Rainbow Mode</button>
+                </div>
+            </div>
+
+            <!-- CRITICAL TAB -->
+            <div id="tab-critical" class="tab-content">
+                <div class="header-bar">
+                    <h2 style="color: var(--danger);">⚠️ კრიტიკული მოქმედებები</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card" style="border-color: var(--accent);">
+                        <h3 style="color: var(--accent);">🚀 DATABASE SETUP</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ახალი Database-ის გამართვა და ცხრილების შექმნა ერთ
+                            კლიკში.</p>
+                        <button class="btn btn-gold full-width" id="run-setup-btn">RUN SETUP SCRIPT</button>
+                    </div>
+                    <div class="card" style="border-color: var(--danger);">
+                        <h3 style="color: var(--danger);">🔥 SITE RESTART</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის გვერდის გადატვირთვა და სესიების
+                            გაწყვეტა.</p>
+                        <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="section">
-            <h3>Global Events (5 Min)</h3>
-            <div id="active-bonus-timer"
-                style="background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none;">
-                <strong style="color: #ffd700;">🎉 აქტიური ბონუსი:</strong> <span id="bonus-name"></span><br>
-                <strong>დარჩენილი დრო:</strong> <span id="bonus-time-left">0:00</span>
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                <button class="btn-blue" id="mult-2">2X Score</button>
-                <button class="btn-blue" id="mult-4">4X Score</button>
-                <button class="btn-blue" id="mult-6">6X Score</button>
-                <button class="btn-blue" id="mult-8">8X Score</button>
-                <button class="btn-gold" id="btn-rainbow">🌈 Rainbow</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>👥 მომხმარებლების ბაზა</h3>
-            <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="search-player" placeholder="ძებნა ნიკნეიმით ან იმეილით..." style="flex: 1;">
-                <select id="sort-players"
-                    style="background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px;">
-                    <option value="score">დაალაგე ქულებით</option>
-                    <option value="coins">დაალაგე ქოინებით</option>
-                    <option value="time">დაალაგე დროით</option>
-                    <option value="nickname">დაალაგე ნიკნეიმით</option>
-                </select>
-                <button class="btn-blue" id="refresh-players">🔄 განახლება</button>
-            </div>
-            <div id="players-list"
-                style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;">
-                <p style="text-align: center; opacity: 0.5;">მოთამაშეები იტვირთება...</p>
-            </div>
-            <div
-                style="margin-top: 10px; text-align: center; font-size: 0.9rem; opacity: 0.7; display: flex; justify-content: center; gap: 15px; align-items: center;">
-                <span>სულ მომხმარებელი: <span id="total-players">0</span></span>
-                <button id="test-db-btn"
-                    style="background: none; border: 1px solid #555; color: #777; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; cursor: pointer;">🔍
-                    Test Connection</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>⚠️ Critical Actions</h3>
-            <div style="display: flex; gap: 10px; margin-top: 10px; flex-direction: column;">
-                <button class="btn-gold" id="run-setup-btn" style="width: 100%; margin-bottom: 10px;">🚀 RUN DATABASE
-                    SETUP (One-Click)</button>
-                <button class="btn-red" id="restart-site" style="width: 100%;">🔄 RESTART SITE</button>
-            </div>
-        </div>
-
-        <div class="status" id="status-msg"></div>
     </div>
+
+    <!-- Status Messages -->
+    <div id="status-msg"></div>
 
     <script type="module">
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
@@ -212,37 +566,49 @@
         const get = (id) => document.getElementById(id);
         const status = get('status-msg');
 
-        function log(msg, color = 'green') {
+        function log(msg, color = 'var(--primary)') {
             status.textContent = msg;
-            status.style.color = color;
-            setTimeout(() => status.textContent = '', 3000);
+            status.style.display = 'block';
+            status.style.borderLeft = `5px solid ${color}`;
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 4000);
         }
 
+        // --- Tabs Logic ---
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.onclick = () => {
+                const target = item.dataset.tab;
+
+                // Update nav
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                get(`tab-${target}`).classList.add('active');
+
+                // Auto-load players if entering players tab
+                if (target === 'players') loadPlayers();
+            };
+        });
+
         // Auth Logic
-        const doLogin = async () => {
+        get('login-btn').onclick = async () => {
             const pass = get('admin-pass').value.trim();
-            const status = get('login-status');
+            const loginStatus = get('login-status');
 
             if (!pass) return;
-            status.textContent = "Checking...";
+            loginStatus.textContent = "ამოწმებს...";
 
-            // Simple hardcoded password check
-            if (pass === "123123") {
+            if (pass === "unoobi123!123!") {
                 get('login-section').style.display = 'none';
-                get('admin-controls').style.display = 'block';
-                log("Logged in successfully", "green");
+                get('admin-controls').style.display = 'flex';
+                log('მოგესალმებით, ადმინ!', 'var(--primary)');
             } else {
-                status.textContent = "Access Denied";
-                status.style.color = "red";
-                console.log("Login failed with pass:", pass);
+                loginStatus.textContent = "პაროლი არასწორია!";
+                loginStatus.style.color = "var(--danger)";
             }
-        };
-
-        get('login-btn').onclick = doLogin;
-
-        // Support Enter key
-        get('admin-pass').onkeydown = (e) => {
-            if (e.key === 'Enter') doLogin();
         };
 
         get('give-coins').onclick = async () => {
@@ -295,7 +661,6 @@
 
         const triggerEvent = async (type, val) => {
             try {
-                // Upsert logic for events
                 await sql`DELETE FROM global_events WHERE event_type = ${type}`;
                 await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
                           VALUES (${type}, ${val.toString()}, NOW() + INTERVAL '5 minutes')`;
@@ -303,6 +668,7 @@
                 const msg = type === 'multiplier' ? `🌍 GLOBAL ${val}X SCORE ACTIVE! ✨` : `🌈 GLOBAL RAINBOW EVENT ACTIVE! ✨`;
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
                 log(`Triggered ${type} ${val}`);
+                updateBonusTimer();
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
         };
 
@@ -312,74 +678,50 @@
         get('mult-8').onclick = () => triggerEvent('multiplier', 8);
         get('btn-rainbow').onclick = () => triggerEvent('rainbow', 'on');
 
-        // Site Restart Function
         get('restart-site').onclick = async () => {
             if (confirm("⚠️ ნამდვილად გსურთ მთელი საიტის რესტარტი? ყველა მოთამაშე გადატვირთულ იქნება!")) {
                 try {
-                    // Clear all active events
                     await sql`DELETE FROM global_events`;
-
-                    // Send restart notification
                     await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 საიტი რესტარტდება 5 წამში...')`;
-
                     log("Restarting site in 5 seconds...", 'red');
-
-                    // Trigger restart for all clients
                     localStorage.setItem('tilo_force_reload', Date.now().toString());
-
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 5000);
-                } catch (e) {
-                    console.error(e);
-                    log('Error restarting site', 'red');
-                }
+                    setTimeout(() => { window.location.reload(); }, 5000);
+                } catch (e) { console.error(e); log('Error restarting site', 'red'); }
             }
         };
 
-        // Bonus Timer Monitoring
         async function updateBonusTimer() {
             try {
                 const events = await sql`SELECT event_type, event_value, expires_at FROM global_events WHERE expires_at > NOW() LIMIT 1`;
-
                 const timerDiv = get('active-bonus-timer');
+                const noMsg = get('no-bonus-msg');
                 const bonusName = get('bonus-name');
                 const timeLeft = get('bonus-time-left');
 
                 if (events.length > 0) {
                     const event = events[0];
-                    const expiresAt = new Date(event.expires_at);
-                    const now = new Date();
-                    const remainingMs = expiresAt - now;
-
+                    const remainingMs = new Date(event.expires_at) - new Date();
                     if (remainingMs > 0) {
-                        const minutes = Math.floor(remainingMs / 60000);
-                        const seconds = Math.floor((remainingMs % 60000) / 1000);
-
-                        bonusName.textContent = event.event_type === 'multiplier'
-                            ? `${event.event_value}X Score Multiplier`
-                            : 'Rainbow Event';
-                        timeLeft.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        const min = Math.floor(remainingMs / 60000);
+                        const sec = Math.floor((remainingMs % 60000) / 1000);
+                        bonusName.textContent = event.event_type === 'multiplier' ? `${event.event_value}X Score Bonus` : 'Rainbow Event';
+                        timeLeft.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
                         timerDiv.style.display = 'block';
+                        noMsg.style.display = 'none';
                     } else {
                         timerDiv.style.display = 'none';
+                        noMsg.style.display = 'block';
                     }
                 } else {
                     timerDiv.style.display = 'none';
+                    noMsg.style.display = 'block';
                 }
-            } catch (e) {
-                console.error('Timer update error:', e);
-            }
+            } catch (e) { console.error('Timer error:', e); }
         }
 
-        // Update timer every second
         setInterval(updateBonusTimer, 1000);
-        updateBonusTimer(); // Initial call
 
-        // ============================================
-        // PLAYERS DATABASE MANAGEMENT
-        // ============================================
-
+        // PLAYERS DB
         let allPlayers = [];
         let filteredPlayers = [];
 
@@ -388,218 +730,96 @@
                 const sortBy = get('sort-players').value;
                 let players;
 
-                // Use separate queries for each sort option to avoid sql.unsafe
                 if (sortBy === 'score') {
-                    players = await sql`
-                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
-                        FROM users
-                        ORDER BY score DESC
-                        LIMIT 200
-                    `;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 200`;
                 } else if (sortBy === 'coins') {
-                    players = await sql`
-                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
-                        FROM users
-                        ORDER BY coins DESC
-                        LIMIT 200
-                    `;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 200`;
                 } else if (sortBy === 'time') {
-                    players = await sql`
-                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
-                        FROM users
-                        ORDER BY survival_time DESC
-                        LIMIT 200
-                    `;
-                } else { // nickname
-                    players = await sql`
-                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
-                        FROM users
-                        ORDER BY nickname ASC
-                        LIMIT 200
-                    `;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 200`;
+                } else {
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 200`;
                 }
 
                 allPlayers = players;
                 filteredPlayers = players;
                 displayPlayers(filteredPlayers);
-
                 get('total-players').textContent = players.length;
-                log(`Loaded ${players.length} players (including guests)`);
             } catch (e) {
                 console.error(e);
-                log('Error loading players: ' + e.message, 'red');
-                get('players-list').innerHTML = '<p style="text-align: center; color: #ff4d4d;">Error loading players. Check console.</p>';
+                log('მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
             }
         }
 
         function displayPlayers(players) {
             const container = get('players-list');
-
             if (players.length === 0) {
-                container.innerHTML = '<p style="text-align: center; opacity: 0.5;">მოთამაშეები ვერ მოიძებნა</p>';
+                container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">მოთამაშეები ვერ მოიძებნა</p>';
                 return;
             }
 
             container.innerHTML = players.map(player => {
                 const isGuest = player.email.startsWith('guest_');
-                const vipClass = player.is_vip ? 'vip' : '';
-                const vipBadge = player.is_vip ? '👑 ' : '';
-                const guestBadge = isGuest ? '<span style="font-size: 0.7rem; background: #555; padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle;">GUEST</span>' : '';
                 const timeFormatted = formatTime(player.survival_time);
-                const lastActive = player.last_active ? new Date(player.last_active).toLocaleString() : 'Never';
+                const lastActive = player.last_active ? new Date(player.last_active).toLocaleString('ka-GE') : 'არასდროს';
 
                 return `
-                    <div class="player-card ${vipClass}" style="${isGuest ? 'opacity: 0.9;' : ''}">
-                        <div style="margin-bottom: 8px;">
-                            <strong style="font-size: 1.1rem; color: ${player.is_vip ? '#ffd700' : '#fff'};">
-                                ${vipBadge}${player.nickname} ${guestBadge}
-                            </strong>
+                    <div class="player-card ${player.is_vip ? 'vip' : ''}">
+                        <div class="player-details">
+                            <div class="player-name">
+                                ${player.is_vip ? '👑 ' : ''}${player.nickname}
+                                ${isGuest ? '<span style="font-size: 0.65rem; background: #333; padding: 2px 6px; border-radius: 4px;">GUEST</span>' : ''}
+                            </div>
+                            <div style="font-size: 0.8rem; opacity: 0.5;">${player.email}</div>
                         </div>
-                        <div style="opacity: 0.7; font-size: 0.8rem; margin-bottom: 8px;">
-                            📧 ${player.email}
+                        <div class="stats">
+                            <span class="stat-badge">⭐ ქულა: <strong>${Math.floor(player.score)}</strong></span>
+                            <span class="stat-badge">🪙 ქოინი: <strong>${player.coins}</strong></span>
+                            <span class="stat-badge">⏱️ დრო: <strong>${timeFormatted}</strong></span>
                         </div>
-                        <div>
-                            <span class="player-stat">⭐ ქულა: <strong>${Math.floor(player.score)}</strong></span>
-                            <span class="player-stat">⏱️ დრო: <strong>${timeFormatted}</strong></span>
-                            <span class="player-stat">🪙 ქოინი: <strong>${player.coins}</strong></span>
-                        </div>
-                        <div style="margin-top: 5px; font-size: 0.75rem; opacity: 0.5;">
-                            ბოლოს აქტიური: ${lastActive}
-                        </div>
+                        <div style="margin-top: 15px; font-size: 0.7rem; opacity: 0.4;">აქტიური: ${lastActive}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-
-            if (hours > 0) {
-                return `${hours}h ${minutes}m ${secs}s`;
-            } else if (minutes > 0) {
-                return `${minutes}m ${secs}s`;
-            } else {
-                return `${secs}s`;
-            }
+        function formatTime(s) {
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
+            return h > 0 ? `${h}ს ${m}წ` : m > 0 ? `${m}წ ${sc}წ` : `${sc}წ`;
         }
 
-        function searchPlayers() {
-            const query = get('search-player').value.toLowerCase().trim();
-
-            if (!query) {
-                filteredPlayers = allPlayers;
-            } else {
-                filteredPlayers = allPlayers.filter(player =>
-                    player.nickname.toLowerCase().includes(query) ||
-                    player.email.toLowerCase().includes(query)
-                );
-            }
-
+        get('search-player').oninput = () => {
+            const q = get('search-player').value.toLowerCase().trim();
+            filteredPlayers = q ? allPlayers.filter(p => p.nickname.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)) : allPlayers;
             displayPlayers(filteredPlayers);
-        }
-
-        // Event listeners
-        get('refresh-players').onclick = loadPlayers;
-        get('sort-players').onchange = loadPlayers;
-        get('search-player').oninput = searchPlayers;
-
-        // Initial load
-        loadPlayers();
-
-        // Database Setup Executor
-        get('run-setup-btn').onclick = async () => {
-            if (!confirm("დარწმუნებული ხართ? ეს შექმნის ყველა საჭირო ცხრილს (არსებულს არ წაშლის).")) return;
-
-            log('Starting Database Setup...', 'gold');
-            try {
-                // 1. Users Table
-                await sql`
-                    CREATE TABLE IF NOT EXISTS users (
-                        id SERIAL PRIMARY KEY,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        password VARCHAR(255) NOT NULL,
-                        nickname VARCHAR(50) NOT NULL,
-                        score INTEGER DEFAULT 0,
-                        coins INTEGER DEFAULT 0,
-                        is_vip BOOLEAN DEFAULT FALSE,
-                        survival_time INTEGER DEFAULT 0,
-                        best_score INTEGER DEFAULT 0,
-                        last_active TIMESTAMP DEFAULT NOW(),
-                        created_at TIMESTAMP DEFAULT NOW()
-                    )
-                `;
-                log('✅ Users table created/verified');
-
-                // 2. Indexes
-                await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
-                await sql`CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC)`;
-
-                // 3. Chat Messages
-                await sql`
-                    CREATE TABLE IF NOT EXISTS chat_messages (
-                        id SERIAL PRIMARY KEY,
-                        nickname VARCHAR(50) NOT NULL,
-                        message TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT NOW()
-                    )
-                `;
-                log('✅ Chat table created/verified');
-
-                // 4. Global Events
-                await sql`
-                    CREATE TABLE IF NOT EXISTS global_events (
-                        id SERIAL PRIMARY KEY,
-                        event_type VARCHAR(50) NOT NULL,
-                        event_value VARCHAR(50) NOT NULL,
-                        expires_at TIMESTAMP NOT NULL,
-                        created_at TIMESTAMP DEFAULT NOW()
-                    )
-                `;
-                log('✅ Events table created/verified');
-
-                const msg = '🎉 DATABASE SETUP COMPLETE! All tables are ready.';
-                log(msg, 'green');
-                alert(msg);
-                loadPlayers(); // Refresh list
-            } catch (e) {
-                console.error(e);
-                const errorMsg = `❌ SETUP FAILED: ${e.message}`;
-                log(errorMsg, 'red');
-                alert(errorMsg);
-            }
         };
 
-        // Database Connection Tester
-        get('test-db-btn').onclick = async () => {
-            log('Testing database connection...', 'white');
+        get('refresh-players').onclick = loadPlayers;
+        get('sort-players').onchange = loadPlayers;
+
+        // DB SETUP
+        get('run-setup-btn').onclick = async () => {
+            if (!confirm("ნამდვილად გსურთ Database Setup?")) return;
+            log('Setup იწყება...', 'var(--accent)');
             try {
-                // 1. Check if we can talk to Neon
-                const result = await sql`SELECT 1 as test`;
-                if (!result || result[0].test !== 1) throw new Error('Query returned invalid results');
+                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, is_vip BOOLEAN DEFAULT FALSE, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+                await sql`CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC)`;
+                await sql`CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, nickname VARCHAR(50) NOT NULL, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS global_events (id SERIAL PRIMARY KEY, event_type VARCHAR(50) NOT NULL, event_value VARCHAR(50) NOT NULL, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
+                log('🎉 SETUP დასრულებულია!', 'green');
+                loadPlayers();
+            } catch (e) { log('Setup Error: ' + e.message, 'red'); }
+        };
 
-                // 2. Check table existence
+        get('test-db-btn').onclick = async () => {
+            log('კავშირის შემოწმება...', 'white');
+            try {
+                const res = await sql`SELECT 1 as test`;
                 const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
-                const tableNames = tables.map(t => t.table_name);
-
-                let message = `✅ Connection OK! Tables: ${tableNames.join(', ')}`;
-
-                if (!tableNames.includes('users')) {
-                    message = `❌ ERROR: 'users' table not found! Run database_setup.sql`;
-                    log(message, 'red');
-                } else {
-                    const count = await sql`SELECT COUNT(*) FROM users`;
-                    message += ` (Total Users: ${count[0].count})`;
-                    log(message, 'green');
-                }
-                alert(message);
-            } catch (e) {
-                console.error(e);
-                const errorMsg = `❌ DB ERROR: ${e.message}`;
-                log(errorMsg, 'red');
-                alert(errorMsg + "\n\nCheck if your Neon connection string in admin.html is correct!");
-            }
+                const tNames = tables.map(t => t.table_name);
+                alert(`✅ კავშირი OK!\nცხრილები: ${tNames.join(', ')}`);
+                log('კავშირი წარმატებულია', 'green');
+            } catch (e) { log('DB Error', 'red'); alert('შეცდომა: ' + e.message); }
         };
 
     </script>
