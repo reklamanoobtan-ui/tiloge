@@ -2,7 +2,8 @@
 // 🛡️ SECURITY & ANTI-CHEAT SYSTEM
 // ============================================
 
-// Anti-DevTools Detection
+// Anti-DevTools Detection (DISABLED)
+/*
 (function () {
     const devtools = { open: false };
     const threshold = 160;
@@ -13,16 +14,18 @@
             if (!devtools.open) {
                 devtools.open = true;
                 console.clear();
-                alert('⚠️ Developer Tools-ის გამოყენება აკრძალულია! თამაში შეჩერდება.');
-                if (typeof gameActive !== 'undefined') gameActive = false;
+                // alert('⚠️ Developer Tools-ის გამოყენება აკრძალულია! თამაში შეჩერდება.');
+                // if (typeof gameActive !== 'undefined') gameActive = false;
             }
         } else {
             devtools.open = false;
         }
     }, 500);
 })();
+*/
 
-// Console Protection
+// Console Protection (DISABLED)
+/*
 (function () {
     const originalLog = console.log;
     const originalWarn = console.warn;
@@ -39,16 +42,19 @@
         }
     });
 })();
+*/
 
-// Anti-Debugger
+// Anti-Debugger (DISABLED)
+/*
 setInterval(() => {
     const start = performance.now();
-    debugger;
+    // debugger;
     const end = performance.now();
     if (end - start > 100) {
         window.location.reload();
     }
 }, 1000);
+*/
 
 // Score Validation System
 let lastValidScore = 0;
