@@ -256,12 +256,12 @@ async function syncUserData(isFinal = false) {
         // If game is over, record this achievement in history and update total_coins
         if (isFinal && !userEmail.startsWith('guest_')) {
             const finalScore = Math.floor(score);
-            const sessionCoins = Math.floor((finalScore * 0.5) + (currentSurvival * 0.2));
+            const earned = Math.floor((Math.floor(finalScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (window.coinBonusMultiplier || 1.0));
 
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
-                     VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${sessionCoins}, NOW())`;
+                     VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${earned}, NOW())`;
 
-            await sql`UPDATE users SET total_coins = total_coins + ${sessionCoins} WHERE email = ${userEmail}`;
+            await sql`UPDATE users SET total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
         }
     } catch (e) { console.error("Sync Error:", e); }
 }
@@ -1713,8 +1713,10 @@ function gameOver() {
     get('final-stains').textContent = Math.floor(score);
     if (get('final-time')) get('final-time').textContent = survival;
 
-    // Survival bonus
-    coins += Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier);
+    // Survival bonus calculation
+    const earned = Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier);
+    coins += earned;
+    if (get('final-coins')) get('final-coins').textContent = earned;
 
 
     // Check Best Score (Local)
