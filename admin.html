@@ -668,15 +668,25 @@
                 <div class="card" style="margin-bottom: 25px; background: rgba(0,0,0,0.3);">
                     <h3>🌍 გლობალური მართვის პანელი</h3>
 
-                    <label>⏱️ ხანგრძლივობა (წთ):</label>
-                    <input type="number" id="global-duration" class="search-input" value="10"
-                        style="width: 80px; text-align: center; padding: 5px;">
+                    <div
+                        style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label>⏱️ ხანგრძლივობა (წთ):</label>
+                            <input type="number" id="global-duration" class="search-input" value="10"
+                                style="width: 70px; text-align: center; padding: 5px;">
+                        </div>
 
-                    <label style="margin-left: 20px;">📈 გაძლიერების ზრდა (1.1 - 2.0):</label>
-                    <input type="number" id="val-upgrade-factor" class="search-input" value="1.3" step="0.1"
-                        style="width: 80px; text-align: center; padding: 5px;">
-                    <button class="btn btn-primary" style="padding: 5px 15px;"
-                        onclick="quickTrigger('upgrade_config', 'val-upgrade-factor', 1440)">SET</button>
+                        <div
+                            style="display: flex; align-items: center; gap: 8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 15px;">
+                            <label>📈 გაძლიერების ზრდა:</label>
+                            <input type="number" id="val-upgrade-factor" class="search-input" value="1.3" step="0.1"
+                                style="width: 70px; text-align: center; padding: 5px;">
+                            <button class="btn btn-primary" style="padding: 5px 12px;"
+                                onclick="quickTrigger('upgrade_config', 'val-upgrade-factor', 1440)">SET</button>
+                            <button class="btn btn-outline" style="padding: 5px 12px;"
+                                onclick="stopEvent('upgrade_config')">OFF</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Player & Economy -->
@@ -950,16 +960,24 @@
                                 style="color:orange;"></span></span>
                         <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
                             style="width: 100%; margin-bottom: 5px;">
-                        <button class="btn btn-primary full-width"
-                            onclick="quickTrigger('video_timings', 'val-timings')">SET TIMINGS</button>
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('video_timings', 'val-timings')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('video_timings')">OFF</button>
+                        </div>
                     </div>
                     <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
                         <span class="mini-label">🔄 Loop (sec) <span id="cur-loop" class="cur-val"
                                 style="color:cyan;"></span></span>
                         <input type="number" id="val-loop" class="search-input" value="300"
                             style="width: 100%; margin-bottom: 5px;">
-                        <button class="btn btn-primary full-width" onclick="quickTrigger('video_loop', 'val-loop')">SET
-                            LOOP</button>
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('video_loop', 'val-loop')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('video_loop')">OFF</button>
+                        </div>
                     </div>
                 </div>
 
