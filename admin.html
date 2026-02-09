@@ -413,7 +413,6 @@
             <div class="nav-items">
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
-                <div class="nav-item" data-tab="matches">🏆 მატჩების ისტორია</div>
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
@@ -495,29 +494,6 @@
                 </div>
             </div>
 
-            <!-- MATCHES TAB -->
-            <div id="tab-matches" class="tab-content">
-                <div class="header-bar">
-                    <h2>🏆 მატჩების ისტორია (ბოლო 50)</h2>
-                    <button class="btn btn-outline" id="refresh-matches">🔄 განახლება</button>
-                </div>
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                        <thead style="background: rgba(255,255,255,0.05);">
-                            <tr>
-                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">მოთამაშე</th>
-                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">ქულა</th>
-                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">დრო (წმ)</th>
-                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">ქოინი</th>
-                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">თარიღი</th>
-                            </tr>
-                        </thead>
-                        <tbody id="matches-list-tbody">
-                            <!-- Loaded dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             <!-- SYSTEMS TAB -->
             <div id="tab-systems" class="tab-content">
@@ -625,7 +601,6 @@
 
                 // Auto-load if entering tab
                 if (target === 'players') loadPlayers();
-                if (target === 'matches') loadMatches();
             };
         });
 
@@ -641,9 +616,8 @@
                 get('login-section').style.display = 'none';
                 get('admin-controls').style.display = 'flex';
                 log('მოგესალმებით, ადმინ!', 'var(--primary)');
-                loadPlayers(); // Load players immediately
-                loadMatches(); // Load matches immediately
                 if (typeof updateDashboardStats === 'function') updateDashboardStats();
+                loadPlayers(); // Load players immediately
             } else {
                 loginStatus.textContent = "პაროლი არასწორია!";
                 loginStatus.style.color = "var(--danger)";
@@ -839,43 +813,6 @@
         get('refresh-players').onclick = loadPlayers;
         get('sort-players').onchange = loadPlayers;
 
-        async function loadMatches() {
-            try {
-                const results = await sql`
-                    SELECT r.user_email, r.score, r.duration_seconds, r.coins_earned, r.played_at, u.nickname
-                    FROM game_results r
-                    LEFT JOIN users u ON r.user_email = u.email
-                    ORDER BY r.played_at DESC
-                    LIMIT 50
-                `;
-
-                const tbody = get('matches-list-tbody');
-                if (results.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; opacity: 0.5;">მატჩები ჯერ არ არის ჩატარებული</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = results.map(r => `
-                    <tr>
-                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02);">
-                            <div style="font-weight: 600;">${r.nickname}</div>
-                            <div style="font-size: 0.75rem; opacity: 0.5;">${r.user_email}</div>
-                        </td>
-                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); color: var(--accent); font-weight: bold;">${r.score}</td>
-                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02);">${r.duration_seconds}წმ</td>
-                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #00f2fe;">+${r.coins_earned}</td>
-                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; opacity: 0.7;">
-                            ${new Date(r.played_at).toLocaleString('ka-GE')}
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) {
-                console.error(e);
-                log('მატჩების ჩატვირთვა ვერ მოხერხდა', 'red');
-            }
-        }
-
-        get('refresh-matches').onclick = loadMatches;
 
         // DB SETUP
         // WIPE PROGRESS Logic
