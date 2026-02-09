@@ -295,6 +295,37 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
+        .site-fx-card {
+            cursor: pointer;
+            text-align: center;
+            padding: 20px !important;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .site-fx-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .flex-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .gap-5 {
+            gap: 5px;
+        }
+
         .player-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
@@ -413,6 +444,7 @@
             <div class="nav-items">
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
+                <div class="nav-item" data-tab="site">🌐 საიტის მართვა</div>
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
@@ -496,6 +528,96 @@
             </div>
 
 
+            <!-- SITE MANAGEMENT TAB -->
+            <div id="tab-site" class="tab-content">
+                <div class="header-bar">
+                    <h2 style="color: #4facfe;">🌐 საიტის მართვის პანელი (20 ეფექტი)</h2>
+                    <button class="btn btn-danger" onclick="stopEvent('site_effect')">🗑️ ეფექტის გათიშვა</button>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'invert', 60)">
+                        <span style="font-size: 1.5rem;">🙃</span>
+                        <span>Invert Colors</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'grayscale', 60)">
+                        <span style="font-size: 1.5rem;">🌑</span>
+                        <span>Grayscale</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'sepia', 60)">
+                        <span style="font-size: 1.5rem;">📜</span>
+                        <span>Retro Sepia</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'blur', 60)">
+                        <span style="font-size: 1.5rem;">🌫️</span>
+                        <span>Blur World</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'flicker', 60)">
+                        <span style="font-size: 1.5rem;">⚡</span>
+                        <span>Glitch Flicker</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'shake', 60)">
+                        <span style="font-size: 1.5rem;">🫨</span>
+                        <span>Screen Shake</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'mirror', 60)">
+                        <span style="font-size: 1.5rem;">🪞</span>
+                        <span>Mirror World</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'rotate', 60)">
+                        <span style="font-size: 1.5rem;">🙃</span>
+                        <span>Upside Down</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'hue', 60)">
+                        <span style="font-size: 1.5rem;">🌈</span>
+                        <span>Color Shift</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'matrix', 60)">
+                        <span style="font-size: 1.5rem;">📟</span>
+                        <span>Matrix Mode</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'vignette', 60)">
+                        <span style="font-size: 1.5rem;">🎬</span>
+                        <span>Cinematic</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'zoom', 60)">
+                        <span style="font-size: 1.5rem;">🔍</span>
+                        <span>Zoom In</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'night', 60)">
+                        <span style="font-size: 1.5rem;">🌙</span>
+                        <span>Night Mode</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'neon', 60)">
+                        <span style="font-size: 1.5rem;">🔮</span>
+                        <span>Neon Glow</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'tilt', 60)">
+                        <span style="font-size: 1.5rem;">📐</span>
+                        <span>Tilt Screen</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'contrast', 60)">
+                        <span style="font-size: 1.5rem;">🎭</span>
+                        <span>High Contrast</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'outline', 60)">
+                        <span style="font-size: 1.5rem;">✏️</span>
+                        <span>Outline Mode</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'hide_ui', 60)">
+                        <span style="font-size: 1.5rem;">🙈</span>
+                        <span>Hide Game UI</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'floating', 60)">
+                        <span style="font-size: 1.5rem;">☁️</span>
+                        <span>Floating Stains</span>
+                    </div>
+                    <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'disco', 60)">
+                        <span style="font-size: 1.5rem;">🕺</span>
+                        <span>Disco Party</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- SYSTEMS TAB -->
             <div id="tab-systems" class="tab-content">
                 <div class="header-bar">
@@ -563,32 +685,48 @@
                                     style="color:#4facfe;"></span></span>
                             <input type="number" id="val-strength" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('player_strength')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card">
                             <span class="mini-label">📏 რადიუსი <span id="cur-radius" class="cur-val"
                                     style="color:#4facfe;"></span></span>
                             <input type="number" id="val-radius" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('player_radius')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card">
                             <span class="mini-label">💰 ქოინები <span id="cur-coin" class="cur-val"
                                     style="color:#ffd700;"></span></span>
                             <input type="number" id="val-coin" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-gold full-width"
-                                onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-gold" style="flex:2"
+                                    onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('coin_mult')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card">
                             <span class="mini-label">🌍 ქულები <span id="cur-score" class="cur-val"
                                     style="color:#ffd700;"></span></span>
                             <input type="number" id="val-score" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-gold full-width"
-                                onclick="quickTrigger('multiplier', 'val-score')">SET</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-gold" style="flex:2"
+                                    onclick="quickTrigger('multiplier', 'val-score')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('multiplier')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
@@ -602,32 +740,48 @@
                                     style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-bosshp" class="search-input" value="10000"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-danger full-width"
-                                onclick="quickTrigger('boss_hp', 'val-bosshp')">SET HP</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-danger" style="flex:2"
+                                    onclick="quickTrigger('boss_hp', 'val-bosshp')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('boss_hp')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
                             <span class="mini-label">⚡ გაჩენის დრო <span id="cur-spawn" class="cur-val"
                                     style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-spawn" class="search-input" value="500" placeholder="Low=Fast"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-danger full-width"
-                                onclick="quickTrigger('spawn_interval', 'val-spawn')">SPEED</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-danger" style="flex:2"
+                                    onclick="quickTrigger('spawn_interval', 'val-spawn')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('spawn_interval')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
                             <span class="mini-label">🔢 ბოსების ლიმიტი <span id="cur-bosslimit" class="cur-val"
                                     style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-bosslimit" class="search-input" value="20"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-danger full-width"
-                                onclick="quickTrigger('boss_limit', 'val-bosslimit')">LIMIT</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-danger" style="flex:2"
+                                    onclick="quickTrigger('boss_limit', 'val-bosslimit')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('boss_limit')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
                             <span class="mini-label">🧹 ლაქების ლიმიტი <span id="cur-stainlimit" class="cur-val"
                                     style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-stainlimit" class="search-input" value="200"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-danger full-width"
-                                onclick="quickTrigger('stain_limit', 'val-stainlimit')">LIMIT</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-danger" style="flex:2"
+                                    onclick="quickTrigger('stain_limit', 'val-stainlimit')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('stain_limit')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
@@ -641,48 +795,70 @@
                                     style="color:orange;"></span></span>
                             <input type="number" id="val-crisis" class="search-input" value="10"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('crisis_time')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
                             <span class="mini-label">🧼 საპნის სიხშირე <span id="cur-soap" class="cur-val"
                                     style="color:#ff69b4;"></span></span>
                             <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('soap_thresh', 'val-soap')">THRESH</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('soap_thresh', 'val-soap')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('soap_thresh')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
                             <span class="mini-label">🎮 მინი-თამაში <span id="cur-minigame" class="cur-val"
                                     style="color:#4facfe;"></span></span>
                             <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('minigame_thresh', 'val-minigame')">THRESH</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('minigame_thresh', 'val-minigame')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('minigame_thresh')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
                             <span class="mini-label">🧼 Cutscene <span id="cur-cutscene" class="cur-val"
                                     style="color:#ff69b4;"></span></span>
                             <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
                                 style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-primary full-width"
-                                onclick="quickTrigger('soap_cutscene', 'val-cutscene')">TIME</button>
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('soap_cutscene', 'val-cutscene')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('soap_cutscene')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card"
                             style="background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.2);">
                             <span class="mini-label">🛡️ უკვდავება <span id="cur-god" class="cur-val"
                                     style="color:lime;"></span></span>
-                            <button class="btn btn-primary full-width"
-                                style="margin-top:28px; background: rgba(0, 200, 0, 0.8);"
-                                onclick="quickTrigger('god_mode', '1')">ON</button>
+                            <div class="flex-row gap-5" style="margin-top:28px;">
+                                <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 0, 0.8);"
+                                    onclick="quickTrigger('god_mode', '1')">ON</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('god_mode')">OFF</button>
+                            </div>
                         </div>
                         <div class="mini-card"
                             style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
                             <span class="mini-label">❄️ გაყინვა <span id="cur-freeze" class="cur-val"
                                     style="color:cyan;"></span></span>
-                            <button class="btn btn-primary full-width"
-                                style="margin-top:28px; background: rgba(0, 200, 200, 0.8);"
-                                onclick="quickTrigger('freeze_enemies', '1')">ON</button>
+                            <div class="flex-row gap-5" style="margin-top:28px;">
+                                <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 200, 0.8);"
+                                    onclick="quickTrigger('freeze_enemies', '1')">ON</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('freeze_enemies')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
@@ -1021,10 +1197,20 @@
         setInterval(updateDashboardStatus, 5000);
         updateDashboardStatus();
 
-        window.quickTrigger = (type, inputId) => {
-            const val = inputId === '1' ? '1' : (get(inputId)?.value || '0');
-            const dur = parseInt(get('global-duration').value) || 10;
+        window.quickTrigger = (type, inputId, customDur = null) => {
+            const val = inputId === '1' ? '1' : (get(inputId)?.value || inputId);
+            const dur = customDur || parseInt(get('global-duration').value) || 10;
             triggerEvent(type, val, dur);
+        };
+
+        window.stopEvent = async (type) => {
+            if (!confirm(`ნამდვილად გსურთ ${type}-ის გაუქმება?`)) return;
+            try {
+                await sql`DELETE FROM global_events WHERE event_type = ${type}`;
+                log(`🛑 ${type} გაუქმდა`, 'orange');
+                updateBonusTimer();
+                updateDashboardStatus();
+            } catch (e) { log('Error', 'red'); }
         };
 
         window.saveVideoConfig = async () => {

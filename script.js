@@ -2121,6 +2121,9 @@ async function checkGlobalEvents() {
         globalFreezeEnemies = false;
 
         document.body.classList.remove('global-rainbow');
+        // Clear all site effects before re-applying
+        const fxClasses = Array.from(document.body.classList).filter(c => c.startsWith('fx-'));
+        if (fxClasses.length > 0) document.body.classList.remove(...fxClasses);
 
         events.forEach(ev => {
             // Logic parsers for new types
@@ -2133,6 +2136,10 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'soap_cutscene') { globalSoapCutsceneTimeOverride = parseInt(ev.event_value); showStatusUpdate(`🧼 საპნის დრო: ${globalSoapCutsceneTimeOverride}ms`); }
             if (ev.event_type === 'god_mode') { globalGodMode = true; showStatusUpdate('🛡️ უკვდავება ჩართულია!'); }
             if (ev.event_type === 'freeze_enemies') { globalFreezeEnemies = true; showStatusUpdate('❄️ მტრები გაყინულია (სპაუნი შეჩერდა)!'); }
+            if (ev.event_type === 'site_effect') {
+                document.body.classList.add(`fx-${ev.event_value}`);
+                showStatusUpdate(`🌐 საიტის ეფექტი: ${ev.event_value.toUpperCase()} ✨`);
+            }
             if (ev.event_type === 'video_channel') {
                 videoChannels = [{ id: ev.event_value, weight: 100 }];
                 fetchYouTubeVideos();

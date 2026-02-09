@@ -92,6 +92,166 @@ body {
     }
 }
 
+/* --- SITE EFFECTS (ADMIN CONTROL) --- */
+body.fx-invert {
+    filter: invert(1);
+}
+
+body.fx-grayscale {
+    filter: grayscale(1);
+}
+
+body.fx-sepia {
+    filter: sepia(0.8);
+}
+
+body.fx-blur {
+    filter: blur(4px);
+}
+
+body.fx-flicker {
+    animation: fx-flicker-anim 0.15s infinite;
+}
+
+body.fx-shake {
+    animation: fx-shake-anim 0.2s infinite;
+}
+
+body.fx-mirror {
+    transform: scaleX(-1);
+}
+
+body.fx-rotate {
+    transform: rotate(180deg);
+}
+
+body.fx-hue {
+    animation: fx-hue-anim 4s linear infinite;
+}
+
+body.fx-matrix {
+    filter: sepia(1) hue-rotate(100deg) brightness(0.7) contrast(1.3);
+}
+
+body.fx-vignette::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.9);
+    z-index: 99999;
+}
+
+body.fx-zoom {
+    transform: scale(1.15);
+}
+
+body.fx-night {
+    filter: brightness(0.4) contrast(1.2);
+}
+
+body.fx-neon {
+    filter: saturate(2.5) contrast(1.2) brightness(1.2);
+}
+
+body.fx-tilt {
+    transform: perspective(1000px) rotateY(10deg);
+}
+
+body.fx-contrast {
+    filter: contrast(3);
+}
+
+body.fx-outline {
+    filter: drop-shadow(0 0 2px white);
+}
+
+body.fx-hide_ui .hud-stats,
+body.fx-hide_ui .sidebar-menu,
+body.fx-hide_ui .shop-btn,
+body.fx-hide_ui .themes-btn {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.fx-floating .stain {
+    animation: fx-float-anim 3s ease-in-out infinite;
+}
+
+body.fx-disco {
+    animation: fx-disco-anim 1s linear infinite;
+}
+
+@keyframes fx-flicker-anim {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+@keyframes fx-shake-anim {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    25% {
+        transform: translate(2px, 2px);
+    }
+
+    50% {
+        transform: translate(-2px, -2px);
+    }
+
+    75% {
+        transform: translate(2px, -2px);
+    }
+}
+
+@keyframes fx-hue-anim {
+    from {
+        filter: hue-rotate(0deg);
+    }
+
+    to {
+        filter: hue-rotate(360deg);
+    }
+}
+
+@keyframes fx-float-anim {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes fx-disco-anim {
+    0% {
+        background: rgba(255, 0, 0, 0.1);
+    }
+
+    33% {
+        background: rgba(0, 255, 0, 0.1);
+    }
+
+    66% {
+        background: rgba(0, 0, 255, 0.1);
+    }
+}
+
+
 #canvas-container {
     position: absolute;
     top: 0;
