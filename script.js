@@ -424,6 +424,8 @@ let globalSoapThresholdOverride = null;
 let globalMinigameThresholdOverride = null;
 let globalSoapCutsceneTimeOverride = null;
 let soapUseCount = 0;
+let globalGodMode = false;
+let globalFreezeEnemies = false;
 
 function updateScore(points) {
     if (!gameActive) return;
@@ -1710,6 +1712,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
 }
 
 function checkDefeatCondition() {
+    if (globalGodMode) return;
     if (!gameActive) return;
     const totalCount = document.querySelectorAll('.stain').length;
     const bossCountUI = document.querySelectorAll('.boss-stain:not(.triangle-boss)').length;
@@ -2100,6 +2103,8 @@ async function checkGlobalEvents() {
         globalSoapThresholdOverride = null;
         globalMinigameThresholdOverride = null;
         globalSoapCutsceneTimeOverride = null;
+        globalGodMode = false;
+        globalFreezeEnemies = false;
 
         document.body.classList.remove('global-rainbow');
 
@@ -2112,6 +2117,8 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'soap_thresh') { globalSoapThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🧼 საპნის სიხშირე შეცვლილია!'); }
             if (ev.event_type === 'minigame_thresh') { globalMinigameThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🎮 მინი-თამაშის სიხშირე შეცვლილია!'); }
             if (ev.event_type === 'soap_cutscene') { globalSoapCutsceneTimeOverride = parseInt(ev.event_value); showStatusUpdate(`🧼 საპნის დრო: ${globalSoapCutsceneTimeOverride}ms`); }
+            if (ev.event_type === 'god_mode') { globalGodMode = true; showStatusUpdate('🛡️ უკვდავება ჩართულია!'); }
+            if (ev.event_type === 'freeze_enemies') { globalFreezeEnemies = true; showStatusUpdate('❄️ მტრები გაყინულია (სპაუნი შეჩერდა)!'); }
 
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
@@ -2248,6 +2255,11 @@ let spawnTimeout;
 function scheduleNextStain() {
     clearTimeout(spawnTimeout);
     spawnTimeout = null;
+
+    if (globalFreezeEnemies) {
+        spawnTimeout = setTimeout(scheduleNextStain, 1000);
+        return;
+    }
     if (isUpgradeOpen || !gameActive) return;
     createStain();
     spawnTimeout = setTimeout(scheduleNextStain, getSpawnInterval());

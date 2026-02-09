@@ -558,28 +558,32 @@
                         👤 მოთამაშე & ეკონომიკა</h4>
                     <div class="dashboard-grid">
                         <div class="mini-card">
-                            <span class="mini-label">💪 ძალა (X)</span>
+                            <span class="mini-label">💪 ძალა <span id="cur-strength" class="cur-val"
+                                    style="color:#4facfe;"></span></span>
                             <input type="number" id="val-strength" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
                         </div>
                         <div class="mini-card">
-                            <span class="mini-label">📏 რადიუსი (X)</span>
+                            <span class="mini-label">📏 რადიუსი <span id="cur-radius" class="cur-val"
+                                    style="color:#4facfe;"></span></span>
                             <input type="number" id="val-radius" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
                         </div>
                         <div class="mini-card">
-                            <span class="mini-label">💰 ქოინები (X)</span>
+                            <span class="mini-label">💰 ქოინები <span id="cur-coin" class="cur-val"
+                                    style="color:#ffd700;"></span></span>
                             <input type="number" id="val-coin" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-gold full-width"
                                 onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
                         </div>
                         <div class="mini-card">
-                            <span class="mini-label">🌍 ქულები (X)</span>
+                            <span class="mini-label">🌍 ქულები <span id="cur-score" class="cur-val"
+                                    style="color:#ffd700;"></span></span>
                             <input type="number" id="val-score" class="search-input" value="2"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-gold full-width"
@@ -593,28 +597,32 @@
                         ☠️ მტრები & გარემო</h4>
                     <div class="dashboard-grid">
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
-                            <span class="mini-label">☠️ ბოსის HP</span>
+                            <span class="mini-label">☠️ ბოსის HP <span id="cur-bosshp" class="cur-val"
+                                    style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-bosshp" class="search-input" value="10000"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-danger full-width"
                                 onclick="quickTrigger('boss_hp', 'val-bosshp')">SET HP</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
-                            <span class="mini-label">⚡ გაჩენის დრო (ms)</span>
+                            <span class="mini-label">⚡ გაჩენის დრო <span id="cur-spawn" class="cur-val"
+                                    style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-spawn" class="search-input" value="500" placeholder="Low=Fast"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-danger full-width"
                                 onclick="quickTrigger('spawn_interval', 'val-spawn')">SPEED</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
-                            <span class="mini-label">🔢 ბოსების ლიმიტი</span>
+                            <span class="mini-label">🔢 ბოსების ლიმიტი <span id="cur-bosslimit" class="cur-val"
+                                    style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-bosslimit" class="search-input" value="20"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-danger full-width"
                                 onclick="quickTrigger('boss_limit', 'val-bosslimit')">LIMIT</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
-                            <span class="mini-label">🧹 ლაქების ლიმიტი</span>
+                            <span class="mini-label">🧹 ლაქების ლიმიტი <span id="cur-stainlimit" class="cur-val"
+                                    style="color:#ff4d4d;"></span></span>
                             <input type="number" id="val-stainlimit" class="search-input" value="200"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-danger full-width"
@@ -628,37 +636,52 @@
                         🎮 ლოგიკა & ივენთები</h4>
                     <div class="dashboard-grid">
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">⚠️ კრიზისის დრო (წმ)</span>
+                            <span class="mini-label">⚠️ კრიზისის დრო <span id="cur-crisis" class="cur-val"
+                                    style="color:orange;"></span></span>
                             <input type="number" id="val-crisis" class="search-input" value="10"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">🧼 საპნის სიხშირე</span>
+                            <span class="mini-label">🧼 საპნის სიხშირე <span id="cur-soap" class="cur-val"
+                                    style="color:#ff69b4;"></span></span>
                             <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('soap_thresh', 'val-soap')">THRESH</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">🎮 მინი-თამაში</span>
+                            <span class="mini-label">🎮 მინი-თამაში <span id="cur-minigame" class="cur-val"
+                                    style="color:#4facfe;"></span></span>
                             <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('minigame_thresh', 'val-minigame')">THRESH</button>
                         </div>
                         <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">🧼 Cutscene (ms)</span>
+                            <span class="mini-label">🧼 Cutscene <span id="cur-cutscene" class="cur-val"
+                                    style="color:#ff69b4;"></span></span>
                             <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
                                 style="width: 100%; margin-bottom: 5px;">
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('soap_cutscene', 'val-cutscene')">TIME</button>
                         </div>
-                        <div class="mini-card">
-                            <span class="mini-label">🌈 ივენთი</span>
-                            <button class="btn btn-gold full-width" style="margin-top:28px;"
-                                onclick="quickTrigger('rainbow', '1')">🌈 RAINBOW</button>
+                        <div class="mini-card"
+                            style="background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.2);">
+                            <span class="mini-label">🛡️ უკვდავება <span id="cur-god" class="cur-val"
+                                    style="color:lime;"></span></span>
+                            <button class="btn btn-primary full-width"
+                                style="margin-top:28px; background: rgba(0, 200, 0, 0.8);"
+                                onclick="quickTrigger('god_mode', '1')">ON</button>
+                        </div>
+                        <div class="mini-card"
+                            style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
+                            <span class="mini-label">❄️ გაყინვა <span id="cur-freeze" class="cur-val"
+                                    style="color:cyan;"></span></span>
+                            <button class="btn btn-primary full-width"
+                                style="margin-top:28px; background: rgba(0, 200, 200, 0.8);"
+                                onclick="quickTrigger('freeze_enemies', '1')">ON</button>
                         </div>
                     </div>
 
@@ -834,6 +857,32 @@
                 updateBonusTimer();
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
         };
+
+        const updateDashboardStatus = async () => {
+            try {
+                const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
+                document.querySelectorAll('.cur-val').forEach(el => el.textContent = '');
+
+                events.forEach(ev => {
+                    if (ev.event_type === 'player_strength') get('cur-strength').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'player_radius') get('cur-radius').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'coin_mult') get('cur-coin').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'multiplier') get('cur-score').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'boss_hp') get('cur-bosshp').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'boss_limit') get('cur-bosslimit').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'stain_limit') get('cur-stainlimit').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'spawn_interval') get('cur-spawn').textContent = `(${ev.event_value}ms)`;
+                    if (ev.event_type === 'crisis_time') get('cur-crisis').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'soap_thresh') get('cur-soap').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'minigame_thresh') get('cur-minigame').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'soap_cutscene') get('cur-cutscene').textContent = `(${ev.event_value}ms)`;
+                    if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
+                    if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                });
+            } catch (e) { }
+        };
+        setInterval(updateDashboardStatus, 5000);
+        updateDashboardStatus();
 
         window.quickTrigger = (type, inputId) => {
             const val = inputId === '1' ? '1' : (get(inputId)?.value || '0');
