@@ -1163,15 +1163,15 @@ function triggerMagnet() {
 
 function applyUpgrade(id) {
     switch (id) {
-        case 'diff': intervalMultiplier *= 0.85; break; // Balanced
-        case 'speed': helperSpeedMultiplier *= 1.25; break;
+        case 'diff': intervalMultiplier *= 0.7; break; // +30% difficulty
+        case 'speed': helperSpeedMultiplier *= 1.3; break; // +30% speed
         case 'bot': startHelperBot(); break;
-        case 'radius': radiusMultiplier *= 1.25; updatePowerStats(); break;
-        case 'strength': strengthMultiplier *= 1.25; updatePowerStats(); break;
+        case 'radius': radiusMultiplier *= 1.3; updatePowerStats(); break; // +30% radius
+        case 'strength': strengthMultiplier *= 1.3; updatePowerStats(); break; // +30% strength
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
-        case 'coin_buff': coinBonusMultiplier += 0.1; break;
-        case 'bot_pow': helperCleaningMultiplier *= 1.1; break;
+        case 'coin_buff': coinBonusMultiplier += 0.3; break; // +30% coins
+        case 'bot_pow': helperCleaningMultiplier *= 1.3; break; // +30% bot power
         case 'magnet':
             if (!hasMagnetUpgrade) {
                 hasMagnetUpgrade = true;
@@ -1428,16 +1428,16 @@ function showUpgradeOptions() {
     get('upgrade-modal').classList.remove('hidden');
 
     const UPGRADE_POOL = [
-        { id: 'diff', icon: '⚡', title: 'სირთულე', desc: '+10% სირთულე', type: 'multi' },
+        { id: 'diff', icon: '⚡', title: 'სირთულე', desc: '+30% სირთულე', type: 'multi' },
         { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: '+30% სისწრაფე', type: 'multi' },
         { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
         { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
         { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
         { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
         { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
-        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+10% ქოინების მოგება (Max 5)', type: 'multi' },
+        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+30% ქოინების მოგება (Max 5)', type: 'multi' },
         { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' },
-        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+10% რობოტის ძალა (Max 5)', type: 'multi' }
+        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 5)', type: 'multi' }
     ];
 
     // Filter available upgrades based on limits
