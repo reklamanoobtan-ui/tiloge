@@ -434,7 +434,8 @@ let globalGodMode = false;
 let globalFreezeEnemies = false;
 
 // Video Notification Globals
-let videoChannelId = 'UCycgfC-1XTtOeMLr5Vz77dg';
+let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
+let allChannelVideos = {}; // { channelId: [videos] }
 let last10Videos = [];
 let videoPopupTimers = [];
 let videoTimings = [10, 30, 60, 300];
@@ -2132,7 +2133,19 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'soap_cutscene') { globalSoapCutsceneTimeOverride = parseInt(ev.event_value); showStatusUpdate(`🧼 საპნის დრო: ${globalSoapCutsceneTimeOverride}ms`); }
             if (ev.event_type === 'god_mode') { globalGodMode = true; showStatusUpdate('🛡️ უკვდავება ჩართულია!'); }
             if (ev.event_type === 'freeze_enemies') { globalFreezeEnemies = true; showStatusUpdate('❄️ მტრები გაყინულია (სპაუნი შეჩერდა)!'); }
-            if (ev.event_type === 'video_channel') { videoChannelId = ev.event_value; fetchYouTubeVideos(); }
+            if (ev.event_type === 'video_channel') {
+                videoChannels = [{ id: ev.event_value, weight: 100 }];
+                fetchYouTubeVideos();
+            }
+            if (ev.event_type === 'video_config') {
+                try {
+                    const config = JSON.parse(ev.event_value);
+                    if (Array.isArray(config)) {
+                        videoChannels = config;
+                        fetchYouTubeVideos();
+                    }
+                } catch (e) { console.error("Video config parse error", e); }
+            }
             if (ev.event_type === 'video_timings') { videoTimings = ev.event_value.split(',').map(Number); startVideoScheduler(); }
             if (ev.event_type === 'video_loop') { videoLoopInterval = parseInt(ev.event_value); startVideoScheduler(); }
 
@@ -2227,22 +2240,28 @@ function startGameSession(dontReset = false) {
 }
 
 async function fetchYouTubeVideos() {
-    let rss = `https://www.youtube.com/feeds/videos.xml?user=${videoChannelId}`;
-    if (videoChannelId.startsWith('UC')) {
-        rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${videoChannelId}`;
-    }
-    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
-    try {
-        const res = await fetch(api);
-        const data = await res.json();
-        if (data.status === 'ok') {
-            last10Videos = data.items;
-            // showStatusUpdate(`✨ ვიდეო განახლდა: ${data.items.length}`);
-        } else {
-            console.warn('Video Fetch fail:', data);
-            logToAdmin(`YouTube არხი ვერ მოიძებნა: ${videoChannelId}`, 'WARN');
+    // Reset but keep old if fetch fails? Better to just update
+    const newAllVideos = {};
+    for (const channel of videoChannels) {
+        const chId = channel.id;
+        if (!chId) continue;
+        let rss = `https://www.youtube.com/feeds/videos.xml?user=${chId}`;
+        if (chId.startsWith('UC')) {
+            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${chId}`;
         }
-    } catch (e) { console.error('Video fetch error', e); }
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
+        try {
+            const res = await fetch(api);
+            const data = await res.json();
+            if (data.status === 'ok') {
+                newAllVideos[chId] = data.items;
+            } else {
+                console.warn('Video Fetch fail for ' + chId, data);
+                logToAdmin(`YouTube არხი ვერ მოიძებნა: ${chId}`, 'WARN');
+            }
+        } catch (e) { console.error('Video fetch error for ' + chId, e); }
+    }
+    allChannelVideos = newAllVideos;
 }
 
 let currentVideoId = '';
@@ -2281,11 +2300,29 @@ window.closeVideoPlayer = function () {
 };
 
 function showVideoPopup() {
-    if (!last10Videos || last10Videos.length === 0) return;
+    if (Object.keys(allChannelVideos).length === 0) return;
     // Don't show if modal is open to avoid distraction
     if (get('video-player-modal') && !get('video-player-modal').classList.contains('hidden')) return;
 
-    const vid = last10Videos[Math.floor(Math.random() * last10Videos.length)];
+    // Weighted Random Selection of Channel
+    const activeChannels = videoChannels.filter(ch => allChannelVideos[ch.id] && allChannelVideos[ch.id].length > 0);
+    if (activeChannels.length === 0) return;
+
+    const totalWeight = activeChannels.reduce((sum, ch) => sum + ch.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let selectedChannelId = activeChannels[0].id;
+
+    for (const ch of activeChannels) {
+        if (rand < ch.weight) {
+            selectedChannelId = ch.id;
+            break;
+        }
+        rand -= ch.weight;
+    }
+
+    const videos = allChannelVideos[selectedChannelId];
+    const vid = videos[Math.floor(Math.random() * videos.length)];
+
     const popup = get('video-notification');
     const thumb = get('video-thumb');
     const titleOverlay = get('video-title-overlay');
@@ -2566,9 +2603,76 @@ function startHalfHealthEffect() {
     scheduleNextStain();
 }
 
-// Start Video System Globally
+// Draggable & Resizable Player Logic
+function initVideoDraggable() {
+    const modal = get('video-player-modal');
+    const handle = get('video-player-handle');
+    const resizer = get('video-player-resizer');
+
+    if (!modal || !handle || !resizer) return;
+
+    let isDragging = false;
+    let isResizing = false;
+    let startX, startY;
+    let startWidth, startHeight, startLeft, startTop;
+
+    handle.onmousedown = (e) => {
+        if (e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = modal.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        // Switch from bottom/right to left/top for free movement
+        modal.style.bottom = 'auto';
+        modal.style.right = 'auto';
+        modal.style.left = startLeft + 'px';
+        modal.style.top = startTop + 'px';
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        e.preventDefault();
+    };
+
+    resizer.onmousedown = (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = modal.offsetWidth;
+        startHeight = modal.offsetHeight;
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    function onMove(e) {
+        if (isDragging) {
+            modal.style.left = (startLeft + e.clientX - startX) + 'px';
+            modal.style.top = (startTop + e.clientY - startY) + 'px';
+        }
+        if (isResizing) {
+            const newWidth = Math.max(200, startWidth + (e.clientX - startX));
+            modal.style.width = newWidth + 'px';
+            // Height scales automatically due to 16:9 padding-bottom trick in HTML
+        }
+    }
+
+    function onEnd() {
+        isDragging = false;
+        isResizing = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+    }
+}
+
+// Start Systems
 setTimeout(() => {
     fetchYouTubeVideos();
     startVideoScheduler();
     setInterval(fetchYouTubeVideos, 300000);
+    initVideoDraggable();
 }, 2000);

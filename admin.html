@@ -686,19 +686,49 @@
                         </div>
                     </div>
 
-                    <!-- YouTube Notifier -->
+                    <!-- YouTube Notifier Multi-Channel -->
                     <h4
-                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000;">
-                        📺 YouTube Notifier</h4>
-                    <div class="dashboard-grid">
-                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
-                            <span class="mini-label">📺 Channel ID/User <span id="cur-channel" class="cur-val"
-                                    style="color:red;"></span></span>
-                            <input type="text" id="val-channel" class="search-input" value="UCycgfC-1XTtOeMLr5Vz77dg"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <button class="btn btn-danger full-width"
-                                onclick="quickTrigger('video_channel', 'val-channel')">SET CHANNEL</button>
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000; display: flex; align-items: center; gap: 10px;">
+                        📺 YouTube Multi-Channel Notifier
+                        <span
+                            style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT:
+                            5</span>
+                    </h4>
+                    <div class="card"
+                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 15px;">
+                        <div id="channel-config-list">
+                            <!-- JS will populate or we can hardcode 5 slots -->
+                            <div
+                                style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                                <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID / User</div>
+                                <div style="font-size: 0.7rem; opacity: 0.5;">Weight (0-100)</div>
+
+                                <input type="text" id="ch-id-1" class="search-input"
+                                    placeholder="UCycgfC-1XTtOeMLr5Vz..." style="width: 100%;">
+                                <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
+
+                                <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
+                                    style="width: 100%;">
+                                <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
+
+                                <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
+                                    style="width: 100%;">
+                                <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
+
+                                <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
+                                    style="width: 100%;">
+                                <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
+
+                                <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
+                                    style="width: 100%;">
+                                <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
+                            </div>
                         </div>
+                        <button class="btn btn-danger full-width" onclick="saveVideoConfig()">🚀 UPDATE MULTI-CHANNEL
+                            CONFIG</button>
+                    </div>
+
+                    <div class="dashboard-grid mt-10">
                         <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
                             <span class="mini-label">⏱️ Timings (csv) <span id="cur-timings" class="cur-val"
                                     style="color:orange;"></span></span>
@@ -938,6 +968,7 @@
                 else if (type === 'soap_thresh') msg = `🧼 საპნის სიხშირე: ყოველ ${val} ქულაზე`;
                 else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
                 else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
+                else if (type === 'video_config') msg = `📺 YouTube Notifier განახლდა!`;
 
                 msg += ` (${duration} წთ) ✨`;
 
@@ -968,6 +999,19 @@
                     if (ev.event_type === 'soap_cutscene') get('cur-cutscene').textContent = `(${ev.event_value}ms)`;
                     if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
                     if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                    if (ev.event_type === 'video_config') {
+                        try {
+                            const cfg = JSON.parse(ev.event_value);
+                            cfg.forEach((item, idx) => {
+                                if (idx < 5) {
+                                    const id = get(`ch-id-${idx + 1}`);
+                                    const wt = get(`ch-wt-${idx + 1}`);
+                                    if (id && !id.value) id.value = item.id;
+                                    if (wt && wt.value == "0") wt.value = item.weight;
+                                }
+                            });
+                        } catch (e) { }
+                    }
                     if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
                     if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
                     if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
@@ -981,6 +1025,19 @@
             const val = inputId === '1' ? '1' : (get(inputId)?.value || '0');
             const dur = parseInt(get('global-duration').value) || 10;
             triggerEvent(type, val, dur);
+        };
+
+        window.saveVideoConfig = async () => {
+            let config = [];
+            for (let i = 1; i <= 5; i++) {
+                let id = get(`ch-id-${i}`).value.trim();
+                let wt = parseInt(get(`ch-wt-${i}`).value) || 0;
+                if (id) config.push({ id, weight: wt });
+            }
+            if (config.length === 0) { alert('მიუთითეთ მინიმუმ 1 არხი'); return; }
+            const val = JSON.stringify(config);
+            const dur = parseInt(get('global-duration').value) || 120;
+            triggerEvent('video_config', val, dur);
         };
 
         get('stop-events').onclick = async () => {
