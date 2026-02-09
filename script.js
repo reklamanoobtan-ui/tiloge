@@ -241,8 +241,8 @@ async function syncUserData(isFinal = false) {
     if (!userEmail) return;
     try {
         const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
-        // Live Update: Overwrite stats with current session values
-        // Accumulate total time: we update last_seen and diff
+
+        // Update user profile with latest stats
         await sql`UPDATE users SET 
             score = ${Math.floor(score)},
             coins = ${coins},
@@ -252,7 +252,18 @@ async function syncUserData(isFinal = false) {
             total_survival_time = total_survival_time + (CASE WHEN last_seen > NOW() - INTERVAL '30 seconds' THEN EXTRACT(EPOCH FROM (NOW() - last_seen)) ELSE 0 END),
             last_seen = NOW()
             WHERE email = ${userEmail}`;
-    } catch (e) { }
+
+        // If game is over, record this achievement in history and update total_coins
+        if (isFinal && !userEmail.startsWith('guest_')) {
+            const finalScore = Math.floor(score);
+            const sessionCoins = Math.floor((finalScore * 0.5) + (currentSurvival * 0.2));
+
+            await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
+                     VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${sessionCoins}, NOW())`;
+
+            await sql`UPDATE users SET total_coins = total_coins + ${sessionCoins} WHERE email = ${userEmail}`;
+        }
+    } catch (e) { console.error("Sync Error:", e); }
 }
 
 async function fetchLeaderboard() {

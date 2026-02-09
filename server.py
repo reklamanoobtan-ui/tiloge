@@ -112,16 +112,16 @@ async def handle_chat_message(data: dict, websocket: WebSocketServerProtocol):
 
 
 async def handle_score_update(data: dict, websocket: WebSocketServerProtocol):
-    """Handle score update with optimized batch processing"""
+    """Handle live score update with aggregate stat tracking"""
     try:
         email = data.get('email')
         score = data.get('score', 0)
         survival_time = data.get('survival_time', 0)
+        new_coins = data.get('new_coins', 0) # Coins gained during this sync period
         
         if not email:
             return
         
-        # Batch update - only update if score is higher
         async with db_pool.acquire() as conn:
             await conn.execute(
                 """
@@ -129,16 +129,56 @@ async def handle_score_update(data: dict, websocket: WebSocketServerProtocol):
                 SET score = GREATEST(score, $1),
                     survival_time = GREATEST(survival_time, $2),
                     best_score = GREATEST(best_score, $1),
+                    coins = coins + $3,
+                    total_coins = total_coins + $3,
                     last_active = NOW()
-                WHERE email = $3
+                WHERE email = $4
                 """,
-                score, survival_time, email
+                score, survival_time, new_coins, email
             )
         
-        logger.info(f"Score updated for {email}: {score}")
+        logger.info(f"Score/Coins updated for {email}: {score} pts, +{new_coins} coins")
         
     except Exception as e:
         logger.error(f"Error updating score: {e}")
+
+async def handle_match_result(data: dict, websocket: WebSocketServerProtocol):
+    """Handle final game session results (Achievements)"""
+    try:
+        email = data.get('email')
+        score = data.get('score', 0)
+        duration = data.get('duration', 0)
+        coins_earned = data.get('coins_earned', 0)
+        
+        if not email: return
+
+        async with db_pool.acquire() as conn:
+            # 1. Record the achievement in history
+            await conn.execute(
+                """
+                INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                """,
+                email, score, duration, coins_earned
+            )
+            
+            # 2. Update user's aggregate bests
+            await conn.execute(
+                """
+                UPDATE users 
+                SET best_score = GREATEST(best_score, $1),
+                    best_survival_time = GREATEST(best_survival_time, $2),
+                    total_survival_time = total_survival_time + $2,
+                    last_active = NOW()
+                WHERE email = $3
+                """,
+                score, duration, email
+            )
+
+        logger.info(f"🏆 Match Recorded for {email}: {score} score, {duration}s, {coins_earned} coins")
+
+    except Exception as e:
+        logger.error(f"Error handling match result: {e}")
 
 
 async def handle_global_events(websocket: WebSocketServerProtocol):
@@ -226,6 +266,9 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
                 
                 elif msg_type == 'score_update':
                     await handle_score_update(data, websocket)
+                
+                elif msg_type == 'match_result':
+                    await handle_match_result(data, websocket)
                 
                 elif msg_type == 'ping':
                     await websocket.send(json.dumps({'type': 'pong'}))

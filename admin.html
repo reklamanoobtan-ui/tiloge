@@ -413,6 +413,7 @@
             <div class="nav-items">
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
+                <div class="nav-item" data-tab="matches">🏆 მატჩების ისტორია</div>
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
@@ -490,6 +491,30 @@
 
                 <div id="players-list" class="players-container">
                     <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- MATCHES TAB -->
+            <div id="tab-matches" class="tab-content">
+                <div class="header-bar">
+                    <h2>🏆 მატჩების ისტორია (ბოლო 50)</h2>
+                    <button class="btn btn-outline" id="refresh-matches">🔄 განახლება</button>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead style="background: rgba(255,255,255,0.05);">
+                            <tr>
+                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">მოთამაშე</th>
+                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">ქულა</th>
+                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">დრო (წმ)</th>
+                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">ქოინი</th>
+                                <th style="padding: 15px; border-bottom: 1px solid var(--border);">თარიღი</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matches-list-tbody">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -597,8 +622,9 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 get(`tab-${target}`).classList.add('active');
 
-                // Auto-load players if entering players tab
+                // Auto-load if entering tab
                 if (target === 'players') loadPlayers();
+                if (target === 'matches') loadMatches();
             };
         });
 
@@ -740,13 +766,13 @@
                 let players;
 
                 if (sortBy === 'score') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 200`;
                 } else if (sortBy === 'coins') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 200`;
                 } else if (sortBy === 'time') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 200`;
                 } else {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 200`;
                 }
 
                 allPlayers = players;
@@ -782,7 +808,8 @@
                         </div>
                         <div class="stats">
                             <span class="stat-badge">⭐ ქულა: <strong>${Math.floor(player.score)}</strong></span>
-                            <span class="stat-badge">🪙 ქოინი: <strong>${player.coins}</strong></span>
+                            <span class="stat-badge">🪙 ბალანსი: <strong>${player.coins}</strong></span>
+                            <span class="stat-badge">💰 სულ: <strong>${player.total_coins || 0}</strong></span>
                             <span class="stat-badge">⏱️ დრო: <strong>${timeFormatted}</strong></span>
                         </div>
                         <div style="margin-top: 15px; font-size: 0.7rem; opacity: 0.4;">აქტიური: ${lastActive}</div>
@@ -804,6 +831,44 @@
 
         get('refresh-players').onclick = loadPlayers;
         get('sort-players').onchange = loadPlayers;
+
+        async function loadMatches() {
+            try {
+                const results = await sql`
+                    SELECT r.user_email, r.score, r.duration_seconds, r.coins_earned, r.played_at, u.nickname
+                    FROM game_results r
+                    JOIN users u ON r.user_email = u.email
+                    ORDER BY r.played_at DESC
+                    LIMIT 50
+                `;
+
+                const tbody = get('matches-list-tbody');
+                if (results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; opacity: 0.5;">მატჩები ჯერ არ არის ჩატარებული</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = results.map(r => `
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02);">
+                            <div style="font-weight: 600;">${r.nickname}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.5;">${r.user_email}</div>
+                        </td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); color: var(--accent); font-weight: bold;">${r.score}</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02);">${r.duration_seconds}წმ</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #00f2fe;">+${r.coins_earned}</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; opacity: 0.7;">
+                            ${new Date(r.played_at).toLocaleString('ka-GE')}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                log('მატჩების ჩატვირთვა ვერ მოხერხდა', 'red');
+            }
+        }
+
+        get('refresh-matches').onclick = loadMatches;
 
         // DB SETUP
         // WIPE PROGRESS Logic
@@ -849,14 +914,23 @@
         };
 
         get('run-setup-btn').onclick = async () => {
-            if (!confirm("ნამდვილად გსურთ Database Setup?")) return;
+            if (!confirm("ნამდვილად გსურთ Database Setup? (ეს არ წაშლის არსებულ მონაცემებს)")) return;
             log('Setup იწყება...', 'var(--accent)');
             try {
-                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, is_vip BOOLEAN DEFAULT FALSE, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
+                // 1. Users table update
+                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, total_coins INTEGER DEFAULT 0, is_vip BOOLEAN DEFAULT FALSE, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, best_survival_time INTEGER DEFAULT 0, total_survival_time INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+
+                // 2. Achievements (Match History) table
+                await sql`CREATE TABLE IF NOT EXISTS game_results (id SERIAL PRIMARY KEY, user_email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE, score INTEGER NOT NULL, duration_seconds INTEGER NOT NULL, coins_earned INTEGER NOT NULL, played_at TIMESTAMP DEFAULT NOW())`;
+
+                // 3. Indexes & Supporting tables
                 await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
-                await sql`CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC)`;
                 await sql`CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, nickname VARCHAR(50) NOT NULL, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
-                await sql`CREATE TABLE IF NOT EXISTS global_events (id SERIAL PRIMARY KEY, event_type VARCHAR(50) NOT NULL, event_value VARCHAR(50) NOT NULL, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS global_events (event_type VARCHAR(50) PRIMARY KEY, event_value TEXT, expires_at TIMESTAMP)`;
+
                 log('🎉 SETUP დასრულებულია!', 'green');
                 loadPlayers();
             } catch (e) { log('Setup Error: ' + e.message, 'red'); }
