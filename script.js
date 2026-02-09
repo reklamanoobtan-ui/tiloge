@@ -432,6 +432,8 @@ let globalSoapCutsceneTimeOverride = null;
 let soapUseCount = 0;
 let globalGodMode = false;
 let globalFreezeEnemies = false;
+let globalBossImage = null;
+let globalBossScale = 1.0;
 
 // Video Notification Globals
 let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
@@ -1672,7 +1674,14 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         } else {
             // NORMAL BOSS (Every 5k score)
             stain.innerHTML = '<div class="boss-title">BOSS</div>';
-            size = 250;
+            size = 250 * globalBossScale;
+
+            if (globalBossImage) {
+                stain.style.backgroundImage = `url('${globalBossImage}')`;
+                stain.style.backgroundSize = 'cover';
+                stain.style.backgroundPosition = 'center';
+                stain.innerHTML = ''; // Hide "BOSS" text if custom image
+            }
         }
 
         health = baseBossHP * bossScaling * difficulty;
@@ -2119,6 +2128,8 @@ async function checkGlobalEvents() {
         globalSoapCutsceneTimeOverride = null;
         globalGodMode = false;
         globalFreezeEnemies = false;
+        globalBossImage = null;
+        globalBossScale = 1.0;
 
         document.body.classList.remove('global-rainbow');
         // Clear all site effects before re-applying
@@ -2139,6 +2150,13 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'site_effect') {
                 document.body.classList.add(`fx-${ev.event_value}`);
                 showStatusUpdate(`🌐 საიტის ეფექტი: ${ev.event_value.toUpperCase()} ✨`);
+            }
+            if (ev.event_type === 'boss_config') {
+                try {
+                    const cfg = JSON.parse(ev.event_value);
+                    if (cfg.img) globalBossImage = cfg.img;
+                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
+                } catch (e) { }
             }
             if (ev.event_type === 'video_channel') {
                 videoChannels = [{ id: ev.event_value, weight: 100 }];

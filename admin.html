@@ -785,6 +785,33 @@
                         </div>
                     </div>
 
+                    <!-- Boss Appearance Section -->
+                    <h4
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff00ff;">
+                        👾 ბოსის ვიზუალი & მექანიკა <span id="cur-boss-config" class="cur-val"
+                            style="color: #ff00ff; font-size: 0.8rem;"></span></h4>
+                    <div class="card"
+                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,255,0.1); padding: 15px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div>
+                                <span class="mini-label">🖼️ ბოსის ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
+                                <input type="text" id="boss-img-url" class="search-input" placeholder="https://..."
+                                    style="width: 100%;">
+                            </div>
+                            <div>
+                                <span class="mini-label">📐 მასშტაბი</span>
+                                <input type="number" id="boss-scale" class="search-input" value="1.0" step="0.1"
+                                    style="width: 100%;">
+                            </div>
+                        </div>
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
+                                onclick="saveBossConfig()">🚀 UPDATE BOSS SKIN</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('boss_config')">RESET</button>
+                        </div>
+                    </div>
+
                     <!-- Logic -->
                     <h4
                         style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe;">
@@ -1191,6 +1218,7 @@
                     if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
                     if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
                     if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
                 });
             } catch (e) { }
         };
@@ -1224,6 +1252,14 @@
             const val = JSON.stringify(config);
             const dur = parseInt(get('global-duration').value) || 120;
             triggerEvent('video_config', val, dur);
+        };
+
+        window.saveBossConfig = async () => {
+            const img = get('boss-img-url').value.trim();
+            const scale = get('boss-scale').value || "1.0";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale };
+            triggerEvent('boss_config', JSON.stringify(config), dur);
         };
 
         get('stop-events').onclick = async () => {
