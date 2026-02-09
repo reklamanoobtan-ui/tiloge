@@ -186,6 +186,13 @@ async function initDatabase() {
             message TEXT,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS reset_codes (
+            id SERIAL PRIMARY KEY,
+            email TEXT,
+            code TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
     } catch (e) { console.error("DB Init Error", e); }
 }
 
@@ -750,6 +757,139 @@ function initUI() {
                 location.reload();
             }
         }, 2000);
+    };
+
+    // --- Profile Management Listeners ---
+
+    // Update Profile (Nickname/Email)
+    get('update-profile-btn').onclick = async () => {
+        const newNick = get('edit-nick').value.trim();
+        const newEmail = get('edit-email').value.trim();
+
+        if (!newNick && !newEmail) {
+            alert('შეიყვანეთ ახალი მონაცემები!');
+            return;
+        }
+
+        try {
+            if (newNick) {
+                // Check if nick taken
+                const check = await sql`SELECT id FROM users WHERE nickname = ${newNick} AND email != ${userEmail}`;
+                if (check.length > 0) {
+                    alert('ეს ნიკნეიმი უკვე დაკავებულია!');
+                    return;
+                }
+                await sql`UPDATE users SET nickname = ${newNick} WHERE email = ${userEmail}`;
+                nickname = newNick;
+                localStorage.setItem('tilo_nick', nickname);
+            }
+
+            if (newEmail) {
+                // Check if email taken
+                const check = await sql`SELECT id FROM users WHERE email = ${newEmail}`;
+                if (check.length > 0) {
+                    alert('ეს ემაილი უკვე დაკავებულია!');
+                    return;
+                }
+                await sql`UPDATE users SET email = ${newEmail} WHERE email = ${userEmail}`;
+                userEmail = newEmail;
+                localStorage.setItem('tilo_email', userEmail);
+            }
+
+            showStatusUpdate('პროფილი განახლდა! ✨');
+            get('settings-user-name').textContent = nickname;
+            get('settings-user-email').textContent = userEmail;
+            get('edit-nick').value = '';
+            get('edit-email').value = '';
+        } catch (e) {
+            console.error(e);
+            alert('შეცდომა განახლებისას');
+        }
+    };
+
+    // Update Password
+    get('update-pass-btn').onclick = async () => {
+        const newPass = get('edit-pass').value.trim();
+        if (!newPass) {
+            alert('შეიყვანეთ ახალი პაროლი!');
+            return;
+        }
+
+        try {
+            await sql`UPDATE users SET password = ${newPass} WHERE email = ${userEmail}`;
+            showStatusUpdate('პაროლი შეიცვალა! 🔑');
+            get('edit-pass').value = '';
+        } catch (e) {
+            console.error(e);
+            alert('შეცდომა პაროლის შეცვლისას');
+        }
+    };
+
+    // Forgot Password Flow
+    get('forgot-pass-btn').onclick = (e) => {
+        e.preventDefault();
+        get('reset-form').classList.toggle('hidden');
+    };
+
+    get('request-reset-btn').onclick = async () => {
+        const email = get('reset-email').value.trim();
+        if (!email) {
+            alert('შეიყვანეთ ემაილი!');
+            return;
+        }
+
+        try {
+            const userCheck = await sql`SELECT id FROM users WHERE email = ${email}`;
+            if (userCheck.length === 0) {
+                alert('მომხმარებელი ამ ემაილით არ მოიძებნა');
+                return;
+            }
+
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            await sql`DELETE FROM reset_codes WHERE email = ${email}`;
+            await sql`INSERT INTO reset_codes (email, code) VALUES (${email}, ${code})`;
+
+            // Simulating email send
+            alert(`თქვენს ემაილზე გაიგზავნა კოდი! (სიმულაცია: ${code})`);
+            get('verify-reset-section').classList.remove('hidden');
+            get('request-reset-btn').textContent = 'კოდი თავიდან გაგზავნა';
+        } catch (e) {
+            console.error(e);
+            alert('შეცდომა კოდის გაგზავნისას');
+        }
+    };
+
+    get('verify-reset-btn').onclick = async () => {
+        const email = get('reset-email').value.trim();
+        const code = get('reset-code').value.trim();
+        const newPass = get('reset-new-pass').value.trim();
+
+        if (!code || !newPass) {
+            alert('შეავსეთ ყველა ველი!');
+            return;
+        }
+
+        try {
+            const check = await sql`SELECT id FROM reset_codes WHERE email = ${email} AND code = ${code}`;
+            if (check.length === 0) {
+                alert('არასწორი კოდი!');
+                return;
+            }
+
+            await sql`UPDATE users SET password = ${newPass} WHERE email = ${email}`;
+            await sql`DELETE FROM reset_codes WHERE email = ${email}`;
+
+            alert('პაროლი წარმატებით შეიცვალა! ახლა შეგიძლიათ შეხვიდეთ ახალი პაროლით.');
+            get('reset-form').classList.add('hidden');
+            get('verify-reset-section').classList.add('hidden');
+            get('reset-email').value = '';
+            get('reset-code').value = '';
+            get('reset-new-pass').value = '';
+            switchToLogin();
+        } catch (e) {
+            console.error(e);
+            alert('შეცდომა პაროლის განახლებისას');
+        }
     };
 
     // Share Best Score Button
@@ -1583,6 +1723,7 @@ window.onload = async () => {
         get('show-login-btn').style.background = 'var(--cloth-color)';
         get('show-register-btn').style.background = '';
         get('auth-error').textContent = '';
+        get('reset-form').classList.add('hidden');
     };
 
     const switchToRegister = () => {
@@ -1594,6 +1735,7 @@ window.onload = async () => {
         get('show-register-btn').style.background = 'var(--cloth-color)';
         get('show-login-btn').style.background = '';
         get('auth-error').textContent = '';
+        get('reset-form').classList.add('hidden');
     };
 
     get('show-login-btn').onclick = switchToLogin;

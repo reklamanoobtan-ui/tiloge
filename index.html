@@ -151,20 +151,39 @@
                     </div>
                 </div>
 
-                <div class="shop-item settings-profile-full" id="settings-profile-section">
-                    <div class="shop-info">
-                        <h3>👤 პროფილი</h3>
-                        <p id="settings-user-name">სტუმარი</p>
-                        <p id="settings-user-email" style="font-size: 0.7rem; opacity: 0.6;"></p>
-                        <p id="share-timer-container" class="hidden"
-                            style="font-size: 0.75rem; color: #ffcc00; margin-top: 5px;">
-                            ⏳ <span id="share-cooldown-timer">0:00</span>
-                        </p>
+                <div class="settings-col">
+                    <h3 class="section-title">👤 პროფილის მართვა</h3>
+                    <div id="profile-edit-form" class="settings-layout" style="gap: 10px; margin-top: 15px;">
+                        <div class="auth-field" style="margin-bottom: 5px;">
+                            <label style="font-size: 0.75rem; opacity: 0.7;">ახალი ნიკნეიმი:</label>
+                            <input type="text" id="edit-nick" placeholder="ახალი ნიკნეიმი">
+                        </div>
+                        <div class="auth-field" style="margin-bottom: 5px;">
+                            <label style="font-size: 0.75rem; opacity: 0.7;">ახალი ელ-ფოსტა:</label>
+                            <input type="email" id="edit-email" placeholder="ახალი ელ-ფოსტა">
+                        </div>
+                        <button id="update-profile-btn" class="action-btn"
+                            style="padding: 10px; font-size: 0.85rem;">მონაცემების განახლება</button>
+
+                        <div class="auth-field"
+                            style="margin-top: 15px; margin-bottom: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                            <label style="font-size: 0.75rem; opacity: 0.7;">ახალი პაროლი:</label>
+                            <input type="password" id="edit-pass" placeholder="ახალი პაროლი">
+                        </div>
+                        <button id="update-pass-btn" class="action-btn second-btn"
+                            style="padding: 10px; font-size: 0.85rem;">პაროლის შეცვლა</button>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="reset-lb-btn" class="action-btn hidden"
-                            style="background: #ff4d4d; color: white;">Reset</button>
-                        <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
+
+                    <div class="shop-item settings-profile-full" id="settings-profile-section"
+                        style="margin-top: 20px;">
+                        <div class="shop-info">
+                            <h3>👤 აქტიური სესია</h3>
+                            <p id="settings-user-name">სტუმარი</p>
+                            <p id="settings-user-email" style="font-size: 0.7rem; opacity: 0.6;"></p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="logout-btn" class="action-btn second-btn">გასვლა</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -346,6 +365,33 @@
                 </div>
                 <div id="pass-field" class="auth-field">
                     <input type="password" id="auth-password" placeholder="პაროლი">
+                </div>
+
+                <div id="forgot-pass-link-container" style="text-align: right; margin-bottom: 15px;">
+                    <a href="#" id="forgot-pass-btn"
+                        style="font-size: 0.8rem; color: var(--cloth-color); text-decoration: none;">დაგავიწყდა
+                        პაროლი?</a>
+                </div>
+
+                <div id="reset-form" class="hidden"
+                    style="margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 15px;">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px;">შეიყვანეთ თქვენი ემაილი პაროლის
+                        აღსადგენად</p>
+                    <div class="auth-field">
+                        <input type="email" id="reset-email" placeholder="ელ-ფოსტა">
+                    </div>
+                    <button id="request-reset-btn" class="action-btn" style="padding: 10px;">კოდის გაგზავნა</button>
+
+                    <div id="verify-reset-section" class="hidden" style="margin-top: 15px;">
+                        <div class="auth-field">
+                            <input type="text" id="reset-code" placeholder="კოდი ემაილიდან">
+                        </div>
+                        <div class="auth-field">
+                            <input type="password" id="reset-new-pass" placeholder="ახალი პაროლი">
+                        </div>
+                        <button id="verify-reset-btn" class="action-btn second-btn" style="padding: 10px;">პაროლის
+                            განახლება</button>
+                    </div>
                 </div>
 
                 <div id="auth-action-container" style="margin-top: 20px;">
