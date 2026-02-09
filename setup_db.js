@@ -7,16 +7,10 @@ const sql = neon(DATABASE_URL);
 async function setup() {
     console.log("🚀 Starting Database Setup (JavaScript version)...");
     try {
-        console.log("🔥 DROPPING ALL EXISTING TABLES FOR CLEAN RESET...");
-        await sql`DROP TABLE IF EXISTS game_results`;
-        await sql`DROP TABLE IF EXISTS shared_scores`;
-        await sql`DROP TABLE IF EXISTS chat_messages`;
-        await sql`DROP TABLE IF EXISTS global_events`;
-        await sql`DROP TABLE IF EXISTS users`; // Dropping users last due to dependencies if any
-        console.log("✅ All tables dropped.");
+        console.log("♻️ Checking database schema (No data deletion)...");
 
         // Users Table
-        await sql(`CREATE TABLE users (
+        await sql(`CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE,
             password TEXT,
