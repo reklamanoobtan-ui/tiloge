@@ -1573,9 +1573,9 @@ function createParticles(x, y, color, count = 15) {
 
 
 function getSpawnInterval() {
-    // Roguelike Scaling: Starts at 4.0s (was 2.5s), decreases by 0.05s (was 0.1s) every 1000 score. Min 0.8s (was 0.4s)
-    let baseInterval = 4000 - (score * 0.05);
-    baseInterval = Math.max(800, baseInterval); // Cap at 800ms to keep it manageable
+    // Action Mode: Starts at 2.0s, gentle scaling. Min 0.6s
+    let baseInterval = 2000 - (score * 0.05);
+    baseInterval = Math.max(600, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
@@ -1583,10 +1583,10 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit to prevent crash, but allow more chaos later
-    const maxStains = 60 + Math.floor(score / 5000);
+    // Strict limit: Max 80 stains total (Action feel without clutter)
+    const maxStains = 80;
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= Math.min(100, maxStains)) return;
+    if (currentStains >= maxStains) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
