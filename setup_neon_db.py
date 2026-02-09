@@ -1,4 +1,4 @@
-# v1.0.1 - GitHub Actions Sync Test
+# v1.0.2 - GitHub Actions Sync Test
 import asyncio
 import asyncpg
 import os
