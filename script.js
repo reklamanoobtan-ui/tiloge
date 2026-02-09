@@ -1325,12 +1325,34 @@ function burstSoap(x, y) {
     // Initial massive pink burst
     createBubbles(x, y, 100, true);
 
-    // Clear the screen
-    document.querySelectorAll('.stain').forEach(s => s.remove());
+    // Clear the screen and award points
+    let burstPoints = 0;
+    document.querySelectorAll('.stain').forEach(s => {
+        if (s.dataset.cleaning === 'true') return;
+        s.dataset.cleaning = 'true';
+
+        const isBoss = s.classList.contains('boss-stain');
+        const isTriangle = s.classList.contains('triangle-boss');
+        const rMult = parseFloat(s.dataset.rewardMult || 1.0);
+
+        if (isTriangle) {
+            burstPoints += Math.floor(20 * rMult);
+            bossesDefeated++;
+        } else if (isBoss) {
+            burstPoints += Math.floor(10 * rMult);
+            bossesDefeated++;
+        } else {
+            burstPoints += 1;
+            totalStainsCleanedRel++;
+        }
+        s.remove();
+    });
+
+    if (burstPoints > 0) updateScore(burstPoints);
     bossCount = 0;
 
     gameActive = false;
-    showStatusUpdate('ეკრანი გასუფთავდა! ვარდისფერი აფეთქება... 🌸✨');
+    showStatusUpdate(`ეკრანი გასუფთავდა! (+${burstPoints} ქულა) 🌸✨`);
 
     // "Cutscene" - Intense bubble wave for 3 seconds
     let startTime = Date.now();
