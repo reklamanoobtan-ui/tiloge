@@ -99,10 +99,10 @@ let syncLoopInterval = null;
 // --- Helper Functions ---
 
 function updatePowerStats() {
-    let power = baseClothStrength * strengthMultiplier;
+    let power = baseClothStrength * strengthMultiplier * globalStrengthMult;
     const clothEl = get('cloth');
 
-    cleaningRadius = 1 * radiusMultiplier;
+    cleaningRadius = 1 * radiusMultiplier * globalRadiusMult;
     clothStrength = power;
 
     // Apply Current Skin (Clean removal of ALL possible skin classes)
@@ -416,6 +416,12 @@ let globalCrisisTime = 30;
 let globalSpawnIntervalOverride = null;
 let globalBossLimitOverride = null;
 let globalStainLimitOverride = null;
+let globalStrengthMult = 1;
+let globalRadiusMult = 1;
+let globalCoinMult = 1;
+let globalBossHPOverride = null;
+let globalSoapThresholdOverride = null;
+let globalMinigameThresholdOverride = null;
 
 function updateScore(points) {
     if (!gameActive) return;
@@ -447,7 +453,7 @@ function updateScore(points) {
 
         // 1000 score milestone reward
         if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
-            const newCoins = coins + 1;
+            const newCoins = coins + (1 * globalCoinMult);
 
             // 🛡️ Security: Validate coins before updating
             if (window.securitySystem && !window.securitySystem.validateCoins(newCoins)) {
@@ -461,14 +467,16 @@ function updateScore(points) {
             saveStatsToLocal();
         }
 
-        // 2,500 score soap milestone
-        if (Math.floor(score / 2500) > Math.floor(lastSoapMilestone / 2500)) {
+        // Dynamic Soap Milestone
+        const soapThresh = globalSoapThresholdOverride || 2500;
+        if (Math.floor(score / soapThresh) > Math.floor(lastSoapMilestone / soapThresh)) {
             lastSoapMilestone = score;
             createSoap();
         }
 
-        // 3,750 score mini-game milestone
-        if (Math.floor(score / 3750) > Math.floor(lastMinigameMilestone / 3750)) {
+        // Dynamic Minigame Milestone
+        const minigameThresh = globalMinigameThresholdOverride || 3750;
+        if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
             lastMinigameMilestone = score;
             setTimeout(startMinigame, 500); // Small delay
         }
@@ -1630,7 +1638,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         // Formula: 5000 * (1 + score/20000)^2
         const bossScaling = Math.pow(1 + (score / 20000), 2);
 
-        let baseBossHP = 5000;
+        let baseBossHP = globalBossHPOverride || 5000;
 
         if (isTriangle) {
             // ELITE BOSS (Every 20k score)
@@ -1743,7 +1751,7 @@ function gameOver() {
     if (get('final-time')) get('final-time').textContent = survival;
 
     // Survival bonus calculation
-    const earned = Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier);
+    const earned = Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier * globalCoinMult);
     coins += earned;
     if (get('final-coins')) get('final-coins').textContent = earned;
 
@@ -2077,9 +2085,24 @@ async function checkGlobalEvents() {
         globalSpawnIntervalOverride = null;
         globalBossLimitOverride = null;
         globalStainLimitOverride = null;
+        globalStrengthMult = 1;
+        globalRadiusMult = 1;
+        globalCoinMult = 1;
+        globalBossHPOverride = null;
+        globalSoapThresholdOverride = null;
+        globalMinigameThresholdOverride = null;
+
         document.body.classList.remove('global-rainbow');
 
         events.forEach(ev => {
+            // Logic parsers for new types
+            if (ev.event_type === 'player_strength') { globalStrengthMult = parseFloat(ev.event_value); showStatusUpdate('💪 მოთამაშის ძალა გაძლიერებულია!'); updatePowerStats(); }
+            if (ev.event_type === 'player_radius') { globalRadiusMult = parseFloat(ev.event_value); showStatusUpdate('📏 რადიუსი გაზრდილია!'); updatePowerStats(); }
+            if (ev.event_type === 'coin_mult') { globalCoinMult = parseFloat(ev.event_value); showStatusUpdate('💰 ქოინების მულტიპლიკატორი!'); }
+            if (ev.event_type === 'boss_hp') { globalBossHPOverride = parseInt(ev.event_value); showStatusUpdate('☠️ ბოსების HP შეცვლილია!'); }
+            if (ev.event_type === 'soap_thresh') { globalSoapThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🧼 საპნის სიხშირე შეცვლილია!'); }
+            if (ev.event_type === 'minigame_thresh') { globalMinigameThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🎮 მინი-თამაშის სიხშირე შეცვლილია!'); }
+
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
                 showStatusUpdate(`🌍 გლობალური ${globalMultiplier}X ბონუსი აქტიურია! ✨`);
