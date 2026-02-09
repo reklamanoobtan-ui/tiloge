@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'setup_neon_db.py'
-      - '.github/workflows/sync-db.yml'
 
 jobs:
   sync-db:
