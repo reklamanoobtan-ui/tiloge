@@ -254,7 +254,7 @@ async function syncUserData(isFinal = false) {
             WHERE email = ${userEmail}`;
 
         // If game is over, record this achievement in history and update total_coins
-        if (isFinal && !userEmail.startsWith('guest_')) {
+        if (isFinal) {
             const finalScore = Math.floor(score);
             const earned = Math.floor((Math.floor(finalScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (window.coinBonusMultiplier || 1.0));
 
