@@ -514,7 +514,10 @@ function updateStatsSidebar() {
     if (pinkBonuses.length === 0) {
         pinkList.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
     } else {
-        pinkList.innerHTML = pinkBonuses.map(id => {
+        const counts = {};
+        pinkBonuses.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+
+        pinkList.innerHTML = Object.entries(counts).map(([id, count]) => {
             const names = {
                 'diff': '⚡ სირთულის შემსუბუქება',
                 'speed': '🚀 რობოტის სიჩქარე',
@@ -527,7 +530,7 @@ function updateStatsSidebar() {
                 'magnet': '🧲 მაგნიტის სიხშირე',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
-            return `<div class="upgrade-item" style="color: #ff69b4;"><span>${names[id] || id}</span> <strong>+50%</strong></div>`;
+            return `<div class="upgrade-item" style="color: #ff69b4;"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
         }).join('');
     }
 }
@@ -1418,9 +1421,8 @@ function applyPinkUpgrade(id) {
     get('pink-upgrade-modal').classList.add('hidden');
 
     // Track the bonus
-    if (!pinkBonuses.includes(id)) {
-        pinkBonuses.push(id);
-    }
+    // Allow stacking
+    pinkBonuses.push(id);
 
     // Apply 50% boost to the benefit
     switch (id) {
