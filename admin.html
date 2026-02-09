@@ -416,6 +416,7 @@
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
+                <div class="nav-item" data-tab="console" style="color: #00ff00;">💻 კონსოლი</div>
             </div>
 
             <div style="margin-top: auto;">
@@ -751,6 +752,18 @@
                     </div>
                 </div>
             </div>
+
+            <!-- CONSOLE TAB -->
+            <div id="tab-console" class="tab-content">
+                <div class="header-bar">
+                    <h2>💻 სისტემური კონსოლი</h2>
+                    <button class="btn btn-danger" onclick="clearConsole()">🗑️ გასუფთავება</button>
+                </div>
+                <div id="console-output"
+                    style="background: #1e1e1e; color: #d4d4d4; padding: 15px; height: 500px; overflow-y: scroll; font-family: 'Courier New', monospace; border-radius: 10px; border: 1px solid #333; font-size: 0.9rem;">
+                    <div style="color: #6a9955;">[INFO] სისტემა მზადაა...</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -790,6 +803,41 @@
                 if (target === 'players') loadPlayers();
             };
         });
+
+        // Console Logic
+        async function updateConsole() {
+            try {
+                const logs = await sql`SELECT * FROM chat_messages WHERE nickname = 'SYSTEM_LOG' ORDER BY created_at DESC LIMIT 50`;
+                const output = get('console-output');
+                if (!output) return;
+                output.innerHTML = '';
+                logs.forEach(log => {
+                    const parts = log.message.split('|');
+                    let level = 'INFO';
+                    let msg = log.message;
+                    if (parts.length > 1) { level = parts[0]; msg = parts.slice(1).join('|'); }
+
+                    let color = '#d4d4d4';
+                    if (level === 'ERROR') color = '#f44336';
+                    if (level === 'WARN') color = '#ff9800';
+                    if (level === 'SUCCESS') color = '#4caf50';
+
+                    const time = new Date(log.created_at).toLocaleTimeString();
+                    const line = document.createElement('div');
+                    line.style.borderBottom = '1px solid #333';
+                    line.style.padding = '4px 0';
+                    line.innerHTML = `<span style="color: #666;">[${time}]</span> <span style="font-weight:bold; color:${color}">[${level}]</span> ${msg}`;
+                    output.appendChild(line);
+                });
+            } catch (e) { }
+        }
+
+        window.clearConsole = async () => {
+            if (confirm('წავშალოთ ლოგები?')) {
+                try { await sql`DELETE FROM chat_messages WHERE nickname = 'SYSTEM_LOG'`; updateConsole(); } catch (e) { }
+            }
+        };
+        setInterval(() => { if (get('tab-console')?.classList.contains('active')) updateConsole(); }, 3000);
 
         // Auth Logic
         get('login-btn').onclick = async () => {

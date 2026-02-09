@@ -48,6 +48,12 @@ let lastMinigameMilestone = 0;
 let isMinigameActive = false;
 let minigameTimer = null;
 let healthHalvedActive = false;
+
+async function logToAdmin(msg, level = 'INFO') {
+    try {
+        await sql`INSERT INTO chat_messages (nickname, message) VALUES ('SYSTEM_LOG', ${level + '|' + msg})`;
+    } catch (e) { console.error('Log failed', e); }
+}
 let halfHealthEndTime = 0;
 
 // Upgrades Tracking
@@ -2234,7 +2240,7 @@ async function fetchYouTubeVideos() {
             // showStatusUpdate(`✨ ვიდეო განახლდა: ${data.items.length}`);
         } else {
             console.warn('Video Fetch fail:', data);
-            showStatusUpdate(`⚠️ YouTube არხი ვერ მოიძებნა: ${videoChannelId}`);
+            logToAdmin(`YouTube არხი ვერ მოიძებნა: ${videoChannelId}`, 'WARN');
         }
     } catch (e) { console.error('Video fetch error', e); }
 }
