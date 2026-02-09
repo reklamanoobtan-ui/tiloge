@@ -818,17 +818,6 @@ function initUI() {
         }
     };
 
-    // Share Best Score Button
-    get('share-best-btn').onclick = () => {
-        const bestData = JSON.parse(localStorage.getItem('tilo_best_score')) || { score: 0, time: 0 };
-        shareScore(bestData.score, bestData.time);
-    };
-
-    // Share Previous Score Button
-    get('share-prev-btn').onclick = () => {
-        const prevData = JSON.parse(localStorage.getItem('tilo_prev_score')) || { score: 0, time: 0 };
-        shareScore(prevData.score, prevData.time);
-    };
 
     // Revive Button
     get('revive-btn').onclick = () => reviveGame();
