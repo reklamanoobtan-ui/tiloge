@@ -106,8 +106,8 @@ function updatePowerStats() {
     // Apply Current Skin (Clean removal of ALL possible skin classes)
     if (clothEl) {
         const allPossibleSkins = [
-            'skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric', 'skin-rainbow',
-            'cloth-skin-fire', 'cloth-skin-ice', 'cloth-skin-jungle', 'cloth-skin-electric', 'cloth-skin-rainbow'
+            'skin-fire', 'skin-ice', 'skin-electric', 'skin-rainbow',
+            'cloth-skin-fire', 'cloth-skin-ice', 'cloth-skin-electric', 'cloth-skin-rainbow'
         ];
         clothEl.classList.remove(...allPossibleSkins);
 
@@ -156,7 +156,6 @@ function updateUIValues() {
 
     updateSkinBtn('buy-skin-fire', 'fire');
     updateSkinBtn('buy-skin-ice', 'ice');
-    updateSkinBtn('buy-skin-jungle', 'jungle');
     updateSkinBtn('buy-skin-electric', 'electric');
     updateSkinBtn('buy-skin-rainbow', 'rainbow');
 
@@ -663,7 +662,6 @@ function initUI() {
     get('buy-skin-default').onclick = () => handleSkinAction('default');
     get('buy-skin-fire').onclick = () => handleSkinAction('fire');
     get('buy-skin-ice').onclick = () => handleSkinAction('ice');
-    get('buy-skin-jungle').onclick = () => handleSkinAction('jungle');
     get('buy-skin-electric').onclick = () => handleSkinAction('electric');
     get('buy-skin-rainbow').onclick = () => handleSkinAction('rainbow');
 

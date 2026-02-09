@@ -719,10 +719,6 @@ body {
     animation: skin-rainbow-anim 3s linear infinite;
 }
 
-.cloth-skin-jungle {
-    filter: drop-shadow(0 0 15px #2d9300) hue-rotate(80deg) contrast(1.1);
-}
-
 .cloth-skin-electric {
     filter: drop-shadow(0 0 20px #00f2fe) brightness(1.5) contrast(1.2);
 }
