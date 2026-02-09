@@ -83,6 +83,12 @@ let baseClothStrength = 20;
 let clothStrength = 0;
 let cleaningRadius = 1;
 
+// Global Interval IDs to prevent stacking
+let bossInterval = null;
+let defeatCheckInterval = null;
+let timerInterval = null;
+let syncLoopInterval = null;
+
 // --- Helper Functions ---
 
 function updatePowerStats() {
@@ -2080,9 +2086,10 @@ function startGameSession(dontReset = false) {
         bossesDefeated = 0;
         totalStainsCleanedRel = 0;
         totalRepeatablePicked = 0;
+        pendingUpgrades = 0;
         upgradeCounts = {
             'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
-            'bomb': 0, 'coin_buff': 0, 'magnet': 0
+            'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0
         };
 
         // Reset Upgrades
@@ -2091,6 +2098,7 @@ function startGameSession(dontReset = false) {
         strengthMultiplier = 1.0;
         activeHelpers = 0;
         helperSpeedMultiplier = 1.0;
+        helperCleaningMultiplier = 1.0;
         hasBombUpgrade = false;
         coinBonusMultiplier = 1.0;
         hasMagnetUpgrade = false;
@@ -2119,8 +2127,17 @@ function startGameSession(dontReset = false) {
     lastActivityTime = Date.now();
     scheduleNextStain();
 
+    // Sync loop
+    if (syncLoopInterval) clearInterval(syncLoopInterval);
+    syncLoopInterval = setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
+
+    resetGameLoops();
+}
+
+function resetGameLoops() {
     // Boss spawning interval
-    setInterval(() => {
+    if (bossInterval) clearInterval(bossInterval);
+    bossInterval = setInterval(() => {
         if (gameActive) {
             // General Bosses (Cap at 10, scale health for overflow)
             const rawBossCount = Math.floor(score / 500) + 1;
@@ -2145,10 +2162,12 @@ function startGameSession(dontReset = false) {
     }, 60000);
 
     // Defeat condition check
-    setInterval(checkDefeatCondition, 1000);
+    if (defeatCheckInterval) clearInterval(defeatCheckInterval);
+    defeatCheckInterval = setInterval(checkDefeatCondition, 1000);
 
     // Round Timer
-    setInterval(() => {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
         if (gameActive) {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             const m = Math.floor(elapsed / 60);
@@ -2156,9 +2175,6 @@ function startGameSession(dontReset = false) {
             if (get('round-timer-val')) get('round-timer-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
         }
     }, 1000);
-
-    // Sync loop
-    setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
 }
 
 let spawnTimeout;
