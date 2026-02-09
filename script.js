@@ -1447,7 +1447,7 @@ function showUpgradeOptions() {
             return (upgradeCounts[u.id] || 0) < 5;
         }
         if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
-        if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 15;
+        if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 10;
         // Only show Robot Power if player has > 5 bots
         if (u.id === 'bot_pow') {
             if (activeHelpers < 5) return false;
