@@ -86,7 +86,7 @@ let radiusMultiplier = 1.0;
 let strengthMultiplier = 1.0;
 
 // Base stats
-let baseClothStrength = 60; // Increased from 20 to 60 (3x stronger)
+let baseClothStrength = 20; // Reverted to 20 (Harder)
 let clothStrength = 0;
 let cleaningRadius = 1;
 
@@ -457,14 +457,14 @@ function updateScore(points) {
             saveStatsToLocal();
         }
 
-        // 10,000 score soap milestone
-        if (Math.floor(score / 10000) > Math.floor(lastSoapMilestone / 10000)) {
+        // 5,000 score soap milestone
+        if (Math.floor(score / 5000) > Math.floor(lastSoapMilestone / 5000)) {
             lastSoapMilestone = score;
             createSoap();
         }
 
-        // 15,000 score mini-game milestone
-        if (Math.floor(score / 15000) > Math.floor(lastMinigameMilestone / 15000)) {
+        // 7,500 score mini-game milestone
+        if (Math.floor(score / 7500) > Math.floor(lastMinigameMilestone / 7500)) {
             lastMinigameMilestone = score;
             setTimeout(startMinigame, 500); // Small delay
         }
@@ -1564,9 +1564,10 @@ function createParticles(x, y, color, count = 15) {
 
 
 function getSpawnInterval() {
-    // Action Mode: Starts at 2.0s, gentle scaling. Min 0.6s
-    let baseInterval = 2000 - (score * 0.05);
-    baseInterval = Math.max(600, baseInterval);
+    // Roguelike Scaling: Starts at 2.5s, decreases by 0.1s every 1000 score. Min 0.4s
+    // Also affected by 'intervalMultiplier' upgrade (0.9x per upgrade)
+    let baseInterval = 2500 - (score * 0.1);
+    baseInterval = Math.max(400, baseInterval); // Cap at 400ms (insane speed)
     return baseInterval * intervalMultiplier;
 }
 
@@ -1574,10 +1575,10 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit: Max 80 stains total (Action feel without clutter)
-    const maxStains = 80;
+    // Strict limit to prevent crash, but allow more chaos later
+    const maxStains = 60 + Math.floor(score / 5000);
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= maxStains) return;
+    if (currentStains >= Math.min(100, maxStains)) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
@@ -1597,16 +1598,16 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         stain.classList.add('pulse-animation');
 
         // Boss Logic:
-        // Base HP: 2000 (was 5000)
-        // Scaling: Exponential growth but VERY manageable
-        // Formula: 2000 * (1 + score/40000)^1.5 (was score/20000 ^ 2)
-        const bossScaling = Math.pow(1 + (score / 40000), 1.5);
+        // Base HP: 5000
+        // Scaling: Exponential growth but manageable
+        // Formula: 5000 * (1 + score/20000)^2
+        const bossScaling = Math.pow(1 + (score / 20000), 2);
 
-        let baseBossHP = 2000;
+        let baseBossHP = 5000;
 
         if (isTriangle) {
             // ELITE BOSS (Every 20k score)
-            baseBossHP = 6000; // 3x Normal Boss (was 15000)
+            baseBossHP = 15000; // 3x Normal Boss
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
             size = 350;
@@ -1623,10 +1624,11 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
 
     } else {
         // NORMAL STAIN LOGIC
-        // Base HP: 50 (was 100)
-        // Scaling: Linear (+1 HP per 300 score instead of 100)
+        // Base HP: 100
+        // Scaling: Linear (+1 HP per 100 score)
+        // Variety: Random types
 
-        health = (50 + (score / 300)) * difficulty;
+        health = (100 + (score / 100)) * difficulty;
 
         // Random shape and color
         const type = Math.random();
@@ -2065,6 +2067,7 @@ function startGameSession(dontReset = false) {
         totalRepeatablePicked = 0;
         pendingUpgrades = 0;
         lastMinigameMilestone = 0;
+        lastSoapMilestone = 0;
         healthHalvedActive = false;
         pinkBonuses = [];
         upgradeCounts = {
@@ -2285,7 +2288,7 @@ function failMinigame() {
     clearInterval(minigameTimer);
     get('minigame-modal').classList.add('hidden');
     isMinigameActive = false;
-    showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 15,000 ქულაზე. ⌛');
+    showStatusUpdate('ვერ მოასწარი! სცადე შემდეგ 7,500 ქულაზე. ⌛');
     gameActive = true;
     scheduleNextStain();
 }
