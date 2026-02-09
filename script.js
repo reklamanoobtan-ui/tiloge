@@ -256,12 +256,15 @@ async function syncUserData(isFinal = false) {
         // If game is over, record this achievement in history and update total_coins
         if (isFinal) {
             const finalScore = Math.floor(score);
-            const earned = Math.floor((Math.floor(finalScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (window.coinBonusMultiplier || 1.0));
+            const earned = Math.floor((Math.floor(finalScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (coinBonusMultiplier || 1.0));
+
+            console.log("📊 Attempting to record match achievement...", { email: userEmail, score: finalScore, earned });
 
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
                      VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${earned}, NOW())`;
 
             await sql`UPDATE users SET total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
+            console.log("✅ Match achievement recorded successfully.");
         }
     } catch (e) { console.error("Sync Error:", e); }
 }
@@ -398,12 +401,14 @@ async function shareScore(scoreVal, timeVal) {
 
     try {
         const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
+        console.log("🌍 Attempting to auto-share score to rankings...", { nick: nickname, score: scoreVal });
+
         await sql`INSERT INTO shared_scores (nickname, score, survival_time, efficiency, is_vip)
                   VALUES (${nickname}, ${scoreVal}, ${timeVal}, ${efficiency}, ${isVip})`;
 
-        console.log("Match automatically shared to global rankings.");
+        console.log("✅ Match automatically shared to global rankings.");
     } catch (e) {
-        console.error("Auto-Share Error:", e);
+        console.error("❌ Auto-Share Error:", e);
     }
 }
 

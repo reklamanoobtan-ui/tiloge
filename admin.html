@@ -837,7 +837,7 @@
                 const results = await sql`
                     SELECT r.user_email, r.score, r.duration_seconds, r.coins_earned, r.played_at, u.nickname
                     FROM game_results r
-                    JOIN users u ON r.user_email = u.email
+                    LEFT JOIN users u ON r.user_email = u.email
                     ORDER BY r.played_at DESC
                     LIMIT 50
                 `;
