@@ -184,15 +184,21 @@
                 style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;">
                 <p style="text-align: center; opacity: 0.5;">მოთამაშეები იტვირთება...</p>
             </div>
-            <div style="margin-top: 10px; text-align: center; font-size: 0.9rem; opacity: 0.7;">
-                სულ მომხმარებელი: <span id="total-players">0</span>
+            <div
+                style="margin-top: 10px; text-align: center; font-size: 0.9rem; opacity: 0.7; display: flex; justify-content: center; gap: 15px; align-items: center;">
+                <span>სულ მომხმარებელი: <span id="total-players">0</span></span>
+                <button id="test-db-btn"
+                    style="background: none; border: 1px solid #555; color: #777; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; cursor: pointer;">🔍
+                    Test Connection</button>
             </div>
         </div>
 
         <div class="section">
             <h3>⚠️ Critical Actions</h3>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn-red" id="restart-site" style="flex: 1;">🔄 RESTART SITE</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px; flex-direction: column;">
+                <button class="btn-gold" id="run-setup-btn" style="width: 100%; margin-bottom: 10px;">🚀 RUN DATABASE
+                    SETUP (One-Click)</button>
+                <button class="btn-red" id="restart-site" style="width: 100%;">🔄 RESTART SITE</button>
             </div>
         </div>
 
@@ -492,6 +498,100 @@
 
         // Initial load
         loadPlayers();
+
+        // Database Setup Executor
+        get('run-setup-btn').onclick = async () => {
+            if (!confirm("დარწმუნებული ხართ? ეს შექმნის ყველა საჭირო ცხრილს (არსებულს არ წაშლის).")) return;
+
+            log('Starting Database Setup...', 'gold');
+            try {
+                // 1. Users Table
+                await sql`
+                    CREATE TABLE IF NOT EXISTS users (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        nickname VARCHAR(50) NOT NULL,
+                        score INTEGER DEFAULT 0,
+                        coins INTEGER DEFAULT 0,
+                        is_vip BOOLEAN DEFAULT FALSE,
+                        survival_time INTEGER DEFAULT 0,
+                        best_score INTEGER DEFAULT 0,
+                        last_active TIMESTAMP DEFAULT NOW(),
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `;
+                log('✅ Users table created/verified');
+
+                // 2. Indexes
+                await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+                await sql`CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC)`;
+
+                // 3. Chat Messages
+                await sql`
+                    CREATE TABLE IF NOT EXISTS chat_messages (
+                        id SERIAL PRIMARY KEY,
+                        nickname VARCHAR(50) NOT NULL,
+                        message TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `;
+                log('✅ Chat table created/verified');
+
+                // 4. Global Events
+                await sql`
+                    CREATE TABLE IF NOT EXISTS global_events (
+                        id SERIAL PRIMARY KEY,
+                        event_type VARCHAR(50) NOT NULL,
+                        event_value VARCHAR(50) NOT NULL,
+                        expires_at TIMESTAMP NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `;
+                log('✅ Events table created/verified');
+
+                const msg = '🎉 DATABASE SETUP COMPLETE! All tables are ready.';
+                log(msg, 'green');
+                alert(msg);
+                loadPlayers(); // Refresh list
+            } catch (e) {
+                console.error(e);
+                const errorMsg = `❌ SETUP FAILED: ${e.message}`;
+                log(errorMsg, 'red');
+                alert(errorMsg);
+            }
+        };
+
+        // Database Connection Tester
+        get('test-db-btn').onclick = async () => {
+            log('Testing database connection...', 'white');
+            try {
+                // 1. Check if we can talk to Neon
+                const result = await sql`SELECT 1 as test`;
+                if (!result || result[0].test !== 1) throw new Error('Query returned invalid results');
+
+                // 2. Check table existence
+                const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
+                const tableNames = tables.map(t => t.table_name);
+
+                let message = `✅ Connection OK! Tables: ${tableNames.join(', ')}`;
+
+                if (!tableNames.includes('users')) {
+                    message = `❌ ERROR: 'users' table not found! Run database_setup.sql`;
+                    log(message, 'red');
+                } else {
+                    const count = await sql`SELECT COUNT(*) FROM users`;
+                    message += ` (Total Users: ${count[0].count})`;
+                    log(message, 'green');
+                }
+                alert(message);
+            } catch (e) {
+                console.error(e);
+                const errorMsg = `❌ DB ERROR: ${e.message}`;
+                log(errorMsg, 'red');
+                alert(errorMsg + "\n\nCheck if your Neon connection string in admin.html is correct!");
+            }
+        };
 
     </script>
 </body>
