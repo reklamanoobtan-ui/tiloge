@@ -64,6 +64,8 @@ let upgradeCounts = {
     'bot_pow': 0    // Max 5
 };
 
+let pinkBonuses = []; // Track which pink bonuses have been applied
+
 let helperCleaningMultiplier = 1.0;
 
 // Helper Bot State (Roguelike only)
@@ -597,32 +599,51 @@ function updateStatsSidebar() {
     get('session-cleaned').textContent = totalStainsCleanedRel;
 
     const list = get('active-upgrades-list');
-    list.innerHTML = '';
+    const pinkList = get('pink-bonuses-list');
+    if (!list || !pinkList) return;
 
-    const names = {
-        'diff': 'სირთულე (⚡)',
-        'speed': 'რობოტის სიჩქარე (🤖)',
-        'bot': 'რობოტების რაოდენობა (🤖)',
-        'radius': 'წმენდის რადიუსი (📏)',
-        'strength': 'წმენდის ძალა (💪)',
-        'karcher': 'კერხერი (🚿)',
-        'bomb': 'ბომბი (💣)',
-        'coin_buff': 'ქოინების ბონუსი (💰)',
-        'magnet': 'მაგნიტი (🧲)'
-    };
-
-    let hasAny = false;
-    for (const [id, count] of Object.entries(upgradeCounts)) {
-        if (count > 0) {
-            hasAny = true;
-            const item = document.createElement('div');
-            item.className = 'upgrade-stat-item';
-            const cap = (id === 'karcher') ? 1 : 5;
-            item.innerHTML = `<span>${names[id]}</span> <span>${count}/${cap}</span>`;
-            list.appendChild(item);
-        }
+    // Regular upgrades
+    const activeUpgrades = Object.entries(upgradeCounts).filter(([_, count]) => count > 0);
+    if (activeUpgrades.length === 0) {
+        list.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
+    } else {
+        list.innerHTML = activeUpgrades.map(([id, count]) => {
+            const names = {
+                'diff': '⚡ სირთულე',
+                'speed': '🚀 რობოტის სიჩქარე',
+                'bot': '🤖 რობოტები',
+                'radius': '📏 რადიუსი',
+                'strength': '💪 ძალა',
+                'karcher': '🚿 კერხერი',
+                'bomb': '💣 ბომბი',
+                'coin_buff': '💰 ქოინები',
+                'magnet': '🧲 მაგნიტი',
+                'bot_pow': '🦾 რობოტის ძალა'
+            };
+            return `<div class="upgrade-item"><span>${names[id] || id}</span> <strong>×${count}</strong></div>`;
+        }).join('');
     }
-    if (!hasAny) list.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
+
+    // Pink bonuses
+    if (pinkBonuses.length === 0) {
+        pinkList.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
+    } else {
+        pinkList.innerHTML = pinkBonuses.map(id => {
+            const names = {
+                'diff': '⚡ სირთულის შემსუბუქება',
+                'speed': '🚀 რობოტის სიჩქარე',
+                'bot': '🤖 რობოტის სიჩქარე',
+                'radius': '📏 წმენდის რადიუსი',
+                'strength': '💪 ტილოს ძალა',
+                'karcher': '🚿 კერხერის სიმძლავრე',
+                'bomb': '💣 ბომბის სიმძლავრე',
+                'coin_buff': '💰 ქოინების ბონუსი',
+                'magnet': '🧲 მაგნიტის სიხშირე',
+                'bot_pow': '🦾 რობოტის ძალა'
+            };
+            return `<div class="upgrade-item" style="color: #ff69b4;"><span>${names[id] || id}</span> <strong>+50%</strong></div>`;
+        }).join('');
+    }
 }
 
 
@@ -1503,6 +1524,11 @@ function showPinkUpgradeOptions() {
 function applyPinkUpgrade(id) {
     get('pink-upgrade-modal').classList.add('hidden');
 
+    // Track the bonus
+    if (!pinkBonuses.includes(id)) {
+        pinkBonuses.push(id);
+    }
+
     // Apply 50% boost to the benefit
     switch (id) {
         case 'diff': intervalMultiplier *= 0.7; break; // +50% efficacy in reducing interval
@@ -1519,6 +1545,7 @@ function applyPinkUpgrade(id) {
 
     updatePowerStats();
     updateUIValues();
+    updateStatsSidebar();
     gameActive = true;
     scheduleNextStain();
     showStatusUpdate('სუპერ-გაძლიერება მიღებულია! 💪🌸');
@@ -2133,6 +2160,7 @@ function startGameSession(dontReset = false) {
         pendingUpgrades = 0;
         lastMinigameMilestone = 0;
         healthHalvedActive = false;
+        pinkBonuses = [];
         upgradeCounts = {
             'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
             'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0
