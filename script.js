@@ -1391,6 +1391,10 @@ function applyUpgrade(id) {
 
 // --- Pink Soap Special Mechanic ---
 
+
+let soapTimer = null;
+let soapWarningTimer = null;
+
 function createSoap() {
     if (isSoapActive || isUpgradeOpen) return; // Don't spawn soap if choosing upgrade
     const container = get('canvas-container');
@@ -1408,6 +1412,40 @@ function createSoap() {
     soap.style.left = `${spawnX - 60}px`;
     soap.style.top = `${spawnY - 40}px`;
 
+    // 30 Seconds Disappear Logic
+    if (soapTimer) clearTimeout(soapTimer);
+    if (soapWarningTimer) clearTimeout(soapWarningTimer);
+
+    // Warning at 20s
+    soapWarningTimer = setTimeout(() => {
+        const s = get('active-soap');
+        if (s) {
+            // Apply a flashing red border/shadow animation
+            s.style.transition = '0.5s';
+            s.style.boxShadow = '0 0 20px red';
+            s.style.border = '2px solid red';
+            showStatusUpdate('საპონი მალე გაქრება! 🕒⚠️');
+
+            // Pulse animation manually if CSS keyframes aren't reliable
+            let toggle = false;
+            const pulseInt = setInterval(() => {
+                if (!get('active-soap')) { clearInterval(pulseInt); return; }
+                toggle = !toggle;
+                s.style.transform = toggle ? 'scale(1.1)' : 'scale(1.0)';
+            }, 500);
+        }
+    }, 20000);
+
+    // Disappear at 30s
+    soapTimer = setTimeout(() => {
+        const s = get('active-soap');
+        if (s) {
+            s.remove();
+            isSoapActive = false;
+            showStatusUpdate('საპონი გაქრა... 😞🧼');
+        }
+    }, 30000);
+
     soapClickCount = 0;
     soap.onclick = (e) => {
         e.stopPropagation();
@@ -1423,16 +1461,21 @@ function createSoap() {
     };
 
     soap.onmouseenter = () => {
-        showStatusUpdate('დააკლიკე 10-ჯერ საპონს! 🧼⚡');
-        soap.style.boxShadow = '0 0 50px #ff69b4, inset 0 0 30px white';
+        // Only override if not in warning mode
+        if (!get('active-soap').style.border) {
+            showStatusUpdate('დააკლიკე 10-ჯერ საპონს! 🧼⚡');
+            soap.style.boxShadow = '0 0 50px #ff69b4, inset 0 0 30px white';
+        }
     };
 
     soap.onmouseleave = () => {
-        soap.style.boxShadow = '';
+        if (!get('active-soap').style.border) {
+            soap.style.boxShadow = '';
+        }
     };
 
     container.appendChild(soap);
-    showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! 🧼✨');
+    showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! (30წმ) 🧼✨');
 }
 
 function createBubbles(x, y, count, isPink = false) {
@@ -1468,6 +1511,9 @@ function createBubbles(x, y, count, isPink = false) {
 }
 
 function burstSoap(x, y) {
+    if (soapTimer) clearTimeout(soapTimer);
+    if (soapWarningTimer) clearTimeout(soapWarningTimer);
+
     const soap = get('active-soap');
     if (soap) soap.remove();
     isSoapActive = false;
