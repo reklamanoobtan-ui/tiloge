@@ -2217,10 +2217,7 @@ function startGameSession(dontReset = false) {
 
     resetGameLoops();
 
-    // Start Video Scheduler
-    fetchYouTubeVideos();
-    startVideoScheduler();
-    setInterval(fetchYouTubeVideos, 300000); // Check for new videos every 5 mins
+    // Video Scheduler moved to global init
 }
 
 async function fetchYouTubeVideos() {
@@ -2234,6 +2231,10 @@ async function fetchYouTubeVideos() {
         const data = await res.json();
         if (data.status === 'ok') {
             last10Videos = data.items;
+            // showStatusUpdate(`✨ ვიდეო განახლდა: ${data.items.length}`);
+        } else {
+            console.warn('Video Fetch fail:', data);
+            showStatusUpdate(`⚠️ YouTube არხი ვერ მოიძებნა: ${videoChannelId}`);
         }
     } catch (e) { console.error('Video fetch error', e); }
 }
@@ -2504,3 +2505,10 @@ function startHalfHealthEffect() {
     gameActive = true;
     scheduleNextStain();
 }
+
+// Start Video System Globally
+setTimeout(() => {
+    fetchYouTubeVideos();
+    startVideoScheduler();
+    setInterval(fetchYouTubeVideos, 300000);
+}, 2000);
