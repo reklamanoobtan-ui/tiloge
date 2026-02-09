@@ -124,6 +124,11 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_vip', isVip);
     localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
     localStorage.setItem('tilo_current_skin', currentSkin);
+
+    // 🛡️ Security: Update integrity hash after saving
+    if (window.securitySystem) {
+        window.securitySystem.verifyStorageIntegrity();
+    }
 }
 
 function updateUIValues() {
@@ -549,7 +554,15 @@ function updateScore(points) {
         // Apply Global Multiplier
         const finalPoints = points * globalMultiplier;
 
-        score += finalPoints;
+        const newScore = score + finalPoints;
+
+        // 🛡️ Security: Validate score before updating
+        if (window.securitySystem && !window.securitySystem.validateScore(newScore)) {
+            console.warn('🚨 Invalid score detected, rejecting update');
+            return;
+        }
+
+        score = newScore;
         totalStainsCleaned += finalPoints;
 
         // Queue all earned upgrades
@@ -565,7 +578,15 @@ function updateScore(points) {
 
         // 1000 score milestone reward
         if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
-            coins += 1;
+            const newCoins = coins + 1;
+
+            // 🛡️ Security: Validate coins before updating
+            if (window.securitySystem && !window.securitySystem.validateCoins(newCoins)) {
+                console.warn('🚨 Invalid coin modification detected');
+                return;
+            }
+
+            coins = newCoins;
             showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
             lastMilestoneScore = score;
             saveStatsToLocal();
