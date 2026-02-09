@@ -1397,7 +1397,8 @@ function burstSoap(x, y) {
     if (soap) soap.remove();
     isSoapActive = false;
 
-    createBubbles(x, y, 40);
+    // Initial big burst
+    createBubbles(x, y, 60);
 
     // Clear the screen
     document.querySelectorAll('.stain').forEach(s => s.remove());
@@ -1406,16 +1407,18 @@ function burstSoap(x, y) {
     gameActive = false;
     showStatusUpdate('ეკრანი გასუფთავდა! ბუშტების ტალღა მოდის... 🌊');
 
-    // "Cutscene" - Bubble wave for 3 seconds
+    // "Cutscene" - Intense bubble wave for 3 seconds
+    let startTime = Date.now();
     let waveInterval = setInterval(() => {
-        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 10);
-    }, 100);
+        // Random bursts across the screen
+        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 15);
 
-    setTimeout(() => {
-        clearInterval(waveInterval);
-        showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
-        showPinkUpgradeOptions();
-    }, 3000);
+        if (Date.now() - startTime >= 3000) {
+            clearInterval(waveInterval);
+            showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
+            showPinkUpgradeOptions();
+        }
+    }, 150);
 }
 
 function showPinkUpgradeOptions() {
@@ -1425,9 +1428,8 @@ function showPinkUpgradeOptions() {
     modal.classList.remove('hidden');
 
     const names = {
-        'diff': 'სირთულის შემსუბუქება',
         'speed': 'რობოტის სიჩქარე',
-        'bot': 'რობოტის ძალა',
+        'bot': 'რობოტის რაოდენობა',
         'radius': 'წმენდის რადიუსი',
         'strength': 'ტილოს ძალა',
         'karcher': 'კერხერის სიმძლავრე',
@@ -1438,15 +1440,15 @@ function showPinkUpgradeOptions() {
     };
 
     const icons = {
-        'diff': '⚡', 'speed': '🚀', 'bot': '🤖', 'radius': '📏',
+        'speed': '🚀', 'bot': '🤖', 'radius': '📏',
         'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲', 'bot_pow': '🦾'
     };
 
-    // Filter upgrades player already has at least one of
-    const ownedIds = Object.keys(upgradeCounts).filter(id => upgradeCounts[id] > 0);
+    // Filter upgrades player already has at least one of (Excluding 'diff')
+    const ownedIds = Object.keys(upgradeCounts).filter(id => id !== 'diff' && upgradeCounts[id] > 0);
 
-    // If none owned (unlikely at 10k), offer fallback
-    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts);
+    // If none owned (unlikely at 10k), offer fallback (Excluding 'diff')
+    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts).filter(id => id !== 'diff');
 
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
@@ -1508,6 +1510,10 @@ function showUpgradeOptions() {
 
     // Filter available upgrades based on limits
     const available = UPGRADE_POOL.filter(u => {
+        if (u.id === 'diff') {
+            if (getSpawnInterval() <= 10) return false;
+            return (upgradeCounts[u.id] || 0) < 5;
+        }
         if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
         if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 15;
         // Only show Robot Power if player has > 5 bots
