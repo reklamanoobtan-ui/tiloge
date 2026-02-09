@@ -840,24 +840,34 @@
         setInterval(() => { if (get('tab-console')?.classList.contains('active')) updateConsole(); }, 3000);
 
         // Auth Logic
-        get('login-btn').onclick = async () => {
-            const pass = get('admin-pass').value.trim();
-            const loginStatus = get('login-status');
+        const loginBtn = get('login-btn');
+        if (loginBtn) {
+            loginBtn.onclick = async () => {
+                const passInput = get('admin-pass');
+                const pass = passInput ? passInput.value.trim() : '';
+                const loginStatus = get('login-status');
 
-            if (!pass) return;
-            loginStatus.textContent = "ამოწმებს...";
+                if (!pass) return;
+                if (loginStatus) loginStatus.textContent = "ამოწმებს...";
 
-            if (pass === "unoobi123!123!") {
-                get('login-section').style.display = 'none';
-                get('admin-controls').style.display = 'flex';
-                log('მოგესალმებით, ადმინ!', 'var(--primary)');
-                if (typeof updateDashboardStats === 'function') updateDashboardStats();
-                loadPlayers(); // Load players immediately
-            } else {
-                loginStatus.textContent = "პაროლი არასწორია!";
-                loginStatus.style.color = "var(--danger)";
-            }
-        };
+                console.log("Admin Login Attempt...");
+
+                // The password is: unoobi123!123!
+                if (pass === "unoobi123!123!") {
+                    get('login-section').style.display = 'none';
+                    get('admin-controls').style.display = 'flex';
+                    log('მოგესალმებით, ადმინ!', 'var(--primary)');
+                    if (typeof updateDashboardStats === 'function') updateDashboardStats();
+                    loadPlayers(); // Load players immediately
+                } else {
+                    if (loginStatus) {
+                        loginStatus.textContent = "პაროლი არასწორია!";
+                        loginStatus.style.color = "var(--danger)";
+                    }
+                    console.warn("Invalid admin password attempt.");
+                }
+            };
+        }
 
         get('give-coins').onclick = async () => {
             const name = get('target-nick').value.trim();
