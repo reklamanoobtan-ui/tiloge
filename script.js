@@ -629,7 +629,7 @@ function initUI() {
     // End Game Button
     get('end-game-btn').onclick = () => {
         if (confirm("ნამდვილად გსურთ თამაშის დასრულება? შედეგი ავტომატურად შეინახება.")) {
-            gameOver();
+            gameOver(true);
         }
     };
 
@@ -1708,13 +1708,19 @@ function checkDefeatCondition() {
 }
 
 
-function gameOver() {
+function gameOver(isManual = false) {
     gameActive = false;
     clearTimeout(spawnTimeout);
     if (bossScalingInterval) clearInterval(bossScalingInterval);
 
     // Survival calc
     let survival = Math.floor((Date.now() - startTime) / 1000);
+
+    const defeatTitle = get('defeat-title');
+    if (defeatTitle) {
+        defeatTitle.textContent = isManual ? "თამაში დასრულდა! 🏁" : "დამარცხდით! 💀";
+        defeatTitle.style.color = isManual ? "#4facfe" : "#ff4d4d";
+    }
 
     get('defeat-modal').classList.remove('hidden');
     get('final-stains').textContent = Math.floor(score);
