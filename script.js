@@ -55,8 +55,11 @@ let upgradeCounts = {
     'karcher': 0,   // Max 1
     'bomb': 0,      // Max 1
     'coin_buff': 0, // Max 5
-    'magnet': 0     // Max 1
+    'magnet': 0,     // Max 1
+    'bot_pow': 0    // Max 5
 };
+
+let helperCleaningMultiplier = 1.0;
 
 // Helper Bot State (Roguelike only)
 let activeHelpers = 0;
@@ -1219,7 +1222,7 @@ function startHelperBot() {
                 setTimeout(() => {
                     if (closest.parentElement) {
                         let h = parseFloat(closest.dataset.health);
-                        h -= 80; // Improved robot cleaning power
+                        h -= (80 * helperCleaningMultiplier); // Dynamic robot cleaning power
                         closest.dataset.health = h;
                         closest.style.opacity = Math.max(0.2, h / parseFloat(closest.dataset.maxHealth));
                         if (h <= 0 && closest.dataset.cleaning !== 'true') {
@@ -1294,6 +1297,7 @@ function applyUpgrade(id) {
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
         case 'coin_buff': coinBonusMultiplier += 0.1; break;
+        case 'bot_pow': helperCleaningMultiplier *= 1.1; break;
         case 'magnet':
             if (!hasMagnetUpgrade) {
                 hasMagnetUpgrade = true;
@@ -1393,10 +1397,19 @@ function burstSoap(x, y) {
     document.querySelectorAll('.stain').forEach(s => s.remove());
     bossCount = 0; // Reset boss count as well
 
-    // Pause and show special menu
     gameActive = false;
-    showStatusUpdate('ეკრანი გასუფთავდა! აირჩიე სუპერ-ბონუსი! 🌸');
-    showPinkUpgradeOptions();
+    showStatusUpdate('ეკრანი გასუფთავდა! ბუშტების ტალღა მოდის... 🌊');
+
+    // "Cutscene" - Bubble wave for 3 seconds
+    let waveInterval = setInterval(() => {
+        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 10);
+    }, 100);
+
+    setTimeout(() => {
+        clearInterval(waveInterval);
+        showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
+        showPinkUpgradeOptions();
+    }, 3000);
 }
 
 function showPinkUpgradeOptions() {
@@ -1414,12 +1427,13 @@ function showPinkUpgradeOptions() {
         'karcher': 'კერხერის სიმძლავრე',
         'bomb': 'ბომბის სიმძლავრე',
         'coin_buff': 'ქოინების ბონუსი',
-        'magnet': 'მაგნიტის სიხშირე'
+        'magnet': 'მაგნიტის სიხშირე',
+        'bot_pow': 'რობოტის ძალა'
     };
 
     const icons = {
         'diff': '⚡', 'speed': '🚀', 'bot': '🤖', 'radius': '📏',
-        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲'
+        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲', 'bot_pow': '🦾'
     };
 
     // Filter upgrades player already has at least one of
@@ -1458,6 +1472,7 @@ function applyPinkUpgrade(id) {
         case 'bomb': strengthMultiplier *= 1.5; break;
         case 'coin_buff': coinBonusMultiplier *= 1.5; break;
         case 'magnet': magnetInterval *= 0.5; break; // Half the interval (2x speed)
+        case 'bot_pow': helperCleaningMultiplier *= 1.5; break;
     }
 
     updatePowerStats();
@@ -1481,14 +1496,20 @@ function showUpgradeOptions() {
         { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
         { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
         { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+10% ქოინების მოგება (Max 5)', type: 'multi' },
-        { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' }
+        { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' },
+        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+10% რობოტის ძალა (Max 5)', type: 'multi' }
     ];
 
     // Filter available upgrades based on limits
     const available = UPGRADE_POOL.filter(u => {
         if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
         if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 15;
-        // Strict limit of 5 per repeatable upgrade
+        // Only show Robot Power if player has > 5 bots
+        if (u.id === 'bot_pow') {
+            if (activeHelpers < 5) return false;
+            return (upgradeCounts[u.id] || 0) < 5;
+        }
+        // Strict limit of 5 per repeatable upgrade (for others)
         return (upgradeCounts[u.id] || 0) < 5;
     });
 
