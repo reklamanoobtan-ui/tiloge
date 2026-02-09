@@ -1712,54 +1712,86 @@ function createParticles(x, y, color, count = 15) {
     }
 }
 
+
 function getSpawnInterval() {
-    // Progressive difficulty - starts at 2000ms, gets faster with score
-    return Math.max(10, (2000 * intervalMultiplier) - (score * 5));
+    // Roguelike Scaling: Starts at 2.5s, decreases by 0.1s every 1000 score. Min 0.4s
+    // Also affected by 'intervalMultiplier' upgrade (0.9x per upgrade)
+    let baseInterval = 2500 - (score * 0.1);
+    baseInterval = Math.max(400, baseInterval); // Cap at 400ms (insane speed)
+    return baseInterval * intervalMultiplier;
 }
 
 function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0) {
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit of 60 stains to prevent lag and increase pressure
+    // Strict limit to prevent crash, but allow more chaos later
+    const maxStains = 60 + Math.floor(score / 5000);
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= 60) return;
+    if (currentStains >= Math.min(100, maxStains)) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
 
+    // ==========================================
+    // ROGUELIKE SCALING LOGIC 
+    // ==========================================
+
+    // Difficulty Factor: Increases by 0.1 every 1000 score
+    const difficulty = 1 + (score / 10000);
+
     let health = 100;
-    let size = Math.random() * 100 + 50;
+    let size = Math.random() * 100 + 50; // Random size 50-150px
 
     if (isBoss) {
         stain.classList.add('boss-stain');
         stain.classList.add('pulse-animation');
 
-        // Every 10,000 score scaling (doubles at each milestone)
-        let scalingFactor = Math.pow(2, Math.floor(score / 10000));
-        let baseHealth = isTriangle ? 9000 : 3000;
+        // Boss Logic:
+        // Base HP: 5000
+        // Scaling: Exponential growth but manageable
+        // Formula: 5000 * (1 + score/20000)^2
+        const bossScaling = Math.pow(1 + (score / 20000), 2);
 
-        health = baseHealth * scalingFactor * healthMultiplier;
-        size = isTriangle ? 300 : 250;
-
-        if (healthHalvedActive) health /= 2;
+        let baseBossHP = 5000;
 
         if (isTriangle) {
+            // ELITE BOSS (Every 20k score)
+            baseBossHP = 15000; // 3x Normal Boss
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
+            size = 350;
         } else {
+            // NORMAL BOSS (Every 5k score)
             stain.innerHTML = '<div class="boss-title">BOSS</div>';
+            size = 250;
         }
+
+        health = baseBossHP * bossScaling * difficulty;
+
+        // Critical: Boss HP caps at 10 Million to prevent impossible numbers
+        health = Math.min(health, 10000000);
+
     } else {
-        // Random shape and color behavior
+        // NORMAL STAIN LOGIC
+        // Base HP: 100
+        // Scaling: Linear (+1 HP per 100 score)
+        // Variety: Random types
+
+        health = (100 + (score / 100)) * difficulty;
+
+        // Random shape and color
         const type = Math.random();
-        if (type < 0.2) { // 20% Circle Blue
+        if (type < 0.2) { // 20% Circle Blue (Fast but weak)
             stain.classList.add('stain-circle');
             stain.style.backgroundColor = 'rgba(0, 102, 255, 0.4)';
-        } else if (type < 0.4) { // 20% Triangle Yellow
+            health *= 0.7; // 30% less HP
+        } else if (type < 0.4) { // 20% Triangle Yellow (Strong but small)
             stain.classList.add('stain-triangle');
             stain.style.backgroundColor = 'rgba(255, 204, 0, 0.4)';
-        } else { // 60% Square (randomish colors)
+            health *= 1.5; // 50% more HP
+            size *= 0.8;   // Smaller
+        } else { // 60% Square (Standard)
             const colors = ['rgba(255, 77, 77, 0.3)', 'rgba(77, 255, 77, 0.3)', 'rgba(155, 77, 255, 0.3)'];
             stain.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         }
