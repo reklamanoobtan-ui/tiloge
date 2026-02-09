@@ -148,6 +148,7 @@ body {
         0 10px 10px rgba(0, 0, 0, 0.05),
         inset 0 -5px 15px rgba(0, 0, 0, 0.1),
         inset 0 5px 15px rgba(255, 255, 255, 0.4);
+    pointer-events: none;
     cursor: grab;
     transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.1s ease-out;
     z-index: 10;
@@ -690,6 +691,7 @@ body {
         0 0 30px rgba(255, 105, 180, 0.6),
         inset 0 0 20px rgba(255, 255, 255, 0.5);
     cursor: pointer;
+    pointer-events: auto;
     z-index: 3000;
     display: flex;
     justify-content: center;

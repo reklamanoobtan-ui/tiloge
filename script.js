@@ -1313,25 +1313,37 @@ function createSoap() {
     soap.className = 'soap-stain';
     soap.id = 'active-soap';
     soap.innerHTML = '🧼';
-    soap.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
-    soap.style.top = `${Math.random() * (window.innerHeight - 80)}px`;
+    // Spawn more towards the center (30% to 70% range)
+    const spawnX = (window.innerWidth * 0.3) + (Math.random() * window.innerWidth * 0.4);
+    const spawnY = (window.innerHeight * 0.3) + (Math.random() * window.innerHeight * 0.4);
+    soap.style.left = `${spawnX - 60}px`;
+    soap.style.top = `${spawnY - 40}px`;
 
     soapClickCount = 0;
     soap.onclick = (e) => {
         e.stopPropagation();
         soapClickCount++;
-        createBubbles(e.clientX, e.clientY, 10);
+        createBubbles(e.clientX, e.clientY, 15);
 
         // Visual feedback
-        soap.style.transform = `scale(${1 + (soapClickCount * 0.05)})`;
+        soap.style.transform = `scale(${1.2 + (soapClickCount * 0.1)})`;
 
         if (soapClickCount >= 10) {
             burstSoap(e.clientX, e.clientY);
         }
     };
 
+    soap.onmouseenter = () => {
+        showStatusUpdate('დააკლიკე 10-ჯერ საპონს! 🧼⚡');
+        soap.style.boxShadow = '0 0 50px #ff69b4, inset 0 0 30px white';
+    };
+
+    soap.onmouseleave = () => {
+        soap.style.boxShadow = '';
+    };
+
     container.appendChild(soap);
-    showStatusUpdate('საპონი გამოჩნდა! გაასკდე 10 კლიკით! 🧼✨');
+    showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! 🧼✨');
 }
 
 function createBubbles(x, y, count) {
