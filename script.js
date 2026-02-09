@@ -434,6 +434,7 @@ let globalGodMode = false;
 let globalFreezeEnemies = false;
 let globalBossImage = null;
 let globalBossScale = 1.0;
+let globalUpgradeFactor = 1.3;
 
 // Video Notification Globals
 let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
@@ -463,7 +464,7 @@ function updateScore(points) {
         // Queue all earned upgrades
         while (score >= nextUpgradeScore) {
             pendingUpgrades++;
-            nextUpgradeScore = Math.ceil(nextUpgradeScore * 1.3);
+            nextUpgradeScore = Math.ceil(nextUpgradeScore * globalUpgradeFactor);
         }
 
         if (pendingUpgrades > 0 && !isUpgradeOpen) {
@@ -2130,6 +2131,7 @@ async function checkGlobalEvents() {
         globalFreezeEnemies = false;
         globalBossImage = null;
         globalBossScale = 1.0;
+        globalUpgradeFactor = 1.3;
 
         document.body.classList.remove('global-rainbow');
         // Clear all site effects before re-applying
@@ -2157,6 +2159,12 @@ async function checkGlobalEvents() {
                     if (cfg.img) globalBossImage = cfg.img;
                     if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
                 } catch (e) { }
+            }
+            if (ev.event_type === 'upgrade_config') {
+                globalUpgradeFactor = parseFloat(ev.event_value) || 1.3;
+            }
+            if (ev.event_type === 'info') {
+                showSystemAlert(ev.event_value);
             }
             if (ev.event_type === 'video_channel') {
                 videoChannels = [{ id: ev.event_value, weight: 100 }];
@@ -2692,6 +2700,33 @@ function initVideoDraggable() {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onEnd);
     }
+}
+
+// --- System Alert Logic ---
+let lastAlertMessage = "";
+function showSystemAlert(msg) {
+    if (!msg || msg === lastAlertMessage) return;
+    lastAlertMessage = msg;
+
+    const container = get('global-alert-container');
+    const textBox = get('global-alert-text');
+    if (!container || !textBox) return;
+
+    textBox.textContent = msg;
+    container.classList.remove('hidden');
+    setTimeout(() => container.classList.add('active'), 50);
+
+    // Duration: 2s per word, min 5s
+    const wordCount = msg.split(/\s+/).length;
+    const duration = Math.max(5000, wordCount * 2000);
+
+    setTimeout(() => {
+        container.classList.remove('active');
+        setTimeout(() => {
+            container.classList.add('hidden');
+            lastAlertMessage = ""; // Reset to allow same message later if re-triggered
+        }, 500);
+    }, duration);
 }
 
 // Start Systems
