@@ -371,22 +371,42 @@
         async function loadPlayers() {
             try {
                 const sortBy = get('sort-players').value;
-                let orderClause = 'score DESC';
+                let players;
 
-                switch (sortBy) {
-                    case 'score': orderClause = 'score DESC'; break;
-                    case 'coins': orderClause = 'coins DESC'; break;
-                    case 'time': orderClause = 'survival_time DESC'; break;
-                    case 'nickname': orderClause = 'nickname ASC'; break;
+                // Use separate queries for each sort option to avoid sql.unsafe
+                if (sortBy === 'score') {
+                    players = await sql`
+                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
+                        FROM users
+                        WHERE email NOT LIKE 'guest_%'
+                        ORDER BY score DESC
+                        LIMIT 100
+                    `;
+                } else if (sortBy === 'coins') {
+                    players = await sql`
+                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
+                        FROM users
+                        WHERE email NOT LIKE 'guest_%'
+                        ORDER BY coins DESC
+                        LIMIT 100
+                    `;
+                } else if (sortBy === 'time') {
+                    players = await sql`
+                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
+                        FROM users
+                        WHERE email NOT LIKE 'guest_%'
+                        ORDER BY survival_time DESC
+                        LIMIT 100
+                    `;
+                } else { // nickname
+                    players = await sql`
+                        SELECT nickname, email, score, survival_time, coins, is_vip, last_active
+                        FROM users
+                        WHERE email NOT LIKE 'guest_%'
+                        ORDER BY nickname ASC
+                        LIMIT 100
+                    `;
                 }
-
-                const players = await sql`
-                    SELECT nickname, email, score, survival_time, coins, is_vip, last_active
-                    FROM users
-                    WHERE email NOT LIKE 'guest_%'
-                    ORDER BY ${sql.unsafe(orderClause)}
-                    LIMIT 100
-                `;
 
                 allPlayers = players;
                 filteredPlayers = players;
@@ -396,7 +416,8 @@
                 log(`Loaded ${players.length} players`);
             } catch (e) {
                 console.error(e);
-                log('Error loading players', 'red');
+                log('Error loading players: ' + e.message, 'red');
+                get('players-list').innerHTML = '<p style="text-align: center; color: #ff4d4d;">Error loading players. Check console.</p>';
             }
         }
 
