@@ -39,6 +39,10 @@ let lastActivityTime = Date.now();
 let bossesDefeated = 0;
 let totalStainsCleanedRel = 0;
 let totalRepeatablePicked = 0; // Cap at 10
+let soapClickCount = 0;
+let lastSoapMilestone = 0;
+let isSoapActive = false;
+let magnetInterval = 3000;
 
 // Upgrades Tracking
 let upgradeCounts = {
@@ -192,6 +196,12 @@ async function initDatabase() {
             email TEXT,
             code TEXT,
             created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS global_events (
+            event_type TEXT PRIMARY KEY,
+            event_value TEXT,
+            expires_at TIMESTAMP
         )`;
     } catch (e) { console.error("DB Init Error", e); }
 }
@@ -504,11 +514,17 @@ setInterval(updateShareButtonsUI, 1000);
 
 // --- Game Logic ---
 
+let globalMultiplier = 1;
+let globalRainbowActive = false;
+
 function updateScore(points) {
     if (!gameActive) return;
     if (points > 0) {
-        score += points;
-        totalStainsCleaned += points;
+        // Apply Global Multiplier
+        const finalPoints = points * globalMultiplier;
+
+        score += finalPoints;
+        totalStainsCleaned += finalPoints;
 
         if (score >= nextUpgradeScore) {
             showUpgradeOptions();
@@ -522,6 +538,12 @@ function updateScore(points) {
             showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
             lastMilestoneScore = score;
             saveStatsToLocal();
+        }
+
+        // 10,000 score soap milestone
+        if (Math.floor(score / 10000) > Math.floor(lastSoapMilestone / 10000)) {
+            lastSoapMilestone = score;
+            createSoap();
         }
 
         // Sync every 20 points for "immediate" reflection
@@ -1232,22 +1254,28 @@ function startHelperBot() {
         }
     }
     moveBot();
+}
 
-    // Magnet functionality if owned
-    setInterval(() => {
-        if (hasMagnetUpgrade && gameActive) {
-            const stains = document.querySelectorAll('.stain');
-            if (stains.length > 0) {
-                const target = stains[0];
-                const rect = target.getBoundingClientRect();
-                createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
-                let h = parseFloat(target.dataset.health);
-                target.dataset.health = h - 200; // Magnet cleans bit by bit
-                if (h <= 200) target.dataset.health = 0; // Ensure removal
-                checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
-            }
-        }
-    }, 3000);
+function startMagnetLoop() {
+    if (!hasMagnetUpgrade) return;
+
+    if (gameActive) {
+        triggerMagnet();
+    }
+    setTimeout(startMagnetLoop, magnetInterval);
+}
+
+function triggerMagnet() {
+    const stains = document.querySelectorAll('.stain');
+    if (stains.length > 0) {
+        const target = stains[0];
+        const rect = target.getBoundingClientRect();
+        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
+        let h = parseFloat(target.dataset.health);
+        target.dataset.health = h - 200;
+        if (h <= 200) target.dataset.health = 0;
+        checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
 }
 
 function applyUpgrade(id) {
@@ -1261,10 +1289,155 @@ function applyUpgrade(id) {
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
         case 'coin_buff': coinBonusMultiplier += 0.1; break;
-        case 'magnet': hasMagnetUpgrade = true; break;
+        case 'magnet':
+            if (!hasMagnetUpgrade) {
+                hasMagnetUpgrade = true;
+                startMagnetLoop();
+            }
+            break;
     }
     updateUIValues();
     scheduleNextStain(); // Resume spawn loop
+}
+
+// --- Pink Soap Special Mechanic ---
+
+function createSoap() {
+    if (isSoapActive) return;
+    const container = get('canvas-container');
+    if (!container) return;
+
+    isSoapActive = true;
+
+    const soap = document.createElement('div');
+    soap.className = 'soap-stain';
+    soap.id = 'active-soap';
+    soap.innerHTML = '🧼';
+    soap.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+    soap.style.top = `${Math.random() * (window.innerHeight - 80)}px`;
+
+    soapClickCount = 0;
+    soap.onclick = (e) => {
+        e.stopPropagation();
+        soapClickCount++;
+        createBubbles(e.clientX, e.clientY, 10);
+
+        // Visual feedback
+        soap.style.transform = `scale(${1 + (soapClickCount * 0.05)})`;
+
+        if (soapClickCount >= 10) {
+            burstSoap(e.clientX, e.clientY);
+        }
+    };
+
+    container.appendChild(soap);
+    showStatusUpdate('საპონი გამოჩნდა! გაასკდე 10 კლიკით! 🧼✨');
+}
+
+function createBubbles(x, y, count) {
+    const container = document.body;
+    for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble-particle';
+        const size = Math.random() * 20 + 10;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `${x}px`;
+        bubble.style.top = `${y}px`;
+
+        const tx = (Math.random() - 0.5) * 200;
+        const ty = (Math.random() - 0.5) * 200;
+        bubble.style.setProperty('--tx', `${tx}px`);
+        bubble.style.setProperty('--ty', `${ty}px`);
+
+        container.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 1000);
+    }
+}
+
+function burstSoap(x, y) {
+    const soap = get('active-soap');
+    if (soap) soap.remove();
+    isSoapActive = false;
+
+    createBubbles(x, y, 40);
+
+    // Clear the screen
+    document.querySelectorAll('.stain').forEach(s => s.remove());
+    bossCount = 0; // Reset boss count as well
+
+    // Pause and show special menu
+    gameActive = false;
+    showStatusUpdate('ეკრანი გასუფთავდა! აირჩიე სუპერ-ბონუსი! 🌸');
+    showPinkUpgradeOptions();
+}
+
+function showPinkUpgradeOptions() {
+    const modal = get('pink-upgrade-modal');
+    const container = get('pink-upgrade-container');
+    container.innerHTML = '';
+    modal.classList.remove('hidden');
+
+    const names = {
+        'diff': 'სირთულის შემსუბუქება',
+        'speed': 'რობოტის სიჩქარე',
+        'bot': 'რობოტის ძალა',
+        'radius': 'წმენდის რადიუსი',
+        'strength': 'ტილოს ძალა',
+        'karcher': 'კერხერის სიმძლავრე',
+        'bomb': 'ბომბის სიმძლავრე',
+        'coin_buff': 'ქოინების ბონუსი',
+        'magnet': 'მაგნიტის სიხშირე'
+    };
+
+    const icons = {
+        'diff': '⚡', 'speed': '🚀', 'bot': '🤖', 'radius': '📏',
+        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲'
+    };
+
+    // Filter upgrades player already has at least one of
+    const ownedIds = Object.keys(upgradeCounts).filter(id => upgradeCounts[id] > 0);
+
+    // If none owned (unlikely at 10k), offer fallback
+    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts);
+
+    const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+
+    selected.forEach(id => {
+        const card = document.createElement('div');
+        card.className = 'upgrade-card pink-upgrade-card';
+        card.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 10px;">${icons[id] || '✨'}</div>
+            <h3>+50% ${names[id] || id}</h3>
+            <p>თქვენი არსებული ${names[id]} გაძლიერდება ნახევარჯერ!</p>
+        `;
+        card.onclick = () => applyPinkUpgrade(id);
+        container.appendChild(card);
+    });
+}
+
+function applyPinkUpgrade(id) {
+    get('pink-upgrade-modal').classList.add('hidden');
+
+    // Apply 50% boost to the benefit
+    switch (id) {
+        case 'diff': intervalMultiplier *= 0.7; break; // +50% efficacy in reducing interval
+        case 'speed': helperSpeedMultiplier *= 1.5; break;
+        case 'bot': helperSpeedMultiplier *= 1.5; break; // Boost robots overall
+        case 'radius': radiusMultiplier *= 1.5; break;
+        case 'strength': strengthMultiplier *= 1.5; break;
+        case 'karcher': strengthMultiplier *= 1.5; radiusMultiplier *= 1.5; break;
+        case 'bomb': strengthMultiplier *= 1.5; break;
+        case 'coin_buff': coinBonusMultiplier *= 1.5; break;
+        case 'magnet': magnetInterval *= 0.5; break; // Half the interval (2x speed)
+    }
+
+    updatePowerStats();
+    updateUIValues();
+    gameActive = true;
+    scheduleNextStain();
+    showStatusUpdate('სუპერ-გაძლიერება მიღებულია! 💪🌸');
 }
 
 function closeUpgradeModal() {
@@ -1829,7 +2002,32 @@ window.onload = async () => {
     };
 
     setupChat();
+    checkGlobalEvents();
+    setInterval(checkGlobalEvents, 10000);
 };
+
+async function checkGlobalEvents() {
+    try {
+        const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
+
+        // Reset state
+        globalMultiplier = 1;
+        globalRainbowActive = false;
+        document.body.classList.remove('global-rainbow');
+
+        events.forEach(ev => {
+            if (ev.event_type === 'multiplier') {
+                globalMultiplier = parseInt(ev.event_value) || 1;
+                showStatusUpdate(`🌍 გლობალური ${globalMultiplier}X ბონუსი აქტიურია! ✨`);
+            }
+            if (ev.event_type === 'rainbow') {
+                globalRainbowActive = true;
+                document.body.classList.add('global-rainbow');
+                showStatusUpdate(`🌈 გლობალური რეინბოუ ივენთი! ✨`);
+            }
+        });
+    } catch (e) { console.error("Global Event Check Error", e); }
+}
 
 
 function startGameSession(dontReset = false) {

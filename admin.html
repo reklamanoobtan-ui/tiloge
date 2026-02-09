@@ -122,6 +122,17 @@
             </div>
         </div>
 
+        <div class="section">
+            <h3>Global Events (5 Min)</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                <button class="btn-blue" id="mult-2">2X Score</button>
+                <button class="btn-blue" id="mult-4">4X Score</button>
+                <button class="btn-blue" id="mult-6">6X Score</button>
+                <button class="btn-blue" id="mult-8">8X Score</button>
+                <button class="btn-gold" id="btn-rainbow">🌈 Rainbow</button>
+            </div>
+        </div>
+
         <div class="status" id="status-msg"></div>
     </div>
 
@@ -203,6 +214,25 @@
                 log("Broadcast sent!");
             } catch (e) { log('Error', 'red'); }
         };
+
+        const triggerEvent = async (type, val) => {
+            try {
+                // Upsert logic for events
+                await sql`DELETE FROM global_events WHERE event_type = ${type}`;
+                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
+                          VALUES (${type}, ${val.toString()}, NOW() + INTERVAL '5 minutes')`;
+
+                const msg = type === 'multiplier' ? `🌍 GLOBAL ${val}X SCORE ACTIVE! ✨` : `🌈 GLOBAL RAINBOW EVENT ACTIVE! ✨`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+                log(`Triggered ${type} ${val}`);
+            } catch (e) { console.error(e); log('Error triggering event', 'red'); }
+        };
+
+        get('mult-2').onclick = () => triggerEvent('multiplier', 2);
+        get('mult-4').onclick = () => triggerEvent('multiplier', 4);
+        get('mult-6').onclick = () => triggerEvent('multiplier', 6);
+        get('mult-8').onclick = () => triggerEvent('multiplier', 8);
+        get('btn-rainbow').onclick = () => triggerEvent('rainbow', 'on');
 
     </script>
 </body>
