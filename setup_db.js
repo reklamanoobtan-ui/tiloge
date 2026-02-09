@@ -24,6 +24,13 @@ async function setup() {
             created_at TIMESTAMP DEFAULT NOW(),
             is_vip BOOLEAN DEFAULT FALSE
         )`);
+
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS survival_time INTEGER DEFAULT 0`; } catch (e) { }
+
         console.log("✅ Users table ready.");
 
         // Game Results Table
