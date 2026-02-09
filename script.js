@@ -2132,7 +2132,7 @@ window.onload = async () => {
 
             // Generate temp email/pass for session
             const sessionID = Date.now();
-            userEmail = `guest_${sessionID}@tilo.ge`;
+            userEmail = `guest_${sessionID}@tilo.life`;
             const sessionPass = `pass_${sessionID}`;
 
             await sql`INSERT INTO users(email, password, nickname, coins) VALUES(${userEmail}, ${sessionPass}, ${nickname}, 0)`;
