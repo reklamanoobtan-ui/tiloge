@@ -685,6 +685,37 @@
                         </div>
                     </div>
 
+                    <!-- YouTube Notifier -->
+                    <h4
+                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000;">
+                        📺 YouTube Notifier</h4>
+                    <div class="dashboard-grid">
+                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                            <span class="mini-label">📺 Channel ID/User <span id="cur-channel" class="cur-val"
+                                    style="color:red;"></span></span>
+                            <input type="text" id="val-channel" class="search-input" value="UbralodNoobi"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-danger full-width"
+                                onclick="quickTrigger('video_channel', 'val-channel')">SET CHANNEL</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                            <span class="mini-label">⏱️ Timings (csv) <span id="cur-timings" class="cur-val"
+                                    style="color:orange;"></span></span>
+                            <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('video_timings', 'val-timings')">SET TIMINGS</button>
+                        </div>
+                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                            <span class="mini-label">🔄 Loop (sec) <span id="cur-loop" class="cur-val"
+                                    style="color:cyan;"></span></span>
+                            <input type="number" id="val-loop" class="search-input" value="300"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('video_loop', 'val-loop')">SET LOOP</button>
+                        </div>
+                    </div>
+
                     <button class="btn btn-danger full-width mt-20" id="stop-events"
                         style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ცვლილების გაუქმება
                         (RESET)</button>
@@ -878,6 +909,9 @@
                     if (ev.event_type === 'soap_cutscene') get('cur-cutscene').textContent = `(${ev.event_value}ms)`;
                     if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
                     if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                    if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
                 });
             } catch (e) { }
         };

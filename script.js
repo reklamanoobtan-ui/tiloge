@@ -427,6 +427,13 @@ let soapUseCount = 0;
 let globalGodMode = false;
 let globalFreezeEnemies = false;
 
+// Video Notification Globals
+let videoChannelId = 'UbralodNoobi';
+let last10Videos = [];
+let videoPopupTimers = [];
+let videoTimings = [10, 30, 60, 300];
+let videoLoopInterval = 300;
+
 function updateScore(points) {
     if (!gameActive) return;
     if (points > 0) {
@@ -2119,6 +2126,9 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'soap_cutscene') { globalSoapCutsceneTimeOverride = parseInt(ev.event_value); showStatusUpdate(`🧼 საპნის დრო: ${globalSoapCutsceneTimeOverride}ms`); }
             if (ev.event_type === 'god_mode') { globalGodMode = true; showStatusUpdate('🛡️ უკვდავება ჩართულია!'); }
             if (ev.event_type === 'freeze_enemies') { globalFreezeEnemies = true; showStatusUpdate('❄️ მტრები გაყინულია (სპაუნი შეჩერდა)!'); }
+            if (ev.event_type === 'video_channel') { videoChannelId = ev.event_value; fetchYouTubeVideos(); }
+            if (ev.event_type === 'video_timings') { videoTimings = ev.event_value.split(',').map(Number); startVideoScheduler(); }
+            if (ev.event_type === 'video_loop') { videoLoopInterval = parseInt(ev.event_value); startVideoScheduler(); }
 
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
@@ -2206,6 +2216,73 @@ function startGameSession(dontReset = false) {
     syncLoopInterval = setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
 
     resetGameLoops();
+
+    // Start Video Scheduler
+    fetchYouTubeVideos();
+    startVideoScheduler();
+    setInterval(fetchYouTubeVideos, 300000); // Check for new videos every 5 mins
+}
+
+async function fetchYouTubeVideos() {
+    let rss = `https://www.youtube.com/feeds/videos.xml?user=${videoChannelId}`;
+    if (videoChannelId.startsWith('UC')) {
+        rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${videoChannelId}`;
+    }
+    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
+    try {
+        const res = await fetch(api);
+        const data = await res.json();
+        if (data.status === 'ok') {
+            last10Videos = data.items;
+        }
+    } catch (e) { console.error('Video fetch error', e); }
+}
+
+function showVideoPopup() {
+    if (!last10Videos || last10Videos.length === 0) return;
+    const vid = last10Videos[Math.floor(Math.random() * last10Videos.length)];
+    const popup = get('video-notification');
+    const thumb = get('video-thumb');
+    const link = get('video-link');
+
+    // Extract ID
+    let videoId = vid.guid.split(':')[2];
+    if (!videoId && vid.link) {
+        try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+    }
+
+    thumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    link.href = vid.link;
+
+    popup.classList.remove('hidden');
+    // Force reflow
+    void popup.offsetWidth;
+    popup.classList.add('slide-in');
+
+    // Auto-hide
+    setTimeout(() => {
+        popup.classList.remove('slide-in');
+        // Wait for transition then hide
+        // Using CSS transition duration
+    }, 10000);
+}
+
+function startVideoScheduler() {
+    videoPopupTimers.forEach(t => clearTimeout(t));
+    videoPopupTimers.forEach(t => clearInterval(t)); // Handle intervals too
+    videoPopupTimers = [];
+
+    videoTimings.forEach(time => {
+        const t = setTimeout(showVideoPopup, time * 1000);
+        videoPopupTimers.push(t);
+    });
+
+    const maxTime = Math.max(...videoTimings);
+    const loopStart = setTimeout(() => {
+        const interval = setInterval(showVideoPopup, videoLoopInterval * 1000);
+        videoPopupTimers.push(interval);
+    }, (maxTime + videoLoopInterval) * 1000); // Start loop AFTER the last fixed event + interval
+    videoPopupTimers.push(loopStart);
 }
 
 function resetGameLoops() {

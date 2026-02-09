@@ -512,6 +512,42 @@
 
 
     <script src="websocket-client.js"></script>
+    <!-- Video Notification Popup -->
+    <div id="video-notification" class="hidden"
+        style="position: fixed; bottom: 20px; left: 20px; width: 260px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 15px; padding: 15px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3
+                style="margin: 0; color: cyan; text-transform: uppercase; letter-spacing: 1px; animation: glow 1.5s ease-in-out infinite alternate; font-size: 1rem;">
+                ✨ ახალი ვიდეო!</h3>
+            <button onclick="document.getElementById('video-notification').style.transform = 'translateX(-150%)'"
+                style="background: none; border: none; color: rgba(255,255,255,0.7); font-size: 1.5rem; cursor: pointer; line-height: 0.8;">&times;</button>
+        </div>
+        <a id="video-link" href="#" target="_blank"
+            style="display: block; position: relative; overflow: hidden; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+            <img id="video-thumb" src="" alt="Video Thumbnail"
+                style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;">
+            <div
+                style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; font-size: 0.8rem; font-weight: bold;">
+                დააჭირე სანახავად ▶️</div>
+        </a>
+    </div>
+
+    <style>
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+            }
+
+            to {
+                text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px #00ffff;
+            }
+        }
+
+        #video-notification.slide-in {
+            transform: translateX(0) !important;
+        }
+    </style>
+
     <script type="module" src="script.js"></script>
 </body>
 
