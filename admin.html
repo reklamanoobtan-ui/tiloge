@@ -551,6 +551,13 @@
                             გაწყვეტა.</p>
                         <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
                     </div>
+                    <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
+                        <h3 style="color: var(--danger);">🧹 WIPE PROGRESS</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის ქულების და ქოინების განულება.
+                            <b>ექაუნთები დარჩება!</b>
+                        </p>
+                        <button class="btn btn-danger full-width" id="wipe-progress-btn">WIPE ALL PROGRESS</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -797,6 +804,34 @@
         get('sort-players').onchange = loadPlayers;
 
         // DB SETUP
+        // WIPE PROGRESS Logic
+        get('wipe-progress-btn').onclick = async () => {
+            const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების, ქოინების და დროის განულება?\n\nექაუნთები (იმეილი/პაროლი) შენარჩუნდება, მაგრამ პროგრესი წაიშლება!");
+            if (!confirmed) return;
+
+            log('Wiping progress...', 'var(--danger)');
+            try {
+                await sql`
+                    UPDATE users 
+                    SET score = 0, 
+                        coins = 0, 
+                        survival_time = 0, 
+                        best_score = 0
+                `;
+
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა ქულების გლობალური განულება! ყველაფერი იწყება 0-დან! 🧼')`;
+
+                const msg = '🎉 ყველა მოთამაშის პროგრესი წარმატებით განულდა!';
+                log(msg, 'green');
+                alert(msg);
+                loadPlayers();
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა განულებისას', 'red');
+                alert('შეცდომა: ' + e.message);
+            }
+        };
+
         get('run-setup-btn').onclick = async () => {
             if (!confirm("ნამდვილად გსურთ Database Setup?")) return;
             log('Setup იწყება...', 'var(--accent)');
