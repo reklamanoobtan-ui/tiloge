@@ -648,6 +648,13 @@
                             <button class="btn btn-primary full-width"
                                 onclick="quickTrigger('minigame_thresh', 'val-minigame')">THRESH</button>
                         </div>
+                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                            <span class="mini-label">🧼 Cutscene (ms)</span>
+                            <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <button class="btn btn-primary full-width"
+                                onclick="quickTrigger('soap_cutscene', 'val-cutscene')">TIME</button>
+                        </div>
                         <div class="mini-card">
                             <span class="mini-label">🌈 ივენთი</span>
                             <button class="btn btn-gold full-width" style="margin-top:28px;"
@@ -818,6 +825,7 @@
                 else if (type === 'boss_hp') msg = `☠️ ბოსის HP: ${val}`;
                 else if (type === 'soap_thresh') msg = `🧼 საპნის სიხშირე: ყოველ ${val} ქულაზე`;
                 else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
+                else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
 
                 msg += ` (${duration} წთ) ✨`;
 

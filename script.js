@@ -422,6 +422,8 @@ let globalCoinMult = 1;
 let globalBossHPOverride = null;
 let globalSoapThresholdOverride = null;
 let globalMinigameThresholdOverride = null;
+let globalSoapCutsceneTimeOverride = null;
+let soapUseCount = 0;
 
 function updateScore(points) {
     if (!gameActive) return;
@@ -1330,6 +1332,7 @@ function createBubbles(x, y, count, isPink = false) {
 
 function burstSoap(x, y) {
     if (soapTimer) clearTimeout(soapTimer);
+    soapUseCount++;
     if (soapWarningTimer) clearTimeout(soapWarningTimer);
 
     const soap = get('active-soap');
@@ -1375,7 +1378,11 @@ function burstSoap(x, y) {
         createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 10, false);
         createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 5, true);
 
-        if (Date.now() - startTime >= 3000) {
+        let cutTime = 3000;
+        if (soapUseCount >= 5) cutTime = 1500;
+        if (globalSoapCutsceneTimeOverride !== null) cutTime = globalSoapCutsceneTimeOverride;
+
+        if (Date.now() - startTime >= cutTime) {
             clearInterval(waveInterval);
             showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
             showPinkUpgradeOptions();
@@ -2092,6 +2099,7 @@ async function checkGlobalEvents() {
         globalBossHPOverride = null;
         globalSoapThresholdOverride = null;
         globalMinigameThresholdOverride = null;
+        globalSoapCutsceneTimeOverride = null;
 
         document.body.classList.remove('global-rainbow');
 
@@ -2103,6 +2111,7 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'boss_hp') { globalBossHPOverride = parseInt(ev.event_value); showStatusUpdate('☠️ ბოსების HP შეცვლილია!'); }
             if (ev.event_type === 'soap_thresh') { globalSoapThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🧼 საპნის სიხშირე შეცვლილია!'); }
             if (ev.event_type === 'minigame_thresh') { globalMinigameThresholdOverride = parseInt(ev.event_value); showStatusUpdate('🎮 მინი-თამაშის სიხშირე შეცვლილია!'); }
+            if (ev.event_type === 'soap_cutscene') { globalSoapCutsceneTimeOverride = parseInt(ev.event_value); showStatusUpdate(`🧼 საპნის დრო: ${globalSoapCutsceneTimeOverride}ms`); }
 
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
