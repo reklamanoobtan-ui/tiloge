@@ -521,12 +521,24 @@
                     <h2>🎉 Global Events Management</h2>
                 </div>
                 <div class="card" style="margin-bottom: 25px;">
-                    <h3>🌍 Custom Multiplier Configuration</h3>
+                    <h3>🌍 Custom Game Rules & Events</h3>
                     <div style="margin-top: 15px;">
-                        <label style="display:block; margin-bottom:5px; opacity:0.8;">Multiplier Amount (X):</label>
-                        <input type="number" id="event-mult" class="search-input"
+                        <label style="display:block; margin-bottom:5px; opacity:0.8;">Event Type / Rule:</label>
+                        <select id="event-type" class="search-input"
+                            style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                            <option value="multiplier">Score Multiplier (X)</option>
+                            <option value="crisis_time">Crisis Time (Seconds)</option>
+                            <option value="spawn_interval">Spawn Interval (MS)</option>
+                            <option value="boss_limit">Boss Limit (Count)</option>
+                            <option value="stain_limit">Stain Limit (Count)</option>
+                            <option value="rainbow">🌈 Rainbow Mode</option>
+                        </select>
+
+                        <label style="display:block; margin-bottom:5px; opacity:0.8;">Value (Duration ignored for
+                            this):</label>
+                        <input type="text" id="event-value" class="search-input"
                             style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"
-                            value="2" min="1">
+                            placeholder="e.g. 2 (for X), 60 (for sec)...">
 
                         <label style="display:block; margin-bottom:5px; opacity:0.8;">Duration (Minutes):</label>
                         <input type="number" id="event-duration" class="search-input"
@@ -534,7 +546,7 @@
                             value="10" min="1">
 
                         <button class="btn btn-gold full-width" id="start-custom-event"
-                            style="font-weight: bold; font-size: 1.1rem;">🚀 START EVENT</button>
+                            style="font-weight: bold; font-size: 1.1rem;">🚀 SET RULE / START EVENT</button>
                         <button class="btn btn-danger full-width mt-10" id="stop-events"
                             style="margin-top: 10px; opacity: 0.8;">🛑 STOP ALL EVENTS</button>
                     </div>
@@ -685,17 +697,27 @@
                 await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
                           VALUES (${type}, ${val.toString()}, ${expireDate.toISOString()})`;
 
-                const msg = `🌍 GLOBAL ${val}X SCORE ACTIVE FOR ${duration} MINUTES! ✨`;
+                let msg = `Global Event Active!`;
+                if (type === 'multiplier') msg = `🌍 GLOBAL ${val}X SCORE BOOST!`;
+                else if (type === 'crisis_time') msg = `⚠️ CRISIS TIMER SET TO ${val}s`;
+                else if (type === 'spawn_interval') msg = `⚡ SPAWN INTERVAL SET TO ${val}ms`;
+                else if (type === 'boss_limit') msg = `☠️ BOSS LIMIT SET TO ${val}`;
+                else if (type === 'stain_limit') msg = `🧹 STAIN LIMIT SET TO ${val}`;
+                else if (type === 'rainbow') msg = `🌈 RAINBOW MODE ACTIVATED!`;
+
+                msg += ` (${duration}m) ✨`;
+
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
-                log(`Triggered ${val}X for ${duration}m`);
+                log(`Triggered ${type} (${val}) for ${duration}m`);
                 updateBonusTimer();
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
         };
 
         get('start-custom-event').onclick = () => {
-            const mult = parseInt(get('event-mult').value) || 2;
+            const type = get('event-type').value;
+            const val = get('event-value').value || '0';
             const dur = parseInt(get('event-duration').value) || 10;
-            triggerEvent('multiplier', mult, dur);
+            triggerEvent(type, val, dur);
         };
 
         get('stop-events').onclick = async () => {

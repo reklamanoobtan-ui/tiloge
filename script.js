@@ -412,6 +412,10 @@ async function shareScore(scoreVal, timeVal) {
 
 let globalMultiplier = 1;
 let globalRainbowActive = false;
+let globalCrisisTime = 30;
+let globalSpawnIntervalOverride = null;
+let globalBossLimitOverride = null;
+let globalStainLimitOverride = null;
 
 function updateScore(points) {
     if (!gameActive) return;
@@ -519,7 +523,6 @@ function updateStatsSidebar() {
 
         pinkList.innerHTML = Object.entries(counts).map(([id, count]) => {
             const names = {
-                'diff': '⚡ სირთულის შემსუბუქება',
                 'speed': '🚀 რობოტის სიჩქარე',
                 'bot': '🤖 რობოტის სიჩქარე',
                 'radius': '📏 წმენდის რადიუსი',
@@ -1166,7 +1169,7 @@ function triggerMagnet() {
 
 function applyUpgrade(id) {
     switch (id) {
-        case 'diff': intervalMultiplier *= 0.7; break; // +30% difficulty
+        // case 'diff' removed
         case 'speed': helperSpeedMultiplier *= 1.3; break; // +30% speed
         case 'bot': startHelperBot(); break;
         case 'radius': radiusMultiplier *= 1.3; updatePowerStats(); break; // +30% radius
@@ -1452,7 +1455,7 @@ function showUpgradeOptions() {
     get('upgrade-modal').classList.remove('hidden');
 
     const UPGRADE_POOL = [
-        { id: 'diff', icon: '⚡', title: 'სირთულე', desc: '+30% სირთულე', type: 'multi' },
+        // 'diff' removed
         { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: '+30% სისწრაფე', type: 'multi' },
         { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
         { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
@@ -1466,10 +1469,7 @@ function showUpgradeOptions() {
 
     // Filter available upgrades based on limits
     const available = UPGRADE_POOL.filter(u => {
-        if (u.id === 'diff') {
-            if (getSpawnInterval() <= 10) return false;
-            return (upgradeCounts[u.id] || 0) < 5;
-        }
+        // 'diff' logic removed
         if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
         if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 10;
         // Only show Robot Power if player has > 5 bots
@@ -1588,6 +1588,9 @@ function createParticles(x, y, color, count = 15) {
 
 
 function getSpawnInterval() {
+    // Global Event Override
+    if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
+
     // Roguelike Scaling: Starts at 2.5s, decreases by 0.1s every 1000 score. Min 0.4s
     // Also affected by 'intervalMultiplier' upgrade (0.9x per upgrade)
     let baseInterval = 2500 - (score * 0.1);
@@ -1699,10 +1702,14 @@ function checkDefeatCondition() {
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
     // Trigger crisis only if screen is actually dirty AND player is inactive
-    const isCrisis = totalCount >= 50 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 10 || triangleBossCountUI >= 5;
+    const limitStains = globalStainLimitOverride || 50;
+    const limitBoss = globalBossLimitOverride || 10;
+    const limitElite = globalBossLimitOverride ? Math.ceil(globalBossLimitOverride / 2) : 5;
+
+    const isCrisis = totalCount >= limitStains || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= limitBoss || triangleBossCountUI >= limitElite;
 
     if (isCrisis && !defeatTimer) {
-        let timeLeft = 30;
+        let timeLeft = globalCrisisTime;
         defeatTimer = setInterval(() => {
             if (!gameActive) { clearInterval(defeatTimer); defeatTimer = null; return; }
             timeLeft--;
@@ -2066,6 +2073,10 @@ async function checkGlobalEvents() {
         // Reset state
         globalMultiplier = 1;
         globalRainbowActive = false;
+        globalCrisisTime = 30;
+        globalSpawnIntervalOverride = null;
+        globalBossLimitOverride = null;
+        globalStainLimitOverride = null;
         document.body.classList.remove('global-rainbow');
 
         events.forEach(ev => {
@@ -2077,6 +2088,22 @@ async function checkGlobalEvents() {
                 globalRainbowActive = true;
                 document.body.classList.add('global-rainbow');
                 showStatusUpdate(`🌈 გლობალური რეინბოუ ივენთი! ✨`);
+            }
+            if (ev.event_type === 'crisis_time') {
+                globalCrisisTime = parseInt(ev.event_value);
+                showStatusUpdate(`⚠️ კრიზისის დრო: ${globalCrisisTime} წამი!`);
+            }
+            if (ev.event_type === 'spawn_interval') {
+                globalSpawnIntervalOverride = parseInt(ev.event_value);
+                showStatusUpdate(`⚡ სპაუნის სიჩქარე: ${globalSpawnIntervalOverride}ms!`);
+            }
+            if (ev.event_type === 'boss_limit') {
+                globalBossLimitOverride = parseInt(ev.event_value);
+                showStatusUpdate(`☠️ ბოსების ლიმიტი: ${globalBossLimitOverride}!`);
+            }
+            if (ev.event_type === 'stain_limit') {
+                globalStainLimitOverride = parseInt(ev.event_value);
+                showStatusUpdate(`🧹 ლაქების ლიმიტი: ${globalStainLimitOverride}!`);
             }
         });
     } catch (e) { console.error("Global Event Check Error", e); }
