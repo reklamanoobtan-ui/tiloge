@@ -378,33 +378,29 @@
                     players = await sql`
                         SELECT nickname, email, score, survival_time, coins, is_vip, last_active
                         FROM users
-                        WHERE email NOT LIKE 'guest_%'
                         ORDER BY score DESC
-                        LIMIT 100
+                        LIMIT 200
                     `;
                 } else if (sortBy === 'coins') {
                     players = await sql`
                         SELECT nickname, email, score, survival_time, coins, is_vip, last_active
                         FROM users
-                        WHERE email NOT LIKE 'guest_%'
                         ORDER BY coins DESC
-                        LIMIT 100
+                        LIMIT 200
                     `;
                 } else if (sortBy === 'time') {
                     players = await sql`
                         SELECT nickname, email, score, survival_time, coins, is_vip, last_active
                         FROM users
-                        WHERE email NOT LIKE 'guest_%'
                         ORDER BY survival_time DESC
-                        LIMIT 100
+                        LIMIT 200
                     `;
                 } else { // nickname
                     players = await sql`
                         SELECT nickname, email, score, survival_time, coins, is_vip, last_active
                         FROM users
-                        WHERE email NOT LIKE 'guest_%'
                         ORDER BY nickname ASC
-                        LIMIT 100
+                        LIMIT 200
                     `;
                 }
 
@@ -413,7 +409,7 @@
                 displayPlayers(filteredPlayers);
 
                 get('total-players').textContent = players.length;
-                log(`Loaded ${players.length} players`);
+                log(`Loaded ${players.length} players (including guests)`);
             } catch (e) {
                 console.error(e);
                 log('Error loading players: ' + e.message, 'red');
@@ -425,28 +421,30 @@
             const container = get('players-list');
 
             if (players.length === 0) {
-                container.innerHTML = '<p style="text-align: center; opacity: 0.5;">No players found</p>';
+                container.innerHTML = '<p style="text-align: center; opacity: 0.5;">მოთამაშეები ვერ მოიძებნა</p>';
                 return;
             }
 
             container.innerHTML = players.map(player => {
+                const isGuest = player.email.startsWith('guest_');
                 const vipClass = player.is_vip ? 'vip' : '';
                 const vipBadge = player.is_vip ? '👑 ' : '';
+                const guestBadge = isGuest ? '<span style="font-size: 0.7rem; background: #555; padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle;">GUEST</span>' : '';
                 const timeFormatted = formatTime(player.survival_time);
                 const lastActive = player.last_active ? new Date(player.last_active).toLocaleString() : 'Never';
 
                 return `
-                    <div class="player-card ${vipClass}">
+                    <div class="player-card ${vipClass}" style="${isGuest ? 'opacity: 0.9;' : ''}">
                         <div style="margin-bottom: 8px;">
                             <strong style="font-size: 1.1rem; color: ${player.is_vip ? '#ffd700' : '#fff'};">
-                                ${vipBadge}${player.nickname}
+                                ${vipBadge}${player.nickname} ${guestBadge}
                             </strong>
                         </div>
                         <div style="opacity: 0.7; font-size: 0.8rem; margin-bottom: 8px;">
                             📧 ${player.email}
                         </div>
                         <div>
-                            <span class="player-stat">⭐ ქულა: <strong>${player.score}</strong></span>
+                            <span class="player-stat">⭐ ქულა: <strong>${Math.floor(player.score)}</strong></span>
                             <span class="player-stat">⏱️ დრო: <strong>${timeFormatted}</strong></span>
                             <span class="player-stat">🪙 ქოინი: <strong>${player.coins}</strong></span>
                         </div>
