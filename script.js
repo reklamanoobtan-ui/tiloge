@@ -1302,21 +1302,23 @@ function applyUpgrade(id) {
             break;
     }
     updateUIValues();
+    updateStatsSidebar();
 
     pendingUpgrades--;
     if (pendingUpgrades > 0) {
         showUpgradeOptions();
     } else {
+        get('upgrade-modal').classList.add('hidden');
         isUpgradeOpen = false;
-        gameActive = true; // Ensure game is active
-        scheduleNextStain(); // Resume spawn loop
+        gameActive = true;
+        scheduleNextStain();
     }
 }
 
 // --- Pink Soap Special Mechanic ---
 
 function createSoap() {
-    if (isSoapActive) return;
+    if (isSoapActive || isUpgradeOpen) return; // Don't spawn soap if choosing upgrade
     const container = get('canvas-container');
     if (!container) return;
 
@@ -1465,11 +1467,6 @@ function applyPinkUpgrade(id) {
     showStatusUpdate('სუპერ-გაძლიერება მიღებულია! 💪🌸');
 }
 
-function closeUpgradeModal() {
-    get('upgrade-modal').classList.add('hidden');
-    isUpgradeOpen = false;
-}
-
 function showUpgradeOptions() {
     isUpgradeOpen = true;
     gameActive = false; // Pause while choosing
@@ -1497,8 +1494,10 @@ function showUpgradeOptions() {
 
     // If no upgrades available, close and return
     if (available.length === 0) {
-        closeUpgradeModal();
-        triggerEndgame(); // If no upgrades, trigger endgame
+        get('upgrade-modal').classList.add('hidden');
+        isUpgradeOpen = false;
+        gameActive = true;
+        scheduleNextStain();
         return;
     }
 
@@ -1520,8 +1519,6 @@ function showUpgradeOptions() {
             applyUpgrade(upg.id);
             if (upg.type === 'multi') totalRepeatablePicked++;
             upgradeCounts[upg.id]++;
-            closeUpgradeModal();
-            updateStatsSidebar();
         };
         container.appendChild(card);
     });
