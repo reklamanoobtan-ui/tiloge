@@ -482,6 +482,7 @@
                     <input type="text" id="search-player" placeholder="ძებნა ნიკნეიმით ან იმეილით..."
                         style="margin-bottom: 0;">
                     <select id="sort-players">
+                        <option value="newest">🆕 ახალი მოთამაშეები</option>
                         <option value="score">დაალაგე ქულებით</option>
                         <option value="coins">დაალაგე ქოინებით</option>
                         <option value="time">დაალაგე დროით</option>
@@ -768,14 +769,16 @@
                 const sortBy = get('sort-players').value;
                 let players;
 
-                if (sortBy === 'score') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 200`;
+                if (sortBy === 'newest') {
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY id DESC LIMIT 1000`;
+                } else if (sortBy === 'score') {
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 1000`;
                 } else if (sortBy === 'coins') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 1000`;
                 } else if (sortBy === 'time') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 1000`;
                 } else {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 200`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
                 }
 
                 allPlayers = players;
