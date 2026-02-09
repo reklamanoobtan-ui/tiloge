@@ -86,7 +86,7 @@ let radiusMultiplier = 1.0;
 let strengthMultiplier = 1.0;
 
 // Base stats
-let baseClothStrength = 20;
+let baseClothStrength = 60; // Increased from 20 to 60 (3x stronger)
 let clothStrength = 0;
 let cleaningRadius = 1;
 
@@ -1573,10 +1573,9 @@ function createParticles(x, y, color, count = 15) {
 
 
 function getSpawnInterval() {
-    // Roguelike Scaling: Starts at 2.5s, decreases by 0.1s every 1000 score. Min 0.4s
-    // Also affected by 'intervalMultiplier' upgrade (0.9x per upgrade)
-    let baseInterval = 2500 - (score * 0.1);
-    baseInterval = Math.max(400, baseInterval); // Cap at 400ms (insane speed)
+    // Roguelike Scaling: Starts at 4.0s (was 2.5s), decreases by 0.05s (was 0.1s) every 1000 score. Min 0.8s (was 0.4s)
+    let baseInterval = 4000 - (score * 0.05);
+    baseInterval = Math.max(800, baseInterval); // Cap at 800ms to keep it manageable
     return baseInterval * intervalMultiplier;
 }
 
@@ -1607,16 +1606,16 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         stain.classList.add('pulse-animation');
 
         // Boss Logic:
-        // Base HP: 5000
-        // Scaling: Exponential growth but manageable
-        // Formula: 5000 * (1 + score/20000)^2
-        const bossScaling = Math.pow(1 + (score / 20000), 2);
+        // Base HP: 2000 (was 5000)
+        // Scaling: Exponential growth but VERY manageable
+        // Formula: 2000 * (1 + score/40000)^1.5 (was score/20000 ^ 2)
+        const bossScaling = Math.pow(1 + (score / 40000), 1.5);
 
-        let baseBossHP = 5000;
+        let baseBossHP = 2000;
 
         if (isTriangle) {
             // ELITE BOSS (Every 20k score)
-            baseBossHP = 15000; // 3x Normal Boss
+            baseBossHP = 6000; // 3x Normal Boss (was 15000)
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
             size = 350;
@@ -1633,11 +1632,10 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
 
     } else {
         // NORMAL STAIN LOGIC
-        // Base HP: 100
-        // Scaling: Linear (+1 HP per 100 score)
-        // Variety: Random types
+        // Base HP: 50 (was 100)
+        // Scaling: Linear (+1 HP per 300 score instead of 100)
 
-        health = (100 + (score / 100)) * difficulty;
+        health = (50 + (score / 300)) * difficulty;
 
         // Random shape and color
         const type = Math.random();
