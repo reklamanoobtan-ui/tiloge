@@ -640,6 +640,9 @@
                 get('login-section').style.display = 'none';
                 get('admin-controls').style.display = 'flex';
                 log('მოგესალმებით, ადმინ!', 'var(--primary)');
+                loadPlayers(); // Load players immediately
+                loadMatches(); // Load matches immediately
+                if (typeof updateDashboardStats === 'function') updateDashboardStats();
             } else {
                 loginStatus.textContent = "პაროლი არასწორია!";
                 loginStatus.style.color = "var(--danger)";
