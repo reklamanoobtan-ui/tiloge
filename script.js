@@ -1371,19 +1371,30 @@ function createSoap() {
     showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! 🧼✨');
 }
 
-function createBubbles(x, y, count) {
+function createBubbles(x, y, count, isPink = false) {
     const container = document.body;
     for (let i = 0; i < count; i++) {
         const bubble = document.createElement('div');
         bubble.className = 'bubble-particle';
-        const size = Math.random() * 20 + 10;
+
+        // Larger sizes for cinematic effect
+        const minSize = isPink ? 30 : 10;
+        const maxSize = isPink ? 80 : 30;
+        const size = Math.random() * (maxSize - minSize) + minSize;
+
         bubble.style.width = `${size}px`;
         bubble.style.height = `${size}px`;
         bubble.style.left = `${x}px`;
         bubble.style.top = `${y}px`;
 
-        const tx = (Math.random() - 0.5) * 200;
-        const ty = (Math.random() - 0.5) * 200;
+        if (isPink) {
+            bubble.style.background = 'radial-gradient(circle at 30% 30%, #ffc0cb, #ff69b4)';
+            bubble.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+            bubble.style.boxShadow = '0 0 20px rgba(255, 105, 180, 0.5)';
+        }
+
+        const tx = (Math.random() - 0.5) * 400; // Increased spread
+        const ty = (Math.random() - 0.5) * 400;
         bubble.style.setProperty('--tx', `${tx}px`);
         bubble.style.setProperty('--ty', `${ty}px`);
 
@@ -1397,28 +1408,29 @@ function burstSoap(x, y) {
     if (soap) soap.remove();
     isSoapActive = false;
 
-    // Initial big burst
-    createBubbles(x, y, 60);
+    // Initial massive pink burst
+    createBubbles(x, y, 100, true);
 
     // Clear the screen
     document.querySelectorAll('.stain').forEach(s => s.remove());
-    bossCount = 0; // Reset boss count as well
+    bossCount = 0;
 
     gameActive = false;
-    showStatusUpdate('ეკრანი გასუფთავდა! ბუშტების ტალღა მოდის... 🌊');
+    showStatusUpdate('ეკრანი გასუფთავდა! ვარდისფერი აფეთქება... 🌸✨');
 
     // "Cutscene" - Intense bubble wave for 3 seconds
     let startTime = Date.now();
     let waveInterval = setInterval(() => {
-        // Random bursts across the screen
-        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 15);
+        // Mix of small white and large pink bubbles
+        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 10, false);
+        createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 5, true);
 
         if (Date.now() - startTime >= 3000) {
             clearInterval(waveInterval);
             showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
             showPinkUpgradeOptions();
         }
-    }, 150);
+    }, 100);
 }
 
 function showPinkUpgradeOptions() {
