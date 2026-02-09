@@ -1308,6 +1308,7 @@ function applyUpgrade(id) {
         showUpgradeOptions();
     } else {
         isUpgradeOpen = false;
+        gameActive = true; // Ensure game is active
         scheduleNextStain(); // Resume spawn loop
     }
 }
@@ -1471,6 +1472,7 @@ function closeUpgradeModal() {
 
 function showUpgradeOptions() {
     isUpgradeOpen = true;
+    gameActive = false; // Pause while choosing
     get('upgrade-modal').classList.remove('hidden');
 
     const UPGRADE_POOL = [
@@ -1607,9 +1609,9 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit of 300 stains to prevent lag
+    // Strict limit of 60 stains to prevent lag and increase pressure
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= 300) return;
+    if (currentStains >= 60) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
@@ -1675,7 +1677,7 @@ function checkDefeatCondition() {
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
     // Trigger crisis only if screen is actually dirty AND player is inactive
-    const isCrisis = totalCount >= 200 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 10 || triangleBossCountUI >= 5;
+    const isCrisis = totalCount >= 50 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 10 || triangleBossCountUI >= 5;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = 30;
