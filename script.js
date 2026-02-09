@@ -2245,33 +2245,87 @@ async function fetchYouTubeVideos() {
     } catch (e) { console.error('Video fetch error', e); }
 }
 
+let currentVideoId = '';
+let hasWatchedOneVideo = false;
+
+window.hideVideoPopup = function () {
+    const popup = get('video-notification');
+    if (popup) popup.classList.remove('slide-in');
+};
+
+window.watchVideoHere = function (event) {
+    if (event) event.preventDefault();
+    const modal = get('video-player-modal');
+    const iframe = get('video-iframe');
+
+    if (hasWatchedOneVideo) {
+        showStatusUpdate('⚠️ უკვე უყურეთ 1 ვიდეოს აქ. გადადით YouTube-ზე.');
+        return;
+    }
+
+    if (!iframe || !currentVideoId) return;
+
+    iframe.src = `https://www.youtube.com/embed/${currentVideoId}?autoplay=1`;
+    modal.classList.remove('hidden');
+    hasWatchedOneVideo = true;
+
+    // Hide notification
+    window.hideVideoPopup();
+};
+
+window.closeVideoPlayer = function () {
+    const modal = get('video-player-modal');
+    const iframe = get('video-iframe');
+    if (iframe) iframe.src = '';
+    if (modal) modal.classList.add('hidden');
+};
+
 function showVideoPopup() {
     if (!last10Videos || last10Videos.length === 0) return;
+    // Don't show if modal is open to avoid distraction
+    if (get('video-player-modal') && !get('video-player-modal').classList.contains('hidden')) return;
+
     const vid = last10Videos[Math.floor(Math.random() * last10Videos.length)];
     const popup = get('video-notification');
     const thumb = get('video-thumb');
-    const link = get('video-link');
+    const titleOverlay = get('video-title-overlay');
+    const btnWatch = get('btn-watch-here');
+    const btnYoutube = get('btn-youtube');
 
     // Extract ID
     let videoId = vid.guid.split(':')[2];
     if (!videoId && vid.link) {
         try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
     }
+    currentVideoId = videoId; // Store for watcher
 
-    thumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-    link.href = vid.link;
+    if (thumb) thumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    if (titleOverlay) titleOverlay.textContent = vid.title;
+    if (btnYoutube) btnYoutube.href = vid.link;
 
-    popup.classList.remove('hidden');
-    // Force reflow
-    void popup.offsetWidth;
-    popup.classList.add('slide-in');
+    if (btnWatch) {
+        if (hasWatchedOneVideo) {
+            btnWatch.style.opacity = '0.5';
+            btnWatch.style.cursor = 'not-allowed';
+            btnWatch.onclick = (e) => { e.preventDefault(); showStatusUpdate('⚠️ ლიმიტი ამოწურულია'); };
+            btnWatch.textContent = 'ნანახია ✅';
+        } else {
+            btnWatch.style.opacity = '1';
+            btnWatch.style.cursor = 'pointer';
+            btnWatch.onclick = window.watchVideoHere;
+            btnWatch.textContent = 'აქ ვუყურებ 👁️';
+        }
+    }
 
-    // Auto-hide
-    setTimeout(() => {
-        popup.classList.remove('slide-in');
-        // Wait for transition then hide
-        // Using CSS transition duration
-    }, 10000);
+    if (popup) {
+        popup.classList.remove('hidden');
+        void popup.offsetWidth;
+        popup.classList.add('slide-in');
+
+        setTimeout(() => {
+            popup.classList.remove('slide-in');
+        }, 10000);
+    }
 }
 
 function startVideoScheduler() {

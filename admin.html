@@ -932,6 +932,7 @@
                 msg += ` (${duration} წთ) ✨`;
 
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('SYSTEM_LOG', ${'INFO|Event: ' + type + ' = ' + val})`;
                 log(`გააქტიურდა: ${type} (${val}) - ${duration} წთ`);
                 updateBonusTimer();
             } catch (e) { console.error(e); log('Error triggering event', 'red'); }
