@@ -1319,10 +1319,10 @@ function checkDefeatCondition() {
     const inactiveTime = (Date.now() - lastActivityTime) / 1000;
 
     // Trigger crisis only if screen is actually dirty AND player is inactive
-    const isCrisis = totalCount >= 200 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 20 || triangleBossCountUI >= 10;
+    const isCrisis = totalCount >= 200 || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= 10 || triangleBossCountUI >= 5;
 
     if (isCrisis && !defeatTimer) {
-        let timeLeft = 60;
+        let timeLeft = 30;
         defeatTimer = setInterval(() => {
             if (!gameActive) { clearInterval(defeatTimer); defeatTimer = null; return; }
             timeLeft--;
@@ -1330,8 +1330,8 @@ function checkDefeatCondition() {
             else if (timeLeft % 5 === 0) {
                 let reason = "ჭუჭყი ბევრია!";
                 if (inactiveTime > 30) reason = "არააქტიური ხარ!";
-                else if (bossCountUI >= 20) reason = "ბოსების შემოსევა!";
-                else if (triangleBossCountUI >= 10) reason = "სამკუთხედი ბოსების ალყა! ⚠️";
+                else if (bossCountUI >= 10) reason = "ბოსების შემოსევა!";
+                else if (triangleBossCountUI >= 5) reason = "სამკუთხედი ბოსების ალყა! ⚠️";
                 showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
             }
         }, 1000);
