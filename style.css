@@ -135,16 +135,19 @@ body {
 
 .cloth {
     position: absolute;
-    width: 180px;
-    height: 180px;
+    width: 200px;
+    /* Slightly larger to show the model clearly */
+    height: 200px;
     background-image: url('tilo.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    background-color: transparent !important;
+    border: none !important;
     pointer-events: none;
     z-index: 1000;
     transition: transform 0.1s ease-out, filter 0.3s ease;
-    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
     cursor: grab;
     touch-action: none;
     display: flex;
@@ -154,61 +157,13 @@ body {
 
 .cloth:active {
     cursor: grabbing;
-    transform: scale(1.08) rotate(2deg);
-    box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.2),
-        0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05) rotate(2deg);
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
 }
 
-.cloth::before {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    right: 5px;
-    bottom: 5px;
-    border: 1px dashed rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    pointer-events: none;
-}
+/* Skins are now handled by .cloth-skin-* classes with filters only */
 
-.cloth::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(0, 0, 0, 0.05) 100%);
-    pointer-events: none;
-}
-
-/* Skins */
-.skin-fire {
-    background: linear-gradient(45deg, #ff4d4d, #ffcc00) !important;
-    box-shadow: 0 0 30px rgba(255, 77, 77, 0.5) !important;
-}
-
-.skin-ice {
-    background: linear-gradient(45deg, #4facfe, #00f2fe) !important;
-    box-shadow: 0 0 30px rgba(79, 172, 254, 0.5) !important;
-}
-
-.skin-jungle {
-    background: linear-gradient(45deg, #11998e, #38ef7d) !important;
-    box-shadow: 0 0 30px rgba(56, 239, 125, 0.5) !important;
-}
-
-.skin-electric {
-    background: linear-gradient(45deg, #6a11cb, #2575fc) !important;
-    box-shadow: 0 0 30px rgba(106, 17, 203, 0.5) !important;
-}
-
-.skin-rainbow {
-    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important;
-    background-size: 400% 400% !important;
-    animation: rainbow-bg 5s linear infinite !important;
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.4) !important;
-}
+/* End of old skins section */
 
 @keyframes rainbow-bg {
     0% {

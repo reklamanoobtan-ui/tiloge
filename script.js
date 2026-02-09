@@ -103,10 +103,14 @@ function updatePowerStats() {
     cleaningRadius = 1 * radiusMultiplier;
     clothStrength = power;
 
-    // Apply Current Skin (Now using Image-based overrides)
+    // Apply Current Skin (Clean removal of ALL possible skin classes)
     if (clothEl) {
-        // Clear all possible skin classes
-        clothEl.classList.remove('cloth-skin-fire', 'cloth-skin-ice', 'cloth-skin-jungle', 'cloth-skin-electric', 'cloth-skin-rainbow');
+        const allPossibleSkins = [
+            'skin-fire', 'skin-ice', 'skin-jungle', 'skin-electric', 'skin-rainbow',
+            'cloth-skin-fire', 'cloth-skin-ice', 'cloth-skin-jungle', 'cloth-skin-electric', 'cloth-skin-rainbow'
+        ];
+        clothEl.classList.remove(...allPossibleSkins);
+
         if (currentSkin !== 'default') {
             clothEl.classList.add(`cloth-skin-${currentSkin}`);
         }
@@ -154,6 +158,7 @@ function updateUIValues() {
     updateSkinBtn('buy-skin-ice', 'ice');
     updateSkinBtn('buy-skin-jungle', 'jungle');
     updateSkinBtn('buy-skin-electric', 'electric');
+    updateSkinBtn('buy-skin-rainbow', 'rainbow');
 
     if (get('interval-val')) {
         let interval = getSpawnInterval();
