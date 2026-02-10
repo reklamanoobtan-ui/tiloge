@@ -937,6 +937,11 @@ function initUI() {
     setupAdmin();
 }
 
+function safeSetOnClick(id, action) {
+    const el = document.getElementById(id);
+    if (el) el.onclick = action;
+}
+
 function setupAdmin() {
     const adminBtn = document.getElementById('admin-panel-btn');
     const adminModal = document.getElementById('admin-modal');
@@ -947,7 +952,7 @@ function setupAdmin() {
     }
 
     adminBtn.onclick = () => adminModal.classList.remove('hidden');
-    document.getElementById('close-admin').onclick = () => adminModal.classList.add('hidden');
+    safeSetOnClick('close-admin', () => adminModal.classList.add('hidden'));
 
     const statusMsg = document.getElementById('admin-status');
     const setStatus = (msg, color = 'green') => {
@@ -958,27 +963,30 @@ function setupAdmin() {
         }
     };
 
-    const getVal = (id) => document.getElementById(id).value.trim();
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    };
 
-    document.getElementById('admin-give-coins').onclick = async () => {
+    safeSetOnClick('admin-give-coins', async () => {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         try {
             await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${nick} `;
             setStatus(`1000 Coins sent to ${nick} `);
         } catch (e) { setStatus('Error', 'red'); }
-    };
+    });
 
-    document.getElementById('admin-give-vip').onclick = async () => {
+    safeSetOnClick('admin-give-vip', async () => {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         try {
             await sql`UPDATE users SET is_vip = true WHERE nickname = ${nick} `;
             setStatus(`VIP granted to ${nick} `);
         } catch (e) { setStatus('Error', 'red'); }
-    };
+    });
 
-    document.getElementById('admin-ban-user').onclick = async () => {
+    safeSetOnClick('admin-ban-user', async () => {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         if (confirm(`Ban ${nick}? This will reset their stats.`)) {
@@ -987,45 +995,43 @@ function setupAdmin() {
                 setStatus(`${nick} has been reset / banned`, 'red');
             } catch (e) { setStatus('Error', 'red'); }
         }
-    };
+    });
 
-    document.getElementById('admin-reset-lb').onclick = async () => {
+    safeSetOnClick('admin-reset-lb', async () => {
         if (confirm("Reset Leaderboard for everyone?")) {
             try {
                 await sql`UPDATE users SET score = 0, survival_time = 0`;
                 setStatus("Leaderboard reset successful");
-                fetchLeaderboard();
+                if (typeof fetchLeaderboard === 'function') fetchLeaderboard();
             } catch (e) { setStatus('Error', 'red'); }
         }
-    };
+    });
 
-    document.getElementById('admin-send-broadcast').onclick = async () => {
+    safeSetOnClick('admin-send-broadcast', async () => {
         const msg = getVal('admin-broadcast-msg');
         if (!msg) return;
         try {
-            // Send to chat
             await sql`INSERT INTO chat_messages(nickname, message) VALUES('📢 SYSTEM', ${msg})`;
-
-            // Trigger global system alert for everyone
             await sql`INSERT INTO global_events (event_type, event_value, expires_at)
                       VALUES ('info', ${msg}, NOW() + INTERVAL '1 minute')
                       ON CONFLICT (event_type) DO UPDATE 
                       SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
-
-            document.getElementById('admin-broadcast-msg').value = '';
+            const broadInput = document.getElementById('admin-broadcast-msg');
+            if (broadInput) broadInput.value = '';
             setStatus("Broadcast sent (Chat & Screen)");
         } catch (e) { setStatus('Error', 'red'); }
-    };
+    });
 
-    document.getElementById('admin-save-config').onclick = async () => {
-        const speed = document.getElementById('admin-global-speed').value;
+    safeSetOnClick('admin-save-config', async () => {
+        const speedEl = document.getElementById('admin-global-speed');
+        if (!speedEl) return;
+        const speed = speedEl.value;
         try {
-            // Need table for this, assume it exists or fail gracefully
             await sql`INSERT INTO system_config(key, value) VALUES('global_speed', ${speed})
                       ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value`;
             setStatus(`Global speed saved: ${speed} `);
         } catch (e) { setStatus('Error saving config', 'red'); }
-    };
+    });
 }
 
 function setupChat() {
@@ -1958,37 +1964,6 @@ function checkCleaning(bx, by) {
 // Init
 window.onload = async () => {
     initUI();
-    await initDatabase();
-
-    // Check persistent session for real users only
-    const savedEmail = localStorage.getItem('tilo_email');
-    if (savedEmail && !savedEmail.startsWith('guest_')) {
-        userEmail = savedEmail;
-        nickname = localStorage.getItem('tilo_nick');
-        coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
-        isVip = localStorage.getItem('tilo_vip') === 'true';
-        startGameSession(true);
-    } else {
-        document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
-    }
-
-    // Modals are handled in initUI
-
-    // Modal Closers
-    const closeAuth = () => {
-        get('auth-modal').classList.add('hidden');
-        get('auth-modal').classList.remove('auth-open-side');
-        document.body.classList.remove('auth-visual-open');
-    };
-    safeOnClick('close-auth', closeAuth);
-    if (get('skip-minigame')) get('skip-minigame').onclick = skipMinigame;
-    safeOnClick('close-restricted', () => get('restricted-modal').classList.add('hidden'));
-    safeOnClick('not-now-btn', () => get('restricted-modal').classList.add('hidden'));
-    safeOnClick('go-to-register-btn', () => {
-        if (get('restricted-modal')) get('restricted-modal').classList.add('hidden');
-        if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
-        switchToRegister();
-    });
 
     // Mode Toggle Logic
     let authMode = 'login';
@@ -2052,6 +2027,7 @@ window.onload = async () => {
         const emailEl = get('auth-email');
         const passEl = get('auth-password');
         const errorEl = get('auth-error');
+        const submitBtn = get('auth-submit-btn');
         if (!nickEl || !emailEl || !passEl || !errorEl) return;
 
         const nickValue = nickEl.value.trim();
@@ -2060,11 +2036,20 @@ window.onload = async () => {
 
         if (!identValue || !passValue) { errorEl.textContent = "შეავსეთ ველები!"; return; }
 
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "მიმდინარეობს...";
+        }
+
         try {
             if (authMode === 'register') {
-                if (!nickValue) { errorEl.textContent = "შეიყვანეთ ნიკნეიმი!"; return; }
+                if (!nickValue) { errorEl.textContent = "შეიყვანეთ ნიკნეიმი!"; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "რეგისტრაცია"; } return; }
                 const check = await sql`SELECT id FROM users WHERE nickname = ${nickValue} OR email = ${identValue}`;
-                if (check.length > 0) { errorEl.textContent = "ნიკნეიმი ან ემაილი დაკავებულია!"; return; }
+                if (check.length > 0) {
+                    errorEl.textContent = "ნიკნეიმი ან ემაილი დაკავებულია!";
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "რეგისტრაცია"; }
+                    return;
+                }
 
                 await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${identValue}, ${passValue}, ${nickValue}, 0)`;
                 userEmail = identValue;
@@ -2073,7 +2058,11 @@ window.onload = async () => {
                 isVip = false;
             } else {
                 const res = await sql`SELECT * FROM users WHERE (email = ${identValue} OR nickname = ${identValue}) AND password = ${passValue}`;
-                if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
+                if (res.length === 0) {
+                    errorEl.textContent = "არასწორი მონაცემები!";
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "შესვლა"; }
+                    return;
+                }
                 const user = res[0];
                 nickname = user.nickname;
                 userEmail = user.email;
@@ -2096,6 +2085,10 @@ window.onload = async () => {
         } catch (e) {
             console.error(e);
             errorEl.textContent = "შეცდომა ბაზასთან!";
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = authMode === 'register' ? "რეგისტრაცია" : "შესვლა";
+            }
         }
     });
 
@@ -2103,6 +2096,7 @@ window.onload = async () => {
     safeOnClick('play-game-btn', async () => {
         const nickEl = get('player-nick');
         const errorEl = get('start-error');
+        const playBtn = get('play-game-btn');
         if (!nickEl || !errorEl) return;
         const inputNick = nickEl.value.trim();
         if (!inputNick) {
@@ -2110,18 +2104,22 @@ window.onload = async () => {
             return;
         }
 
+        if (playBtn) {
+            playBtn.disabled = true;
+            playBtn.textContent = "მიმდინარეობს...";
+        }
+
         try {
-            // Check if this nickname is registered
             const res = await sql`SELECT email FROM users WHERE nickname = ${inputNick} AND email NOT LIKE 'guest_%'`;
             if (res.length > 0) {
                 errorEl.textContent = "ეს ნიკნეიმი ეკუთვნის დარეგისტრირებულ მომხმარებელს! 🔐";
+                if (playBtn) { playBtn.disabled = false; playBtn.textContent = "სტუმრად დაწყება 🎮"; }
                 return;
             }
 
             nickname = inputNick;
             localStorage.setItem('tilo_nick', nickname);
 
-            // Generate temp email/pass for session
             const sessionID = Date.now();
             userEmail = `guest_${sessionID}@tilo.life`;
             const sessionPass = `pass_${sessionID}`;
@@ -2131,8 +2129,45 @@ window.onload = async () => {
         } catch (e) {
             console.error("Login Error", e);
             errorEl.textContent = "შეცდომა! თავიდან სცადეთ.";
+            if (playBtn) {
+                playBtn.disabled = false;
+                playBtn.textContent = "სტუმრად დაწყება 🎮";
+            }
         }
     });
+
+    // Closers & Extras
+    const closeAuth = () => {
+        if (get('auth-modal')) {
+            get('auth-modal').classList.add('hidden');
+            get('auth-modal').classList.remove('auth-open-side');
+        }
+        document.body.classList.remove('auth-visual-open');
+    };
+    safeOnClick('close-auth', closeAuth);
+    if (get('skip-minigame')) get('skip-minigame').onclick = skipMinigame;
+    safeOnClick('close-restricted', () => get('restricted-modal').classList.add('hidden'));
+    safeOnClick('not-now-btn', () => get('restricted-modal').classList.add('hidden'));
+    safeOnClick('go-to-register-btn', () => {
+        if (get('restricted-modal')) get('restricted-modal').classList.add('hidden');
+        if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
+        switchToRegister();
+    });
+
+    // Check persistent session ONLY after binding buttons
+    const savedEmail = localStorage.getItem('tilo_email');
+    if (savedEmail && !savedEmail.startsWith('guest_')) {
+        userEmail = savedEmail;
+        nickname = localStorage.getItem('tilo_nick');
+        coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+        isVip = localStorage.getItem('tilo_vip') === 'true';
+        startGameSession(true);
+    } else {
+        document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+    }
+
+    // Initialize Database in background to keep UI responsive
+    initDatabase().catch(e => console.error("DB Init Failed", e));
 
     setupChat();
     checkGlobalEvents();
