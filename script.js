@@ -14,6 +14,7 @@ let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 let score = 0;
 let accumulatedScore = 0; // Score from previous sub-sessions (before revives)
+let sessionCoinsEarned = 0; // Coins earned in the current run (milestones, etc.)
 
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
@@ -497,15 +498,9 @@ function updateScore(points) {
 
         // 1000 score milestone reward
         if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
-            const newCoins = coins + (1 * globalCoinMult);
-
-            // 🛡️ Security: Validate coins before updating
-            if (window.securitySystem && !window.securitySystem.validateCoins(newCoins)) {
-                console.warn('🚨 Invalid coin modification detected');
-                return;
-            }
-
-            coins = newCoins;
+            const addAmt = (1 * globalCoinMult);
+            coins += addAmt;
+            sessionCoinsEarned += addAmt;
             showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
             lastMilestoneScore = score;
             saveStatsToLocal();
@@ -539,6 +534,7 @@ function updateScore(points) {
 function updateStatsSidebar() {
     get('session-bosses').textContent = bossesDefeated;
     get('session-cleaned').textContent = totalStainsCleanedRel;
+    if (get('session-coins-earned')) get('session-coins-earned').textContent = sessionCoinsEarned;
 
     const list = get('active-upgrades-list');
     const pinkList = get('pink-bonuses-list');
@@ -1830,10 +1826,8 @@ function gameOver() {
     get('final-stains').textContent = totalScore;
     if (get('final-time')) get('final-time').textContent = survival;
 
-    // Survival bonus calculation (ONLY based on the score since last revive)
-    const earned = Math.floor((Math.floor(subSessionScore * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier * globalCoinMult);
-    coins += earned;
-    if (get('final-coins')) get('final-coins').textContent = earned;
+    // Final reward removed as per user request (Only coins earned during process are kept)
+    if (get('final-coins')) get('final-coins').textContent = sessionCoinsEarned;
 
 
     // Check Best Score (Local)
@@ -2363,6 +2357,7 @@ function startGameSession(dontReset = false) {
     }
 
     score = 0;
+    sessionCoinsEarned = 0; // Reset session coins correctly
     nextUpgradeScore = 10; // ALWAYS reset upgrade milestone if score is reset to 0
     totalStainsCleanedRel = 0;
     updatePowerStats();
