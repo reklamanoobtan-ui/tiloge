@@ -96,6 +96,11 @@ let baseClothStrength = 20; // Reverted to 20 (Harder)
 let clothStrength = 0;
 let cleaningRadius = 1;
 
+// Admin-controlled game parameters
+let globalBossInterval = 60000; // Boss spawn interval in milliseconds (default 60s)
+let globalUpgradePower = 1.3; // Upgrade multiplier (default 1.3 = +30%)
+let globalPinkUpgradePower = 1.5; // Pink upgrade multiplier (default 1.5 = +50%)
+
 // Global Interval IDs to prevent stacking
 let bossInterval = null;
 let defeatCheckInterval = null;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ka">
 
 <head>
@@ -794,6 +794,18 @@
                             <button class="btn btn-outline" style="flex:1"
                                 onclick="stopEvent('stain_limit')">OFF</button>
                         </div>
+                        <div class="mini-card" style="border-color: rgba(255, 77, 77, 0.3);">
+                            <span class="mini-label">⏱️ ბოსების გაჩენის სიხშირე (წამი) <span id="cur-bossrate"
+                                    class="cur-val" style="color:red;"></span></span>
+                            <input type="number" id="val-bossrate" class="search-input" value="60"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-danger" style="flex:2"
+                                    onclick="quickTrigger('boss_spawn_rate', 'val-bossrate')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('boss_spawn_rate')">OFF</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -886,6 +898,35 @@
                             <button class="btn btn-outline" style="flex:1" onclick="stopEvent('god_mode')">OFF</button>
                         </div>
                     </div>
+
+                    <!-- Upgrade Power -->
+                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                        <span class="mini-label">⚡ გაძლიერების ძალა (Default 1.3) <span id="cur-upgpow" class="cur-val"
+                                style="color:gold;"></span></span>
+                        <input type="number" id="val-upgpow" class="search-input" value="1.3" step="0.1"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('upgrade_power', 'val-upgpow')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('upgrade_power')">OFF</button>
+                        </div>
+                    </div>
+
+                    <!-- Pink Power -->
+                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                        <span class="mini-label">🌸 Pink გაძლიერება (Default 1.5) <span id="cur-pinkpow" class="cur-val"
+                                style="color:#ff69b4;"></span></span>
+                        <input type="number" id="val-pinkpow" class="search-input" value="1.5" step="0.1"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('pink_power', 'val-pinkpow')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('pink_power')">OFF</button>
+                        </div>
+                    </div>
+
                     <div class="mini-card"
                         style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
                         <span class="mini-label">❄️ გაყინვა <span id="cur-freeze" class="cur-val"
@@ -1212,6 +1253,9 @@
                 else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
                 else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
                 else if (type === 'video_config') msg = `📺 YouTube Notifier განახლდა!`;
+                else if (type === 'boss_spawn_rate') msg = `⏱️ ბოსების გაჩენის დრო: ყოველ ${val} წამში`;
+                else if (type === 'upgrade_power') msg = `⚡ გაძლიერებების ძალა: ${val}X`;
+                else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
 
                 msg += ` (${duration} წთ) ✨`;
 
@@ -1260,7 +1304,9 @@
                     if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
                     if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
                     if (ev.event_type === 'forced_video') get('cur-forced-video').textContent = `(ACTIVE)`;
-                    if (ev.event_type === 'upgrade_config') get('val-upgrade-factor').value = ev.event_value;
+                    if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'upgrade_power') get('cur-upgpow').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'pink_power') get('cur-pinkpow').textContent = `(${ev.event_value}X)`;
                 });
             } catch (e) { }
         };
