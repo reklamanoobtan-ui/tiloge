@@ -43,27 +43,7 @@
     <!-- Main Game HUD (Hidden Initially) -->
     <div id="game-hud" class="hidden-game-ui">
         <!-- Top Left: Statistics Sidebar-style Toggle -->
-        <div id="top-stats-menu" class="side-menu-container glass left-menu">
-            <button id="top-stats-toggle" class="side-menu-toggle">📊</button>
-            <div class="side-menu-content">
-                <div class="side-menu-header">სტატისტიკა</div>
-                <div class="menu-stat-item">✨ ქულა: <span id="score-val">0</span></div>
-                <div class="menu-stat-item">🪙 ქოინი: <span id="coins-val">0</span></div>
-                <div class="menu-stat-item">⏱️ სპაუნი: <span id="interval-val">2.00</span>წმ</div>
-                <div class="menu-stat-item">🕒 დრო: <span id="round-timer-val">0:00</span></div>
-                <!-- TOP.GE ASYNC COUNTER CODE -->
-                <div id="top-ge-counter-container" data-site-id="118538"></div>
-                <script async src="//counter.top.ge/counter.js"></script>
-                <!-- / END OF TOP.GE COUNTER CODE -->
-                <!-- WAUST.AT COUNTER CODE -->
-                <script
-                    id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
-                <script async src="//waust.at/d.js"></script>
-                <!-- / END OF WAUST.AT COUNTER CODE -->
-                <div id="vip-tag" class="menu-stat-item vip-hidden" style="color:#ffd700; font-weight:bold;">👑 VIP
-                </div>
-            </div>
-        </div>
+        <!-- Old Stats Menu Removed -->
 
 
         <div class="info-text"
@@ -113,6 +93,21 @@
                     style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
                     <span>💬</span> გლობალური ჩატი
                 </button>
+            </div>
+
+            <!-- Counters Section -->
+            <div class="sidebar-section"
+                style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <!-- TOP.GE ASYNC COUNTER CODE -->
+                <div id="top-ge-counter-container" data-site-id="118538"></div>
+                <script async src="//counter.top.ge/counter.js"></script>
+                <!-- / END OF TOP.GE COUNTER CODE -->
+
+                <!-- WAUST.AT COUNTER CODE -->
+                <script
+                    id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
+                <script async src="//waust.at/d.js"></script>
+                <!-- / END OF WAUST.AT COUNTER CODE -->
             </div>
         </div>
     </div>
@@ -564,7 +559,7 @@
     <script src="websocket-client.js"></script>
     <!-- Video Notification Popup -->
     <div id="video-notification" class="hidden"
-        style="position: fixed; bottom: 20px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        style="position: fixed; top: 20px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <h3 style="margin: 0; color: cyan; font-size: 0.9rem; animation: glow 2s infinite;">✨ ახალი ვიდეო!</h3>
             <button onclick="hideVideoPopup()"
