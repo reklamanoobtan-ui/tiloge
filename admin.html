@@ -630,54 +630,85 @@
                     style="background: rgba(255,0,255,0.05); border: 1px solid rgba(255,0,255,0.2); margin-bottom: 25px;">
                     <h3 style="color: #ff00ff; margin-bottom: 20px;">⭕ ჩვეულებრივი ბოსი</h3>
 
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">🖼️ ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
-                            <input type="text" id="regular-boss-img" class="search-input" placeholder="https://..."
-                                style="width: 100%;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="mini-card">
+                            <span class="mini-label">🖼️ ფოტოს URL</span>
+                            <input type="text" id="reg-boss-img" class="search-input" placeholder="https://..."
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_img', 'reg-boss-img')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_img')">OFF</button>
+                            </div>
                         </div>
-                        <div>
+                        <div class="mini-card">
                             <span class="mini-label">📐 მასშტაბი (1.0 = Normal)</span>
-                            <input type="number" id="regular-boss-scale" class="search-input" value="1.0" step="0.1"
-                                style="width: 100%;">
+                            <input type="number" id="reg-boss-scale" class="search-input" value="1.0" step="0.1"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_scale', 'reg-boss-scale')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_scale')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="mini-card">
                             <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
-                            <input type="number" id="regular-boss-opacity" class="search-input" value="10" min="1"
-                                max="10" style="width: 100%;">
+                            <input type="number" id="reg-boss-opacity" class="search-input" value="10" min="1" max="10"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_opacity', 'reg-boss-opacity')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_opacity')">OFF</button>
+                            </div>
                         </div>
-                        <div>
-                            <span class="mini-label">❤️ HP</span>
-                            <input type="number" id="regular-boss-hp" class="search-input" value="10000"
-                                style="width: 100%;">
+                        <div class="mini-card">
+                            <span class="mini-label">❤️ HP (Base) <span id="cur-reg-hp" class="cur-val"
+                                    style="color:#ff00ff;"></span></span>
+                            <input type="number" id="reg-boss-hp" class="search-input" value="10000"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_hp', 'reg-boss-hp')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_hp')">OFF</button>
+                            </div>
                         </div>
-                        <div>
-                            <span class="mini-label">⏱️ გაჩენის სიხშირე (წამი)</span>
-                            <input type="number" id="regular-boss-spawn" class="search-input" value="60"
-                                style="width: 100%;">
+                        <div class="mini-card">
+                            <span class="mini-label">⏱️ სპაუნის სიხშირე <span id="cur-reg-spawn" class="cur-val"
+                                    style="color:#ff00ff;"></span></span>
+                            <input type="number" id="reg-boss-spawn" class="search-input" value="60"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_spawn', 'reg-boss-spawn')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_spawn')">OFF</button>
+                            </div>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">📈 გაჩენის ქულა <span id="cur-reg-thresh" class="cur-val"
+                                    style="color:#ff00ff;"></span></span>
+                            <input type="number" id="reg-boss-threshold" class="search-input" value="500"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('reg_boss_threshold', 'reg-boss-threshold')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('reg_boss_threshold')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">📈 გაჩენის ქულა (Score Threshold)</span>
-                            <input type="number" id="regular-boss-threshold" class="search-input" value="500"
-                                style="width: 100%;">
-                        </div>
-                        <div>
-                            <span class="mini-label">⚡ მყისიერი გაჩენა</span>
-                            <button class="btn btn-outline full-width" style="border-color: #ff00ff; color: #ff00ff;"
-                                onclick="spawnBossNow('regular')">SPAWN NOW 🚀</button>
-                        </div>
-                    </div>
-
-                    <div class="flex-row gap-5">
-                        <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
-                            onclick="saveRegularBoss()">💾 SAVE</button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="resetRegularBoss()">🔄 RESET</button>
+                    <div class="card" style="background: rgba(255,0,255,0.1); margin-bottom: 0;">
+                        <button class="btn btn-outline full-width"
+                            style="border-color: #ff00ff; color: #ff00ff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
+                            onclick="spawnBossNow('regular')">🚀 მყისიერი სპაუნი (SPAWN REGULAR NOW)</button>
                     </div>
                 </div>
 
@@ -685,54 +716,85 @@
                 <div class="card" style="background: rgba(0,255,255,0.05); border: 1px solid rgba(0,255,255,0.2);">
                     <h3 style="color: #00ffff; margin-bottom: 20px;">🔺 სამკუთხედი ბოსი (Elite)</h3>
 
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">🖼️ ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
-                            <input type="text" id="triangle-boss-img" class="search-input" placeholder="https://..."
-                                style="width: 100%;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="mini-card">
+                            <span class="mini-label">🖼️ ფოტოს URL</span>
+                            <input type="text" id="tri-boss-img" class="search-input" placeholder="https://..."
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_img', 'tri-boss-img')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_img')">OFF</button>
+                            </div>
                         </div>
-                        <div>
-                            <span class="mini-label">📐 მასშტაბი (1.0 = Normal)</span>
-                            <input type="number" id="triangle-boss-scale" class="search-input" value="1.0" step="0.1"
-                                style="width: 100%;">
+                        <div class="mini-card">
+                            <span class="mini-label">📐 მასშტაბი</span>
+                            <input type="number" id="tri-boss-scale" class="search-input" value="1.0" step="0.1"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_scale', 'tri-boss-scale')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_scale')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="mini-card">
                             <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
-                            <input type="number" id="triangle-boss-opacity" class="search-input" value="10" min="1"
-                                max="10" style="width: 100%;">
+                            <input type="number" id="tri-boss-opacity" class="search-input" value="10" min="1" max="10"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_opacity', 'tri-boss-opacity')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_opacity')">OFF</button>
+                            </div>
                         </div>
-                        <div>
-                            <span class="mini-label">❤️ HP</span>
-                            <input type="number" id="triangle-boss-hp-input" class="search-input" value="30000"
-                                style="width: 100%;">
+                        <div class="mini-card">
+                            <span class="mini-label">❤️ HP <span id="cur-tri-hp" class="cur-val"
+                                    style="color:#00ffff;"></span></span>
+                            <input type="number" id="tri-boss-hp" class="search-input" value="30000"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_hp', 'tri-boss-hp')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_hp')">OFF</button>
+                            </div>
                         </div>
-                        <div>
-                            <span class="mini-label">⏱️ გაჩენის სიხშირე (წამი)</span>
-                            <input type="number" id="triangle-boss-spawn" class="search-input" value="120"
-                                style="width: 100%;">
+                        <div class="mini-card">
+                            <span class="mini-label">⏱️ სპაუნის სიხშირე <span id="cur-tri-spawn" class="cur-val"
+                                    style="color:#00ffff;"></span></span>
+                            <input type="number" id="tri-boss-spawn" class="search-input" value="120"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_spawn', 'tri-boss-spawn')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_spawn')">OFF</button>
+                            </div>
+                        </div>
+                        <div class="mini-card">
+                            <span class="mini-label">📈 გაჩენის ქულა <span id="cur-tri-thresh" class="cur-val"
+                                    style="color:#00ffff;"></span></span>
+                            <input type="number" id="tri-boss-threshold" class="search-input" value="1000"
+                                style="width: 100%; margin-bottom: 5px;">
+                            <div class="flex-row gap-5">
+                                <button class="btn btn-primary" style="flex:2"
+                                    onclick="quickTrigger('tri_boss_threshold', 'tri-boss-threshold')">SET</button>
+                                <button class="btn btn-outline" style="flex:1"
+                                    onclick="stopEvent('tri_boss_threshold')">OFF</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">📈 გაჩენის ქულა (Score Threshold)</span>
-                            <input type="number" id="triangle-boss-threshold" class="search-input" value="1000"
-                                style="width: 100%;">
-                        </div>
-                        <div>
-                            <span class="mini-label">⚡ მყისიერი გაჩენა</span>
-                            <button class="btn btn-outline full-width" style="border-color: #00ffff; color: #00ffff;"
-                                onclick="spawnBossNow('triangle')">SPAWN NOW 🚀</button>
-                        </div>
-                    </div>
-
-                    <div class="flex-row gap-5">
-                        <button class="btn btn-primary" style="flex:2; background: #00ffff; color: #000;"
-                            onclick="saveTriangleBoss()">💾 SAVE</button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="resetTriangleBoss()">🔄 RESET</button>
+                    <div class="card" style="background: rgba(0,255,255,0.1); margin-bottom: 0;">
+                        <button class="btn btn-outline full-width"
+                            style="border-color: #00ffff; color: #00ffff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
+                            onclick="spawnBossNow('triangle')">🚀 მყისიერი სპაუნი (SPAWN ELITE NOW)</button>
                     </div>
                 </div>
 
@@ -1169,6 +1231,47 @@
     <!-- Status Messages -->
     <div id="status-msg"></div>
 
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="margin-bottom: 20px;">✏️ მომხმარებლის რედაქტირება</h2>
+            <div class="mini-card" style="margin-bottom: 10px;">
+                <span class="mini-label">ნიკნეიმი</span>
+                <input type="text" id="edit-user-nick" class="search-input" style="width: 100%;">
+            </div>
+            <div class="mini-card" style="margin-bottom: 10px;">
+                <span class="mini-label">იმეილი (არ იცვლება)</span>
+                <input type="text" id="edit-user-email" class="search-input" style="width: 100%; opacity: 0.5;"
+                    readonly>
+            </div>
+            <div class="dashboard-grid" style="margin-bottom: 15px;">
+                <div class="mini-card">
+                    <span class="mini-label">⭐ ქულა</span>
+                    <input type="number" id="edit-user-score" class="search-input" style="width: 100%;">
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">🪙 ბალანსი</span>
+                    <input type="number" id="edit-user-coins" class="search-input" style="width: 100%;">
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">💰 სულ ქოინები</span>
+                    <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">👑 VIP</span>
+                    <div style="margin-top: 5px;">
+                        <input type="checkbox" id="edit-user-vip" style="width: 25px; height: 25px;">
+                    </div>
+                </div>
+            </div>
+            <div class="flex-row gap-10">
+                <button class="btn btn-primary" style="flex: 2" onclick="saveUserEdit()">შენახვა</button>
+                <button class="btn btn-outline" style="flex: 1"
+                    onclick="get('edit-user-modal').classList.add('hidden')">გაუქმება</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
         const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
@@ -1352,6 +1455,18 @@
                 else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
                 else if (type === 'regular_boss_config') msg = `⭕ ჩვეულებრივი ბოსი განახლდა!`;
                 else if (type === 'triangle_boss_config') msg = `🔺 სამკუთხედი ბოსი განახლდა!`;
+                else if (type === 'reg_boss_img') msg = `🖼️ ჩვეულებრივი ბოსის ფოტო შეიცვალა`;
+                else if (type === 'reg_boss_scale') msg = `📐 ჩვეულებრივი ბოსის მასშტაბი: ${val}`;
+                else if (type === 'reg_boss_opacity') msg = `👁️ ჩვეულებრივი ბოსის სიმკრთალე: ${val}`;
+                else if (type === 'reg_boss_hp') msg = `❤️ ჩვეულებრივი ბოსის HP: ${val}`;
+                else if (type === 'reg_boss_spawn') msg = `⏱️ ჩვეულებრივი ბოსის სპაუნი: ${val}წმ`;
+                else if (type === 'reg_boss_threshold') msg = `📈 ჩვეულებრივი ბოსის ქულა: ${val}`;
+                else if (type === 'tri_boss_img') msg = `🖼️ Elite ბოსის ფოტო შეიცვალა`;
+                else if (type === 'tri_boss_scale') msg = `📐 Elite ბოსის მასშტაბი: ${val}`;
+                else if (type === 'tri_boss_opacity') msg = `👁️ Elite ბოსის სიმკრთალე: ${val}`;
+                else if (type === 'tri_boss_hp') msg = `❤️ Elite ბოსის HP: ${val}`;
+                else if (type === 'tri_boss_spawn') msg = `⏱️ Elite ბოსის სპაუნი: ${val}წმ`;
+                else if (type === 'tri_boss_threshold') msg = `📈 Elite ბოსის ქულა: ${val}`;
                 else if (type === 'spawn_now') msg = `🚀 მყისიერი ბოსის გაჩენა: ${val.toUpperCase()}!`;
 
                 msg += ` (${duration} წთ) ✨`;
@@ -1404,6 +1519,15 @@
                     if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
                     if (ev.event_type === 'upgrade_power') get('cur-upgpow').textContent = `(${ev.event_value}X)`;
                     if (ev.event_type === 'pink_power') get('cur-pinkpow').textContent = `(${ev.event_value}X)`;
+
+                    // Individual Boss Stats
+                    if (ev.event_type === 'reg_boss_hp') get('cur-reg-hp')?.textContent ? get('cur-reg-hp').textContent = `(${ev.event_value})` : null;
+                    if (ev.event_type === 'reg_boss_spawn') get('cur-reg-spawn')?.textContent ? get('cur-reg-spawn').textContent = `(${ev.event_value}s)` : null;
+                    if (ev.event_type === 'reg_boss_threshold') get('cur-reg-thresh')?.textContent ? get('cur-reg-thresh').textContent = `(${ev.event_value})` : null;
+
+                    if (ev.event_type === 'tri_boss_hp') get('cur-tri-hp')?.textContent ? get('cur-tri-hp').textContent = `(${ev.event_value})` : null;
+                    if (ev.event_type === 'tri_boss_spawn') get('cur-tri-spawn')?.textContent ? get('cur-tri-spawn').textContent = `(${ev.event_value}s)` : null;
+                    if (ev.event_type === 'tri_boss_threshold') get('cur-tri-thresh')?.textContent ? get('cur-tri-thresh').textContent = `(${ev.event_value})` : null;
                 });
             } catch (e) { }
         };
@@ -1640,10 +1764,63 @@
                             <span class="stat-badge">⏱️ დრო: <strong>${timeFormatted}</strong></span>
                         </div>
                         <div style="margin-top: 15px; font-size: 0.7rem; opacity: 0.4;">აქტიური: ${lastActive}</div>
+                        <div class="flex-row gap-5" style="margin-top: 15px;">
+                            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 10px;" 
+                                onclick="editUser('${player.email}')">✏️ EDIT</button>
+                            <button class="btn btn-danger" style="font-size: 0.75rem; padding: 5px 10px;" 
+                                onclick="deleteUser('${player.email}')">🗑️ DELETE</button>
+                        </div>
                     </div>
                 `;
             }).join('');
         }
+
+        window.deleteUser = async (email) => {
+            if (!confirm(`ნამდვილად გსურთ მომხმარებლის წაშლა: ${email}?`)) return;
+            try {
+                await sql`DELETE FROM users WHERE email = ${email}`;
+                log(`მომხმარებელი წაიშალა: ${email}`, 'red');
+                loadPlayers();
+            } catch (e) { log('შეცდომა წაშლისას', 'red'); }
+        };
+
+        window.editUser = (email) => {
+            const player = allPlayers.find(p => p.email === email);
+            if (!player) return;
+
+            const modal = get('edit-user-modal');
+            get('edit-user-email').value = player.email;
+            get('edit-user-nick').value = player.nickname;
+            get('edit-user-score').value = Math.floor(player.score);
+            get('edit-user-coins').value = player.coins;
+            get('edit-user-total-coins').value = player.total_coins || 0;
+            get('edit-user-vip').checked = player.is_vip;
+
+            modal.classList.remove('hidden');
+        };
+
+        window.saveUserEdit = async () => {
+            const email = get('edit-user-email').value;
+            const nick = get('edit-user-nick').value.trim();
+            const score = parseInt(get('edit-user-score').value) || 0;
+            const coins = parseInt(get('edit-user-coins').value) || 0;
+            const totalCoins = parseInt(get('edit-user-total-coins').value) || 0;
+            const isVip = get('edit-user-vip').checked;
+
+            try {
+                await sql`UPDATE users SET 
+                    nickname = ${nick}, 
+                    score = ${score}, 
+                    coins = ${coins}, 
+                    total_coins = ${totalCoins}, 
+                    is_vip = ${isVip} 
+                    WHERE email = ${email}`;
+
+                log(`მონაცემები განახლდა: ${nick}`, 'green');
+                get('edit-user-modal').classList.add('hidden');
+                loadPlayers();
+            } catch (e) { log('განახლების შეცდომა', 'red'); }
+        };
 
         function formatTime(s) {
             const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;

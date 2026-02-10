@@ -98,6 +98,7 @@ let cleaningRadius = 1;
 
 // Admin-controlled game parameters
 let globalBossInterval = 60000; // Boss spawn interval in milliseconds (default 60s)
+let globalTriangleBossInterval = 120000; // Triangle boss spawn interval
 let globalUpgradePower = 1.3; // Upgrade multiplier (default 1.3 = +30%)
 let globalPinkUpgradePower = 1.5; // Pink upgrade multiplier (default 1.5 = +50%)
 let globalBossOpacity = 1.0; // Boss opacity (1-10 scale, converted to 0.1-1.0)
@@ -111,6 +112,7 @@ let lastSpawnEventId = 0; // Track last processed immediate spawn
 
 // Global Interval IDs to prevent stacking
 let bossInterval = null;
+let triBossInterval = null;
 let defeatCheckInterval = null;
 let timerInterval = null;
 let syncLoopInterval = null;
@@ -1081,6 +1083,7 @@ async function fetchChat() {
             FROM chat_messages cm
             LEFT JOIN users u ON cm.nickname = u.nickname
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds'
+              AND cm.nickname != 'SYSTEM_LOG'
             ORDER BY cm.id, cm.created_at ASC
     `;
         const container = get('chat-messages');
@@ -1213,14 +1216,14 @@ function triggerMagnet() {
 function applyUpgrade(id) {
     switch (id) {
         // case 'diff' removed
-        case 'speed': helperSpeedMultiplier *= 1.3; break; // +30% speed
+        case 'speed': helperSpeedMultiplier *= globalUpgradePower; break;
         case 'bot': startHelperBot(); break;
-        case 'radius': radiusMultiplier *= 1.3; updatePowerStats(); break; // +30% radius
-        case 'strength': strengthMultiplier *= 1.3; updatePowerStats(); break; // +30% strength
-        case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
+        case 'radius': radiusMultiplier *= globalUpgradePower; updatePowerStats(); break;
+        case 'strength': strengthMultiplier *= globalUpgradePower; updatePowerStats(); break;
+        case 'karcher': strengthMultiplier *= (globalUpgradePower * 0.7 + 1); radiusMultiplier *= (globalUpgradePower * 0.7 + 1); updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
-        case 'coin_buff': coinBonusMultiplier += 0.3; break; // +30% coins
-        case 'bot_pow': helperCleaningMultiplier *= 1.3; break; // +30% bot power
+        case 'coin_buff': coinBonusMultiplier += (globalUpgradePower - 1); break;
+        case 'bot_pow': helperCleaningMultiplier *= globalUpgradePower; break;
         case 'magnet':
             if (!hasMagnetUpgrade) {
                 hasMagnetUpgrade = true;
@@ -1458,10 +1461,11 @@ function showPinkUpgradeOptions() {
     selected.forEach(id => {
         const card = document.createElement('div');
         card.className = 'upgrade-card pink-upgrade-card';
+        const percent = Math.round((globalPinkUpgradePower - 1) * 100);
         card.innerHTML = `
             <div style="font-size: 3rem; margin-bottom: 10px;">${icons[id] || '✨'}</div>
-            <h3>+50% ${names[id] || id}</h3>
-            <p>თქვენი არსებული ${names[id]} გაძლიერდება ნახევარჯერ!</p>
+            <h3>+${percent}% ${names[id] || id}</h3>
+            <p>თქვენი არსებული ${names[id]} გაძლიერდება!</p>
         `;
         card.onclick = () => applyPinkUpgrade(id);
         container.appendChild(card);
@@ -1475,18 +1479,18 @@ function applyPinkUpgrade(id) {
     // Allow stacking
     pinkBonuses.push(id);
 
-    // Apply 50% boost to the benefit
+    // Apply boost to the benefit
     switch (id) {
-        case 'diff': intervalMultiplier *= 0.7; break; // +50% efficacy in reducing interval
-        case 'speed': helperSpeedMultiplier *= 1.5; break;
-        case 'bot': helperSpeedMultiplier *= 1.5; break; // Boost robots overall
-        case 'radius': radiusMultiplier *= 1.5; break;
-        case 'strength': strengthMultiplier *= 1.5; break;
-        case 'karcher': strengthMultiplier *= 1.5; radiusMultiplier *= 1.5; break;
-        case 'bomb': strengthMultiplier *= 1.5; break;
-        case 'coin_buff': coinBonusMultiplier *= 1.5; break;
-        case 'magnet': magnetInterval *= 0.5; break; // Half the interval (2x speed)
-        case 'bot_pow': helperCleaningMultiplier *= 1.5; break;
+        case 'diff': intervalMultiplier *= (1 / globalPinkUpgradePower); break;
+        case 'speed': helperSpeedMultiplier *= globalPinkUpgradePower; break;
+        case 'bot': helperSpeedMultiplier *= globalPinkUpgradePower; break; // Boost robots overall
+        case 'radius': radiusMultiplier *= globalPinkUpgradePower; break;
+        case 'strength': strengthMultiplier *= globalPinkUpgradePower; break;
+        case 'karcher': strengthMultiplier *= globalPinkUpgradePower; radiusMultiplier *= globalPinkUpgradePower; break;
+        case 'bomb': strengthMultiplier *= globalPinkUpgradePower; break;
+        case 'coin_buff': coinBonusMultiplier *= globalPinkUpgradePower; break;
+        case 'magnet': magnetInterval *= (1 / globalPinkUpgradePower); break;
+        case 'bot_pow': helperCleaningMultiplier *= globalPinkUpgradePower; break;
     }
 
     updatePowerStats();
@@ -2136,6 +2140,13 @@ async function checkGlobalEvents() {
     try {
         const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
 
+        const oldRegInt = globalBossInterval;
+        const oldTriInt = globalTriangleBossInterval;
+        const oldRegOp = globalBossOpacity;
+        const oldTriOp = globalTriangleBossOpacity;
+        const oldRegScale = globalBossScale;
+        const oldTriScale = globalTriangleBossScale;
+
         // Reset state
         globalMultiplier = 1;
         globalRainbowActive = false;
@@ -2162,6 +2173,7 @@ async function checkGlobalEvents() {
         globalTriangleBossScale = 1.0;
         globalTriangleBossOpacity = 1.0;
         globalTriangleBossThreshold = 1000;
+        globalTriangleBossInterval = 120000;
         globalUpgradePower = 1.3;
         globalPinkUpgradePower = 1.5;
         globalUpgradeFactor = 1.3;
@@ -2187,35 +2199,20 @@ async function checkGlobalEvents() {
                 document.body.classList.add(`fx-${ev.event_value}`);
                 showStatusUpdate(`🌐 საიტის ეფექტი: ${ev.event_value.toUpperCase()} ✨`);
             }
-            if (ev.event_type === 'boss_config') {
-                try {
-                    const cfg = JSON.parse(ev.event_value);
-                    if (cfg.img) globalBossImage = cfg.img;
-                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
-                    if (cfg.opacity) globalBossOpacity = parseFloat(cfg.opacity) / 10;
-                } catch (e) { }
-            }
-            if (ev.event_type === 'regular_boss_config') {
-                try {
-                    const cfg = JSON.parse(ev.event_value);
-                    if (cfg.img) globalBossImage = cfg.img; // Sharing for now or could have separate
-                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
-                    if (cfg.opacity) globalBossOpacity = parseFloat(cfg.opacity) / 10;
-                    if (cfg.hp) globalBossHPOverride = parseInt(cfg.hp);
-                    if (cfg.spawn) globalBossInterval = parseInt(cfg.spawn) * 1000;
-                    if (cfg.threshold) globalRegularBossThreshold = parseInt(cfg.threshold);
-                } catch (e) { }
-            }
-            if (ev.event_type === 'triangle_boss_config') {
-                try {
-                    const cfg = JSON.parse(ev.event_value);
-                    if (cfg.img) globalTriangleBossImage = cfg.img;
-                    if (cfg.scale) globalTriangleBossScale = parseFloat(cfg.scale);
-                    if (cfg.opacity) globalTriangleBossOpacity = parseFloat(cfg.opacity) / 10;
-                    if (cfg.hp) globalTriangleBossHP = parseInt(cfg.hp);
-                    if (cfg.threshold) globalTriangleBossThreshold = parseInt(cfg.threshold);
-                } catch (e) { }
-            }
+            if (ev.event_type === 'reg_boss_img') globalBossImage = ev.event_value;
+            if (ev.event_type === 'reg_boss_scale') globalBossScale = parseFloat(ev.event_value);
+            if (ev.event_type === 'reg_boss_opacity') globalBossOpacity = parseFloat(ev.event_value) / 10;
+            if (ev.event_type === 'reg_boss_hp') globalBossHPOverride = parseInt(ev.event_value);
+            if (ev.event_type === 'reg_boss_spawn') globalBossInterval = parseInt(ev.event_value) * 1000;
+            if (ev.event_type === 'reg_boss_threshold') globalRegularBossThreshold = parseInt(ev.event_value);
+
+            if (ev.event_type === 'tri_boss_img') globalTriangleBossImage = ev.event_value;
+            if (ev.event_type === 'tri_boss_scale') globalTriangleBossScale = parseFloat(ev.event_value);
+            if (ev.event_type === 'tri_boss_opacity') globalTriangleBossOpacity = parseFloat(ev.event_value) / 10;
+            if (ev.event_type === 'tri_boss_hp') globalTriangleBossHP = parseInt(ev.event_value);
+            if (ev.event_type === 'tri_boss_spawn') globalTriangleBossInterval = parseInt(ev.event_value) * 1000;
+            if (ev.event_type === 'tri_boss_threshold') globalTriangleBossThreshold = parseInt(ev.event_value);
+
             if (ev.event_type === 'upgrade_power') {
                 globalUpgradePower = parseFloat(ev.event_value) || 1.3;
             }
@@ -2280,6 +2277,28 @@ async function checkGlobalEvents() {
                 showStatusUpdate(`🧹 ლაქების ლიმიტი: ${globalStainLimitOverride}!`);
             }
         });
+
+        // Restart loops if intervals changed
+        if (globalBossInterval !== oldRegInt || globalTriangleBossInterval !== oldTriInt) {
+            if (gameActive) resetGameLoops();
+        }
+
+        // Apply visual updates to existing bosses if needed
+        if (globalBossOpacity !== oldRegOp || globalBossScale !== oldRegScale) {
+            document.querySelectorAll('.boss-stain:not(.triangle-boss)').forEach(b => {
+                b.style.opacity = globalBossOpacity;
+                b.style.width = `${250 * globalBossScale}px`;
+                b.style.height = `${250 * globalBossScale}px`;
+            });
+        }
+        if (globalTriangleBossOpacity !== oldTriOp || globalTriangleBossScale !== oldTriScale) {
+            document.querySelectorAll('.triangle-boss').forEach(b => {
+                b.style.opacity = globalTriangleBossOpacity;
+                b.style.width = `${350 * globalTriangleBossScale}px`;
+                b.style.height = `${350 * globalTriangleBossScale}px`;
+            });
+        }
+
     } catch (e) { console.error("Global Event Check Error", e); }
 }
 
@@ -2498,31 +2517,35 @@ function startVideoScheduler() {
 }
 
 function resetGameLoops() {
-    // Boss spawning interval
+    // --- Boss Spawning Intervals ---
+
+    // Regular Bosses
     if (bossInterval) clearInterval(bossInterval);
     bossInterval = setInterval(() => {
-        if (gameActive) {
-            // General Bosses (Cap at 10, scale health for overflow)
-            const rawBossCount = Math.floor(score / globalRegularBossThreshold) + 1;
-            const finalBossSpawn = Math.min(rawBossCount, 10);
-            const bossHealthMult = rawBossCount > 10 ? (rawBossCount / 10) : 1.0;
+        if (!gameActive) return;
+        if (score < globalRegularBossThreshold) return;
 
-            for (let i = 0; i < finalBossSpawn; i++) {
-                createStain(true, false, bossHealthMult);
-            }
+        const limit = globalBossLimitOverride || 10;
+        const rawBossCount = Math.floor(score / globalRegularBossThreshold) + 1;
+        const finalBossSpawn = Math.min(rawBossCount, 10);
+        const bossHealthMult = rawBossCount > 10 ? (rawBossCount / 10) : 1.0;
+        for (let i = 0; i < finalBossSpawn; i++) {
+            createStain(true, false, bossHealthMult);
+        }
+    }, globalBossInterval);
 
-            // Triangle Elite Bosses (Cap at 5, scale health for overflow)
-            if (score >= globalTriangleBossThreshold) {
-                const rawTriangleCount = Math.floor((score - globalTriangleBossThreshold) / 1000) + 1;
-                const finalTriangleSpawn = Math.min(rawTriangleCount, 5);
-                const triangleHealthMult = rawTriangleCount > 5 ? (rawTriangleCount / 5) : 1.0;
-
-                for (let i = 0; i < finalTriangleSpawn; i++) {
-                    createStain(true, true, triangleHealthMult);
-                }
+    // Triangle Elite Bosses
+    if (triBossInterval) clearInterval(triBossInterval);
+    triBossInterval = setInterval(() => {
+        if (gameActive && score >= globalTriangleBossThreshold) {
+            const rawTriangleCount = Math.floor((score - globalTriangleBossThreshold) / 1000) + 1;
+            const finalTriangleSpawn = Math.min(rawTriangleCount, 5);
+            const triangleHealthMult = rawTriangleCount > 5 ? (rawTriangleCount / 5) : 1.0;
+            for (let i = 0; i < finalTriangleSpawn; i++) {
+                createStain(true, true, triangleHealthMult);
             }
         }
-    }, 60000);
+    }, globalTriangleBossInterval);
 
     // Defeat condition check
     if (defeatCheckInterval) clearInterval(defeatCheckInterval);
