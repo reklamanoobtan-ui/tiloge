@@ -540,15 +540,12 @@ function updateStatsSidebar() {
     if (get('session-coins-earned')) get('session-coins-earned').textContent = sessionCoinsEarned;
 
     const list = get('active-upgrades-list');
-    const pinkList = get('pink-bonuses-list');
-    if (!list || !pinkList) return;
-
-    // Regular upgrades
-    const activeUpgrades = Object.entries(upgradeCounts).filter(([_, count]) => count > 0);
-    if (activeUpgrades.length === 0) {
-        list.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
-    } else {
-        list.innerHTML = activeUpgrades.map(([id, count]) => {
+    if (list) {
+        // Regular upgrades
+        const activeUpgrades = Object.entries(upgradeCounts).filter(([_, count]) => count > 0);
+        if (activeUpgrades.length === 0) {
+            list.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
+        } else {
             const names = {
                 'diff': '⚡ სირთულე',
                 'speed': '🚀 რობოტის სიჩქარე',
@@ -561,18 +558,18 @@ function updateStatsSidebar() {
                 'magnet': '🧲 მაგნიტი',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
-            return `<div class="upgrade-item"><span>${names[id] || id}</span> <strong>×${count}</strong></div>`;
-        }).join('');
+            list.innerHTML = activeUpgrades.map(([id, count]) => `<div class="upgrade-item"><span>${names[id] || id}</span> <strong>×${count}</strong></div>`).join('');
+        }
     }
 
-    // Pink bonuses
-    if (pinkBonuses.length === 0) {
-        pinkList.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
-    } else {
-        const counts = {};
-        pinkBonuses.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
-
-        pinkList.innerHTML = Object.entries(counts).map(([id, count]) => {
+    const pinkList = get('pink-bonuses-list');
+    if (pinkList) {
+        // Pink bonuses
+        if (pinkBonuses.length === 0) {
+            pinkList.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.5;">ჯერ არ გაქვთ</p>';
+        } else {
+            const counts = {};
+            pinkBonuses.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
             const names = {
                 'speed': '🚀 რობოტის სიჩქარე',
                 'bot': '🤖 რობოტის სიჩქარე',
@@ -584,8 +581,8 @@ function updateStatsSidebar() {
                 'magnet': '🧲 მაგნიტის სიხშირე',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
-            return `<div class="upgrade-item pink-bonus-item"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
-        }).join('');
+            pinkList.innerHTML = Object.entries(counts).map(([id, count]) => `<div class="upgrade-item pink-bonus-item"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`).join('');
+        }
     }
 }
 
@@ -652,7 +649,6 @@ function initUI() {
             fetchGlobalRankings();
         }
     };
-    const uiAction = () => get('ui-modal').classList.remove('hidden');
 
     safeOnClick('shop-btn', shopAction);
     safeOnClick('shop-btn-side', shopAction);
@@ -666,17 +662,9 @@ function initUI() {
     safeOnClick('ratings-btn', ratingsAction);
     safeOnClick('ratings-btn-side', ratingsAction);
 
-    safeOnClick('ui-toggle-btn', uiAction);
-    safeOnClick('ui-toggle-btn-side', uiAction);
-
-    safeOnClick('close-ui', () => get('ui-modal').classList.add('hidden'));
 
     // Premium Sidebar Logic
-    const statsSidebar = get('stats-sidebar');
     const menuSidebar = get('menu-sidebar');
-
-    if (get('stats-side-toggle')) get('stats-side-toggle').onclick = () => statsSidebar && statsSidebar.classList.toggle('side-collapsed');
-    if (get('stats-close-btn')) get('stats-close-btn').onclick = () => statsSidebar && statsSidebar.classList.add('side-collapsed');
 
     if (get('menu-side-toggle')) get('menu-side-toggle').onclick = () => menuSidebar && menuSidebar.classList.toggle('side-collapsed');
     if (get('menu-close-btn')) get('menu-close-btn').onclick = () => menuSidebar && menuSidebar.classList.add('side-collapsed');
