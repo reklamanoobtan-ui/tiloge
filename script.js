@@ -579,7 +579,7 @@ function updateStatsSidebar() {
                 'magnet': '🧲 მაგნიტის სიხშირე',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
-            return `<div class="upgrade-item" style="color: #ff69b4;"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
+            return `<div class="upgrade-item pink-bonus-item"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
         }).join('');
     }
 }
