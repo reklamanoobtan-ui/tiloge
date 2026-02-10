@@ -1566,7 +1566,40 @@
             if (!confirm(`ნამდვილად გსურთ ${type}-ის გაუქმება?`)) return;
             try {
                 await sql`DELETE FROM global_events WHERE event_type = ${type}`;
-                log(`🛑 ${type} გაუქმდა`, 'orange');
+
+                // Reset inputs to defaults
+                const defaults = {
+                    'reg_boss_hp': { id: 'reg-boss-hp', val: '10000' },
+                    'reg_boss_spawn': { id: 'reg-boss-spawn', val: '60' },
+                    'reg_boss_threshold': { id: 'reg-boss-threshold', val: '500' },
+                    'reg_boss_scale': { id: 'reg-boss-scale', val: '1.0' },
+                    'reg_boss_opacity': { id: 'reg-boss-opacity', val: '10' },
+                    'reg_boss_img': { id: 'reg-boss-img', val: '' },
+
+                    'tri_boss_hp': { id: 'tri-boss-hp', val: '30000' },
+                    'tri_boss_spawn': { id: 'tri-boss-spawn', val: '120' },
+                    'tri_boss_threshold': { id: 'tri-boss-threshold', val: '1000' },
+                    'tri_boss_scale': { id: 'tri-boss-scale', val: '1.0' },
+                    'tri_boss_opacity': { id: 'tri-boss-opacity', val: '10' },
+                    'tri_boss_img': { id: 'tri-boss-img', val: '' },
+
+                    'boss_hp': { id: 'val-bosshp', val: '10000' },
+                    'spawn_interval': { id: 'val-spawn', val: '500' },
+                    'boss_limit': { id: 'val-bosslimit', val: '20' },
+                    'stain_limit': { id: 'val-stainlimit', val: '200' },
+
+                    'upgrade_power': { id: 'val-upgpow', val: '1.3' },
+                    'pink_power': { id: 'val-pinkpow', val: '1.5' },
+                    'multiplier': { id: 'val-multiplier', val: '2' },
+                    'crisis_time': { id: 'val-crisis', val: '30' }
+                };
+
+                if (defaults[type]) {
+                    const el = get(defaults[type].id);
+                    if (el) el.value = defaults[type].val;
+                }
+
+                log(`🛑 ${type} გაუქმდა და აღდგა საწყისი მნიშვნელობა`, 'orange');
                 updateBonusTimer();
                 updateDashboardStatus();
             } catch (e) { log('Error', 'red'); }
