@@ -1068,12 +1068,6 @@ body.fx-disco {
     .info-text h1 {
         font-size: 0.9rem;
     }
-
-    .stats-sidebar {
-        bottom: 80px !important;
-        right: 10px !important;
-        width: 140px !important;
-    }
 }
 
 /* Statistics Sidebar (Right) - Enhanced Premium Look */
@@ -1098,8 +1092,8 @@ body.fx-disco {
 }
 
 .stats-sidebar.side-collapsed {
-    transform: translateX(calc(100% + 15px)) scale(0.95);
-    opacity: 0.5;
+    transform: translateX(calc(100% + 50px));
+    opacity: 0;
 }
 
 .stats-toggle-side {
