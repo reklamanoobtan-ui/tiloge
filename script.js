@@ -102,6 +102,12 @@ let globalUpgradePower = 1.3; // Upgrade multiplier (default 1.3 = +30%)
 let globalPinkUpgradePower = 1.5; // Pink upgrade multiplier (default 1.5 = +50%)
 let globalBossOpacity = 1.0; // Boss opacity (1-10 scale, converted to 0.1-1.0)
 let globalTriangleBossHP = 30000; // Triangle boss HP override
+let globalTriangleBossImage = null;
+let globalTriangleBossScale = 1.0;
+let globalTriangleBossOpacity = 1.0;
+let globalRegularBossThreshold = 500; // Score threshold for regular bosses
+let globalTriangleBossThreshold = 1000; // Score threshold for triangle bosses
+let lastSpawnEventId = 0; // Track last processed immediate spawn
 
 // Global Interval IDs to prevent stacking
 let bossInterval = null;
@@ -2167,7 +2173,36 @@ async function checkGlobalEvents() {
                     const cfg = JSON.parse(ev.event_value);
                     if (cfg.img) globalBossImage = cfg.img;
                     if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
+                    if (cfg.opacity) globalBossOpacity = parseFloat(cfg.opacity) / 10;
                 } catch (e) { }
+            }
+            if (ev.event_type === 'regular_boss_config') {
+                try {
+                    const cfg = JSON.parse(ev.event_value);
+                    if (cfg.img) globalBossImage = cfg.img; // Sharing for now or could have separate
+                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
+                    if (cfg.opacity) globalBossOpacity = parseFloat(cfg.opacity) / 10;
+                    if (cfg.hp) globalBossHPOverride = parseInt(cfg.hp);
+                    if (cfg.spawn) globalBossInterval = parseInt(cfg.spawn) * 1000;
+                    if (cfg.threshold) globalRegularBossThreshold = parseInt(cfg.threshold);
+                } catch (e) { }
+            }
+            if (ev.event_type === 'triangle_boss_config') {
+                try {
+                    const cfg = JSON.parse(ev.event_value);
+                    if (cfg.img) globalTriangleBossImage = cfg.img;
+                    if (cfg.scale) globalTriangleBossScale = parseFloat(cfg.scale);
+                    if (cfg.opacity) globalTriangleBossOpacity = parseFloat(cfg.opacity) / 10;
+                    if (cfg.hp) globalTriangleBossHP = parseInt(cfg.hp);
+                    if (cfg.threshold) globalTriangleBossThreshold = parseInt(cfg.threshold);
+                } catch (e) { }
+            }
+            if (ev.event_type === 'spawn_now') {
+                if (ev.id > lastSpawnEventId) {
+                    lastSpawnEventId = ev.id;
+                    if (ev.event_value === 'regular') createStain(true, false, 1.0);
+                    if (ev.event_value === 'triangle') createStain(true, true, 1.0);
+                }
             }
             if (ev.event_type === 'upgrade_config') {
                 globalUpgradeFactor = parseFloat(ev.event_value) || 1.3;
@@ -2443,7 +2478,7 @@ function resetGameLoops() {
     bossInterval = setInterval(() => {
         if (gameActive) {
             // General Bosses (Cap at 10, scale health for overflow)
-            const rawBossCount = Math.floor(score / 500) + 1;
+            const rawBossCount = Math.floor(score / globalRegularBossThreshold) + 1;
             const finalBossSpawn = Math.min(rawBossCount, 10);
             const bossHealthMult = rawBossCount > 10 ? (rawBossCount / 10) : 1.0;
 
@@ -2452,8 +2487,8 @@ function resetGameLoops() {
             }
 
             // Triangle Elite Bosses (Cap at 5, scale health for overflow)
-            if (score >= 1000) {
-                const rawTriangleCount = Math.floor((score - 1000) / 1000) + 1;
+            if (score >= globalTriangleBossThreshold) {
+                const rawTriangleCount = Math.floor((score - globalTriangleBossThreshold) / 1000) + 1;
                 const finalTriangleSpawn = Math.min(rawTriangleCount, 5);
                 const triangleHealthMult = rawTriangleCount > 5 ? (rawTriangleCount / 5) : 1.0;
 

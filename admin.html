@@ -661,6 +661,19 @@
                         </div>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">📈 გაჩენის ქულა (Score Threshold)</span>
+                            <input type="number" id="regular-boss-threshold" class="search-input" value="500"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">⚡ მყისიერი გაჩენა</span>
+                            <button class="btn btn-outline full-width" style="border-color: #ff00ff; color: #ff00ff;"
+                                onclick="spawnBossNow('regular')">SPAWN NOW 🚀</button>
+                        </div>
+                    </div>
+
                     <div class="flex-row gap-5">
                         <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
                             onclick="saveRegularBoss()">💾 SAVE</button>
@@ -700,6 +713,19 @@
                             <span class="mini-label">⏱️ გაჩენის სიხშირე (წამი)</span>
                             <input type="number" id="triangle-boss-spawn" class="search-input" value="120"
                                 style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">📈 გაჩენის ქულა (Score Threshold)</span>
+                            <input type="number" id="triangle-boss-threshold" class="search-input" value="1000"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">⚡ მყისიერი გაჩენა</span>
+                            <button class="btn btn-outline full-width" style="border-color: #00ffff; color: #00ffff;"
+                                onclick="spawnBossNow('triangle')">SPAWN NOW 🚀</button>
                         </div>
                     </div>
 
@@ -1340,6 +1366,7 @@
                 else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
                 else if (type === 'regular_boss_config') msg = `⭕ ჩვეულებრივი ბოსი განახლდა!`;
                 else if (type === 'triangle_boss_config') msg = `🔺 სამკუთხედი ბოსი განახლდა!`;
+                else if (type === 'spawn_now') msg = `🚀 მყისიერი ბოსის გაჩენა: ${val.toUpperCase()}!`;
 
                 msg += ` (${duration} წთ) ✨`;
 
@@ -1441,10 +1468,11 @@
             const opacity = get('regular-boss-opacity').value || "10";
             const hp = get('regular-boss-hp').value || "10000";
             const spawn = get('regular-boss-spawn').value || "60";
+            const threshold = get('regular-boss-threshold').value || "500";
             const dur = parseInt(get('global-duration').value) || 60;
-            const config = { img, scale, opacity, hp, spawn };
+            const config = { img, scale, opacity, hp, spawn, threshold };
             await triggerEvent('regular_boss_config', JSON.stringify(config), dur);
-            get('regular-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s)`;
+            get('regular-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
             log('✅ ჩვეულებრივი ბოსი განახლდა', 'green');
         };
 
@@ -1456,6 +1484,7 @@
             get('regular-boss-opacity').value = '10';
             get('regular-boss-hp').value = '10000';
             get('regular-boss-spawn').value = '60';
+            get('regular-boss-threshold').value = '500';
             get('regular-boss-status').textContent = 'Default Settings';
             log('🔄 ჩვეულებრივი ბოსი დარესეტდა', 'orange');
         };
@@ -1467,10 +1496,11 @@
             const opacity = get('triangle-boss-opacity').value || "10";
             const hp = get('triangle-boss-hp-input').value || "30000";
             const spawn = get('triangle-boss-spawn').value || "120";
+            const threshold = get('triangle-boss-threshold').value || "1000";
             const dur = parseInt(get('global-duration').value) || 60;
-            const config = { img, scale, opacity, hp, spawn };
+            const config = { img, scale, opacity, hp, spawn, threshold };
             await triggerEvent('triangle_boss_config', JSON.stringify(config), dur);
-            get('triangle-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s)`;
+            get('triangle-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
             log('✅ სამკუთხედი ბოსი განახლდა', 'cyan');
         };
 
@@ -1482,8 +1512,16 @@
             get('triangle-boss-opacity').value = '10';
             get('triangle-boss-hp-input').value = '30000';
             get('triangle-boss-spawn').value = '120';
+            get('triangle-boss-threshold').value = '1000';
             get('triangle-boss-status').textContent = 'Default Settings';
             log('🔄 სამკუთხედი ბოსი დარესეტდა', 'orange');
+        };
+
+        window.spawnBossNow = async (type) => {
+            // Type is 'regular' or 'triangle'
+            // Trigger a very short event that clients will pick up
+            await triggerEvent('spawn_now', type, 1); // Only active for 1 minute
+            log(`🚀 მყისიერი სპაუნი: ${type.toUpperCase()}`, 'yellow');
         };
 
         window.saveForcedVideo = async () => {
