@@ -535,7 +535,6 @@ function updateScore(points) {
 }
 
 function updateStatsSidebar() {
-    if (get('session-cleaned')) get('session-cleaned').textContent = totalStainsCleanedRel;
 
     const list = get('active-upgrades-list');
     const pinkList = get('pink-bonuses-list');
