@@ -670,6 +670,10 @@ function initUI() {
     safeOnClick('ui-toggle-btn-side', uiAction);
 
     safeOnClick('close-ui', () => get('ui-modal').classList.add('hidden'));
+    safeOnClick('close-shop', () => get('shop-modal').classList.add('hidden'));
+    safeOnClick('close-settings', () => get('settings-modal').classList.add('hidden'));
+    safeOnClick('close-themes', () => get('themes-modal').classList.add('hidden'));
+    safeOnClick('close-ratings', () => get('ratings-modal').classList.add('hidden'));
 
     // Premium Sidebar Logic
     const statsSidebar = get('stats-sidebar');
