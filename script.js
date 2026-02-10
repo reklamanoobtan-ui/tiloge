@@ -478,12 +478,13 @@ function updateScore(points) {
         totalStainsCleaned += finalPoints;
 
         // Queue all earned upgrades
-        while (score >= nextUpgradeScore) {
+        const safeFactor = Math.max(1.05, globalUpgradeFactor || 1.3);
+        while (score >= nextUpgradeScore && pendingUpgrades < 10) { // Limit pending to 10 for safety
             pendingUpgrades++;
-            nextUpgradeScore = Math.ceil(nextUpgradeScore * globalUpgradeFactor);
+            nextUpgradeScore = Math.ceil(nextUpgradeScore * safeFactor);
         }
 
-        if (pendingUpgrades > 0 && !isUpgradeOpen) {
+        if (pendingUpgrades > 0 && !isUpgradeOpen && gameActive) {
             showUpgradeOptions();
             syncUserData(true);
         }
