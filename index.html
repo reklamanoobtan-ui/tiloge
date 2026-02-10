@@ -65,18 +65,6 @@
             </div>
         </div>
 
-        <!-- Top Right: Menu Sidebar-style Toggle -->
-        <div id="top-actions-menu" class="side-menu-container glass right-menu">
-            <button id="top-actions-toggle" class="side-menu-toggle">⚙️</button>
-            <div class="side-menu-content">
-                <div class="side-menu-header">მენიუ</div>
-                <button id="shop-btn" class="menu-action-btn">🧼 ტილოები</button>
-                <button id="settings-btn" class="menu-action-btn">⚙️ პარამეტრები</button>
-                <button id="themes-btn" class="menu-action-btn">🖼️ თემები</button>
-                <button id="ratings-btn" class="menu-action-btn">📊 რეიტინგი</button>
-                <button id="ui-toggle-btn" class="menu-action-btn">👁️ UI ოპციები</button>
-            </div>
-        </div>
 
         <div class="info-text"
             style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 4000;">
@@ -90,32 +78,52 @@
         </div>
     </div>
 
-    <!-- Global Chat (Left) -->
-    <div id="global-chat" class="chat-container glass side-collapsed">
-        <button id="chat-side-toggle" class="chat-toggle-side">💬</button>
-        <div class="chat-content-wrapper">
-            <div class="chat-header">
-                <span>💬 ჩატი</span>
-                <button id="chat-toggle-btn" class="chat-toggle">✕</button>
+    <!-- Menu & Statistics Sidebar (Left) -->
+    <div id="menu-sidebar" class="premium-sidebar left side-collapsed">
+        <button id="menu-side-toggle" class="sidebar-toggle-side">⚙️</button>
+        <div class="sidebar-content-wrapper">
+            <div class="sidebar-header">
+                ⚙️ მენიუ
+                <button id="menu-close-btn" class="sidebar-close">×</button>
             </div>
-            <div id="chat-messages" class="chat-messages"></div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="გაგზავნე მესიჯი..." maxlength="50">
-                <button id="send-chat-btn">➤</button>
+
+            <div class="sidebar-section">
+                <button id="shop-btn-side" class="menu-sidebar-btn"><span>🧼</span> ტილოები</button>
+                <button id="settings-btn-side" class="menu-sidebar-btn"><span>⚙️</span> პარამეტრები</button>
+                <button id="themes-btn-side" class="menu-sidebar-btn"><span>🖼️</span> თემები</button>
+                <button id="ratings-btn-side" class="menu-sidebar-btn"><span>📊</span> რეიტინგი</button>
+                <button id="ui-toggle-btn-side" class="menu-sidebar-btn"><span>👁️</span> UI ოპციები</button>
             </div>
-            <div style="font-size: 0.65rem; color: #888; text-align: center; margin-top: 5px; padding-bottom: 10px;">
-                შეტყობინებები იშლება 10 წამში
+
+            <div class="sidebar-section"
+                style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <h4 style="font-size: 0.75rem; opacity: 0.6; margin-bottom: 12px;">📊 თქვენი შედეგები</h4>
+                <div class="upgrade-item">
+                    <span>🏆 საუკეთესო</span>
+                    <strong id="side-best-score">0</strong>
+                </div>
+                <div class="upgrade-item" style="margin-top: 8px;">
+                    <span>⏮️ წინა ხელი</span>
+                    <strong id="side-prev-score">0</strong>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 10px;">
+                <button id="chat-modal-btn" class="menu-sidebar-btn"
+                    style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
+                    <span>💬</span> გლობალური ჩატი
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Statistics Sidebar (Right) - Renamed to Progress -->
-    <div id="stats-sidebar" class="stats-sidebar glass side-collapsed">
-        <button id="stats-side-toggle" class="stats-toggle-side">📈</button>
-        <div class="stats-content-wrapper">
-            <div class="stats-header">
+    <!-- Progress Sidebar (Right) -->
+    <div id="stats-sidebar" class="premium-sidebar right side-collapsed">
+        <button id="stats-side-toggle" class="sidebar-toggle-side">📈</button>
+        <div class="sidebar-content-wrapper">
+            <div class="sidebar-header">
                 📊 პროგრესი
-                <button id="stats-close-btn" class="stats-toggle">×</button>
+                <button id="stats-close-btn" class="sidebar-close">×</button>
             </div>
             <div class="sidebar-section">
                 <h4 style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase;">აქტიური
@@ -132,12 +140,34 @@
                 </div>
             </div>
             <div class="sidebar-section"
-                style="margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
                 <div class="session-stats">
                     <div class="s-stat"><span>👾 ბოსები:</span> <strong id="session-bosses">0</strong></div>
                     <div class="s-stat"><span>🌟 გასუფთავებული:</span> <strong id="session-cleaned">0</strong></div>
                     <div class="s-stat"><span>🪙 მოგებული:</span> <strong id="session-coins-earned"
                             style="color:#ffd700;">0</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal (Centered) -->
+    <div id="chat-modal" class="modal hidden">
+        <div class="modal-content glass" style="max-width: 550px;">
+            <span class="close-modal" id="close-chat-modal">&times;</span>
+            <div class="chat-content-wrapper">
+                <div class="chat-header">
+                    <span>💬 გლობალური ჩატი</span>
+                </div>
+                <div id="chat-messages" class="chat-messages" style="height: 350px;"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="გაგზავნე მესიჯი..." maxlength="50"
+                        style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; flex: 1;">
+                    <button id="send-chat-btn" class="action-btn"
+                        style="width: 60px; margin: 0; background: cyan; color: black;">➤</button>
+                </div>
+                <div style="font-size: 0.7rem; color: #888; text-align: center; margin-top: 15px;">
+                    შეტყობინებები იშლება 10 წამში • თამაში დაპაუზებულია
                 </div>
             </div>
         </div>

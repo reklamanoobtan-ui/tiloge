@@ -161,9 +161,12 @@ function updateUIValues() {
         get('score-val').textContent = accumulatedScore > 0 ? `${displayScore} (${accumulatedScore})` : displayScore;
     }
 
-    // Stats UI
     if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
     if (get('prev-score-stat')) get('prev-score-stat').textContent = `${lastPrevScore.score} stain / ${lastPrevScore.time}s`;
+
+    // Sidebar Stats Sync
+    if (get('side-best-score')) get('side-best-score').textContent = lastBestScore.score;
+    if (get('side-prev-score')) get('side-prev-score').textContent = lastPrevScore.score;
 
     const updateSkinBtn = (btnId, skinName) => {
         const btn = get(btnId);
@@ -627,27 +630,66 @@ function initUI() {
     get('buy-skin-rainbow').onclick = () => handleSkinAction('rainbow');
 
     // UI Toggle Logic
-    get('ui-toggle-btn').onclick = () => get('ui-modal').classList.remove('hidden');
-    get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
+    const shopAction = () => get('shop-modal').classList.remove('hidden');
+    const settingsAction = () => {
+        if (userEmail && userEmail.startsWith('guest_')) {
+            get('restricted-modal').classList.remove('hidden');
+            return;
+        }
+        get('settings-modal').classList.remove('hidden');
+        get('settings-user-name').textContent = nickname || 'სტუმარი';
+        get('settings-user-email').textContent = userEmail && !userEmail.startsWith('guest_') ? userEmail : 'სტუმრის ანგარიში';
+    };
+    const themesAction = () => get('themes-modal').classList.remove('hidden');
+    const ratingsAction = () => {
+        get('ratings-modal').classList.remove('hidden');
+        fetchGlobalRankings();
+    };
+    const uiAction = () => get('ui-modal').classList.remove('hidden');
 
-    // Side Menus Logic
-    const statsMenu = get('top-stats-menu');
-    const actionsMenu = get('top-actions-menu');
+    if (get('shop-btn')) get('shop-btn').onclick = shopAction;
+    if (get('shop-btn-side')) get('shop-btn-side').onclick = shopAction;
 
-    get('top-stats-toggle').onclick = () => {
-        statsMenu.classList.toggle('menu-open');
+    if (get('settings-btn')) get('settings-btn').onclick = settingsAction;
+    if (get('settings-btn-side')) get('settings-btn-side').onclick = settingsAction;
+
+    if (get('themes-btn')) get('themes-btn').onclick = themesAction;
+    if (get('themes-btn-side')) get('themes-btn-side').onclick = themesAction;
+
+    if (get('ratings-btn')) get('ratings-btn').onclick = ratingsAction;
+    if (get('ratings-btn-side')) get('ratings-btn-side').onclick = ratingsAction;
+
+    if (get('ui-toggle-btn')) get('ui-toggle-btn').onclick = uiAction;
+    if (get('ui-toggle-btn-side')) get('ui-toggle-btn-side').onclick = uiAction;
+
+    if (get('close-ui')) get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
+
+    // Premium Sidebar Logic
+    const statsSidebar = get('stats-sidebar');
+    const menuSidebar = get('menu-sidebar');
+
+    if (get('stats-side-toggle')) get('stats-side-toggle').onclick = () => statsSidebar.classList.toggle('side-collapsed');
+    if (get('stats-close-btn')) get('stats-close-btn').onclick = () => statsSidebar.classList.add('side-collapsed');
+
+    if (get('menu-side-toggle')) get('menu-side-toggle').onclick = () => menuSidebar.classList.toggle('side-collapsed');
+    if (get('menu-close-btn')) get('menu-close-btn').onclick = () => menuSidebar.classList.add('side-collapsed');
+
+    // Chat Modal Logic
+    const chatModal = get('chat-modal');
+    const openChat = () => {
+        chatModal.classList.remove('hidden');
+        gameActive = false;
+        showStatusUpdate(' ჩატი გახსნილია - თამაში დაპაუზებულია ⏸️');
+    };
+    const closeChat = () => {
+        chatModal.classList.add('hidden');
+        gameActive = true;
+        scheduleNextStain();
+        showStatusUpdate('თამაში გაგრძელდა ▶️');
     };
 
-    get('top-actions-toggle').onclick = () => {
-        actionsMenu.classList.toggle('menu-open');
-    };
-
-    // Close side menus when clicking actions inside them
-    document.querySelectorAll('.menu-action-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            actionsMenu.classList.remove('menu-open');
-        });
-    });
+    if (get('chat-modal-btn')) get('chat-modal-btn').onclick = openChat;
+    if (get('close-chat-modal')) get('close-chat-modal').onclick = closeChat;
 
     // Pause Button Logic
     let isPaused = false;
@@ -677,53 +719,6 @@ function initUI() {
             gameOver();
         }
     };
-
-    // Chat Side Toggle
-    const chatSideToggle = get('chat-side-toggle');
-    const chatToggleBtn = get('chat-toggle-btn');
-    const globalChat = get('global-chat');
-
-    if (chatSideToggle && globalChat) {
-        chatSideToggle.onclick = () => {
-            globalChat.classList.toggle('side-collapsed');
-        };
-    }
-
-    if (chatToggleBtn && globalChat) {
-        chatToggleBtn.onclick = () => {
-            globalChat.classList.add('side-collapsed');
-        };
-    }
-
-    // Logout Logic
-    get('logout-btn').onclick = () => {
-        localStorage.clear();
-        location.reload();
-    };
-
-    // Update Profile Info in Settings
-    get('settings-btn').onclick = () => {
-        // Restriction Check for Profile
-        if (userEmail && userEmail.startsWith('guest_')) {
-            get('restricted-modal').classList.remove('hidden');
-            return;
-        }
-
-        get('settings-modal').classList.remove('hidden');
-        get('settings-user-name').textContent = nickname || 'სტუმარი';
-        if (userEmail && !userEmail.startsWith('guest_')) {
-            get('settings-user-email').textContent = userEmail;
-        } else {
-            get('settings-user-email').textContent = 'სტუმრის ანგარიში';
-        }
-    };
-
-    // Ratings Modal
-    get('ratings-btn').onclick = () => {
-        get('ratings-modal').classList.remove('hidden');
-        fetchGlobalRankings();
-    };
-    get('close-ratings').onclick = () => get('ratings-modal').classList.add('hidden');
 
     // Restart Logic
     const handleRestart = () => {
@@ -1028,50 +1023,8 @@ function setupAdmin() {
 }
 
 function setupChat() {
-    const chatContainer = get('global-chat');
     const chatInput = get('chat-input');
     const sendBtn = get('send-chat-btn');
-    let isDraggingChat = false;
-    let chatOffsetX, chatOffsetY;
-
-    function onChatDrag(e) {
-        if (!isDraggingChat) return;
-        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-        let x = clientX - chatOffsetX;
-        let y = clientY - chatOffsetY;
-        x = Math.max(0, Math.min(window.innerWidth - chatContainer.clientWidth, x));
-        y = Math.max(0, Math.min(window.innerHeight - chatContainer.clientHeight, y));
-        chatContainer.style.left = `${x} px`;
-        chatContainer.style.top = `${y} px`;
-        chatContainer.style.right = 'auto';
-    }
-
-    function stopChatDrag() {
-        isDraggingChat = false;
-        document.removeEventListener('mousemove', onChatDrag);
-        document.removeEventListener('mouseup', stopChatDrag);
-        document.removeEventListener('touchmove', onChatDrag);
-        document.removeEventListener('touchend', stopChatDrag);
-    }
-
-    chatContainer.addEventListener('mousedown', (e) => {
-        if (e.target === chatInput || e.target === sendBtn) return;
-        isDraggingChat = true;
-        chatOffsetX = e.clientX - chatContainer.offsetLeft;
-        chatOffsetY = e.clientY - chatContainer.offsetTop;
-        document.addEventListener('mousemove', onChatDrag);
-        document.addEventListener('mouseup', stopChatDrag);
-    });
-
-    chatContainer.addEventListener('touchstart', (e) => {
-        if (e.target === chatInput || e.target === sendBtn) return;
-        isDraggingChat = true;
-        chatOffsetX = e.touches[0].clientX - chatContainer.offsetLeft;
-        chatOffsetY = e.touches[0].clientY - chatContainer.offsetTop;
-        document.addEventListener('touchmove', onChatDrag, { passive: false });
-        document.addEventListener('touchend', stopChatDrag);
-    });
 
     async function sendMsg() {
         const text = chatInput.value.trim().substring(0, 50);
@@ -1082,8 +1035,8 @@ function setupChat() {
             fetchChat();
         } catch (e) { }
     }
-    sendBtn.onclick = sendMsg;
-    chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
+    if (sendBtn) sendBtn.onclick = sendMsg;
+    if (chatInput) chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
     setInterval(fetchChat, 3000);
 }
 
