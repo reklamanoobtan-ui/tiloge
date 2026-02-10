@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" href="ratings.css">
+    <link rel="stylesheet" href="skin-animations.css">
     <script src="security.js"></script>
 </head>
 
@@ -66,7 +67,7 @@
             <button id="top-actions-toggle" class="side-menu-toggle">⚙️</button>
             <div class="side-menu-content">
                 <div class="side-menu-header">მენიუ</div>
-                <button id="shop-btn" class="menu-action-btn">🛒 მაღაზია</button>
+                <button id="shop-btn" class="menu-action-btn">🧼 ტილოები</button>
                 <button id="settings-btn" class="menu-action-btn">⚙️ პარამეტრები</button>
                 <button id="themes-btn" class="menu-action-btn">🖼️ თემები</button>
                 <button id="ratings-btn" class="menu-action-btn">📊 რეიტინგი</button>
@@ -215,36 +216,62 @@
                         </div>
                         <button id="buy-skin-default" class="action-btn">უფასო</button>
                     </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
+                    <div class="shop-item"
+                        style="background: linear-gradient(135deg, rgba(255,69,0,0.1), rgba(255,140,0,0.05)); border: 2px solid rgba(255,69,0,0.3); position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 50%, rgba(255,69,0,0.2) 0%, transparent 70%); animation: fireGlow 2s ease-in-out infinite;">
+                        </div>
+                        <div class="shop-info" style="position: relative; z-index: 1;">
                             <h3>🔥 ცეცხლის ტილო</h3>
-                            <p>მოწითალო მანათობელი, გზადაგზა ცეცხლის კვალს ტოვებს</p>
+                            <p style="color: #ff6347;">მოწითალო მანათობელი, გზადაგზა ცეცხლის კვალს ტოვებს</p>
                         </div>
-                        <button id="buy-skin-fire" class="action-btn">50 🪙</button>
+                        <button id="buy-skin-fire" class="action-btn"
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff4500, #ff6347); box-shadow: 0 0 20px rgba(255,69,0,0.5);">50
+                            🪙</button>
                     </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
+                    <div class="shop-item"
+                        style="background: linear-gradient(135deg, rgba(0,191,255,0.1), rgba(135,206,250,0.05)); border: 2px solid rgba(0,191,255,0.3); position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%); animation: iceSparkle 3s ease-in-out infinite;">
+                        </div>
+                        <div class="shop-info" style="position: relative; z-index: 1;">
                             <h3>❄️ ყინულის ტილო</h3>
-                            <p>ცისფერი მანათობელი, გზადაგზა ფიფქებს ტოვებს</p>
+                            <p style="color: #87ceeb;">ცისფერი მანათობელი, გზადაგზა ფიფქებს ტოვებს</p>
                         </div>
-                        <button id="buy-skin-ice" class="action-btn">50 🪙</button>
+                        <button id="buy-skin-ice" class="action-btn"
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #00bfff, #87ceeb); box-shadow: 0 0 20px rgba(0,191,255,0.5);">50
+                            🪙</button>
                     </div>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>🌈 რეინბოუ ტილო</h3>
-                            <p>სხვადასხვა ფერები და მანათობელი, გზადაგზა ბუშტებს ტოვებს</p>
+                    <div class="shop-item"
+                        style="background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,255,255,0.1), rgba(255,255,0,0.1)); border: 2px solid rgba(255,105,180,0.3); position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(45deg, rgba(255,0,0,0.1), rgba(255,127,0,0.1), rgba(255,255,0,0.1), rgba(0,255,0,0.1), rgba(0,0,255,0.1), rgba(75,0,130,0.1), rgba(148,0,211,0.1)); background-size: 400% 400%; animation: rainbowShift 5s ease infinite;">
                         </div>
-                        <button id="buy-skin-rainbow" class="action-btn">100 🪙</button>
+                        <div class="shop-info" style="position: relative; z-index: 1;">
+                            <h3>🌈 რეინბოუ ტილო</h3>
+                            <p
+                                style="background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;">
+                                სხვადასხვა ფერები და მანათობელი, გზადაგზა ბუშტებს ტოვებს</p>
+                        </div>
+                        <button id="buy-skin-rainbow" class="action-btn"
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0); box-shadow: 0 0 20px rgba(255,105,180,0.5);">100
+                            🪙</button>
                     </div>
                 </div>
                 <div class="settings-col">
                     <h3 class="section-title">პრემიუმ ტილოები</h3>
-                    <div class="shop-item">
-                        <div class="shop-info">
-                            <h3>⚡ ელექტრო ტილო</h3>
-                            <p>მოყვითალო მანათობელი, გზადაგზა ელვებს ტოვებს</p>
+                    <div class="shop-item"
+                        style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,255,0,0.05)); border: 2px solid rgba(255,215,0,0.3); position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,0,0.1) 10px, rgba(255,255,0,0.1) 20px); animation: electricPulse 1s linear infinite;">
                         </div>
-                        <button id="buy-skin-electric" class="action-btn">50 🪙</button>
+                        <div class="shop-info" style="position: relative; z-index: 1;">
+                            <h3>⚡ ელექტრო ტილო</h3>
+                            <p style="color: #ffd700;">მოყვითალო მანათობელი, გზადაგზა ელვებს ტოვებს</p>
+                        </div>
+                        <button id="buy-skin-electric" class="action-btn"
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ffd700, #ffff00); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5);">50
+                            🪙</button>
                     </div>
                 </div>
             </div>
