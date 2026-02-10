@@ -828,6 +828,18 @@
                                 style="width: 100%;">
                         </div>
                     </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">👁️ ბოსის სიმკრთალე (1-10, 10=მაქს)</span>
+                            <input type="number" id="boss-opacity" class="search-input" value="10" min="1" max="10"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">🔺 სამკუთხედი ბოსის HP</span>
+                            <input type="number" id="triangle-boss-hp" class="search-input" value="30000"
+                                style="width: 100%;">
+                        </div>
+                    </div>
                     <div class="flex-row gap-5">
                         <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
                             onclick="saveBossConfig()">🚀 UPDATE BOSS SKIN</button>
@@ -1346,7 +1358,7 @@
             const img = get('boss-img-url').value.trim();
             const scale = get('boss-scale').value || "1.0";
             const dur = parseInt(get('global-duration').value) || 60;
-            const config = { img, scale };
+            const config = { img, scale, opacity: get('boss-opacity').value || "10", triangleHP: get('triangle-boss-hp').value || "30000" };
             triggerEvent('boss_config', JSON.stringify(config), dur);
         };
 

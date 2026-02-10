@@ -100,6 +100,8 @@ let cleaningRadius = 1;
 let globalBossInterval = 60000; // Boss spawn interval in milliseconds (default 60s)
 let globalUpgradePower = 1.3; // Upgrade multiplier (default 1.3 = +30%)
 let globalPinkUpgradePower = 1.5; // Pink upgrade multiplier (default 1.5 = +50%)
+let globalBossOpacity = 1.0; // Boss opacity (1-10 scale, converted to 0.1-1.0)
+let globalTriangleBossHP = 30000; // Triangle boss HP override
 
 // Global Interval IDs to prevent stacking
 let bossInterval = null;
