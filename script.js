@@ -535,9 +535,7 @@ function updateScore(points) {
 }
 
 function updateStatsSidebar() {
-    get('session-bosses').textContent = bossesDefeated;
-    get('session-cleaned').textContent = totalStainsCleanedRel;
-    if (get('session-coins-earned')) get('session-coins-earned').textContent = sessionCoinsEarned;
+    if (get('session-cleaned')) get('session-cleaned').textContent = totalStainsCleanedRel;
 
     const list = get('active-upgrades-list');
     const pinkList = get('pink-bonuses-list');
