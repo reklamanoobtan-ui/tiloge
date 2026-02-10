@@ -597,12 +597,17 @@
     <div id="global-alert-container" class="hidden"
         style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 100000; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: 0.5s;">
         <div id="global-alert-box"
-            style="background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(40,40,40,0.9)); border: 2px solid cyan; padding: 40px 60px; border-radius: 20px; box-shadow: 0 0 50px rgba(0,255,255,0.3); transform: scale(0.5); transition: 0.5s; text-align: center; max-width: 80%;">
+            style="background: linear-gradient(135deg, rgba(30,30,10,0.98), rgba(20,20,5,0.98)); border: 4px solid #ffd700; padding: 60px 80px; border-radius: 40px; box-shadow: 0 0 100px rgba(255,215,0,0.5), inset 0 0 40px rgba(255,215,0,0.2); transform: scale(0.5); transition: 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; max-width: 90%; position: relative; overflow: hidden;">
+            <!-- Neon background glow -->
             <div
-                style="color: cyan; font-size: 1rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 15px; text-shadow: 0 0 10px cyan;">
-                📢 SYSTEM ANNOUNCEMENT</div>
+                style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%); pointer-events: none;">
+            </div>
+
+            <div
+                style="color: #ffd700; font-size: 1.4rem; font-weight: 900; letter-spacing: 8px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(255,215,0,0.8); text-transform: uppercase; font-family: 'Outfit', sans-serif;">
+                ✨ სისტემური შეტყობინება ✨</div>
             <div id="global-alert-text"
-                style="color: white; font-size: 2.5rem; font-weight: 800; line-height: 1.2; text-shadow: 0 0 20px rgba(255,255,255,0.5);">
+                style="color: white; font-size: 3.5rem; font-weight: 800; line-height: 1.1; text-shadow: 0 0 30px #ffd700, 0 0 60px rgba(255,215,0,0.4); font-family: 'Outfit', sans-serif;">
                 Message Here</div>
         </div>
     </div>
@@ -610,18 +615,18 @@
     <style>
         @keyframes alert-pulse {
             0% {
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-                border-color: cyan;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+                border-color: #ffd700;
             }
 
             50% {
-                box-shadow: 0 0 60px rgba(0, 255, 255, 0.6);
+                box-shadow: 0 0 80px rgba(255, 215, 0, 0.7);
                 border-color: #fff;
             }
 
             100% {
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-                border-color: cyan;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+                border-color: #ffd700;
             }
         }
 

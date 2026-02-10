@@ -1006,9 +1006,17 @@ function setupAdmin() {
         const msg = getVal('admin-broadcast-msg');
         if (!msg) return;
         try {
+            // Send to chat
             await sql`INSERT INTO chat_messages(nickname, message) VALUES('📢 SYSTEM', ${msg})`;
+
+            // Trigger global system alert for everyone
+            await sql`INSERT INTO global_events (event_type, event_value, expires_at)
+                      VALUES ('info', ${msg}, NOW() + INTERVAL '1 minute')
+                      ON CONFLICT (event_type) DO UPDATE 
+                      SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
+
             document.getElementById('admin-broadcast-msg').value = '';
-            setStatus("Broadcast sent");
+            setStatus("Broadcast sent (Chat & Screen)");
         } catch (e) { setStatus('Error', 'red'); }
     };
 
@@ -2846,9 +2854,9 @@ function showSystemAlert(msg) {
     container.classList.remove('hidden');
     setTimeout(() => container.classList.add('active'), 50);
 
-    // Duration: 2s per word, min 5s
-    const wordCount = msg.split(/\s+/).length;
-    const duration = Math.max(5000, wordCount * 2000);
+    // Duration: Exactly 2s per word as requested
+    const wordCount = msg.trim().split(/\s+/).length;
+    const duration = wordCount * 2000;
 
     setTimeout(() => {
         container.classList.remove('active');
