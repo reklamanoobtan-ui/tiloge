@@ -445,6 +445,7 @@
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
                 <div class="nav-item" data-tab="site">🌐 საიტის მართვა</div>
+                <div class="nav-item" data-tab="bosses">👾 ბოსები</div>
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
@@ -614,6 +615,113 @@
                     <div class="mini-card site-fx-card" onclick="quickTrigger('site_effect', 'disco', 60)">
                         <span style="font-size: 1.5rem;">🕺</span>
                         <span>Disco Party</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOSSES TAB -->
+            <div id="tab-bosses" class="tab-content">
+                <div class="header-bar">
+                    <h2 style="color: #ff00ff;">👾 ბოსების მართვა</h2>
+                </div>
+
+                <!-- Regular Boss Section -->
+                <div class="card"
+                    style="background: rgba(255,0,255,0.05); border: 1px solid rgba(255,0,255,0.2); margin-bottom: 25px;">
+                    <h3 style="color: #ff00ff; margin-bottom: 20px;">⭕ ჩვეულებრივი ბოსი</h3>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">🖼️ ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
+                            <input type="text" id="regular-boss-img" class="search-input" placeholder="https://..."
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">📐 მასშტაბი (1.0 = Normal)</span>
+                            <input type="number" id="regular-boss-scale" class="search-input" value="1.0" step="0.1"
+                                style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
+                            <input type="number" id="regular-boss-opacity" class="search-input" value="10" min="1"
+                                max="10" style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">❤️ HP</span>
+                            <input type="number" id="regular-boss-hp" class="search-input" value="10000"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">⏱️ გაჩენის სიხშირე (წამი)</span>
+                            <input type="number" id="regular-boss-spawn" class="search-input" value="60"
+                                style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
+                            onclick="saveRegularBoss()">💾 SAVE</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="resetRegularBoss()">🔄 RESET</button>
+                    </div>
+                </div>
+
+                <!-- Triangle Boss Section -->
+                <div class="card" style="background: rgba(0,255,255,0.05); border: 1px solid rgba(0,255,255,0.2);">
+                    <h3 style="color: #00ffff; margin-bottom: 20px;">🔺 სამკუთხედი ბოსი (Elite)</h3>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">🖼️ ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
+                            <input type="text" id="triangle-boss-img" class="search-input" placeholder="https://..."
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">📐 მასშტაბი (1.0 = Normal)</span>
+                            <input type="number" id="triangle-boss-scale" class="search-input" value="1.0" step="0.1"
+                                style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
+                            <input type="number" id="triangle-boss-opacity" class="search-input" value="10" min="1"
+                                max="10" style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">❤️ HP</span>
+                            <input type="number" id="triangle-boss-hp-input" class="search-input" value="30000"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <span class="mini-label">⏱️ გაჩენის სიხშირე (წამი)</span>
+                            <input type="number" id="triangle-boss-spawn" class="search-input" value="120"
+                                style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2; background: #00ffff; color: #000;"
+                            onclick="saveTriangleBoss()">💾 SAVE</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="resetTriangleBoss()">🔄 RESET</button>
+                    </div>
+                </div>
+
+                <!-- Status Display -->
+                <div class="card" style="margin-top: 25px; background: rgba(0,0,0,0.3);">
+                    <h3>📊 მიმდინარე სტატუსი</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>
+                            <span class="mini-label">⭕ ჩვეულებრივი ბოსი</span>
+                            <p id="regular-boss-status" style="color: #ff00ff; font-weight: bold;">Default Settings</p>
+                        </div>
+                        <div>
+                            <span class="mini-label">🔺 სამკუთხედი ბოსი</span>
+                            <p id="triangle-boss-status" style="color: #00ffff; font-weight: bold;">Default Settings</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -806,44 +914,6 @@
                                     onclick="stopEvent('boss_spawn_rate')">OFF</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Boss Appearance Section -->
-                <h4
-                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff00ff;">
-                    👾 ბოსის ვიზუალი & მექანიკა <span id="cur-boss-config" class="cur-val"
-                        style="color: #ff00ff; font-size: 0.8rem;"></span></h4>
-                <div class="card"
-                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,255,0.1); padding: 15px; margin-bottom: 20px;">
-                    <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">🖼️ ბოსის ფოტოს URL (დატოვეთ ცარიელი ორიგინალისთვის)</span>
-                            <input type="text" id="boss-img-url" class="search-input" placeholder="https://..."
-                                style="width: 100%;">
-                        </div>
-                        <div>
-                            <span class="mini-label">📐 მასშტაბი</span>
-                            <input type="number" id="boss-scale" class="search-input" value="1.0" step="0.1"
-                                style="width: 100%;">
-                        </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <span class="mini-label">👁️ ბოსის სიმკრთალე (1-10, 10=მაქს)</span>
-                            <input type="number" id="boss-opacity" class="search-input" value="10" min="1" max="10"
-                                style="width: 100%;">
-                        </div>
-                        <div>
-                            <span class="mini-label">🔺 სამკუთხედი ბოსის HP</span>
-                            <input type="number" id="triangle-boss-hp" class="search-input" value="30000"
-                                style="width: 100%;">
-                        </div>
-                    </div>
-                    <div class="flex-row gap-5">
-                        <button class="btn btn-primary" style="flex:2; background: #ff00ff;"
-                            onclick="saveBossConfig()">🚀 UPDATE BOSS SKIN</button>
-                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('boss_config')">RESET</button>
                     </div>
                 </div>
 
@@ -1268,6 +1338,8 @@
                 else if (type === 'boss_spawn_rate') msg = `⏱️ ბოსების გაჩენის დრო: ყოველ ${val} წამში`;
                 else if (type === 'upgrade_power') msg = `⚡ გაძლიერებების ძალა: ${val}X`;
                 else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
+                else if (type === 'regular_boss_config') msg = `⭕ ჩვეულებრივი ბოსი განახლდა!`;
+                else if (type === 'triangle_boss_config') msg = `🔺 სამკუთხედი ბოსი განახლდა!`;
 
                 msg += ` (${duration} წთ) ✨`;
 
@@ -1360,6 +1432,58 @@
             const dur = parseInt(get('global-duration').value) || 60;
             const config = { img, scale, opacity: get('boss-opacity').value || "10", triangleHP: get('triangle-boss-hp').value || "30000" };
             triggerEvent('boss_config', JSON.stringify(config), dur);
+        };
+
+        // Regular Boss Functions
+        window.saveRegularBoss = async () => {
+            const img = get('regular-boss-img').value.trim();
+            const scale = get('regular-boss-scale').value || "1.0";
+            const opacity = get('regular-boss-opacity').value || "10";
+            const hp = get('regular-boss-hp').value || "10000";
+            const spawn = get('regular-boss-spawn').value || "60";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale, opacity, hp, spawn };
+            await triggerEvent('regular_boss_config', JSON.stringify(config), dur);
+            get('regular-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s)`;
+            log('✅ ჩვეულებრივი ბოსი განახლდა', 'green');
+        };
+
+        window.resetRegularBoss = async () => {
+            if (!confirm('დარწმუნებული ხართ?')) return;
+            await stopEvent('regular_boss_config');
+            get('regular-boss-img').value = '';
+            get('regular-boss-scale').value = '1.0';
+            get('regular-boss-opacity').value = '10';
+            get('regular-boss-hp').value = '10000';
+            get('regular-boss-spawn').value = '60';
+            get('regular-boss-status').textContent = 'Default Settings';
+            log('🔄 ჩვეულებრივი ბოსი დარესეტდა', 'orange');
+        };
+
+        // Triangle Boss Functions
+        window.saveTriangleBoss = async () => {
+            const img = get('triangle-boss-img').value.trim();
+            const scale = get('triangle-boss-scale').value || "1.0";
+            const opacity = get('triangle-boss-opacity').value || "10";
+            const hp = get('triangle-boss-hp-input').value || "30000";
+            const spawn = get('triangle-boss-spawn').value || "120";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale, opacity, hp, spawn };
+            await triggerEvent('triangle_boss_config', JSON.stringify(config), dur);
+            get('triangle-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s)`;
+            log('✅ სამკუთხედი ბოსი განახლდა', 'cyan');
+        };
+
+        window.resetTriangleBoss = async () => {
+            if (!confirm('დარწმუნებული ხართ?')) return;
+            await stopEvent('triangle_boss_config');
+            get('triangle-boss-img').value = '';
+            get('triangle-boss-scale').value = '1.0';
+            get('triangle-boss-opacity').value = '10';
+            get('triangle-boss-hp-input').value = '30000';
+            get('triangle-boss-spawn').value = '120';
+            get('triangle-boss-status').textContent = 'Default Settings';
+            log('🔄 სამკუთხედი ბოსი დარესეტდა', 'orange');
         };
 
         window.saveForcedVideo = async () => {
