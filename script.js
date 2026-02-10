@@ -1685,7 +1685,15 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
             baseBossHP = 15000; // 3x Normal Boss
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
-            size = 350;
+            size = 350 * (globalTriangleBossScale || 1.0);
+
+            if (globalTriangleBossImage) {
+                stain.style.backgroundImage = `url('${globalTriangleBossImage}')`;
+                stain.style.backgroundSize = 'cover';
+                stain.style.backgroundPosition = 'center';
+                stain.innerHTML = '';
+            }
+            stain.style.opacity = globalTriangleBossOpacity || 1.0;
         } else {
             // NORMAL BOSS (Every 5k score)
             stain.innerHTML = '<div class="boss-title">BOSS</div>';
@@ -1697,6 +1705,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
                 stain.style.backgroundPosition = 'center';
                 stain.innerHTML = ''; // Hide "BOSS" text if custom image
             }
+            stain.style.opacity = globalBossOpacity || 1.0;
         }
 
         health = baseBossHP * bossScaling * difficulty;
@@ -2145,6 +2154,16 @@ async function checkGlobalEvents() {
         globalFreezeEnemies = false;
         globalBossImage = null;
         globalBossScale = 1.0;
+        globalBossOpacity = 1.0;
+        globalBossInterval = 60000;
+        globalRegularBossThreshold = 500;
+        globalTriangleBossHP = 30000;
+        globalTriangleBossImage = null;
+        globalTriangleBossScale = 1.0;
+        globalTriangleBossOpacity = 1.0;
+        globalTriangleBossThreshold = 1000;
+        globalUpgradePower = 1.3;
+        globalPinkUpgradePower = 1.5;
         globalUpgradeFactor = 1.3;
         globalForcedVideo = null;
 
@@ -2196,6 +2215,12 @@ async function checkGlobalEvents() {
                     if (cfg.hp) globalTriangleBossHP = parseInt(cfg.hp);
                     if (cfg.threshold) globalTriangleBossThreshold = parseInt(cfg.threshold);
                 } catch (e) { }
+            }
+            if (ev.event_type === 'upgrade_power') {
+                globalUpgradePower = parseFloat(ev.event_value) || 1.3;
+            }
+            if (ev.event_type === 'pink_power') {
+                globalPinkUpgradePower = parseFloat(ev.event_value) || 1.5;
             }
             if (ev.event_type === 'spawn_now') {
                 if (ev.id > lastSpawnEventId) {
