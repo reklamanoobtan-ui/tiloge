@@ -8,7 +8,7 @@ import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.
 const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
 // State & Version Control
-const APP_VERSION = "2.2.1"; // Leaderboard Efficiency Update
+const APP_VERSION = "2.3.0"; // Admin Powers Update
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
@@ -90,6 +90,11 @@ let currentSkin = localStorage.getItem('tilo_current_skin') || 'default';
 let intervalMultiplier = 1.0;
 let radiusMultiplier = 1.0;
 let strengthMultiplier = 1.0;
+let globalUpgradePower = 1.3;
+let globalPinkUpgradePower = 1.5;
+let globalBossInterval = 60000; // ms
+let globalBossScalingInterval = 60000; // ms
+let globalBossScalingFactor = 2.0;
 
 // Base stats
 let baseClothStrength = 20; // Reverted to 20 (Harder)
@@ -434,7 +439,6 @@ let globalGodMode = false;
 let globalFreezeEnemies = false;
 let globalBossImage = null;
 let globalBossScale = 1.0;
-let globalUpgradeFactor = 1.3;
 
 // Video Notification Globals
 let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
@@ -1200,14 +1204,14 @@ function triggerMagnet() {
 function applyUpgrade(id) {
     switch (id) {
         // case 'diff' removed
-        case 'speed': helperSpeedMultiplier *= 1.3; break; // +30% speed
+        case 'speed': helperSpeedMultiplier *= globalUpgradePower; break;
         case 'bot': startHelperBot(); break;
-        case 'radius': radiusMultiplier *= 1.3; updatePowerStats(); break; // +30% radius
-        case 'strength': strengthMultiplier *= 1.3; updatePowerStats(); break; // +30% strength
+        case 'radius': radiusMultiplier *= globalUpgradePower; updatePowerStats(); break;
+        case 'strength': strengthMultiplier *= globalUpgradePower; updatePowerStats(); break;
         case 'karcher': strengthMultiplier *= 2; radiusMultiplier *= 2; updatePowerStats(); break;
         case 'bomb': hasBombUpgrade = true; break;
-        case 'coin_buff': coinBonusMultiplier += 0.3; break; // +30% coins
-        case 'bot_pow': helperCleaningMultiplier *= 1.3; break; // +30% bot power
+        case 'coin_buff': coinBonusMultiplier += (globalUpgradePower - 1); break;
+        case 'bot_pow': helperCleaningMultiplier *= globalUpgradePower; break;
         case 'magnet':
             if (!hasMagnetUpgrade) {
                 hasMagnetUpgrade = true;
@@ -1447,8 +1451,8 @@ function showPinkUpgradeOptions() {
         card.className = 'upgrade-card pink-upgrade-card';
         card.innerHTML = `
             <div style="font-size: 3rem; margin-bottom: 10px;">${icons[id] || '✨'}</div>
-            <h3>+50% ${names[id] || id}</h3>
-            <p>თქვენი არსებული ${names[id]} გაძლიერდება ნახევარჯერ!</p>
+            <h3>+${Math.round((globalPinkUpgradePower - 1.0) * 100)}% ${names[id] || id}</h3>
+            <p>თქვენი არსებული ${names[id]} გაძლიერდება!</p>
         `;
         card.onclick = () => applyPinkUpgrade(id);
         container.appendChild(card);
@@ -1464,16 +1468,16 @@ function applyPinkUpgrade(id) {
 
     // Apply 50% boost to the benefit
     switch (id) {
-        case 'diff': intervalMultiplier *= 0.7; break; // +50% efficacy in reducing interval
-        case 'speed': helperSpeedMultiplier *= 1.5; break;
-        case 'bot': helperSpeedMultiplier *= 1.5; break; // Boost robots overall
-        case 'radius': radiusMultiplier *= 1.5; break;
-        case 'strength': strengthMultiplier *= 1.5; break;
-        case 'karcher': strengthMultiplier *= 1.5; radiusMultiplier *= 1.5; break;
-        case 'bomb': strengthMultiplier *= 1.5; break;
-        case 'coin_buff': coinBonusMultiplier *= 1.5; break;
-        case 'magnet': magnetInterval *= 0.5; break; // Half the interval (2x speed)
-        case 'bot_pow': helperCleaningMultiplier *= 1.5; break;
+        case 'diff': intervalMultiplier *= (1 / globalPinkUpgradePower); break;
+        case 'speed': helperSpeedMultiplier *= globalPinkUpgradePower; break;
+        case 'bot': helperSpeedMultiplier *= globalPinkUpgradePower; break;
+        case 'radius': radiusMultiplier *= globalPinkUpgradePower; break;
+        case 'strength': strengthMultiplier *= globalPinkUpgradePower; break;
+        case 'karcher': strengthMultiplier *= globalPinkUpgradePower; radiusMultiplier *= globalPinkUpgradePower; break;
+        case 'bomb': strengthMultiplier *= globalPinkUpgradePower; break;
+        case 'coin_buff': coinBonusMultiplier *= globalPinkUpgradePower; break;
+        case 'magnet': magnetInterval *= (1 / globalPinkUpgradePower); break;
+        case 'bot_pow': helperCleaningMultiplier *= globalPinkUpgradePower; break;
     }
 
     updatePowerStats();
@@ -1489,17 +1493,18 @@ function showUpgradeOptions() {
     gameActive = false; // Pause while choosing
     get('upgrade-modal').classList.remove('hidden');
 
+    const pct = Math.round((globalUpgradePower - 1.0) * 100);
     const UPGRADE_POOL = [
         // 'diff' removed
-        { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: '+30% სისწრაფე', type: 'multi' },
+        { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: `+${pct}% სისწრაფე`, type: 'multi' },
         { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
-        { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
-        { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
+        { id: 'radius', icon: '📏', title: 'რადიუსი', desc: `+${pct}% რადიუსი`, type: 'multi' },
+        { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: `+${pct}% ძალა`, type: 'multi' },
         { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
         { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
-        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+30% ქოინების მოგება (Max 5)', type: 'multi' },
+        { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: `+${pct}% ქოინების მოგება (Max 5)`, type: 'multi' },
         { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' },
-        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 5)', type: 'multi' }
+        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: `+${pct}% რობოტის ძალა (Max 5)`, type: 'multi' }
     ];
 
     // Filter available upgrades based on limits
@@ -1569,7 +1574,7 @@ function triggerEndgame() {
     bossScalingInterval = setInterval(() => {
         if (!gameActive) { clearInterval(bossScalingInterval); return; }
 
-        bossHealthMultiplier *= 2;
+        bossHealthMultiplier *= globalBossScalingFactor;
         showStatusUpdate(`ბოსები გაძლიერდნენ!(x${bossHealthMultiplier}) ☠️`);
 
         // Upgrade existing bosses
@@ -1591,7 +1596,7 @@ function triggerEndgame() {
             boss.style.height = `${newSize}px`;
         });
 
-    }, 60000);
+    }, globalBossScalingInterval);
 }
 
 
@@ -1669,7 +1674,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
 
         if (isTriangle) {
             // ELITE BOSS (Every 20k score)
-            baseBossHP = 15000; // 3x Normal Boss
+            baseBossHP = baseBossHP * 3; // 3x Normal Boss (Respects override)
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
             size = 350;
@@ -1686,7 +1691,8 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
             }
         }
 
-        health = baseBossHP * bossScaling * difficulty;
+        // Combine all multipliers: Base * ScoreScaling * Difficulty * OverflowMult * TimeScaling(Global)
+        health = baseBossHP * bossScaling * difficulty * healthMultiplier * bossHealthMultiplier;
 
         // Critical: Boss HP caps at 10 Million to prevent impossible numbers
         health = Math.min(health, 10000000);
@@ -2132,7 +2138,11 @@ async function checkGlobalEvents() {
         globalFreezeEnemies = false;
         globalBossImage = null;
         globalBossScale = 1.0;
-        globalUpgradeFactor = 1.3;
+        globalBossScale = 1.0;
+        // globalUpgradeFactor removed
+        globalBossInterval = 60000;
+        globalUpgradePower = 1.3;
+        globalPinkUpgradePower = 1.5;
         globalForcedVideo = null;
 
         document.body.classList.remove('global-rainbow');
@@ -2159,14 +2169,27 @@ async function checkGlobalEvents() {
                 try {
                     const cfg = JSON.parse(ev.event_value);
                     if (cfg.img) globalBossImage = cfg.img;
-                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale);
+                    if (cfg.scale) globalBossScale = parseFloat(cfg.scale) || 1.0;
+                    if (cfg.scaling_interval) globalBossScalingInterval = (parseInt(cfg.scaling_interval) || 60) * 1000;
+                    if (cfg.scaling_factor) globalBossScalingFactor = parseFloat(cfg.scaling_factor) || 2.0;
                 } catch (e) { }
             }
             if (ev.event_type === 'upgrade_config') {
-                globalUpgradeFactor = parseFloat(ev.event_value) || 1.3;
+                globalUpgradePower = parseFloat(ev.event_value) || 1.3;
+                showStatusUpdate(`⚡ Upgrade Power Sync: ${globalUpgradePower}X`);
             }
             if (ev.event_type === 'info') {
                 showSystemAlert(ev.event_value);
+            }
+            if (ev.event_type === 'boss_spawn_rate') {
+                globalBossInterval = (parseInt(ev.event_value) || 60) * 1000;
+                resetGameLoops(); // Re-apply interval
+            }
+            if (ev.event_type === 'upgrade_power') {
+                globalUpgradePower = parseFloat(ev.event_value);
+            }
+            if (ev.event_type === 'pink_power') {
+                globalPinkUpgradePower = parseFloat(ev.event_value);
             }
             if (ev.event_type === 'video_channel') {
                 videoChannels = [{ id: ev.event_value, weight: 100 }];
@@ -2435,27 +2458,29 @@ function resetGameLoops() {
     if (bossInterval) clearInterval(bossInterval);
     bossInterval = setInterval(() => {
         if (gameActive) {
-            // General Bosses (Cap at 10, scale health for overflow)
+            // General Bosses (Cap at globalBossLimitOverride or 10, scale health for overflow)
+            const limit = globalBossLimitOverride || 10;
             const rawBossCount = Math.floor(score / 500) + 1;
-            const finalBossSpawn = Math.min(rawBossCount, 10);
-            const bossHealthMult = rawBossCount > 10 ? (rawBossCount / 10) : 1.0;
+            const finalBossSpawn = Math.min(rawBossCount, limit);
+            const bossHealthMult = rawBossCount > limit ? (rawBossCount / limit) : 1.0;
 
             for (let i = 0; i < finalBossSpawn; i++) {
                 createStain(true, false, bossHealthMult);
             }
 
-            // Triangle Elite Bosses (Cap at 5, scale health for overflow)
+            // Triangle Elite Bosses (Cap at half limit, scale health for overflow)
             if (score >= 1000) {
+                const triLimit = Math.ceil(limit / 2);
                 const rawTriangleCount = Math.floor((score - 1000) / 1000) + 1;
-                const finalTriangleSpawn = Math.min(rawTriangleCount, 5);
-                const triangleHealthMult = rawTriangleCount > 5 ? (rawTriangleCount / 5) : 1.0;
+                const finalTriangleSpawn = Math.min(rawTriangleCount, triLimit);
+                const triangleHealthMult = rawTriangleCount > triLimit ? (rawTriangleCount / triLimit) : 1.0;
 
                 for (let i = 0; i < finalTriangleSpawn; i++) {
                     createStain(true, true, triangleHealthMult);
                 }
             }
         }
-    }, 60000);
+    }, globalBossInterval);
 
     // Defeat condition check
     if (defeatCheckInterval) clearInterval(defeatCheckInterval);
