@@ -1405,7 +1405,7 @@ function burstSoap(x, y) {
     if (burstPoints > 0) updateScore(burstPoints);
     bossCount = 0;
 
-    gameActive = false;
+    gameActive = false; // Pause AFTER awarding points
     showStatusUpdate(`ეკრანი გასუფთავდა! (+${burstPoints} ქულა) 🌸✨`);
 
     // "Cutscene" - Intense bubble wave for 3 seconds
@@ -1776,7 +1776,7 @@ function checkDefeatCondition() {
     const limitBoss = globalBossLimitOverride || 10;
     const limitElite = globalBossLimitOverride ? Math.ceil(globalBossLimitOverride / 2) : 5;
 
-    const isCrisis = totalCount >= limitStains || (totalCount > 10 && inactiveTime > 60) || bossCountUI >= limitBoss || triangleBossCountUI >= limitElite;
+    const isCrisis = totalCount >= limitStains || inactiveTime > 30 || bossCountUI >= limitBoss || triangleBossCountUI >= limitElite;
 
     if (isCrisis && !defeatTimer) {
         let timeLeft = globalCrisisTime;
@@ -1786,7 +1786,8 @@ function checkDefeatCondition() {
             if (timeLeft <= 0) { clearInterval(defeatTimer); gameOver(); }
             else if (timeLeft % 5 === 0) {
                 let reason = "ჭუჭყი ბევრია!";
-                if (inactiveTime > 30) reason = "არააქტიური ხარ!";
+                if (inactiveTime > 30) reason = "არააქტიური ხარ! ⚠️";
+                else if (totalCount >= limitStains) reason = "ჭუჭყი ბევრია!";
                 else if (bossCountUI >= 10) reason = "ბოსების შემოსევა!";
                 else if (triangleBossCountUI >= 5) reason = "სამკუთხედი ბოსების ალყა! ⚠️";
                 showStatusUpdate(`კრიზისი! ${reason} ${timeLeft}წ დარჩა! ⚠️`);
@@ -2308,7 +2309,6 @@ function startGameSession(dontReset = false) {
     if (!dontReset) {
         // Meta-progress (isVip, coins, skins) is kept from global loads
         bossesDefeated = 0;
-        totalStainsCleanedRel = 0;
         totalRepeatablePicked = 0;
         pendingUpgrades = 0;
         lastMinigameMilestone = 0;
@@ -2335,6 +2335,8 @@ function startGameSession(dontReset = false) {
     }
 
     score = 0;
+    nextUpgradeScore = 10; // ALWAYS reset upgrade milestone if score is reset to 0
+    totalStainsCleanedRel = 0;
     updatePowerStats();
     showStatusUpdate(`მოგესალმებით, ${nickname}! ✨`);
 
@@ -2360,6 +2362,9 @@ function startGameSession(dontReset = false) {
     syncLoopInterval = setInterval(() => { if (userEmail && gameActive) syncUserData(); }, 3000);
 
     resetGameLoops();
+
+    if (defeatCheckInterval) clearInterval(defeatCheckInterval);
+    defeatCheckInterval = setInterval(checkDefeatCondition, 1000);
 
     // Video Scheduler moved to global init
 }
