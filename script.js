@@ -622,12 +622,17 @@ function handleSkinAction(name) {
     syncUserData();
 }
 
+function safeOnClick(id, action) {
+    const el = get(id);
+    if (el) el.onclick = action;
+}
+
 function initUI() {
-    get('buy-skin-default').onclick = () => handleSkinAction('default');
-    get('buy-skin-fire').onclick = () => handleSkinAction('fire');
-    get('buy-skin-ice').onclick = () => handleSkinAction('ice');
-    get('buy-skin-electric').onclick = () => handleSkinAction('electric');
-    get('buy-skin-rainbow').onclick = () => handleSkinAction('rainbow');
+    safeOnClick('buy-skin-default', () => handleSkinAction('default'));
+    safeOnClick('buy-skin-fire', () => handleSkinAction('fire'));
+    safeOnClick('buy-skin-ice', () => handleSkinAction('ice'));
+    safeOnClick('buy-skin-electric', () => handleSkinAction('electric'));
+    safeOnClick('buy-skin-rainbow', () => handleSkinAction('rainbow'));
 
     // UI Toggle Logic
     const shopAction = () => get('shop-modal').classList.remove('hidden');
@@ -642,37 +647,39 @@ function initUI() {
     };
     const themesAction = () => get('themes-modal').classList.remove('hidden');
     const ratingsAction = () => {
-        get('ratings-modal').classList.remove('hidden');
-        fetchGlobalRankings();
+        if (get('ratings-modal')) {
+            get('ratings-modal').classList.remove('hidden');
+            fetchGlobalRankings();
+        }
     };
     const uiAction = () => get('ui-modal').classList.remove('hidden');
 
-    if (get('shop-btn')) get('shop-btn').onclick = shopAction;
-    if (get('shop-btn-side')) get('shop-btn-side').onclick = shopAction;
+    safeOnClick('shop-btn', shopAction);
+    safeOnClick('shop-btn-side', shopAction);
 
-    if (get('settings-btn')) get('settings-btn').onclick = settingsAction;
-    if (get('settings-btn-side')) get('settings-btn-side').onclick = settingsAction;
+    safeOnClick('settings-btn', settingsAction);
+    safeOnClick('settings-btn-side', settingsAction);
 
-    if (get('themes-btn')) get('themes-btn').onclick = themesAction;
-    if (get('themes-btn-side')) get('themes-btn-side').onclick = themesAction;
+    safeOnClick('themes-btn', themesAction);
+    safeOnClick('themes-btn-side', themesAction);
 
-    if (get('ratings-btn')) get('ratings-btn').onclick = ratingsAction;
-    if (get('ratings-btn-side')) get('ratings-btn-side').onclick = ratingsAction;
+    safeOnClick('ratings-btn', ratingsAction);
+    safeOnClick('ratings-btn-side', ratingsAction);
 
-    if (get('ui-toggle-btn')) get('ui-toggle-btn').onclick = uiAction;
-    if (get('ui-toggle-btn-side')) get('ui-toggle-btn-side').onclick = uiAction;
+    safeOnClick('ui-toggle-btn', uiAction);
+    safeOnClick('ui-toggle-btn-side', uiAction);
 
-    if (get('close-ui')) get('close-ui').onclick = () => get('ui-modal').classList.add('hidden');
+    safeOnClick('close-ui', () => get('ui-modal').classList.add('hidden'));
 
     // Premium Sidebar Logic
     const statsSidebar = get('stats-sidebar');
     const menuSidebar = get('menu-sidebar');
 
-    if (get('stats-side-toggle')) get('stats-side-toggle').onclick = () => statsSidebar.classList.toggle('side-collapsed');
-    if (get('stats-close-btn')) get('stats-close-btn').onclick = () => statsSidebar.classList.add('side-collapsed');
+    if (get('stats-side-toggle')) get('stats-side-toggle').onclick = () => statsSidebar && statsSidebar.classList.toggle('side-collapsed');
+    if (get('stats-close-btn')) get('stats-close-btn').onclick = () => statsSidebar && statsSidebar.classList.add('side-collapsed');
 
-    if (get('menu-side-toggle')) get('menu-side-toggle').onclick = () => menuSidebar.classList.toggle('side-collapsed');
-    if (get('menu-close-btn')) get('menu-close-btn').onclick = () => menuSidebar.classList.add('side-collapsed');
+    if (get('menu-side-toggle')) get('menu-side-toggle').onclick = () => menuSidebar && menuSidebar.classList.toggle('side-collapsed');
+    if (get('menu-close-btn')) get('menu-close-btn').onclick = () => menuSidebar && menuSidebar.classList.add('side-collapsed');
 
     // Chat Modal Logic
     const chatModal = get('chat-modal');
@@ -688,8 +695,8 @@ function initUI() {
         showStatusUpdate('თამაში გაგრძელდა ▶️');
     };
 
-    if (get('chat-modal-btn')) get('chat-modal-btn').onclick = openChat;
-    if (get('close-chat-modal')) get('close-chat-modal').onclick = closeChat;
+    safeOnClick('chat-modal-btn', openChat);
+    safeOnClick('close-chat-modal', closeChat);
 
     // Pause Button Logic
     let isPaused = false;
@@ -714,11 +721,14 @@ function initUI() {
     }
 
     // End Game Button
-    get('end-game-btn').onclick = () => {
-        if (confirm("ნამდვილად გსურთ თამაშის დასრულება? შედეგი ავტომატურად შეინახება.")) {
-            gameOver();
-        }
-    };
+    const endBtn = get('end-game-btn');
+    if (endBtn) {
+        endBtn.onclick = () => {
+            if (confirm("ნამდვილად გსურთ თამაშის დასრულება? შედეგი ავტომატურად შეინახება.")) {
+                gameOver();
+            }
+        };
+    }
 
     // Restart Logic
     const handleRestart = () => {
@@ -730,14 +740,22 @@ function initUI() {
             location.reload();
         }
     };
-    get('restart-game-btn').onclick = handleRestart;
+    if (get('restart-game-btn')) get('restart-game-btn').onclick = handleRestart;
+
+    // Logout Logic
+    if (get('logout-btn')) {
+        get('logout-btn').onclick = () => {
+            localStorage.clear();
+            location.reload();
+        };
+    }
 
     // --- Profile Management Listeners ---
 
-    // Update Profile (Nickname/Email)
-    get('update-profile-btn').onclick = async () => {
-        const newNick = get('edit-nick').value.trim();
-        const newEmail = get('edit-email').value.trim();
+    // Profile listeners
+    safeOnClick('update-profile-btn', async () => {
+        const newNick = get('edit-nick') ? get('edit-nick').value.trim() : '';
+        const newEmail = get('edit-email') ? get('edit-email').value.trim() : '';
 
         if (!newNick && !newEmail) {
             alert('შეიყვანეთ ახალი მონაცემები!');
@@ -746,7 +764,6 @@ function initUI() {
 
         try {
             if (newNick) {
-                // Check if nick taken
                 const check = await sql`SELECT id FROM users WHERE nickname = ${newNick} AND email != ${userEmail}`;
                 if (check.length > 0) {
                     alert('ეს ნიკნეიმი უკვე დაკავებულია!');
@@ -758,7 +775,6 @@ function initUI() {
             }
 
             if (newEmail) {
-                // Check if email taken
                 const check = await sql`SELECT id FROM users WHERE email = ${newEmail}`;
                 if (check.length > 0) {
                     alert('ეს ემაილი უკვე დაკავებულია!');
@@ -770,19 +786,18 @@ function initUI() {
             }
 
             showStatusUpdate('პროფილი განახლდა! ✨');
-            get('settings-user-name').textContent = nickname;
-            get('settings-user-email').textContent = userEmail;
-            get('edit-nick').value = '';
-            get('edit-email').value = '';
+            if (get('settings-user-name')) get('settings-user-name').textContent = nickname;
+            if (get('settings-user-email')) get('settings-user-email').textContent = userEmail;
+            if (get('edit-nick')) get('edit-nick').value = '';
+            if (get('edit-email')) get('edit-email').value = '';
         } catch (e) {
             console.error(e);
             alert('შეცდომა განახლებისას');
         }
-    };
+    });
 
-    // Update Password
-    get('update-pass-btn').onclick = async () => {
-        const newPass = get('edit-pass').value.trim();
+    safeOnClick('update-pass-btn', async () => {
+        const newPass = get('edit-pass') ? get('edit-pass').value.trim() : '';
         if (!newPass) {
             alert('შეიყვანეთ ახალი პაროლი!');
             return;
@@ -791,46 +806,50 @@ function initUI() {
         try {
             await sql`UPDATE users SET password = ${newPass} WHERE email = ${userEmail}`;
             showStatusUpdate('პაროლი შეიცვალა! 🔑');
-            get('edit-pass').value = '';
+            if (get('edit-pass')) get('edit-pass').value = '';
         } catch (e) {
             console.error(e);
             alert('შეცდომა პაროლის შეცვლისას');
         }
-    };
+    });
 
     // Forgot Password Flow
-    get('forgot-pass-btn').onclick = (e) => {
-        e.preventDefault();
-        get('reset-form').classList.toggle('hidden');
-    };
+    if (get('forgot-pass-btn')) {
+        get('forgot-pass-btn').onclick = (e) => {
+            e.preventDefault();
+            get('reset-form').classList.toggle('hidden');
+        };
+    }
 
-    get('request-reset-btn').onclick = async () => {
-        const email = get('reset-email').value.trim();
-        if (!email) {
-            alert('შეიყვანეთ ემაილი!');
-            return;
-        }
-
-        try {
-            const userCheck = await sql`SELECT id FROM users WHERE email = ${email}`;
-            if (userCheck.length === 0) {
-                alert('მომხმარებელი ამ ემაილით არ მოიძებნა');
+    if (get('request-reset-btn')) {
+        get('request-reset-btn').onclick = async () => {
+            const email = get('reset-email').value.trim();
+            if (!email) {
+                alert('შეიყვანეთ ემაილი!');
                 return;
             }
 
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            await sql`DELETE FROM reset_codes WHERE email = ${email}`;
-            await sql`INSERT INTO reset_codes (email, code) VALUES (${email}, ${code})`;
+            try {
+                const userCheck = await sql`SELECT id FROM users WHERE email = ${email}`;
+                if (userCheck.length === 0) {
+                    alert('მომხმარებელი ამ ემაილით არ მოიძებნა');
+                    return;
+                }
 
-            // Simulating email send
-            alert(`თქვენს ემაილზე გაიგზავნა კოდი! (სიმულაცია: ${code})`);
-            get('verify-reset-section').classList.remove('hidden');
-            get('request-reset-btn').textContent = 'კოდი თავიდან გაგზავნა';
-        } catch (e) {
-            console.error(e);
-            alert('შეცდომა კოდის გაგზავნისას');
-        }
-    };
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                await sql`DELETE FROM reset_codes WHERE email = ${email}`;
+                await sql`INSERT INTO reset_codes (email, code) VALUES (${email}, ${code})`;
+
+                // Simulating email send
+                alert(`თქვენს ემაილზე გაიგზავნა კოდი! (სიმულაცია: ${code})`);
+                get('verify-reset-section').classList.remove('hidden');
+                get('request-reset-btn').textContent = 'კოდი თავიდან გაგზავნა';
+            } catch (e) {
+                console.error(e);
+                alert('შეცდომა კოდის გაგზავნისას');
+            }
+        };
+    }
 
     get('verify-reset-btn').onclick = async () => {
         const email = get('reset-email').value.trim();
@@ -867,7 +886,7 @@ function initUI() {
 
 
     // Revive Button
-    get('revive-btn').onclick = () => reviveGame();
+    safeOnClick('revive-btn', () => reviveGame());
 
     const loadUIState = () => {
         const uiState = JSON.parse(localStorage.getItem('tilo_ui_state')) || { stats: true, chat: true };
@@ -881,25 +900,32 @@ function initUI() {
         if (chat) chat.style.display = uiState.chat ? 'flex' : 'none';
     };
 
-    get('toggle-stats').onchange = (e) => {
-        const show = e.target.checked;
-        const statsEl = document.querySelector('.user-stats');
-        if (statsEl) statsEl.style.display = show ? 'flex' : 'none';
-        saveUIState();
-    };
+    if (get('toggle-stats')) {
+        get('toggle-stats').onchange = (e) => {
+            const show = e.target.checked;
+            const statsEl = document.querySelector('.user-stats');
+            if (statsEl) statsEl.style.display = show ? 'flex' : 'none';
+            saveUIState();
+        };
+    }
 
-    get('toggle-chat').onchange = (e) => {
-        const show = e.target.checked;
-        const chat = get('global-chat');
-        if (chat) chat.style.display = show ? 'flex' : 'none';
-        saveUIState();
-    };
+    if (get('toggle-chat')) {
+        get('toggle-chat').onchange = (e) => {
+            const show = e.target.checked;
+            const chat = get('global-chat');
+            if (chat) chat.style.display = show ? 'flex' : 'none';
+            saveUIState();
+        };
+    }
 
     const saveUIState = () => {
+        const statsToggle = get('toggle-stats');
+        const lbToggle = get('toggle-lb');
+        const chatToggle = get('toggle-chat');
         const state = {
-            stats: get('toggle-stats').checked,
-            lb: get('toggle-lb').checked,
-            chat: get('toggle-chat').checked
+            stats: statsToggle ? statsToggle.checked : true,
+            lb: lbToggle ? lbToggle.checked : true,
+            chat: chatToggle ? chatToggle.checked : true
         };
         localStorage.setItem('tilo_ui_state', JSON.stringify(state));
     };
@@ -907,15 +933,7 @@ function initUI() {
     // Initialize UI State
     loadUIState();
 
-    get('shop-btn').onclick = () => get('shop-modal').classList.remove('hidden');
-    get('close-shop').onclick = () => get('shop-modal').classList.add('hidden');
-    get('close-settings').onclick = () => get('settings-modal').classList.add('hidden');
-
-    // Redundant restart removed
-
-    get('themes-btn').onclick = () => get('themes-modal').classList.remove('hidden');
-    get('close-themes').onclick = () => get('themes-modal').classList.add('hidden');
-
+    // Theme selection logic
     document.querySelectorAll('.theme-opt').forEach(opt => {
         opt.onclick = () => {
             const theme = opt.dataset.theme;
@@ -1966,13 +1984,7 @@ window.onload = async () => {
         document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
     }
 
-    // Statistics Sidebar Logic
-    get('stats-side-toggle').onclick = () => get('stats-sidebar').classList.toggle('side-collapsed');
-    get('stats-close-btn').onclick = () => get('stats-sidebar').classList.add('side-collapsed');
-
-    // Chat Sidebar Logic
-    get('chat-side-toggle').onclick = () => get('global-chat').classList.toggle('side-collapsed');
-    get('chat-toggle-btn').onclick = () => get('global-chat').classList.add('side-collapsed');
+    // Modals are handled in initUI
 
     // Modal Closers
     const closeAuth = () => {
@@ -1980,60 +1992,83 @@ window.onload = async () => {
         get('auth-modal').classList.remove('auth-open-side');
         document.body.classList.remove('auth-visual-open');
     };
-    get('close-auth').onclick = closeAuth;
+    safeOnClick('close-auth', closeAuth);
     if (get('skip-minigame')) get('skip-minigame').onclick = skipMinigame;
-    get('close-restricted').onclick = () => get('restricted-modal').classList.add('hidden');
-    get('not-now-btn').onclick = () => get('restricted-modal').classList.add('hidden');
-    get('go-to-register-btn').onclick = () => {
-        get('restricted-modal').classList.add('hidden');
-        get('auth-modal').classList.remove('hidden');
+    safeOnClick('close-restricted', () => get('restricted-modal').classList.add('hidden'));
+    safeOnClick('not-now-btn', () => get('restricted-modal').classList.add('hidden'));
+    safeOnClick('go-to-register-btn', () => {
+        if (get('restricted-modal')) get('restricted-modal').classList.add('hidden');
+        if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
         switchToRegister();
-    };
+    });
 
     // Mode Toggle Logic
     let authMode = 'login';
     const switchToLogin = () => {
         authMode = 'login';
-        get('auth-title').textContent = "ავტორიზაცია";
-        get('nick-field').style.display = 'none';
-        get('auth-email').placeholder = "ელ-ფოსტა / ნიკნეიმი";
-        get('auth-submit-btn').textContent = "შესვლა";
-        get('show-login-btn').style.background = 'var(--cloth-color)';
-        get('show-register-btn').style.background = '';
-        get('auth-error').textContent = '';
-        get('reset-form').classList.add('hidden');
+        const title = get('auth-title');
+        const nickField = get('nick-field');
+        const emailInput = get('auth-email');
+        const submitBtn = get('auth-submit-btn');
+        const loginToggle = get('show-login-btn');
+        const regToggle = get('show-register-btn');
+        const errorEl = get('auth-error');
+        const resetForm = get('reset-form');
+
+        if (title) title.textContent = "ავტორიზაცია";
+        if (nickField) nickField.style.display = 'none';
+        if (emailInput) emailInput.placeholder = "ელ-ფოსტა / ნიკნეიმი";
+        if (submitBtn) submitBtn.textContent = "შესვლა";
+        if (loginToggle) loginToggle.style.background = 'var(--cloth-color)';
+        if (regToggle) regToggle.style.background = '';
+        if (errorEl) errorEl.textContent = '';
+        if (resetForm) resetForm.classList.add('hidden');
     };
 
     const switchToRegister = () => {
         authMode = 'register';
-        get('auth-title').textContent = "რეგისტრაცია";
-        get('nick-field').style.display = 'block';
-        get('auth-email').placeholder = "ელ-ფოსტა";
-        get('auth-submit-btn').textContent = "რეგისტრაცია";
-        get('show-register-btn').style.background = 'var(--cloth-color)';
-        get('show-login-btn').style.background = '';
-        get('auth-error').textContent = '';
-        get('reset-form').classList.add('hidden');
+        const title = get('auth-title');
+        const nickField = get('nick-field');
+        const emailInput = get('auth-email');
+        const submitBtn = get('auth-submit-btn');
+        const regToggle = get('show-register-btn');
+        const loginToggle = get('show-login-btn');
+        const errorEl = get('auth-error');
+        const resetForm = get('reset-form');
+
+        if (title) title.textContent = "რეგისტრაცია";
+        if (nickField) nickField.style.display = 'block';
+        if (emailInput) emailInput.placeholder = "ელ-ფოსტა";
+        if (submitBtn) submitBtn.textContent = "რეგისტრაცია";
+        if (regToggle) regToggle.style.background = 'var(--cloth-color)';
+        if (loginToggle) loginToggle.style.background = '';
+        if (errorEl) errorEl.textContent = '';
+        if (resetForm) resetForm.classList.add('hidden');
     };
 
-    get('show-login-btn').onclick = switchToLogin;
-    get('show-register-btn').onclick = switchToRegister;
-    get('open-auth-btn').onclick = () => {
-        const isStartScreen = !get('game-start-overlay').classList.contains('hidden');
-        get('auth-modal').classList.remove('hidden');
-        if (isStartScreen) {
+    safeOnClick('show-login-btn', switchToLogin);
+    safeOnClick('show-register-btn', switchToRegister);
+    safeOnClick('open-auth-btn', () => {
+        const isStartScreen = get('game-start-overlay') && !get('game-start-overlay').classList.contains('hidden');
+        if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
+        if (isStartScreen && get('auth-modal')) {
             get('auth-modal').classList.add('auth-open-side');
             document.body.classList.add('auth-visual-open');
         }
         switchToLogin();
-    };
+    });
 
     // Submit Auth
-    get('auth-submit-btn').onclick = async () => {
-        const nickValue = get('nickname-input').value.trim();
-        const identValue = get('auth-email').value.trim();
-        const passValue = get('auth-password').value.trim();
+    safeOnClick('auth-submit-btn', async () => {
+        const nickEl = get('nickname-input');
+        const emailEl = get('auth-email');
+        const passEl = get('auth-password');
         const errorEl = get('auth-error');
+        if (!nickEl || !emailEl || !passEl || !errorEl) return;
+
+        const nickValue = nickEl.value.trim();
+        const identValue = emailEl.value.trim();
+        const passValue = passEl.value.trim();
 
         if (!identValue || !passValue) { errorEl.textContent = "შეავსეთ ველები!"; return; }
 
@@ -2063,20 +2098,25 @@ window.onload = async () => {
             localStorage.setItem('tilo_coins', coins);
             localStorage.setItem('tilo_vip', isVip);
 
-            get('auth-modal').classList.add('hidden');
-            get('auth-modal').classList.remove('auth-open-side');
+            const authModal = get('auth-modal');
+            if (authModal) {
+                authModal.classList.add('hidden');
+                authModal.classList.remove('auth-open-side');
+            }
             document.body.classList.remove('auth-visual-open');
             startGameSession(true);
         } catch (e) {
             console.error(e);
             errorEl.textContent = "შეცდომა ბაზასთან!";
         }
-    };
+    });
 
     // Guest Play Button
-    get('play-game-btn').onclick = async () => {
-        const inputNick = get('player-nick').value.trim();
+    safeOnClick('play-game-btn', async () => {
+        const nickEl = get('player-nick');
         const errorEl = get('start-error');
+        if (!nickEl || !errorEl) return;
+        const inputNick = nickEl.value.trim();
         if (!inputNick) {
             errorEl.textContent = "შეიყვანეთ ნიკნეიმი!";
             return;
@@ -2104,7 +2144,7 @@ window.onload = async () => {
             console.error("Login Error", e);
             errorEl.textContent = "შეცდომა! თავიდან სცადეთ.";
         }
-    };
+    });
 
     setupChat();
     checkGlobalEvents();
@@ -2324,8 +2364,8 @@ function startGameSession(dontReset = false) {
     });
 
     // Reset Side Menus
-    get('top-stats-menu').classList.remove('menu-open');
-    get('top-actions-menu').classList.remove('menu-open');
+    if (get('stats-sidebar')) get('stats-sidebar').classList.add('side-collapsed');
+    if (get('menu-sidebar')) get('menu-sidebar').classList.add('side-collapsed');
 
     // Start Loops
     gameActive = true;
