@@ -734,526 +734,519 @@
                         </div>
                     </div>
 
-                    <div class="card" style="background: rgba(255,0,255,0.1); margin-bottom: 0;">
-                        <button class="btn btn-outline full-width"
-                            style="border-color: #ff00ff; color: #ff00ff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
-                            onclick="spawnBossNow('regular')">🚀 მყისიერი სპაუნი (SPAWN REGULAR NOW)</button>
-                    </div>
+                    <button class="btn btn-outline full-width"
+                        style="border-color: #ff00ff; color: #ff00ff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
+                        onclick="spawnBossNow('regular')">🚀 მყისიერი სპაუნი (SPAWN REGULAR NOW)</button>
                 </div>
-
-                <!-- Triangle Boss Section -->
-                <div class="card" style="background: rgba(0,255,255,0.05); border: 1px solid rgba(0,255,255,0.2);">
-                    <h3 style="color: #00ffff; margin-bottom: 20px;">🔺 სამკუთხედი ბოსი (Elite)</h3>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div class="mini-card">
-                            <span class="mini-label">🖼️ ფოტოს URL</span>
-                            <input type="text" id="tri-boss-img" class="search-input" placeholder="https://..."
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_img', 'tri-boss-img')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_img')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">📐 მასშტაბი</span>
-                            <input type="number" id="tri-boss-scale" class="search-input" value="1.0" step="0.1"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_scale', 'tri-boss-scale')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_scale')">OFF</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-grid" style="margin-bottom: 20px;">
-                        <div class="mini-card">
-                            <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
-                            <input type="number" id="tri-boss-opacity" class="search-input" value="10" min="1" max="10"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_opacity', 'tri-boss-opacity')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_opacity')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">❤️ HP <span id="cur-tri-hp" class="cur-val"
-                                    style="color:#00ffff;"></span></span>
-                            <input type="number" id="tri-boss-hp" class="search-input" value="30000"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_hp', 'tri-boss-hp')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_hp')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">⏱️ სპაუნის სიხშირე <span id="cur-tri-spawn" class="cur-val"
-                                    style="color:#00ffff;"></span></span>
-                            <input type="number" id="tri-boss-spawn" class="search-input" value="120"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_spawn', 'tri-boss-spawn')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_spawn')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">📈 გაჩენის ქულა <span id="cur-tri-thresh" class="cur-val"
-                                    style="color:#00ffff;"></span></span>
-                            <input type="number" id="tri-boss-threshold" class="search-input" value="1000"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('tri_boss_threshold', 'tri-boss-threshold')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('tri_boss_threshold')">OFF</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card" style="background: rgba(0,255,255,0.1); margin-bottom: 0;">
-                        <button class="btn btn-outline full-width"
-                            style="border-color: #00ffff; color: #00ffff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
-                            onclick="spawnBossNow('triangle')">🚀 მყისიერი სპაუნი (SPAWN ELITE NOW)</button>
-                    </div>
-                </div>
-
-                <!-- Shared Enemy Settings -->
-                <div class="card" style="margin-top: 25px; border-color: rgba(255, 77, 77, 0.3);">
-                    <h3 style="color: #ff4d4d;">☠️ საერთო მართვა (Global Enemy Settings)</h3>
-                    <div class="dashboard-grid" style="margin-top: 15px;">
-                        <div class="mini-card">
-                            <span class="mini-label">☠️ ბოსის HP <span id="cur-bosshp" class="cur-val"
-                                    style="color:#ff4d4d;"></span></span>
-                            <input type="number" id="val-bosshp" class="search-input" value="10000"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-danger" style="flex:2"
-                                    onclick="quickTrigger('boss_hp', 'val-bosshp')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('boss_hp')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">⚡ გაჩენის დრო <span id="cur-spawn" class="cur-val"
-                                    style="color:#ff4d4d;"></span></span>
-                            <input type="number" id="val-spawn" class="search-input" value="500" placeholder="Low=Fast"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-danger" style="flex:2"
-                                    onclick="quickTrigger('spawn_interval', 'val-spawn')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('spawn_interval')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">🔢 ბოსების ლიმიტი <span id="cur-bosslimit" class="cur-val"
-                                    style="color:#ff4d4d;"></span></span>
-                            <input type="number" id="val-bosslimit" class="search-input" value="20"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-danger" style="flex:2"
-                                    onclick="quickTrigger('boss_limit', 'val-bosslimit')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('boss_limit')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card">
-                            <span class="mini-label">🧹 ლაქების ლიმიტი <span id="cur-stainlimit" class="cur-val"
-                                    style="color:#ff4d4d;"></span></span>
-                            <input type="number" id="val-stainlimit" class="search-input" value="200"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-danger" style="flex:2"
-                                    onclick="quickTrigger('stain_limit', 'val-stainlimit')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('stain_limit')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card"
-                            style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
-                            <span class="mini-label">❄️ მტრების გაყინვა <span id="cur-freeze" class="cur-val"
-                                    style="color:cyan;"></span></span>
-                            <div class="flex-row gap-5" style="margin-top:28px;">
-                                <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 200, 0.8);"
-                                    onclick="quickTrigger('freeze_enemies', '1')">ON</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('freeze_enemies')">OFF</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status Display -->
-                <div class="card" style="margin-top: 25px; background: rgba(0,0,0,0.3);">
-                    <h3>📊 მიმდინარე სტატუსი</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                        <div>
-                            <span class="mini-label">⭕ ჩვეულებრივი ბოსი</span>
-                            <p id="regular-boss-status" style="color: #ff00ff; font-weight: bold;">Default Settings</p>
-                        </div>
-                        <div>
-                            <span class="mini-label">🔺 სამკუთხედი ბოსი</span>
-                            <p id="triangle-boss-status" style="color: #00ffff; font-weight: bold;">Default Settings</p>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn btn-danger full-width" style="margin-top: 15px;" onclick="resetRegularBoss()">🔄
+                    ყველა პარამეტრის განულება (RESET TO DEFAULT)</button>
             </div>
 
-            <!-- SYSTEMS TAB -->
-            <div id="tab-systems" class="tab-content">
-                <div class="header-bar">
-                    <h2>⚙️ სისტემური მართვა</h2>
-                </div>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h3>🧹 მონაცემების გასუფთავება</h3>
-                        <p style="opacity: 0.6; margin-bottom: 20px;">ამ მოქმედების გაუქმება შეუძლებელია!</p>
-                        <button class="btn btn-danger full-width" id="reset-lb">⚠ RESET LEADERBOARD ⚠</button>
+            <!-- Triangle Boss Section -->
+            <div class="card" style="background: rgba(0,255,255,0.05); border: 1px solid rgba(0,255,255,0.2);">
+                <h3 style="color: #00ffff; margin-bottom: 20px;">🔺 სამკუთხედი ბოსი (Elite)</h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="mini-card">
+                        <span class="mini-label">🖼️ ფოტოს URL</span>
+                        <input type="text" id="tri-boss-img" class="search-input" placeholder="https://..."
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_img', 'tri-boss-img')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_img')">OFF</button>
+                        </div>
                     </div>
-                    <div class="card">
-                        <h3>📡 კავშირის ტესტი</h3>
-                        <p style="opacity: 0.6; margin-bottom: 20px;">შეამოწმეთ Database-თან კავშირი და ცხრილების
-                            მდგომარეობა</p>
-                        <button class="btn btn-outline full-width" id="test-db-btn">🔍 DATABASE TEST</button>
+                    <div class="mini-card">
+                        <span class="mini-label">📐 მასშტაბი</span>
+                        <input type="number" id="tri-boss-scale" class="search-input" value="1.0" step="0.1"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_scale', 'tri-boss-scale')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_scale')">OFF</button>
+                        </div>
                     </div>
                 </div>
+
+                <div class="dashboard-grid" style="margin-bottom: 20px;">
+                    <div class="mini-card">
+                        <span class="mini-label">👁️ სიმკრთალე (1-10)</span>
+                        <input type="number" id="tri-boss-opacity" class="search-input" value="10" min="1" max="10"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_opacity', 'tri-boss-opacity')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_opacity')">OFF</button>
+                        </div>
+                    </div>
+                    <div class="mini-card">
+                        <span class="mini-label">❤️ HP <span id="cur-tri-hp" class="cur-val"
+                                style="color:#00ffff;"></span></span>
+                        <input type="number" id="tri-boss-hp" class="search-input" value="30000"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_hp', 'tri-boss-hp')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_hp')">OFF</button>
+                        </div>
+                    </div>
+                    <div class="mini-card">
+                        <span class="mini-label">⏱️ სპაუნის სიხშირე <span id="cur-tri-spawn" class="cur-val"
+                                style="color:#00ffff;"></span></span>
+                        <input type="number" id="tri-boss-spawn" class="search-input" value="120"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_spawn', 'tri-boss-spawn')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_spawn')">OFF</button>
+                        </div>
+                    </div>
+                    <div class="mini-card">
+                        <span class="mini-label">📈 გაჩენის ქულა <span id="cur-tri-thresh" class="cur-val"
+                                style="color:#00ffff;"></span></span>
+                        <input type="number" id="tri-boss-threshold" class="search-input" value="1000"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('tri_boss_threshold', 'tri-boss-threshold')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('tri_boss_threshold')">OFF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: rgba(0,255,255,0.1); margin-bottom: 0;">
+                    <button class="btn btn-outline full-width"
+                        style="border-color: #00ffff; color: #00ffff; font-weight: bold; font-size: 1.1rem; padding: 15px;"
+                        onclick="spawnBossNow('triangle')">🚀 მყისიერი სპაუნი (SPAWN ELITE NOW)</button>
+                </div>
+                <button class="btn btn-danger full-width" style="margin-top: 15px;" onclick="resetTriangleBoss()">🔄
+                    ყველა პარამეტრის განულება (RESET TO DEFAULT)</button>
             </div>
 
-            <!-- EVENTS TAB -->
-            <div id="tab-events" class="tab-content">
-                <div class="header-bar">
-                    <h2>🎉 Global Events Management</h2>
-                </div>
-                <style>
-                    .dashboard-grid {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                        gap: 15px;
-                    }
-
-                    .mini-card {
-                        padding: 15px;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 10px;
-                    }
-
-                    .mini-label {
-                        display: block;
-                        font-size: 0.8rem;
-                        opacity: 0.7;
-                        margin-bottom: 5px;
-                    }
-                </style>
-
-                <div class="card" style="margin-bottom: 25px; background: rgba(0,0,0,0.3);">
-                    <h3>🌍 გლობალური მართვის პანელი</h3>
-
-                    <div
-                        style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <label>⏱️ ხანგრძლივობა (წთ):</label>
-                            <input type="number" id="global-duration" class="search-input" value="10"
-                                style="width: 70px; text-align: center; padding: 5px;">
-                        </div>
-
-                        <div
-                            style="display: flex; align-items: center; gap: 8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 15px;">
-                            <label>📈 გაძლიერების ზრდა:</label>
-                            <input type="number" id="val-upgrade-factor" class="search-input" value="1.3" step="0.1"
-                                style="width: 70px; text-align: center; padding: 5px;">
-                            <button class="btn btn-primary" style="padding: 5px 12px;"
-                                onclick="quickTrigger('upgrade_config', 'val-upgrade-factor', 1440)">SET</button>
-                            <button class="btn btn-outline" style="padding: 5px 12px;"
-                                onclick="stopEvent('upgrade_config')">OFF</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Player & Economy -->
-                <h4
-                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ffd700;">
-                    👤 მოთამაშე & ეკონომიკა</h4>
-                <div class="dashboard-grid">
+            <!-- Shared Enemy Settings -->
+            <div class="card" style="margin-top: 25px; border-color: rgba(255, 77, 77, 0.3);">
+                <h3 style="color: #ff4d4d;">☠️ საერთო მართვა (Global Enemy Settings)</h3>
+                <div class="dashboard-grid" style="margin-top: 15px;">
                     <div class="mini-card">
-                        <span class="mini-label">💪 ძალა <span id="cur-strength" class="cur-val"
-                                style="color:#4facfe;"></span></span>
-                        <input type="number" id="val-strength" class="search-input" value="2"
+                        <span class="mini-label">☠️ ბოსის HP <span id="cur-bosshp" class="cur-val"
+                                style="color:#ff4d4d;"></span></span>
+                        <input type="number" id="val-bosshp" class="search-input" value="10000"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('player_strength')">OFF</button>
+                            <button class="btn btn-danger" style="flex:2"
+                                onclick="quickTrigger('boss_hp', 'val-bosshp')">SET</button>
+                            <button class="btn btn-outline" style="flex:1" onclick="stopEvent('boss_hp')">OFF</button>
                         </div>
                     </div>
                     <div class="mini-card">
-                        <span class="mini-label">📏 რადიუსი <span id="cur-radius" class="cur-val"
-                                style="color:#4facfe;"></span></span>
-                        <input type="number" id="val-radius" class="search-input" value="2"
+                        <span class="mini-label">⚡ გაჩენის დრო <span id="cur-spawn" class="cur-val"
+                                style="color:#ff4d4d;"></span></span>
+                        <input type="number" id="val-spawn" class="search-input" value="500" placeholder="Low=Fast"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
+                            <button class="btn btn-danger" style="flex:2"
+                                onclick="quickTrigger('spawn_interval', 'val-spawn')">SET</button>
                             <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('player_radius')">OFF</button>
+                                onclick="stopEvent('spawn_interval')">OFF</button>
                         </div>
                     </div>
                     <div class="mini-card">
-                        <span class="mini-label">💰 ქოინები <span id="cur-coin" class="cur-val"
-                                style="color:#ffd700;"></span></span>
-                        <input type="number" id="val-coin" class="search-input" value="2"
+                        <span class="mini-label">🔢 ბოსების ლიმიტი <span id="cur-bosslimit" class="cur-val"
+                                style="color:#ff4d4d;"></span></span>
+                        <input type="number" id="val-bosslimit" class="search-input" value="20"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
-                            <button class="btn btn-gold" style="flex:2"
-                                onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
-                            <button class="btn btn-outline" style="flex:1" onclick="stopEvent('coin_mult')">OFF</button>
+                            <button class="btn btn-danger" style="flex:2"
+                                onclick="quickTrigger('boss_limit', 'val-bosslimit')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('boss_limit')">OFF</button>
                         </div>
                     </div>
                     <div class="mini-card">
-                        <span class="mini-label">🌍 ქულები <span id="cur-score" class="cur-val"
-                                style="color:#ffd700;"></span></span>
-                        <input type="number" id="val-score" class="search-input" value="2"
+                        <span class="mini-label">🧹 ლაქების ლიმიტი <span id="cur-stainlimit" class="cur-val"
+                                style="color:#ff4d4d;"></span></span>
+                        <input type="number" id="val-stainlimit" class="search-input" value="200"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
-                            <button class="btn btn-gold" style="flex:2"
-                                onclick="quickTrigger('multiplier', 'val-score')">SET</button>
+                            <button class="btn btn-danger" style="flex:2"
+                                onclick="quickTrigger('stain_limit', 'val-stainlimit')">SET</button>
                             <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('multiplier')">OFF</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Logic -->
-                <h4
-                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe;">
-                    🎮 ლოგიკა & ივენთები</h4>
-                <div class="dashboard-grid">
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">⚠️ კრიზისის დრო <span id="cur-crisis" class="cur-val"
-                                style="color:orange;"></span></span>
-                        <input type="number" id="val-crisis" class="search-input" value="10"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('crisis_time')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">🧼 საპნის სიხშირე <span id="cur-soap" class="cur-val"
-                                style="color:#ff69b4;"></span></span>
-                        <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('soap_thresh', 'val-soap')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('soap_thresh')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">🎮 მინი-თამაში <span id="cur-minigame" class="cur-val"
-                                style="color:#4facfe;"></span></span>
-                        <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('minigame_thresh', 'val-minigame')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('minigame_thresh')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">🧼 Cutscene <span id="cur-cutscene" class="cur-val"
-                                style="color:#ff69b4;"></span></span>
-                        <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('soap_cutscene', 'val-cutscene')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('soap_cutscene')">OFF</button>
+                                onclick="stopEvent('stain_limit')">OFF</button>
                         </div>
                     </div>
                     <div class="mini-card"
-                        style="background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.2);">
-                        <span class="mini-label">🛡️ უკვდავება (God Mode) <span id="cur-god" class="cur-val"
-                                style="color:lime;"></span></span>
-                        <div class="flex-row gap-5" style="margin-top:28px;">
-                            <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 0, 0.8);"
-                                onclick="quickTrigger('god_mode', '1')">ON</button>
-                            <button class="btn btn-outline" style="flex:1" onclick="stopEvent('god_mode')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">⚡ გაძლიერების ძალა (Default 1.3) <span id="cur-upgpow" class="cur-val"
-                                style="color:gold;"></span></span>
-                        <input type="number" id="val-upgpow" class="search-input" value="1.3" step="0.1"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('upgrade_power', 'val-upgpow')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('upgrade_power')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">🌸 Pink გაძლიერება (Default 1.5) <span id="cur-pinkpow" class="cur-val"
-                                style="color:#ff69b4;"></span></span>
-                        <input type="number" id="val-pinkpow" class="search-input" value="1.5" step="0.1"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('pink_power', 'val-pinkpow')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('pink_power')">OFF</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- YouTube Notifier Multi-Channel -->
-                <h4
-                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000; display: flex; align-items: center; gap: 10px;">
-                    📺 YouTube Multi-Channel Notifier
-                    <span
-                        style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT:
-                        5</span>
-                </h4>
-                <div class="card"
-                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 15px;">
-                    <div id="channel-config-list">
-                        <!-- JS will populate or we can hardcode 5 slots -->
-                        <div
-                            style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
-                            <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID / User</div>
-                            <div style="font-size: 0.7rem; opacity: 0.5;">Weight (0-100)</div>
-
-                            <input type="text" id="ch-id-1" class="search-input" placeholder="UCycgfC-1XTtOeMLr5Vz..."
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
-
-                            <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
-                        </div>
-                    </div>
-                    <button class="btn btn-danger full-width" onclick="saveVideoConfig()">🚀 UPDATE MULTI-CHANNEL
-                        CONFIG</button>
-
-                    <div
-                        style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px dashed rgba(255, 0, 0, 0.3);">
-                        <span class="mini-label">🎯 კონკრეტული ვიდეოს ლინკი (პრიორიტეტი) <span id="cur-forced-video"
-                                class="cur-val" style="color: lime;"></span></span>
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <input type="text" id="val-forced-video" class="search-input"
-                                placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
-                            <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET
-                                VIDEO</button>
-                        </div>
-                        <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">გათიშვა (BACK
-                            TO
-                            CHANNELS)</button>
-                    </div>
-                </div>
-
-                <div class="dashboard-grid mt-10">
-                    <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
-                        <span class="mini-label">⏱️ Timings (csv) <span id="cur-timings" class="cur-val"
-                                style="color:orange;"></span></span>
-                        <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('video_timings', 'val-timings')">SET</button>
-                            <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('video_timings')">OFF</button>
-                        </div>
-                    </div>
-                    <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
-                        <span class="mini-label">🔄 Loop (sec) <span id="cur-loop" class="cur-val"
+                        style="background: rgba(0, 255, 255, 0.1); border-color: rgba(0, 255, 255, 0.2);">
+                        <span class="mini-label">❄️ მტრების გაყინვა <span id="cur-freeze" class="cur-val"
                                 style="color:cyan;"></span></span>
-                        <input type="number" id="val-loop" class="search-input" value="300"
-                            style="width: 100%; margin-bottom: 5px;">
-                        <div class="flex-row gap-5">
-                            <button class="btn btn-primary" style="flex:2"
-                                onclick="quickTrigger('video_loop', 'val-loop')">SET</button>
+                        <div class="flex-row gap-5" style="margin-top:28px;">
+                            <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 200, 0.8);"
+                                onclick="quickTrigger('freeze_enemies', '1')">ON</button>
                             <button class="btn btn-outline" style="flex:1"
-                                onclick="stopEvent('video_loop')">OFF</button>
+                                onclick="stopEvent('freeze_enemies')">OFF</button>
                         </div>
                     </div>
                 </div>
+                <button class="btn btn-danger full-width" style="margin-top: 15px;" onclick="resetGlobalEnemies()">🔄
+                    გლობალური პარამეტრების განულება (RESET ALL GLOBAL)</button>
+            </div>
 
-                <button class="btn btn-danger full-width mt-20" id="stop-events"
-                    style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ცვლილების გაუქმება
-                    (RESET)</button>
+            <!-- Status Display -->
+            <div class="card" style="margin-top: 25px; background: rgba(0,0,0,0.3);">
+                <h3>📊 მიმდინარე სტატუსი</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div>
+                        <span class="mini-label">⭕ ჩვეულებრივი ბოსი</span>
+                        <p id="regular-boss-status" style="color: #ff00ff; font-weight: bold;">Default Settings</p>
+                    </div>
+                    <div>
+                        <span class="mini-label">🔺 სამკუთხედი ბოსი</span>
+                        <p id="triangle-boss-status" style="color: #00ffff; font-weight: bold;">Default Settings</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- CRITICAL TAB -->
-        <div id="tab-critical" class="tab-content">
+        <!-- SYSTEMS TAB -->
+        <div id="tab-systems" class="tab-content">
             <div class="header-bar">
-                <h2 style="color: var(--danger);">⚠️ კრიტიკული მოქმედებები</h2>
+                <h2>⚙️ სისტემური მართვა</h2>
             </div>
             <div class="dashboard-grid">
-                <div class="card" style="border-color: var(--accent);">
-                    <h3 style="color: var(--accent);">🚀 DATABASE SETUP</h3>
-                    <p style="opacity: 0.6; margin-bottom: 20px;">ახალი Database-ის გამართვა და ცხრილების შექმნა ერთ
-                        კლიკში.</p>
-                    <button class="btn btn-gold full-width" id="run-setup-btn">RUN SETUP SCRIPT</button>
+                <div class="card">
+                    <h3>🧹 მონაცემების გასუფთავება</h3>
+                    <p style="opacity: 0.6; margin-bottom: 20px;">ამ მოქმედების გაუქმება შეუძლებელია!</p>
+                    <button class="btn btn-danger full-width" id="reset-lb">⚠ RESET LEADERBOARD ⚠</button>
                 </div>
-                <div class="card" style="border-color: var(--danger);">
-                    <h3 style="color: var(--danger);">🔥 SITE RESTART</h3>
-                    <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის გვერდის გადატვირთვა და სესიების
-                        გაწყვეტა.</p>
-                    <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
-                </div>
-                <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
-                    <h3 style="color: var(--danger);">🧹 WIPE DATA</h3>
-                    <p style="opacity: 0.6; margin-bottom: 20px;">პროგრესის ან მთლიანი ბაზის გასუფთავება.</p>
-                    <button class="btn btn-danger full-width" id="wipe-progress-btn" style="margin-bottom: 10px;">RESET
-                        PROGRESS (Keep Accounts)</button>
-                    <button class="btn btn-danger full-width" id="full-wipe-btn"
-                        style="background: #ff0000; border: 2px solid white;">🔥 FULL RESET (Delete All
-                        Accounts)</button>
+                <div class="card">
+                    <h3>📡 კავშირის ტესტი</h3>
+                    <p style="opacity: 0.6; margin-bottom: 20px;">შეამოწმეთ Database-თან კავშირი და ცხრილების
+                        მდგომარეობა</p>
+                    <button class="btn btn-outline full-width" id="test-db-btn">🔍 DATABASE TEST</button>
                 </div>
             </div>
         </div>
 
-        <!-- CONSOLE TAB -->
-        <div id="tab-console" class="tab-content">
+        <!-- EVENTS TAB -->
+        <div id="tab-events" class="tab-content">
             <div class="header-bar">
-                <h2>💻 სისტემური კონსოლი</h2>
-                <button class="btn btn-danger" onclick="clearConsole()">🗑️ გასუფთავება</button>
+                <h2>🎉 Global Events Management</h2>
             </div>
-            <div id="console-output"
-                style="background: #1e1e1e; color: #d4d4d4; padding: 15px; height: 500px; overflow-y: scroll; font-family: 'Courier New', monospace; border-radius: 10px; border: 1px solid #333; font-size: 0.9rem;">
-                <div style="color: #6a9955;">[INFO] სისტემა მზადაა...</div>
+            <style>
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                }
+
+                .mini-card {
+                    padding: 15px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+
+                .mini-label {
+                    display: block;
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                    margin-bottom: 5px;
+                }
+            </style>
+
+            <div class="card" style="margin-bottom: 25px; background: rgba(0,0,0,0.3);">
+                <h3>🌍 გლობალური მართვის პანელი</h3>
+
+                <div
+                    style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label>⏱️ ხანგრძლივობა (წთ):</label>
+                        <input type="number" id="global-duration" class="search-input" value="10"
+                            style="width: 70px; text-align: center; padding: 5px;">
+                    </div>
+
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 15px;">
+                        <label>📈 გაძლიერების ზრდა:</label>
+                        <input type="number" id="val-upgrade-factor" class="search-input" value="1.3" step="0.1"
+                            style="width: 70px; text-align: center; padding: 5px;">
+                        <button class="btn btn-primary" style="padding: 5px 12px;"
+                            onclick="quickTrigger('upgrade_config', 'val-upgrade-factor', 1440)">SET</button>
+                        <button class="btn btn-outline" style="padding: 5px 12px;"
+                            onclick="stopEvent('upgrade_config')">OFF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player & Economy -->
+            <h4
+                style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ffd700;">
+                👤 მოთამაშე & ეკონომიკა</h4>
+            <div class="dashboard-grid">
+                <div class="mini-card">
+                    <span class="mini-label">💪 ძალა <span id="cur-strength" class="cur-val"
+                            style="color:#4facfe;"></span></span>
+                    <input type="number" id="val-strength" class="search-input" value="2"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('player_strength', 'val-strength')">SET</button>
+                        <button class="btn btn-outline" style="flex:1"
+                            onclick="stopEvent('player_strength')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">📏 რადიუსი <span id="cur-radius" class="cur-val"
+                            style="color:#4facfe;"></span></span>
+                    <input type="number" id="val-radius" class="search-input" value="2"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('player_radius', 'val-radius')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('player_radius')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">💰 ქოინები <span id="cur-coin" class="cur-val"
+                            style="color:#ffd700;"></span></span>
+                    <input type="number" id="val-coin" class="search-input" value="2"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-gold" style="flex:2"
+                            onclick="quickTrigger('coin_mult', 'val-coin')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('coin_mult')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">🌍 ქულები <span id="cur-score" class="cur-val"
+                            style="color:#ffd700;"></span></span>
+                    <input type="number" id="val-score" class="search-input" value="2"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-gold" style="flex:2"
+                            onclick="quickTrigger('multiplier', 'val-score')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('multiplier')">OFF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logic -->
+            <h4
+                style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe;">
+                🎮 ლოგიკა & ივენთები</h4>
+            <div class="dashboard-grid">
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">⚠️ კრიზისის დრო <span id="cur-crisis" class="cur-val"
+                            style="color:orange;"></span></span>
+                    <input type="number" id="val-crisis" class="search-input" value="10"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('crisis_time', 'val-crisis')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('crisis_time')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">🧼 საპნის სიხშირე <span id="cur-soap" class="cur-val"
+                            style="color:#ff69b4;"></span></span>
+                    <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('soap_thresh', 'val-soap')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('soap_thresh')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">🎮 მინი-თამაში <span id="cur-minigame" class="cur-val"
+                            style="color:#4facfe;"></span></span>
+                    <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('minigame_thresh', 'val-minigame')">SET</button>
+                        <button class="btn btn-outline" style="flex:1"
+                            onclick="stopEvent('minigame_thresh')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">🧼 Cutscene <span id="cur-cutscene" class="cur-val"
+                            style="color:#ff69b4;"></span></span>
+                    <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('soap_cutscene', 'val-cutscene')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('soap_cutscene')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.2);">
+                    <span class="mini-label">🛡️ უკვდავება (God Mode) <span id="cur-god" class="cur-val"
+                            style="color:lime;"></span></span>
+                    <div class="flex-row gap-5" style="margin-top:28px;">
+                        <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 0, 0.8);"
+                            onclick="quickTrigger('god_mode', '1')">ON</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('god_mode')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">⚡ გაძლიერების ძალა (Default 1.3) <span id="cur-upgpow" class="cur-val"
+                            style="color:gold;"></span></span>
+                    <input type="number" id="val-upgpow" class="search-input" value="1.3" step="0.1"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('upgrade_power', 'val-upgpow')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('upgrade_power')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
+                    <span class="mini-label">🌸 Pink გაძლიერება (Default 1.5) <span id="cur-pinkpow" class="cur-val"
+                            style="color:#ff69b4;"></span></span>
+                    <input type="number" id="val-pinkpow" class="search-input" value="1.5" step="0.1"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('pink_power', 'val-pinkpow')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('pink_power')">OFF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YouTube Notifier Multi-Channel -->
+            <h4
+                style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000; display: flex; align-items: center; gap: 10px;">
+                📺 YouTube Multi-Channel Notifier
+                <span
+                    style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT:
+                    5</span>
+            </h4>
+            <div class="card" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 15px;">
+                <div id="channel-config-list">
+                    <!-- JS will populate or we can hardcode 5 slots -->
+                    <div
+                        style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID / User</div>
+                        <div style="font-size: 0.7rem; opacity: 0.5;">Weight (0-100)</div>
+
+                        <input type="text" id="ch-id-1" class="search-input" placeholder="UCycgfC-1XTtOeMLr5Vz..."
+                            style="width: 100%;">
+                        <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
+
+                        <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
+                            style="width: 100%;">
+                        <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
+
+                        <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
+                            style="width: 100%;">
+                        <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
+
+                        <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
+                            style="width: 100%;">
+                        <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
+
+                        <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
+                            style="width: 100%;">
+                        <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
+                    </div>
+                </div>
+                <button class="btn btn-danger full-width" onclick="saveVideoConfig()">🚀 UPDATE MULTI-CHANNEL
+                    CONFIG</button>
+
+                <div
+                    style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px dashed rgba(255, 0, 0, 0.3);">
+                    <span class="mini-label">🎯 კონკრეტული ვიდეოს ლინკი (პრიორიტეტი) <span id="cur-forced-video"
+                            class="cur-val" style="color: lime;"></span></span>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="val-forced-video" class="search-input"
+                            placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
+                        <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET
+                            VIDEO</button>
+                    </div>
+                    <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">გათიშვა (BACK
+                        TO
+                        CHANNELS)</button>
+                </div>
+            </div>
+
+            <div class="dashboard-grid mt-10">
+                <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                    <span class="mini-label">⏱️ Timings (csv) <span id="cur-timings" class="cur-val"
+                            style="color:orange;"></span></span>
+                    <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('video_timings', 'val-timings')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('video_timings')">OFF</button>
+                    </div>
+                </div>
+                <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                    <span class="mini-label">🔄 Loop (sec) <span id="cur-loop" class="cur-val"
+                            style="color:cyan;"></span></span>
+                    <input type="number" id="val-loop" class="search-input" value="300"
+                        style="width: 100%; margin-bottom: 5px;">
+                    <div class="flex-row gap-5">
+                        <button class="btn btn-primary" style="flex:2"
+                            onclick="quickTrigger('video_loop', 'val-loop')">SET</button>
+                        <button class="btn btn-outline" style="flex:1" onclick="stopEvent('video_loop')">OFF</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-danger full-width mt-20" id="stop-events"
+                style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ცვლილების გაუქმება
+                (RESET)</button>
+        </div>
+    </div>
+
+    <!-- CRITICAL TAB -->
+    <div id="tab-critical" class="tab-content">
+        <div class="header-bar">
+            <h2 style="color: var(--danger);">⚠️ კრიტიკული მოქმედებები</h2>
+        </div>
+        <div class="dashboard-grid">
+            <div class="card" style="border-color: var(--accent);">
+                <h3 style="color: var(--accent);">🚀 DATABASE SETUP</h3>
+                <p style="opacity: 0.6; margin-bottom: 20px;">ახალი Database-ის გამართვა და ცხრილების შექმნა ერთ
+                    კლიკში.</p>
+                <button class="btn btn-gold full-width" id="run-setup-btn">RUN SETUP SCRIPT</button>
+            </div>
+            <div class="card" style="border-color: var(--danger);">
+                <h3 style="color: var(--danger);">🔥 SITE RESTART</h3>
+                <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის გვერდის გადატვირთვა და სესიების
+                    გაწყვეტა.</p>
+                <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
+            </div>
+            <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
+                <h3 style="color: var(--danger);">🧹 WIPE DATA</h3>
+                <p style="opacity: 0.6; margin-bottom: 20px;">პროგრესის ან მთლიანი ბაზის გასუფთავება.</p>
+                <button class="btn btn-danger full-width" id="wipe-progress-btn" style="margin-bottom: 10px;">RESET
+                    PROGRESS (Keep Accounts)</button>
+                <button class="btn btn-danger full-width" id="full-wipe-btn"
+                    style="background: #ff0000; border: 2px solid white;">🔥 FULL RESET (Delete All
+                    Accounts)</button>
             </div>
         </div>
+    </div>
+
+    <!-- CONSOLE TAB -->
+    <div id="tab-console" class="tab-content">
+        <div class="header-bar">
+            <h2>💻 სისტემური კონსოლი</h2>
+            <button class="btn btn-danger" onclick="clearConsole()">🗑️ გასუფთავება</button>
+        </div>
+        <div id="console-output"
+            style="background: #1e1e1e; color: #d4d4d4; padding: 15px; height: 500px; overflow-y: scroll; font-family: 'Courier New', monospace; border-radius: 10px; border: 1px solid #333; font-size: 0.9rem;">
+            <div style="color: #6a9955;">[INFO] სისტემა მზადაა...</div>
+        </div>
+    </div>
     </div>
     </div>
 
@@ -1616,16 +1609,23 @@
         };
 
         window.resetRegularBoss = async () => {
-            if (!confirm('დარწმუნებული ხართ?')) return;
-            await stopEvent('regular_boss_config');
-            get('regular-boss-img').value = '';
-            get('regular-boss-scale').value = '1.0';
-            get('regular-boss-opacity').value = '10';
-            get('regular-boss-hp').value = '10000';
-            get('regular-boss-spawn').value = '60';
-            get('regular-boss-threshold').value = '500';
-            get('regular-boss-status').textContent = 'Default Settings';
-            log('🔄 ჩვეულებრივი ბოსი დარესეტდა', 'orange');
+            if (!confirm('ნამდვილად გსურთ ჩვეულებრივი ბოსის ყველა პარამეტრის განულება?')) return;
+            try {
+                const types = ['reg_boss_img', 'reg_boss_scale', 'reg_boss_opacity', 'reg_boss_hp', 'reg_boss_spawn', 'reg_boss_threshold'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
+
+                get('reg-boss-img').value = '';
+                get('reg-boss-scale').value = '1.0';
+                get('reg-boss-opacity').value = '10';
+                get('reg-boss-hp').value = '10000';
+                get('reg-boss-spawn').value = '60';
+                get('reg-boss-threshold').value = '500';
+
+                log('🔄 ჩვეულებრივი ბოსის პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting boss', 'red'); }
         };
 
         // Triangle Boss Functions
@@ -1644,16 +1644,41 @@
         };
 
         window.resetTriangleBoss = async () => {
-            if (!confirm('დარწმუნებული ხართ?')) return;
-            await stopEvent('triangle_boss_config');
-            get('triangle-boss-img').value = '';
-            get('triangle-boss-scale').value = '1.0';
-            get('triangle-boss-opacity').value = '10';
-            get('triangle-boss-hp-input').value = '30000';
-            get('triangle-boss-spawn').value = '120';
-            get('triangle-boss-threshold').value = '1000';
-            get('triangle-boss-status').textContent = 'Default Settings';
-            log('🔄 სამკუთხედი ბოსი დარესეტდა', 'orange');
+            if (!confirm('ნამდვილად გსურთ სამკუთხედი ბოსის ყველა პარამეტრის განულება?')) return;
+            try {
+                const types = ['tri_boss_img', 'tri_boss_scale', 'tri_boss_opacity', 'tri_boss_hp', 'tri_boss_spawn', 'tri_boss_threshold'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
+
+                get('tri-boss-img').value = '';
+                get('tri-boss-scale').value = '1.0';
+                get('tri-boss-opacity').value = '10';
+                get('tri-boss-hp').value = '30000';
+                get('tri-boss-spawn').value = '120';
+                get('tri-boss-threshold').value = '1000';
+
+                log('🔄 სამკუთხედი ბოსის პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting boss', 'red'); }
+        };
+
+        window.resetGlobalEnemies = async () => {
+            if (!confirm('ნამდვილად გსურთ გლობალური პარამეტრების განულება?')) return;
+            try {
+                const types = ['boss_hp', 'spawn_interval', 'boss_limit', 'stain_limit'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
+
+                get('val-bosshp').value = '10000';
+                get('val-spawn').value = '500';
+                get('val-bosslimit').value = '20';
+                get('val-stainlimit').value = '200';
+
+                log('🔄 გლობალური პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting global settings', 'red'); }
         };
 
         window.spawnBossNow = async (type) => {
