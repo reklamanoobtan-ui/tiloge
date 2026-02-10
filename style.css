@@ -1088,18 +1088,17 @@ body.fx-disco {
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     padding: 0;
-    overflow: hidden;
 }
 
 .stats-sidebar.side-collapsed {
-    transform: translateX(calc(100% + 50px));
-    opacity: 0;
+    transform: translateX(calc(100% + 20px));
+    /* Fully slide out */
 }
 
 .stats-toggle-side {
     position: absolute;
-    left: -50px;
-    top: 50%;
+    left: -54px;
+    /* Move slightly more left to be fully visible */
     transform: translateY(-50%);
     width: 44px;
     height: 44px;

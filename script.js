@@ -13,6 +13,7 @@ let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 let score = 0;
+let accumulatedScore = 0; // Score from previous sub-sessions (before revives)
 
 let nickname = localStorage.getItem('tilo_nick') || '';
 let userEmail = localStorage.getItem('tilo_email') || '';
@@ -154,7 +155,10 @@ function saveStatsToLocal() {
 
 function updateUIValues() {
     if (get('coins-val')) get('coins-val').textContent = coins;
-    if (get('score-val')) get('score-val').textContent = Math.floor(score);
+    if (get('score-val')) {
+        const displayScore = Math.floor(score);
+        get('score-val').textContent = accumulatedScore > 0 ? `${displayScore} (${accumulatedScore})` : displayScore;
+    }
 
     // Stats UI
     if (get('best-score-stat')) get('best-score-stat').textContent = `${lastBestScore.score} stain / ${lastBestScore.time}s`;
@@ -264,13 +268,14 @@ async function syncUserData(isFinal = false) {
     if (!userEmail) return;
     try {
         const currentSurvival = Math.floor((Date.now() - startTime) / 1000);
+        const totalScoreToSync = Math.floor(score + accumulatedScore);
 
         // Update user profile with latest stats
         await sql`UPDATE users SET 
-            score = ${Math.floor(score)},
+            score = ${totalScoreToSync},
             coins = ${coins},
             survival_time = ${currentSurvival},
-            best_score = GREATEST(best_score, ${Math.floor(score)}),
+            best_score = GREATEST(best_score, ${totalScoreToSync}),
             best_survival_time = GREATEST(best_survival_time, ${currentSurvival}),
             total_survival_time = total_survival_time + (CASE WHEN last_active > NOW() - INTERVAL '30 seconds' THEN EXTRACT(EPOCH FROM (NOW() - last_active)) ELSE 0 END),
             last_active = NOW()
@@ -278,8 +283,9 @@ async function syncUserData(isFinal = false) {
 
         // If game is over, record this achievement in history and update total_coins
         if (isFinal) {
-            const finalScore = Math.floor(score);
-            const earned = Math.floor((Math.floor(finalScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (coinBonusMultiplier || 1.0));
+            const finalScore = totalScoreToSync;
+            const subSessionScore = Math.floor(score);
+            const earned = Math.floor((Math.floor(subSessionScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (coinBonusMultiplier || 1.0));
 
             console.log("📊 Attempting to record match achievement...", { email: userEmail, score: finalScore, earned });
 
@@ -1809,25 +1815,28 @@ function gameOver() {
     // Survival calc
     let survival = Math.floor((Date.now() - startTime) / 1000);
 
+    const totalScore = Math.floor(score + accumulatedScore);
+    const subSessionScore = Math.floor(score);
+
     get('defeat-modal').classList.remove('hidden');
-    get('final-stains').textContent = Math.floor(score);
+    get('final-stains').textContent = totalScore;
     if (get('final-time')) get('final-time').textContent = survival;
 
-    // Survival bonus calculation
-    const earned = Math.floor((Math.floor(score * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier * globalCoinMult);
+    // Survival bonus calculation (ONLY based on the score since last revive)
+    const earned = Math.floor((Math.floor(subSessionScore * 0.5) + Math.floor(survival * 0.2)) * coinBonusMultiplier * globalCoinMult);
     coins += earned;
     if (get('final-coins')) get('final-coins').textContent = earned;
 
 
     // Check Best Score (Local)
-    if (score > lastBestScore.score) {
-        lastBestScore.score = Math.floor(score);
+    if (totalScore > lastBestScore.score) {
+        lastBestScore.score = totalScore;
         lastBestScore.time = survival;
         localStorage.setItem('tilo_best_score', JSON.stringify(lastBestScore));
     }
 
     // Save Last Score as "Prev Score"
-    lastPrevScore.score = Math.floor(score);
+    lastPrevScore.score = totalScore;
     lastPrevScore.time = survival;
     localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
 
@@ -1835,7 +1844,7 @@ function gameOver() {
     syncUserData(true); // Final sync
 
     // 📊 Auto-share result to global rankings
-    shareScore(Math.floor(score), survival);
+    shareScore(totalScore, survival);
 }
 
 async function reviveGame() {
@@ -1860,6 +1869,15 @@ async function reviveGame() {
 
         get('defeat-modal').classList.add('hidden');
         gameActive = true;
+
+        // Reset sub-session score but keep the total progress
+        accumulatedScore += Math.floor(score);
+        score = 0;
+        nextUpgradeScore = 10;
+        lastMilestoneScore = 0;
+        lastSoapMilestone = 0;
+        lastMinigameMilestone = 0;
+        updateUIValues();
 
         // Resume loops
         lastActivityTime = Date.now();
@@ -2311,6 +2329,8 @@ function startGameSession(dontReset = false) {
         bossesDefeated = 0;
         totalRepeatablePicked = 0;
         pendingUpgrades = 0;
+        accumulatedScore = 0;
+        nextUpgradeScore = 10;
         lastMinigameMilestone = 0;
         lastSoapMilestone = 0;
         healthHalvedActive = false;
