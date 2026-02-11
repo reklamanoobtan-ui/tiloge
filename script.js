@@ -2960,16 +2960,16 @@ function showMassiveAnnouncement(text, durationSeconds) {
     textBox.textContent = text;
     container.classList.remove('hidden');
 
-    // Animate In
+    // Animate In (Fall down to position)
     setTimeout(() => {
         box.style.opacity = "1";
-        box.style.transform = "scale(1)";
+        box.style.transform = "translateY(0)";
     }, 50);
 
-    // Auto Hide
+    // Auto Hide (Slide away)
     setTimeout(() => {
         box.style.opacity = "0";
-        box.style.transform = "scale(0.8)";
+        box.style.transform = "translateY(50px)";
         setTimeout(() => {
             container.classList.add('hidden');
             currentMassiveAnnouncement = "";
