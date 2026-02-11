@@ -12,6 +12,17 @@ const APP_VERSION = "2.2.1"; // Leaderboard Efficiency Update
 let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
+
+// Background Music
+const bgMusic = new Audio(encodeURIComponent('VIDEO mus.mp3'));
+bgMusic.loop = true;
+bgMusic.volume = 0.5; // Adjust as needed
+window.addEventListener('click', () => {
+    bgMusic.play().catch(e => console.log('Music play blocked (user must interact first):', e));
+}, { once: true });
+// Try auto-play immediately
+bgMusic.play().catch(() => console.log('Waiting for user interaction for music...'));
+
 let score = 0;
 let accumulatedScore = 0; // Score from previous sub-sessions (before revives)
 let sessionCoinsEarned = 0; // Coins earned in the current run (milestones, etc.)
