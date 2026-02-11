@@ -3068,6 +3068,15 @@ function adjustColor(hex, amt) {
 }
 
 function showSpinWheel() {
+    if (!gameActive || isMinigameActive || isUpgradeOpen) return;
+
+    // Pause Game
+    gameActive = false;
+    if (spawnTimeout) {
+        clearTimeout(spawnTimeout);
+        spawnTimeout = null;
+    }
+
     drawWheel();
     get('spin-wheel-modal').classList.remove('hidden');
     get('prize-announcement').textContent = "";
@@ -3117,6 +3126,10 @@ function handleSpinResult() {
             get('wheel-container').style.boxShadow = "none";
             get('prize-announcement').style.transform = "scale(1)";
             get('spin-wheel-modal').classList.add('hidden');
+
+            // Resume Game
+            gameActive = true;
+            scheduleNextStain();
         }, 4000);
     }, 5200);
 }
