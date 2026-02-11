@@ -70,7 +70,9 @@ let upgradeCounts = {
     'bomb': 0,      // Max 1
     'coin_buff': 0, // Max 5
     'magnet': 0,     // Max 1
-    'bot_pow': 0    // Max 5
+    'bot_pow': 0,   // Max 5
+    'spawn_speed': 0,
+    'boss_weaken': 0
 };
 
 let pinkBonuses = []; // Track which pink bonuses have been applied
@@ -93,6 +95,8 @@ let currentSkin = localStorage.getItem('tilo_current_skin') || 'default';
 let intervalMultiplier = 1.0;
 let radiusMultiplier = 1.0;
 let strengthMultiplier = 1.0;
+let spawnSpeedUpgradeMultiplier = 1.0;
+let bossWeaknessMultiplier = 1.0;
 
 // Base stats
 let baseClothStrength = 20; // Reverted to 20 (Harder)
@@ -565,7 +569,9 @@ function updateStatsSidebar() {
                 'bomb': '💣 ბომბი',
                 'coin_buff': '💰 ქოინები',
                 'magnet': '⚡ ლაზერი',
-                'bot_pow': '🦾 რობოტის ძალა'
+                'bot_pow': '🦾 რობოტის ძალა',
+                'spawn_speed': '⏩ სპაუნის აჩქარება',
+                'boss_weaken': '💀 ბოსების დასუსტება'
             };
             return `<div class="upgrade-item"><span>${names[id] || id}</span> <strong>×${count}</strong></div>`;
         }).join('');
@@ -588,7 +594,9 @@ function updateStatsSidebar() {
                 'bomb': '💣 ბომბის სიმძლავრე',
                 'coin_buff': '💰 ქოინების ბონუსი',
                 'magnet': '⚡ ლაზერის სიმძლავრე',
-                'bot_pow': '🦾 რობოტის ძალა'
+                'bot_pow': '🦾 რობოტის ძალა',
+                'spawn_speed': '⏩ სპაუნის აჩქარება',
+                'boss_weaken': '💀 ბოსების დასუსტება'
             };
             return `<div class="upgrade-item pink-bonus-item"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
         }).join('');
@@ -1232,6 +1240,8 @@ function applyUpgrade(id) {
                 startLaserLoop();
             }
             break;
+        case 'spawn_speed': spawnSpeedUpgradeMultiplier *= 0.8; break;
+        case 'boss_weaken': bossWeaknessMultiplier *= 0.9; break;
     }
     updateUIValues();
     updateStatsSidebar();
@@ -1442,12 +1452,15 @@ function showPinkUpgradeOptions() {
         'bomb': 'ბომბის სიმძლავრე',
         'coin_buff': 'ქოინების ბონუსი',
         'magnet': 'ლაზერის სიმძლავრე',
-        'bot_pow': 'რობოტის ძალა'
+        'bot_pow': 'რობოტის ძალა',
+        'spawn_speed': 'სპაუნის აჩქარება',
+        'boss_weaken': 'ბოსების დასუსტება'
     };
 
     const icons = {
         'speed': '🚀', 'radius': '📏',
-        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '⚡', 'bot_pow': '🦾'
+        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '⚡', 'bot_pow': '🦾',
+        'spawn_speed': '⏩', 'boss_weaken': '💀'
     };
 
     // Filter upgrades player already has at least one of (Excluding 'diff' and 'bot' count)
@@ -1493,6 +1506,8 @@ function applyPinkUpgrade(id) {
         case 'coin_buff': coinBonusMultiplier *= globalPinkUpgradePower; break;
         case 'magnet': magnetInterval *= (1 / globalPinkUpgradePower); break;
         case 'bot_pow': helperCleaningMultiplier *= globalPinkUpgradePower; break;
+        case 'spawn_speed': spawnSpeedUpgradeMultiplier *= 0.8; break;
+        case 'boss_weaken': bossWeaknessMultiplier *= 0.9; break;
     }
 
     updatePowerStats();
@@ -1518,7 +1533,9 @@ function showUpgradeOptions() {
         { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'აფეთქების რადიუსი და ძალა (Max 5)', type: 'multi' },
         { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+30% ქოინების მოგება (Max 5)', type: 'multi' },
         { id: 'magnet', icon: '⚡', title: 'ლაზერი', desc: 'ავტომატური წმენდა მრავალ ლაქაზე (Max 5)', type: 'multi' },
-        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 10)', type: 'multi' }
+        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 10)', type: 'multi' },
+        { id: 'spawn_speed', icon: '⏩', title: 'სპაუნის აჩქარება', desc: '+20% აჩქარება', type: 'multi' },
+        { id: 'boss_weaken', icon: '💀', title: 'ბოსების დასუსტება', desc: '-10% ბოსების HP (Max 10)', type: 'multi' }
     ];
 
     // Filter available upgrades based on limits
@@ -1528,9 +1545,22 @@ function showUpgradeOptions() {
         if (u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 5;
         if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 10;
 
+        const currentSpdVal = (1000 - (score * 0.5)) * spawnSpeedUpgradeMultiplier;
+
         // Use 10 for basic stats
-        if (u.id === 'radius' || u.id === 'strength' || u.id === 'bot_pow') {
+        if (u.id === 'radius' || u.id === 'strength' || u.id === 'bot_pow' || u.id === 'boss_weaken') {
             if (u.id === 'bot_pow' && activeHelpers < 5) return false;
+
+            // Boss Weaken only appears when 0.1s limit is reached
+            if (u.id === 'boss_weaken') {
+                if (currentSpdVal > 105) return false;
+            }
+            return (upgradeCounts[u.id] || 0) < 10;
+        }
+
+        // Spawn Speed only appears if not at 0.1s limit
+        if (u.id === 'spawn_speed') {
+            if (currentSpdVal <= 100.1) return false;
             return (upgradeCounts[u.id] || 0) < 10;
         }
 
@@ -1538,8 +1568,22 @@ function showUpgradeOptions() {
         return (upgradeCounts[u.id] || 0) < 5;
     });
 
+    // Probability Logic: Lower chance for Strength if Spawn Speed > Strength
+    let finalPool = [];
+    available.forEach(u => {
+        if (u.id === 'strength' && (upgradeCounts['spawn_speed'] || 0) > (upgradeCounts['strength'] || 0)) {
+            // 20% chance to include strength in the draw pool
+            if (Math.random() < 0.2) finalPool.push(u);
+        } else {
+            finalPool.push(u);
+        }
+    });
+
+    // Fallback and Safety Check
+    if (finalPool.length === 0 && available.length > 0) finalPool = available;
+
     // If no upgrades available, close and return
-    if (available.length === 0) {
+    if (finalPool.length === 0) {
         get('upgrade-modal').classList.add('hidden');
         isUpgradeOpen = false;
         gameActive = true;
@@ -1547,7 +1591,7 @@ function showUpgradeOptions() {
         return;
     }
 
-    const shuffled = available.sort(() => 0.5 - Math.random());
+    const shuffled = finalPool.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
 
     const container = get('upgrade-cards-container');
@@ -1721,6 +1765,7 @@ function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
 
     let baseInterval = 1000 - (score * 0.5);
+    baseInterval *= spawnSpeedUpgradeMultiplier;
 
     baseInterval = Math.max(100, baseInterval);
     return baseInterval * intervalMultiplier;
@@ -1759,11 +1804,11 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         // Formula: 5000 * (1 + score/20000)^2
         const bossScaling = Math.pow(1 + (score / 20000), 2);
 
-        let baseBossHP = globalBossHPOverride || 5000;
+        let baseBossHP = (globalBossHPOverride || 5000) * bossWeaknessMultiplier;
 
         if (isTriangle) {
             // ELITE BOSS (Every 20k score)
-            baseBossHP = 15000; // 3x Normal Boss
+            baseBossHP = 15000 * bossWeaknessMultiplier; // 3x Normal Boss
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
             size = 350 * (globalTriangleBossScale || 1.0);
