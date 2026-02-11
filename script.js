@@ -221,6 +221,12 @@ function updateUIValues() {
         let interval = getSpawnInterval();
         get('interval-val').textContent = (interval / 1000).toFixed(2);
     }
+
+    // Update Total Coins Displays
+    const coinText = `(${coins} 🪙)`;
+    if (get('total-coins-shop')) get('total-coins-shop').textContent = coinText;
+    if (get('total-coins-settings')) get('total-coins-settings').textContent = coinText;
+    if (get('total-coins-progress')) get('total-coins-progress').textContent = coinText;
 }
 
 
