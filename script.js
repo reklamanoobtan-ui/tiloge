@@ -1632,7 +1632,7 @@ function showUpgradeOptions() {
 
         // Existing Logic: Spawn Speed vs Strength
         if (u.id === 'strength' && (upgradeCounts['spawn_speed'] || 0) > (upgradeCounts['strength'] || 0)) {
-            weight *= 0.05; // Reduced from 0.2 to 0.05 as requested
+            weight *= 0.8; // Reduced by 20%
         }
 
         if (Math.random() < weight) {
