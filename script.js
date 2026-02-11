@@ -1837,7 +1837,7 @@ function getSpawnInterval() {
     let baseInterval = 1000 - (score * 0.5);
     baseInterval *= spawnSpeedUpgradeMultiplier;
 
-    baseInterval = Math.max(100, baseInterval);
+    baseInterval = Math.max(50, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
