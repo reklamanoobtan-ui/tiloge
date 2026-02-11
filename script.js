@@ -545,22 +545,28 @@ function updateScore(points) {
         // Dynamic Soap Milestone
         const soapThresh = globalSoapThresholdOverride || 1250;
         if (Math.floor(score / soapThresh) > Math.floor(lastSoapMilestone / soapThresh)) {
-            lastSoapMilestone = score;
-            createSoap();
+            if (!isSoapActive && !isUpgradeOpen) {
+                lastSoapMilestone = score;
+                createSoap();
+            }
         }
 
         // Dynamic Minigame Milestone
         const minigameThresh = globalMinigameThresholdOverride || 1875;
         if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
-            lastMinigameMilestone = score;
-            setTimeout(startMinigame, 500);
+            if (!isMinigameActive && !isUpgradeOpen) {
+                lastMinigameMilestone = score;
+                setTimeout(startMinigame, 500);
+            }
         }
 
         // Spin Wheel Milestone
         const spinThresh = globalSpinThresholdOverride || 10000;
         if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
-            lastSpinMilestone = score;
-            setTimeout(showSpinWheel, 1000);
+            if (!isSpinning && !isUpgradeOpen) {
+                lastSpinMilestone = score;
+                setTimeout(showSpinWheel, 1000);
+            }
         }
 
         needsUIUpdate = true;

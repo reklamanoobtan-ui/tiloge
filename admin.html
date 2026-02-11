@@ -572,6 +572,7 @@
                 <div class="nav-item" data-tab="bosses">👾 ბოსები</div>
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
+                <div class="nav-item" data-tab="youtube">📺 იუთუბი</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
                 <div class="nav-item" data-tab="console" style="color: #00ff00;">💻 კონსოლი</div>
             </div>
@@ -1162,13 +1163,15 @@
 
                 <!-- Logic -->
                 <h4
-                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe;">
-                    🎮 ლოგიკა & ივენთები</h4>
+                    style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #4facfe; display: flex; align-items: center; gap: 10px;">
+                    🎮 თამაშის ლოგიკა & რეჟიმები
+                </h4>
                 <div class="dashboard-grid">
+                    <!-- Crisis Settings -->
                     <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
                         <span class="mini-label">⚠️ კრიზისის დრო <span id="cur-crisis" class="cur-val"
                                 style="color:orange;"></span></span>
-                        <input type="number" id="val-crisis" class="search-input" value="10"
+                        <input type="number" id="val-crisis" class="search-input" value="30"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
                             <button class="btn btn-primary" style="flex:2"
@@ -1177,10 +1180,12 @@
                                 onclick="stopEvent('crisis_time')">OFF</button>
                         </div>
                     </div>
+
+                    <!-- Soap Milestone -->
                     <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                        <span class="mini-label">🧼 საპნის სიხშირე <span id="cur-soap" class="cur-val"
+                        <span class="mini-label">🧼 საპნის ბარიერი <span id="cur-soap" class="cur-val"
                                 style="color:#ff69b4;"></span></span>
-                        <input type="number" id="val-soap" class="search-input" value="1000" placeholder="Score"
+                        <input type="number" id="val-soap" class="search-input" value="1250" placeholder="Score"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
                             <button class="btn btn-primary" style="flex:2"
@@ -1189,10 +1194,12 @@
                                 onclick="stopEvent('soap_thresh')">OFF</button>
                         </div>
                     </div>
+
+                    <!-- Minigame Milestone -->
                     <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
                         <span class="mini-label">🎮 მინი-თამაში <span id="cur-minigame" class="cur-val"
                                 style="color:#4facfe;"></span></span>
-                        <input type="number" id="val-minigame" class="search-input" value="1500" placeholder="Score"
+                        <input type="number" id="val-minigame" class="search-input" value="1875" placeholder="Score"
                             style="width: 100%; margin-bottom: 5px;">
                         <div class="flex-row gap-5">
                             <button class="btn btn-primary" style="flex:2"
@@ -1200,154 +1207,170 @@
                             <button class="btn btn-outline" style="flex:1"
                                 onclick="stopEvent('minigame_thresh')">OFF</button>
                         </div>
-                        <div class="mini-card" style="border-color: rgba(255, 204, 0, 0.3);">
-                            <span class="mini-label">🎰 Spin Wheel <span id="cur-spin" class="cur-val"
-                                    style="color:#ffcc00;"></span></span>
-                            <input type="number" id="val-spinwheel" class="search-input" value="10000"
-                                placeholder="Score" style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-gold" style="flex:2"
-                                    onclick="quickTrigger('spinwheel_thresh', 'val-spinwheel')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('spinwheel_thresh')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">🧼 Cutscene <span id="cur-cutscene" class="cur-val"
-                                    style="color:#ff69b4;"></span></span>
-                            <input type="number" id="val-cutscene" class="search-input" value="1500" placeholder="ms"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('soap_cutscene', 'val-cutscene')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('soap_cutscene')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card"
-                            style="background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.2);">
-                            <span class="mini-label">🛡️ უკვდავება (God Mode) <span id="cur-god" class="cur-val"
-                                    style="color:lime;"></span></span>
-                            <div class="flex-row gap-5" style="margin-top:28px;">
-                                <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 0, 0.8);"
-                                    onclick="quickTrigger('god_mode', '1')">ON</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('god_mode')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">⚡ გაძლიერების ძალა (Default 1.3) <span id="cur-upgpow"
-                                    class="cur-val" style="color:gold;"></span></span>
-                            <input type="number" id="val-upgpow" class="search-input" value="1.3" step="0.1"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('upgrade_power', 'val-upgpow')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('upgrade_power')">OFF</button>
-                            </div>
-                        </div>
-                        <div class="mini-card" style="border-color: rgba(79, 172, 254, 0.3);">
-                            <span class="mini-label">🌸 Pink გაძლიერება (Default 1.5) <span id="cur-pinkpow"
-                                    class="cur-val" style="color:#ff69b4;"></span></span>
-                            <input type="number" id="val-pinkpow" class="search-input" value="1.5" step="0.1"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('pink_power', 'val-pinkpow')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('pink_power')">OFF</button>
-                            </div>
+                    </div>
+
+                    <!-- Spin Wheel Milestone -->
+                    <div class="mini-card" style="border-color: rgba(255, 204, 0, 0.3);">
+                        <span class="mini-label">🎰 Spin Wheel <span id="cur-spin" class="cur-val"
+                                style="color:#ffcc00;"></span></span>
+                        <input type="number" id="val-spinwheel" class="search-input" value="10000" placeholder="Score"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-gold" style="flex:2"
+                                onclick="quickTrigger('spinwheel_thresh', 'val-spinwheel')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('spinwheel_thresh')">OFF</button>
                         </div>
                     </div>
 
-                    <!-- YouTube Notifier Multi-Channel -->
-                    <h4
-                        style="margin: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; color: #ff0000; display: flex; align-items: center; gap: 10px;">
-                        📺 YouTube Multi-Channel Notifier
+                    <!-- God Mode -->
+                    <div class="mini-card"
+                        style="background: rgba(0, 255, 0, 0.05); border-color: rgba(0, 255, 0, 0.2);">
+                        <span class="mini-label">🛡️ God Mode <span id="cur-god" class="cur-val"
+                                style="color:lime;"></span></span>
+                        <div class="flex-row gap-5" style="margin-top:28px;">
+                            <button class="btn btn-primary" style="flex:2; background: rgba(0, 200, 0, 0.8);"
+                                onclick="quickTrigger('god_mode', '1')">ON</button>
+                            <button class="btn btn-outline" style="flex:1" onclick="stopEvent('god_mode')">OFF</button>
+                        </div>
+                    </div>
+
+                    <!-- Freeze Enemies -->
+                    <div class="mini-card"
+                        style="background: rgba(0, 242, 254, 0.05); border-color: rgba(0, 242, 254, 0.2);">
+                        <span class="mini-label">❄️ Freeze Enemies <span id="cur-freeze" class="cur-val"
+                                style="color:#00f2fe;"></span></span>
+                        <div class="flex-row gap-5" style="margin-top:28px;">
+                            <button class="btn btn-primary" style="flex:2; background: rgba(0, 242, 254, 0.6);"
+                                onclick="quickTrigger('freeze_enemies', '1')">ON</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('freeze_enemies')">OFF</button>
+                        </div>
+                    </div>
+
+                    <!-- Upgrade Balance -->
+                    <div class="mini-card" style="border-color: rgba(255, 215, 0, 0.3);">
+                        <span class="mini-label">⚡ გაძლიერების ძალა <span id="cur-upgpow" class="cur-val"
+                                style="color:gold;"></span></span>
+                        <input type="number" id="val-upgpow" class="search-input" value="1.3" step="0.1"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('upgrade_power', 'val-upgpow')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('upgrade_power')">OFF</button>
+                        </div>
+                    </div>
+
+                    <!-- Pink Bonus Balance -->
+                    <div class="mini-card" style="border-color: rgba(255, 105, 180, 0.3);">
+                        <span class="mini-label">🌸 Pink გაძლიერება <span id="cur-pinkpow" class="cur-val"
+                                style="color:#ff69b4;"></span></span>
+                        <input type="number" id="val-pinkpow" class="search-input" value="1.5" step="0.1"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('pink_power', 'val-pinkpow')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('pink_power')">OFF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-row mt-20">
+                    <button class="btn btn-danger full-width" id="stop-events"
+                        style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ივენთის გაუქმება
+                        (RESET)</button>
+                </div>
+            </div>
+
+            <!-- YOUTUBE TAB -->
+            <div id="tab-youtube" class="tab-content">
+                <div class="header-bar">
+                    <h2>📺 YouTube Settings</h2>
+                </div>
+                <!-- YouTube Notifier Multi-Channel -->
+                <div class="card"
+                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 20px;">
+                    <h4 style="color: #ff0000; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        📡 Multi-Channel Notification System
                         <span
                             style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT:
                             5</span>
                     </h4>
-                    <div class="card"
-                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 15px;">
-                        <div id="channel-config-list">
-                            <!-- JS will populate or we can hardcode 5 slots -->
-                            <div
-                                style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
-                                <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID / User</div>
-                                <div style="font-size: 0.7rem; opacity: 0.5;">Weight (0-100)</div>
 
-                                <input type="text" id="ch-id-1" class="search-input"
-                                    placeholder="UCycgfC-1XTtOeMLr5Vz..." style="width: 100%;">
-                                <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
-
-                                <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
-                                    style="width: 100%;">
-                                <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
-
-                                <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
-                                    style="width: 100%;">
-                                <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
-
-                                <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
-                                    style="width: 100%;">
-                                <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
-
-                                <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
-                                    style="width: 100%;">
-                                <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
-                            </div>
-                        </div>
-                        <button class="btn btn-danger full-width" onclick="saveVideoConfig()">🚀 UPDATE MULTI-CHANNEL
-                            CONFIG</button>
-
+                    <div id="channel-config-list">
                         <div
-                            style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px dashed rgba(255, 0, 0, 0.3);">
-                            <span class="mini-label">🎯 კონკრეტული ვიდეოს ლინკი (პრიორიტეტი) <span id="cur-forced-video"
-                                    class="cur-val" style="color: lime;"></span></span>
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <input type="text" id="val-forced-video" class="search-input"
-                                    placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
-                                <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET
-                                    VIDEO</button>
-                            </div>
-                            <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">გათიშვა (BACK
-                                TO
-                                CHANNELS)</button>
+                            style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID (UC...) or Username</div>
+                            <div style="font-size: 0.7rem; opacity: 0.5;">Weight %</div>
+
+                            <input type="text" id="ch-id-1" class="search-input" placeholder="UCycgfC-1XTtOeMLr5Vz..."
+                                style="width: 100%;">
+                            <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
+
+                            <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
+                                style="width: 100%;">
+                            <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
+
+                            <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
+                                style="width: 100%;">
+                            <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
+
+                            <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
+                                style="width: 100%;">
+                            <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
+
+                            <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
+                                style="width: 100%;">
+                            <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
                         </div>
                     </div>
 
-                    <div class="dashboard-grid mt-10">
-                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
-                            <span class="mini-label">⏱️ Timings (csv) <span id="cur-timings" class="cur-val"
-                                    style="color:orange;"></span></span>
-                            <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('video_timings', 'val-timings')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('video_timings')">OFF</button>
-                            </div>
+                    <button class="btn btn-danger full-width" onclick="saveVideoConfig()"
+                        style="background: #cc0000; border: none;">🚀 UPDATE CHANNELS CONFIG</button>
+
+                    <div
+                        style="margin-top: 30px; padding: 20px; background: rgba(255, 215, 0, 0.03); border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.3);">
+                        <h4 style="color: var(--accent); margin-bottom: 15px;">🎯 forced_video (High Priority)</h4>
+                        <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 15px;">If active, this specific video
+                            will always show instead of the channel rotation.</p>
+
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="val-forced-video" class="search-input"
+                                placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
+                            <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET VIDEO</button>
                         </div>
-                        <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
-                            <span class="mini-label">🔄 Loop (sec) <span id="cur-loop" class="cur-val"
-                                    style="color:cyan;"></span></span>
-                            <input type="number" id="val-loop" class="search-input" value="300"
-                                style="width: 100%; margin-bottom: 5px;">
-                            <div class="flex-row gap-5">
-                                <button class="btn btn-primary" style="flex:2"
-                                    onclick="quickTrigger('video_loop', 'val-loop')">SET</button>
-                                <button class="btn btn-outline" style="flex:1"
-                                    onclick="stopEvent('video_loop')">OFF</button>
-                            </div>
+                        <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">DISABLE FORCED
+                            VIDEO</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid mt-20">
+                    <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                        <span class="mini-label">⏱️ Popup Sequence (sec) <span id="cur-timings" class="cur-val"
+                                style="color:orange;"></span></span>
+                        <input type="text" id="val-timings" class="search-input" value="10,30,60,300"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('video_timings', 'val-timings')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('video_timings')">OFF</button>
                         </div>
                     </div>
-
-                    <button class="btn btn-danger full-width mt-20" id="stop-events"
-                        style="opacity: 0.9; padding: 15px; font-size: 1.1rem;">🛑 ყველა ცვლილების გაუქმება
-                        (RESET)</button>
+                    <div class="mini-card" style="border-color: rgba(255, 0, 0, 0.3);">
+                        <span class="mini-label">🔄 Loop Interval (sec) <span id="cur-loop" class="cur-val"
+                                style="color:cyan;"></span></span>
+                        <input type="number" id="val-loop" class="search-input" value="300"
+                            style="width: 100%; margin-bottom: 5px;">
+                        <div class="flex-row gap-5">
+                            <button class="btn btn-primary" style="flex:2"
+                                onclick="quickTrigger('video_loop', 'val-loop')">SET</button>
+                            <button class="btn btn-outline" style="flex:1"
+                                onclick="stopEvent('video_loop')">OFF</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1627,6 +1650,8 @@
                 else if (type === 'player_radius') msg = `📏 მოთამაშის რადიუსი: ${val}X`;
                 else if (type === 'coin_mult') msg = `💰 ქოინების მამრავლი: ${val}X`;
                 else if (type === 'boss_hp') msg = `☠️ ბოსის HP: ${val}`;
+                else if (type === 'freeze_enemies') msg = `❄️ მტრები გაიყინნენ!`;
+                else if (type === 'god_mode') msg = `🛡️ უკვდავების რეჟიმი!`;
                 else if (type === 'soap_thresh') msg = `🧼 საპნის სიხშირე: ყოველ ${val} ქულაზე`;
                 else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
                 else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
@@ -1700,6 +1725,8 @@
                     if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
                     if (ev.event_type === 'upgrade_power') get('cur-upgpow').textContent = `(${ev.event_value}X)`;
                     if (ev.event_type === 'pink_power') get('cur-pinkpow').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                    if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
 
                     // Individual Boss Stats
                     if (ev.event_type === 'reg_boss_hp') get('cur-reg-hp')?.textContent ? get('cur-reg-hp').textContent = `(${ev.event_value})` : null;
