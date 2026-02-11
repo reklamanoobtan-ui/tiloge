@@ -551,8 +551,9 @@ function updateScore(points) {
             setTimeout(startMinigame, 500); // Small delay
         }
 
-        // Spin Wheel Milestone (Every 20,000 points)
-        if (Math.floor(score / 20000) > Math.floor(lastSpinMilestone / 20000)) {
+        // Spin Wheel Milestone
+        const spinThresh = globalSpinThresholdOverride || 10000; // 2x Faster (was 20000)
+        if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
             lastSpinMilestone = score;
             setTimeout(showSpinWheel, 1000);
         }
@@ -2492,6 +2493,10 @@ async function checkGlobalEvents() {
             if (ev.event_type === 'multiplier') {
                 globalMultiplier = parseInt(ev.event_value) || 1;
                 showStatusUpdate(`🌍 გლობალური ${globalMultiplier}X ბონუსი აქტიურია! ✨`);
+            }
+            if (ev.event_type === 'spinwheel_thresh') {
+                globalSpinThresholdOverride = parseInt(ev.event_value);
+                console.log('Spin Wheel Threshold updated:', globalSpinThresholdOverride);
             }
             if (ev.event_type === 'rainbow') {
                 globalRainbowActive = true;
