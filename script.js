@@ -175,6 +175,18 @@ function updateUIValues() {
     if (get('side-best-score')) get('side-best-score').textContent = lastBestScore.score;
     if (get('side-prev-score')) get('side-prev-score').textContent = lastPrevScore.score;
 
+    // Updates for new Sidebar Stats
+    if (get('time-val')) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const m = Math.floor(elapsed / 60);
+        const s = elapsed % 60;
+        get('time-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+    if (get('spawn-val')) {
+        const interval = getSpawnInterval();
+        get('spawn-val').textContent = (interval / 1000).toFixed(2) + 's';
+    }
+
     const updateSkinBtn = (btnId, skinName) => {
         const btn = get(btnId);
         if (!btn) return;
@@ -1608,7 +1620,7 @@ function showUpgradeOptions() {
 
         // Existing Logic: Spawn Speed vs Strength
         if (u.id === 'strength' && (upgradeCounts['spawn_speed'] || 0) > (upgradeCounts['strength'] || 0)) {
-            weight *= 0.2;
+            weight *= 0.05; // Reduced from 0.2 to 0.05 as requested
         }
 
         if (Math.random() < weight) {
