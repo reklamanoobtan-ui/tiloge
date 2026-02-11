@@ -1599,4 +1599,75 @@ input:checked+.slider:before {
         font-size: 0.9rem !important;
         padding: 8px 15px !important;
     }
+
+    /* VERTICAL / PORTRAIT OPTIMIZATION */
+
+    /* Make sidebars wider on narrow screens but shorter */
+    .premium-sidebar {
+        width: 85% !important;
+        /* Wider drawer */
+        left: -86% !important;
+        /* Hide mostly */
+        bottom: 20px;
+        max-height: 60vh;
+    }
+
+    .premium-sidebar.side-expanded {
+        transform: translateX(86%);
+    }
+
+    .premium-sidebar.right {
+        left: auto !important;
+        right: -86% !important;
+        top: 60px;
+        /* Stats at top for visibility */
+        bottom: auto;
+    }
+
+    .premium-sidebar.right.side-expanded {
+        transform: translateX(-86%);
+    }
+
+    /* Toggles positioning for thumb access */
+    .sidebar-toggle-side {
+        width: 50px;
+        height: 50px;
+        top: auto;
+        bottom: 0px;
+        left: 100%;
+        /* Stick out to right of left-bar */
+    }
+
+    /* Right toggle sticks out to left of right-bar */
+    .premium-sidebar.right .sidebar-toggle-side {
+        left: auto;
+        right: 100%;
+        top: 0;
+        bottom: auto;
+    }
+
+    /* HUD Controls at Top Center - transparent background for visibility */
+    .info-text {
+        top: 10px !important;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 5px 15px;
+        border-radius: 20px;
+        width: auto !important;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .info-text h1 {
+        display: none;
+        /* Hide helper text on mobile to save space */
+    }
+
+    /* Ensure canvas fills vertical screen */
+    body,
+    html {
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+        /* Prevent bouncy scroll */
+    }
 }
