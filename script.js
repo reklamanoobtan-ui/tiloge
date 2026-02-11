@@ -128,6 +128,12 @@ let timerInterval = null;
 let syncLoopInterval = null;
 
 
+// --- Global Flags for Throttled Updates ---
+let needsUIUpdate = false;
+let lastSyncTime = 0;
+let clothWidth = 200; // Default cached sizes
+let clothHeight = 200;
+
 // --- Helper Functions ---
 
 function updatePowerStats() {
@@ -156,11 +162,11 @@ function saveStatsToLocal() {
     localStorage.setItem('tilo_vip', isVip);
     localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
     localStorage.setItem('tilo_current_skin', currentSkin);
-
-    // 🛡️ Security: Update integrity hash after saving
+    localStorage.setItem('tilo_upgrades', JSON.stringify(upgradeCounts));
     if (window.securitySystem) {
         window.securitySystem.verifyStorageIntegrity();
     }
+    needsUIUpdate = true;
 }
 
 function updateUIValues() {
@@ -524,9 +530,8 @@ function updateScore(points) {
 
         if (pendingUpgrades > 0 && !isUpgradeOpen && gameActive) {
             showUpgradeOptions();
-            syncUserData(true);
+            syncUserData(); // NOT true, we don't want a full reward sync on upgrade
         }
-
         // 1000 score milestone reward
         if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
             const addAmt = (1 * globalCoinMult);
@@ -538,34 +543,27 @@ function updateScore(points) {
         }
 
         // Dynamic Soap Milestone
-        const soapThresh = globalSoapThresholdOverride || 1250; // 2x Faster (was 2500)
+        const soapThresh = globalSoapThresholdOverride || 1250;
         if (Math.floor(score / soapThresh) > Math.floor(lastSoapMilestone / soapThresh)) {
             lastSoapMilestone = score;
             createSoap();
         }
 
         // Dynamic Minigame Milestone
-        const minigameThresh = globalMinigameThresholdOverride || 1875; // 2x Faster (was 3750)
+        const minigameThresh = globalMinigameThresholdOverride || 1875;
         if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
             lastMinigameMilestone = score;
-            setTimeout(startMinigame, 500); // Small delay
+            setTimeout(startMinigame, 500);
         }
 
         // Spin Wheel Milestone
-        const spinThresh = globalSpinThresholdOverride || 10000; // 2x Faster (was 20000)
+        const spinThresh = globalSpinThresholdOverride || 10000;
         if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
             lastSpinMilestone = score;
             setTimeout(showSpinWheel, 1000);
         }
 
-        // Sync every 20 points for "immediate" reflection
-        if (Math.floor(score) % 20 === 0) {
-            syncUserData(true);
-        }
-
-        updateUIValues();
-        syncUserData();
-        updateStatsSidebar();
+        needsUIUpdate = true;
     }
 }
 
@@ -1381,7 +1379,7 @@ function createSoap() {
 }
 
 function createBubbles(x, y, count, isPink = false) {
-    const container = document.body;
+    const container = get('canvas-container') || document.body;
     for (let i = 0; i < count; i++) {
         const bubble = document.createElement('div');
         bubble.className = 'bubble-particle';
@@ -1779,6 +1777,7 @@ function createLightning(x1, y1, x2, y2) {
 }
 
 function createFireExplosion(x, y) {
+    const container = get('canvas-container') || document.body;
     const explo = document.createElement('div');
     explo.className = 'bomb-explosion';
     const bombLvl = upgradeCounts['bomb'] || 1;
@@ -1787,7 +1786,7 @@ function createFireExplosion(x, y) {
     explo.style.height = `${size}px`;
     explo.style.left = `${x - size / 2}px`;
     explo.style.top = `${y - size / 2}px`;
-    document.body.appendChild(explo);
+    container.appendChild(explo);
     setTimeout(() => explo.remove(), 500);
 }
 
@@ -1945,8 +1944,14 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
 
     stain.style.width = `${size}px`;
     stain.style.height = `${size}px`;
-    stain.style.left = `${Math.random() * (window.innerWidth - size)}px`;
-    stain.style.top = `${Math.random() * (window.innerHeight - size)}px`;
+    const safeWidth = Math.max(0, window.innerWidth - size);
+    const safeHeight = Math.max(0, window.innerHeight - size);
+    stain.style.left = `${Math.random() * safeWidth}px`;
+    stain.style.top = `${Math.random() * safeHeight}px`;
+
+    // Center if larger than screen
+    if (size > window.innerWidth) stain.style.left = `${(window.innerWidth - size) / 2}px`;
+    if (size > window.innerHeight) stain.style.top = `${(window.innerHeight - size) / 2}px`;
     stain.dataset.health = health;
     stain.dataset.maxHealth = health;
     stain.dataset.rewardMult = healthMultiplier;
@@ -2109,11 +2114,9 @@ setInterval(() => {
 function moveCloth(x, y) {
     const cloth = get('cloth');
     if (cloth) {
-        // Center cursor in the middle of cloth
-        const offsetX = cloth.offsetWidth / 2;
-        const offsetY = cloth.offsetHeight / 2;
-        cloth.style.left = `${x - offsetX}px`;
-        cloth.style.top = `${y - offsetY}px`;
+        // Use cached sizes to avoid layout thrashing (offsetWidth involves reflow)
+        cloth.style.left = `${x - clothWidth / 2}px`;
+        cloth.style.top = `${y - clothHeight / 2}px`;
         spawnSkinTrail(x, y); // Spawn skin-specific trail
     }
 }
@@ -2121,6 +2124,8 @@ function moveCloth(x, y) {
 function checkCleaning(bx, by) {
     const stains = document.querySelectorAll('.stain');
     stains.forEach(stain => {
+        if (stain.dataset.cleaning === 'true') return;
+
         const rect = stain.getBoundingClientRect();
         const sx = rect.left + rect.width / 2;
         const sy = rect.top + rect.height / 2;
@@ -2140,55 +2145,74 @@ function checkCleaning(bx, by) {
             const maxH = parseFloat(stain.dataset.maxHealth);
             stain.style.opacity = Math.max(0, h / maxH);
 
-            if (h <= 0 && stain.dataset.cleaning !== 'true') {
-                stain.dataset.cleaning = 'true';
-
-                const isBoss = stain.classList.contains('boss-stain');
-                const isTriangle = stain.classList.contains('triangle-boss');
-                const rMult = parseFloat(stain.dataset.rewardMult || 1.0);
-
-                if (isTriangle) {
-                    bossesDefeated++;
-                    const finalRew = Math.floor(20 * rMult);
-                    updateScore(finalRew);
-                    showStatusUpdate(`ელიტარული ბოსი დამარცხებულია! +${finalRew} ✨`);
-                    createParticles(sx, sy, '#ffd700', 40);
-                } else if (isBoss) {
-                    bossesDefeated++;
-                    const finalRew = Math.floor(10 * rMult);
-                    updateScore(finalRew);
-                    showStatusUpdate(`ბოსი დამარცხებულია! +${finalRew} ✨`);
-                    createParticles(sx, sy, '#ff4d4d', 30);
-                } else {
-                    totalStainsCleanedRel++;
-                    updateScore(1);
-                    createParticles(sx, sy, stain.style.backgroundColor || '#fff', 10);
-                }
-
-                // Bomb Upgrade: Chain Reaction
-                if (hasBombUpgrade) {
-                    createFireExplosion(sx, sy); // Visual effect
-                    const bombLvl = upgradeCounts['bomb'] || 1;
-                    const radius = 200 + (bombLvl * 100);
-                    const damage = 500 * bombLvl;
-
-                    const allStains = document.querySelectorAll('.stain');
-                    allStains.forEach(s => {
-                        if (s === stain) return;
-                        const sRect = s.getBoundingClientRect();
-                        const distS = Math.hypot(sx - (sRect.left + sRect.width / 2), sy - (sRect.top + sRect.height / 2));
-                        if (distS < radius) {
-                            let sh = parseFloat(s.dataset.health);
-                            s.dataset.health = sh - damage;
-                            if (sh - damage <= 0) checkCleaning(currentX, currentY); // Trigger cleanup
-                        }
-                    });
-                }
-
-                setTimeout(() => stain.remove(), 100);
+            if (h <= 0) {
+                finalizeCleaning(stain, sx, sy);
             }
         }
     });
+}
+
+function finalizeCleaning(stain, sx, sy) {
+    if (stain.dataset.cleaning === 'true') return;
+    stain.dataset.cleaning = 'true';
+    stain.remove(); // Remove immediately to prevent ghosting and optimize queries
+    needsUIUpdate = true;
+
+    const isBoss = stain.classList.contains('boss-stain');
+    const isTriangle = stain.classList.contains('triangle-boss');
+    const rMult = parseFloat(stain.dataset.rewardMult || 1.0);
+
+    if (isTriangle) {
+        bossesDefeated++;
+        const finalRew = Math.floor(20 * rMult);
+        updateScore(finalRew);
+        showStatusUpdate(`ელიტარული ბოსი დამარცხებულია! +${finalRew} ✨`);
+        createParticles(sx, sy, '#ffd700', 40);
+    } else if (isBoss) {
+        bossesDefeated++;
+        const finalRew = Math.floor(10 * rMult);
+        updateScore(finalRew);
+        showStatusUpdate(`ბოსი დამარცხებულია! +${finalRew} ✨`);
+        createParticles(sx, sy, '#ff4d4d', 30);
+    } else {
+        totalStainsCleanedRel++;
+        updateScore(1);
+        createParticles(sx, sy, stain.style.backgroundColor || '#fff', 10);
+    }
+
+    // Bomb Upgrade: Chain Reaction
+    if (hasBombUpgrade) {
+        createFireExplosion(sx, sy);
+        const bombLvl = upgradeCounts['bomb'] || 1;
+        const radius = 200 + (bombLvl * 100);
+        const damage = 1000 * bombLvl; // Buffet damage
+
+        // Optimization: allPending will decrease in size as recursion progresses due to stain.remove()
+        const allStains = document.querySelectorAll('.stain');
+        allStains.forEach(s => {
+            if (s.dataset.cleaning === 'true') return;
+
+            // Fast distance check without getBoundingClientRect if possible? 
+            // We need coords. Dataset might have them if we stored them at creation.
+            const sRect = s.getBoundingClientRect();
+            const scx = sRect.left + sRect.width / 2;
+            const scy = sRect.top + sRect.height / 2;
+            const distS = Math.hypot(sx - scx, sy - scy);
+
+            if (distS < radius) {
+                let sh = parseFloat(s.dataset.health);
+                sh -= damage;
+                s.dataset.health = sh;
+
+                const sMaxH = parseFloat(s.dataset.maxHealth);
+                s.style.opacity = Math.max(0, sh / sMaxH);
+
+                if (sh <= 0) {
+                    finalizeCleaning(s, scx, scy);
+                }
+            }
+        });
+    }
 }
 
 // Init
@@ -2808,15 +2832,33 @@ function resetGameLoops() {
     if (defeatCheckInterval) clearInterval(defeatCheckInterval);
     defeatCheckInterval = setInterval(checkDefeatCondition, 1000);
 
-    // Round Timer
+    // --- Round Timer & UI Refresh (Higher Frequency) ---
+    if (timerInterval) clearInterval(timerInterval);
+    let lastTimeUpdate = 0;
     timerInterval = setInterval(() => {
         if (gameActive) {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const m = Math.floor(elapsed / 60);
-            const s = elapsed % 60;
-            if (get('round-timer-val')) get('round-timer-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+            updateUIValues();
+            if (needsUIUpdate) {
+                updateStatsSidebar();
+                needsUIUpdate = false;
+            }
+
+            // Sync with DB every 30s
+            if (Date.now() - lastSyncTime > 30000) {
+                syncUserData();
+                lastSyncTime = Date.now();
+            }
+
+            // High-res timer update once per second
+            if (Date.now() - lastTimeUpdate > 1000) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(elapsed / 60);
+                const s = elapsed % 60;
+                if (get('time-val')) get('time-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+                lastTimeUpdate = Date.now();
+            }
         }
-    }, 1000);
+    }, 200);
 }
 
 let spawnTimeout;
