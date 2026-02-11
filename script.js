@@ -1146,63 +1146,78 @@ function startHelperBot() {
 
     function moveBot() {
         if (!botEl.parentElement) return;
-        if (!gameActive) {
-            setTimeout(moveBot, 500);
-            return;
-        }
 
-        const stains = document.querySelectorAll('.stain');
-        if (stains.length > 0) {
-            let closest = null;
-            let minDist = Infinity;
-            const botRect = botEl.getBoundingClientRect();
-            const bx = botRect.left + botRect.width / 2;
-            const by = botRect.top + botRect.height / 2;
-
-            stains.forEach(s => {
-                const sRect = s.getBoundingClientRect();
-                const sx = sRect.left + sRect.width / 2;
-                const sy = sRect.top + sRect.height / 2;
-                const d = Math.hypot(bx - sx, by - sy);
-                if (d < minDist) {
-                    minDist = d;
-                    closest = s;
-                }
-            });
-
-            if (closest) {
-                const rect = closest.getBoundingClientRect();
-                // Move towards stain with unique offset
-                botEl.style.left = `${rect.left + rect.width / 2 - 25 + offsetX}px`;
-                botEl.style.top = `${rect.top + rect.height / 2 - 25 + offsetY}px`;
-
-                setTimeout(() => {
-                    if (closest && closest.parentElement) {
-                        const sx = rect.left + rect.width / 2;
-                        const sy = rect.top + rect.height / 2;
-
-                        let h = parseFloat(closest.dataset.health);
-                        const dmg = 200 * helperCleaningMultiplier; // Buffed from 80 to 200
-                        h -= dmg;
-                        closest.dataset.health = h;
-
-                        // Visual feedback on hit
-                        createParticles(sx, sy, closest.style.backgroundColor || '#fff', 5);
-                        closest.style.opacity = Math.max(0.1, h / parseFloat(closest.dataset.maxHealth));
-
-                        if (h <= 0) {
-                            finalizeCleaning(closest, sx, sy);
-                        }
-                    }
-                    moveBot();
-                }, (800 / helperSpeedMultiplier)); // Slightly faster interval (800ms base)
-            } else {
+        try {
+            if (!gameActive) {
                 setTimeout(moveBot, 500);
+                return;
             }
-        } else {
-            botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
-            botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
-            setTimeout(moveBot, 1000);
+
+            const stains = document.querySelectorAll('.stain');
+            if (stains.length > 0) {
+                let closest = null;
+                let minDist = Infinity;
+
+                // Use a faster way to get bot center without full rect if possible
+                const bx = parseFloat(botEl.style.left) + 25;
+                const by = parseFloat(botEl.style.top) + 25;
+
+                stains.forEach(s => {
+                    // Skip if already being cleaned or not connected
+                    if (s.dataset.cleaning === 'true' || !s.isConnected) return;
+
+                    const sx = parseFloat(s.dataset.cx);
+                    const sy = parseFloat(s.dataset.cy);
+                    if (isNaN(sx)) return; // Fallback if dataset not ready
+
+                    const d = Math.hypot(bx - sx, by - sy);
+                    if (d < minDist) {
+                        minDist = d;
+                        closest = s;
+                    }
+                });
+
+                if (closest && closest.isConnected) {
+                    const sx = parseFloat(closest.dataset.cx);
+                    const sy = parseFloat(closest.dataset.cy);
+
+                    // Move towards stain with unique offset
+                    botEl.style.left = `${sx - 25 + offsetX}px`;
+                    botEl.style.top = `${sy - 25 + offsetY}px`;
+
+                    setTimeout(() => {
+                        try {
+                            if (closest && closest.isConnected && closest.parentElement) {
+                                let h = parseFloat(closest.dataset.health);
+                                const dmg = 250 * helperCleaningMultiplier; // Buffed again to 250
+                                h -= dmg;
+                                closest.dataset.health = h;
+
+                                createParticles(sx, sy, closest.style.backgroundColor || '#fff', 3);
+                                closest.style.opacity = Math.max(0.1, h / parseFloat(closest.dataset.maxHealth));
+
+                                if (h <= 0) {
+                                    finalizeCleaning(closest, sx, sy);
+                                }
+                            }
+                        } catch (e) {
+                            console.error("Bot action error", e);
+                        }
+                        moveBot();
+                    }, Math.max(100, (800 / helperSpeedMultiplier)));
+                } else {
+                    // No valid target found (might be all being cleaned)
+                    setTimeout(moveBot, 500);
+                }
+            } else {
+                // Random idle move
+                botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+                botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+                setTimeout(moveBot, 1000);
+            }
+        } catch (e) {
+            console.error("Global moveBot error", e);
+            setTimeout(moveBot, 1000); // Attempt recovery
         }
     }
     moveBot();
@@ -1976,6 +1991,10 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     }
 
     container.appendChild(stain);
+    const finalRect = stain.getBoundingClientRect();
+    stain.dataset.cx = finalRect.left + finalRect.width / 2;
+    stain.dataset.cy = finalRect.top + finalRect.height / 2;
+
     checkDefeatCondition();
 }
 
