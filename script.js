@@ -2138,7 +2138,7 @@ function checkCleaning(bx, by) {
 
             // Visual fade
             const maxH = parseFloat(stain.dataset.maxHealth);
-            stain.style.opacity = Math.max(0.2, h / maxH);
+            stain.style.opacity = Math.max(0, h / maxH);
 
             if (h <= 0 && stain.dataset.cleaning !== 'true') {
                 stain.dataset.cleaning = 'true';
