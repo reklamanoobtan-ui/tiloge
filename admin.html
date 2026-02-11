@@ -529,6 +529,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="card" style="border: 1px solid #ffcc00; background: rgba(255,204,0,0.05);">
+                    <h3 style="color: #ffcc00;">📢 Massive Announcement</h3>
+                    <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.9rem;">გაგზავნეთ დიდი შეტყობინება ეკრანის
+                        ბოლოს ყველასთვის</p>
+                    <input type="text" id="massive-msg" placeholder="ტექსტი აქ...">
+                    <div class="flex-row mt-10">
+                        <input type="number" id="massive-dur" value="10" placeholder="წამი"
+                            style="width: 80px; margin-bottom: 0;">
+                        <button class="btn btn-gold full-width" id="send-massive">🔥 ყველასთან გაგზავნა</button>
+                    </div>
+                </div>
             </div>
 
             <!-- PLAYERS TAB -->
@@ -1448,19 +1459,30 @@
             const msg = get('broadcast-msg').value.trim();
             if (!msg) return;
             try {
-                // Send as Chat Message
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
-
-                // Send as Central Alert (Info Event)
-                // Duration: 2s per word, min 5s -> Converted to minutes for triggerEvent (0.1 min = 6s)
-                const wordCount = msg.split(/\s+/).length;
-                const durMin = Math.max(0.1, (wordCount * 2) / 60);
-
-                triggerEvent('info', msg, durMin);
-
+                log(`Broadcasted: ${msg}`);
                 get('broadcast-msg').value = '';
-                log("Broadcast & Central Alert sent!");
             } catch (e) { log('Error', 'red'); }
+        };
+
+        get('send-massive').onclick = async () => {
+            const msg = get('massive-msg').value.trim();
+            const dur = parseInt(get('massive-dur').value) || 10;
+            if (!msg) return alert("შეიყვანეთ ტექსტი");
+            try {
+                // Ensure we use a direct timestamp for precision
+                const expireDate = new Date(Date.now() + dur * 1000);
+                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
+                         VALUES ('massive_announcement', ${msg}, ${expireDate.toISOString()})
+                         ON CONFLICT (event_type) DO UPDATE SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
+
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 MASSIVE', ${msg})`;
+                log(`MASSIVE SENT: ${msg} (${dur}s)`);
+                get('massive-msg').value = '';
+            } catch (e) {
+                console.error(e);
+                log('Error sending massive alert', 'red');
+            }
         };
 
         const triggerEvent = async (type, val, duration) => {

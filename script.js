@@ -2373,6 +2373,12 @@ async function checkGlobalEvents() {
                 globalStainLimitOverride = parseInt(ev.event_value);
                 showStatusUpdate(`🧹 ლაქების ლიმიტი: ${globalStainLimitOverride}!`);
             }
+            if (ev.event_type === 'massive_announcement') {
+                const remainingSec = Math.floor((new Date(ev.expires_at) - new Date()) / 1000);
+                if (remainingSec > 0) {
+                    showMassiveAnnouncement(ev.event_value, remainingSec);
+                }
+            }
         });
 
         // Restart loops if intervals changed
@@ -2936,6 +2942,37 @@ function showSystemAlert(msg) {
             lastAlertMessage = ""; // Reset to allow same message later if re-triggered
         }, 500);
     }, duration);
+}
+
+let currentMassiveAnnouncement = "";
+function showMassiveAnnouncement(text, durationSeconds) {
+    if (!text || text === currentMassiveAnnouncement) return;
+    currentMassiveAnnouncement = text;
+
+    const container = get('massive-announcement-container');
+    const box = get('massive-announcement-box');
+    const textBox = get('massive-announcement-text');
+
+    if (!container || !box || !textBox) return;
+
+    textBox.textContent = text;
+    container.classList.remove('hidden');
+
+    // Animate In
+    setTimeout(() => {
+        box.style.opacity = "1";
+        box.style.transform = "scale(1)";
+    }, 50);
+
+    // Auto Hide
+    setTimeout(() => {
+        box.style.opacity = "0";
+        box.style.transform = "scale(0.8)";
+        setTimeout(() => {
+            container.classList.add('hidden');
+            currentMassiveAnnouncement = "";
+        }, 500);
+    }, durationSeconds * 1000);
 }
 
 /* --- Spin Wheel System --- */
