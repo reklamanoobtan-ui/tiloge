@@ -763,12 +763,13 @@ body.fx-disco {
 }
 
 /* Skin Overrides for Image-based Cloth */
+
 .cloth-skin-fire {
-    filter: drop-shadow(0 0 25px #ff0000) sepia(1) saturate(100) hue-rotate(-50deg);
+    filter: drop-shadow(0 0 35px #ff0000) grayscale(1) sepia(1) hue-rotate(-50deg) saturate(35) brightness(1.1) contrast(1.1);
 }
 
 .cloth-skin-ice {
-    filter: drop-shadow(0 0 25px #00f2fe) sepia(1) saturate(100) hue-rotate(150deg);
+    filter: drop-shadow(0 0 35px #00f2fe) grayscale(1) sepia(1) hue-rotate(175deg) saturate(30) brightness(1.2) contrast(1.1);
 }
 
 .cloth-skin-rainbow {
@@ -776,7 +777,7 @@ body.fx-disco {
 }
 
 .cloth-skin-electric {
-    filter: drop-shadow(0 0 25px #ffff00) sepia(1) saturate(100) hue-rotate(10deg) brightness(1.5);
+    filter: drop-shadow(0 0 35px #ffff00) grayscale(1) sepia(1) hue-rotate(5deg) saturate(35) brightness(1.4) contrast(1.2);
 }
 
 @keyframes skin-rainbow-anim {
