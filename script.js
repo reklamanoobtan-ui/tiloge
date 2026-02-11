@@ -120,6 +120,32 @@ let defeatCheckInterval = null;
 let timerInterval = null;
 let syncLoopInterval = null;
 
+// --- Wave System State ---
+let lastPhaseName = "";
+function getWaveData() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const minute = Math.floor(elapsed / 60);
+    const secondOfMinute = elapsed % 60;
+    const secondOfLoop = elapsed % 30; // 30-second loop principle
+
+    // Meta-Cycle: Every 5th minute is "Safe Zone"
+    if (minute > 0 && (minute + 1) % 5 === 0 && secondOfMinute > 30) {
+        return { phase: 'SAFE', spawnMod: 5.0, healthMod: 0.5, rewardMod: 2.0, color: '#00ff00', label: '🛡️ დაცული ზონა (დასვენება)' };
+    }
+
+    // Micro-Cycle (30s Loop)
+    if (secondOfLoop < 10) {
+        // 0-10s: Sight & Plan
+        return { phase: 'PLAN', spawnMod: 1.2, healthMod: 1.0, rewardMod: 1.0, color: '#4facfe', label: '👁️ დაგეგმვა' };
+    } else if (secondOfLoop < 20) {
+        // 10-20s: Fight & Adrenaline
+        return { phase: 'BATTLE', spawnMod: 0.6, healthMod: 1.3, rewardMod: 1.2, color: '#ff4d4d', label: '⚔️ ბრძოლა' };
+    } else {
+        // 20-30s: Payoff & Reward
+        return { phase: 'REWARD', spawnMod: 0.8, healthMod: 0.8, rewardMod: 2.0, color: '#ffd700', label: '💎 ჯილდო' };
+    }
+}
+
 // --- Helper Functions ---
 
 function updatePowerStats() {
@@ -475,8 +501,9 @@ let globalForcedVideo = null; // {id, title, thumb, link}
 function updateScore(points) {
     if (!gameActive) return;
     if (points > 0) {
-        // Apply Global Multiplier
-        const finalPoints = points * globalMultiplier;
+        // Apply Global Multiplier & Wave Multiplier
+        const wave = getWaveData();
+        const finalPoints = points * globalMultiplier * wave.rewardMod;
 
         const newScore = score + finalPoints;
 
@@ -1706,8 +1733,14 @@ function spawnSkinTrail(x, y) {
 
 function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
+
+    const wave = getWaveData();
     let baseInterval = 2500 - (score * 0.1);
-    baseInterval = Math.max(400, baseInterval);
+
+    // Intensity modulation
+    baseInterval *= wave.spawnMod;
+
+    baseInterval = Math.max(300, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
@@ -1729,7 +1762,8 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     // ==========================================
 
     // Difficulty Factor: Increases by 0.1 every 1000 score
-    const difficulty = 1 + (score / 10000);
+    const wave = getWaveData();
+    const difficulty = (1 + (score / 10000)) * wave.healthMod;
 
     let health = 100;
     let size = Math.random() * 100 + 50; // Random size 50-150px
@@ -2663,13 +2697,25 @@ function resetGameLoops() {
     defeatCheckInterval = setInterval(checkDefeatCondition, 1000);
 
     // Round Timer
-    if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         if (gameActive) {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             const m = Math.floor(elapsed / 60);
             const s = elapsed % 60;
             if (get('round-timer-val')) get('round-timer-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+            // Update Wave UI
+            const wave = getWaveData();
+            const waveIndicator = get('diff-status');
+            if (waveIndicator && wave.label !== lastPhaseName) {
+                lastPhaseName = wave.label;
+                waveIndicator.innerHTML = `<span style="color:${wave.color}; font-weight:800; text-shadow: 0 0 10px ${wave.color}">${wave.label}</span>`;
+
+                // Special effects for specific phases
+                if (wave.phase === 'BATTLE') document.body.style.boxShadow = 'inset 0 0 50px rgba(255,0,0,0.2)';
+                else if (wave.phase === 'REWARD') document.body.style.boxShadow = 'inset 0 0 50px rgba(255,215,0,0.2)';
+                else document.body.style.boxShadow = 'none';
+            }
         }
     }, 1000);
 }
@@ -2996,6 +3042,12 @@ function drawWheel() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw Outer Shadow
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fill();
+
     spinPrizes.forEach((prize, i) => {
         const angle = i * sliceAngle;
 
@@ -3015,43 +3067,72 @@ function drawWheel() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw Text
+        // Draw Text with extreme readability
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(angle + sliceAngle / 2);
         ctx.textAlign = "right";
-        ctx.fillStyle = (prize.color === "#ffffff") ? "#000" : "#fff";
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.font = "bold 14px Outfit";
-        ctx.fillText(prize.label, radius - 30, 0);
-        ctx.font = "10px Outfit";
-        ctx.fillText(`(${prize.probDisplay})`, radius - 30, 15);
+
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 4;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(0,0,0,0.8)";
+
+        const labelText = prize.label;
+        ctx.font = "bold 15px Outfit";
+        ctx.strokeText(labelText, radius - 40, 0);
+        ctx.fillStyle = "#fff";
+        ctx.fillText(labelText, radius - 40, 0);
+
+        ctx.font = "900 11px Outfit";
+        ctx.strokeText(`(${prize.probDisplay})`, radius - 40, 16);
+        ctx.fillStyle = "#ffd700";
+        ctx.fillText(`(${prize.probDisplay})`, radius - 40, 16);
+
         ctx.restore();
     });
 
-    // Outer Ring
-    ctx.beginPath();
-    ctx.arc(radius, radius, radius - 2, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#ffd700";
-    ctx.lineWidth = 5;
-    ctx.stroke();
+    // Decorative Outer Bolts
+    for (let i = 0; i < 12; i++) {
+        const angle = (i * 30) * Math.PI / 180;
+        ctx.beginPath();
+        ctx.arc(radius + Math.cos(angle) * (radius - 10), radius + Math.sin(angle) * (radius - 10), 3, 0, 2 * Math.PI);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+    }
 
-    // Inner Shadow effect
+    // Outer Ring (Golden)
     ctx.beginPath();
     ctx.arc(radius, radius, radius - 5, 0, 2 * Math.PI);
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.strokeStyle = "#ffd700";
     ctx.lineWidth = 10;
     ctx.stroke();
 
-    // Center Circle
+    // Inner Shadow
     ctx.beginPath();
-    ctx.arc(radius, radius, 15, 0, 2 * Math.PI);
-    ctx.fillStyle = "#222";
+    ctx.arc(radius, radius, radius - 15, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(0,0,0,0.4)";
+    ctx.lineWidth = 20;
+    ctx.stroke();
+
+    // Center Hub
+    ctx.beginPath();
+    ctx.arc(radius, radius, 25, 0, 2 * Math.PI);
+    const hubGrad = ctx.createRadialGradient(radius, radius, 0, radius, radius, 25);
+    hubGrad.addColorStop(0, "#444");
+    hubGrad.addColorStop(1, "#111");
+    ctx.fillStyle = hubGrad;
     ctx.fill();
     ctx.strokeStyle = "#ffd700";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.stroke();
+
+    // Hub Logo "T"
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "bold 20px Outfit";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("T", radius, radius);
 }
 
 function adjustColor(hex, amt) {
