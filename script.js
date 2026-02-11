@@ -391,13 +391,48 @@ async function fetchLeaderboard() {
             }
         }
 
+        // Cache the result
+        localStorage.setItem('lb_cache', JSON.stringify(result));
+        localStorage.setItem('lb_cache_time', Date.now());
+
         // Update Online Count
         const countRes = await sql`SELECT COUNT(*) as count FROM users WHERE last_active > NOW() - INTERVAL '2 minutes'`;
         if (get('online-count')) get('online-count').textContent = countRes[0].count;
 
     } catch (e) {
         console.error("Leaderboard Error:", e);
-        if (list) list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
+        const cached = localStorage.getItem('lb_cache');
+        if (cached && list) {
+            try {
+                const result = JSON.parse(cached);
+                list.innerHTML = '<p style="text-align: center; color: #ffcc00; font-size: 0.7rem; padding: 5px;">ნაჩვენებია შენახული მონაცემები (Offline)</p>';
+                result.forEach((entry, i) => {
+                    const isMe = nickname && entry.nickname === nickname;
+                    const item = document.createElement('div');
+                    item.className = 'mini-lb-item';
+                    if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
+
+                    const scoreVal = parseFloat(entry.d_score || 0);
+                    const timeVal = parseFloat(entry.d_time || 0);
+                    const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
+
+                    const crown = entry.is_vip ? '👑 ' : '';
+                    const nameColor = entry.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
+                    const safeNick = entry.nickname.substring(0, 10);
+
+                    item.innerHTML = `
+                        <div class="mini-lb-info">
+                            <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${safeNick}</span>
+                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}s)</span>
+                        </div>
+                        <span class="mini-lb-score">${scoreVal} ✨</span>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (ce) { }
+        } else if (list) {
+            list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
+        }
     }
 }
 
@@ -446,9 +481,25 @@ async function fetchGlobalRankings() {
         const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
-    } catch (e) { console.error("Global Rankings Error:", e); }
+
+        // Cache Global Rankings
+        const globalCache = { topScores, topCoins, topTime };
+        localStorage.setItem('global_lb_cache', JSON.stringify(globalCache));
+
+    } catch (e) {
+        console.error("Global Rankings Error:", e);
+        const cached = localStorage.getItem('global_lb_cache');
+        if (cached) {
+            try {
+                const { topScores, topCoins, topTime } = JSON.parse(cached);
+                showStatusUpdate('⚠️ კავშირი გაწყდა - ნაჩვენებია შენახული რეიტინგები');
+                renderList('top-scores-list', topScores, '✨', 'best_score');
+                renderList('top-coins-list', topCoins, '🪙', 'coins');
+                renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
+            } catch (ce) { }
+        }
+    }
 }
 
 async function shareScore(scoreVal, timeVal) {
