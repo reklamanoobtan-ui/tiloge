@@ -1262,6 +1262,12 @@ function applyUpgrade(id) {
         case 'spawn_speed': spawnSpeedUpgradeMultiplier *= 0.8; break;
         case 'boss_weaken': bossWeaknessMultiplier *= 0.9; break;
     }
+
+    // Elite Power Trade-off: If Elite (Karcher, Bomb, Laser) chosen, speed up spawn by 20%
+    if (id === 'karcher' || id === 'bomb' || id === 'magnet') {
+        spawnSpeedUpgradeMultiplier *= 0.8; // 20% faster (interval * 0.8)
+    }
+
     updateUIValues();
     updateStatsSidebar();
 
@@ -1603,7 +1609,8 @@ function showUpgradeOptions() {
         }
 
         // 3. Pity System: If score > 5000 and no Elite upgrades, boost their chance
-        if ((u.id === 'karcher' || u.id === 'bomb') && score > 5000 && (upgradeCounts['karcher'] || 0) === 0 && (upgradeCounts['bomb'] || 0) === 0) {
+        if ((u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') && score > 5000 &&
+            (upgradeCounts['karcher'] || 0) === 0 && (upgradeCounts['bomb'] || 0) === 0 && (upgradeCounts['magnet'] || 0) === 0) {
             weight = 10.0;
         }
 
