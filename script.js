@@ -1447,8 +1447,8 @@ function burstSoap(x, y) {
     gameActive = false; // Pause AFTER awarding points
     showStatusUpdate(`ეკრანი გასუფთავდა! (+${burstPoints} ქულა) 🌸✨`);
 
-    // "Cutscene" - Intense bubble wave for 3 seconds
-    let startTime = Date.now();
+    // "Cutscene" - Intense bubble wave 
+    let cutsceneStartTime = Date.now();
     let waveInterval = setInterval(() => {
         // Mix of small white and large pink bubbles
         createBubbles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 10, false);
@@ -1456,19 +1456,34 @@ function burstSoap(x, y) {
 
         let cutTime = 3000;
         if (soapUseCount >= 5) cutTime = 1500;
-        if (globalSoapCutsceneTimeOverride !== null) cutTime = globalSoapCutsceneTimeOverride;
+        if (globalSoapCutsceneTimeOverride !== null) cutTime = parseInt(globalSoapCutsceneTimeOverride);
 
-        if (Date.now() - startTime >= cutTime) {
+        if (Date.now() - cutsceneStartTime >= cutTime) {
             clearInterval(waveInterval);
-            showStatusUpdate('აირჩიე სუპერ-ბონუსი! 🌸');
-            showPinkUpgradeOptions();
+
+            // If a regular upgrade is already open (from the score update), wait for it to close
+            if (isUpgradeOpen) {
+                const checkFinished = setInterval(() => {
+                    if (!isUpgradeOpen) {
+                        clearInterval(checkFinished);
+                        showPinkUpgradeOptions();
+                    }
+                }, 100);
+            } else {
+                showPinkUpgradeOptions();
+            }
         }
     }, 100);
 }
 
 function showPinkUpgradeOptions() {
+    isUpgradeOpen = true; // Block regular upgrades while choosing pink one
+    gameActive = false;
+
     const modal = get('pink-upgrade-modal');
     const container = get('pink-upgrade-container');
+    if (!modal || !container) return;
+
     container.innerHTML = '';
     modal.classList.remove('hidden');
 
@@ -1491,12 +1506,12 @@ function showPinkUpgradeOptions() {
         'spawn_speed': '⏩', 'boss_weaken': '💀'
     };
 
-    // Filter upgrades player already has at least one of (Excluding 'diff', 'bot', and 'spawn_speed')
-    const excludes = ['diff', 'bot', 'spawn_speed'];
-    const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && upgradeCounts[id] > 0);
+    // Filter upgrades player already has at least one of (Excluding 'diff', 'bot')
+    const excludes = ['diff', 'bot'];
+    const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && (upgradeCounts[id] || 0) > 0);
 
-    // If none owned, offer fallback
-    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(upgradeCounts).filter(id => !excludes.includes(id));
+    // If none owned, offer based on what's available in the main pool names
+    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(names).filter(id => !excludes.includes(id));
 
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
@@ -1508,7 +1523,7 @@ function showPinkUpgradeOptions() {
         card.innerHTML = `
             <div style="font-size: 3rem; margin-bottom: 10px;">${icons[id] || '✨'}</div>
             <h3>+${percent}% ${names[id] || id}</h3>
-            <p>თქვენი არსებული ${names[id]} გაძლიერდება!</p>
+            <p>თქვენი არსებული ${names[id] || 'უნარი'} გაძლიერდება!</p>
         `;
         card.onclick = () => applyPinkUpgrade(id);
         container.appendChild(card);
@@ -1517,10 +1532,12 @@ function showPinkUpgradeOptions() {
 
 function applyPinkUpgrade(id) {
     get('pink-upgrade-modal').classList.add('hidden');
+    isUpgradeOpen = false;
 
     // Track the bonus
     // Allow stacking
     pinkBonuses.push(id);
+    if (upgradeCounts[id] !== undefined) upgradeCounts[id]++;
 
     // Apply boost to the benefit
     switch (id) {
@@ -2587,7 +2604,7 @@ function startGameSession(dontReset = false) {
         pinkBonuses = [];
         upgradeCounts = {
             'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
-            'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0
+            'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0, 'spawn_speed': 0, 'boss_weaken': 0
         };
 
         // Reset Upgrades
