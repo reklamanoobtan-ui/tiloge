@@ -13,26 +13,32 @@ let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 
-// Background Music
-// Background Music
-const bgMusic = new Audio('VIDEO%20mus.mp3');
-bgMusic.loop = true;
-bgMusic.volume = 0.5;
+// Background Music Manager
+if (window.tiloBgMusic) {
+    window.tiloBgMusic.pause();
+    window.tiloBgMusic = null;
+}
+window.tiloBgMusic = new Audio('VIDEO%20mus.mp3');
+window.tiloBgMusic.loop = true;
+window.tiloBgMusic.volume = 0.5;
 
 function startMusic() {
-    bgMusic.play().then(() => {
-        console.log('Music started!');
-        // Remove listeners once playing
-        document.removeEventListener('click', startMusic);
-        document.removeEventListener('touchstart', startMusic);
-        document.removeEventListener('keydown', startMusic);
-    }).catch(e => console.log('Music autoplay blocked, waiting for interaction...'));
+    // Only play if paused
+    if (window.tiloBgMusic.paused) {
+        window.tiloBgMusic.play().then(() => {
+            console.log('Music started successfully!');
+            // Remove listeners once playing
+            document.removeEventListener('click', startMusic);
+            document.removeEventListener('touchstart', startMusic);
+            document.removeEventListener('keydown', startMusic);
+        }).catch(e => console.log('Autoplay blocked, waiting for user interaction...'));
+    }
 }
 
-// Try immediately
+// Try immediately on load
 startMusic();
 
-// Add fallback listeners for any interaction
+// Add global fallback listeners
 document.addEventListener('click', startMusic);
 document.addEventListener('touchstart', startMusic);
 document.addEventListener('keydown', startMusic);
