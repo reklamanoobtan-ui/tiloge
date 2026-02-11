@@ -14,14 +14,28 @@ let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 
 // Background Music
-const bgMusic = new Audio(encodeURIComponent('VIDEO mus.mp3'));
+// Background Music
+const bgMusic = new Audio('VIDEO%20mus.mp3');
 bgMusic.loop = true;
-bgMusic.volume = 0.5; // Adjust as needed
-window.addEventListener('click', () => {
-    bgMusic.play().catch(e => console.log('Music play blocked (user must interact first):', e));
-}, { once: true });
-// Try auto-play immediately
-bgMusic.play().catch(() => console.log('Waiting for user interaction for music...'));
+bgMusic.volume = 0.5;
+
+function startMusic() {
+    bgMusic.play().then(() => {
+        console.log('Music started!');
+        // Remove listeners once playing
+        document.removeEventListener('click', startMusic);
+        document.removeEventListener('touchstart', startMusic);
+        document.removeEventListener('keydown', startMusic);
+    }).catch(e => console.log('Music autoplay blocked, waiting for interaction...'));
+}
+
+// Try immediately
+startMusic();
+
+// Add fallback listeners for any interaction
+document.addEventListener('click', startMusic);
+document.addEventListener('touchstart', startMusic);
+document.addEventListener('keydown', startMusic);
 
 let score = 0;
 let accumulatedScore = 0; // Score from previous sub-sessions (before revives)
