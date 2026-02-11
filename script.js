@@ -2372,6 +2372,8 @@ window.onload = async () => {
             startGameSession(true);
         } else {
             document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+            const overlay = get('game-start-overlay');
+            if (overlay) overlay.classList.remove('hidden');
         }
     }
 
