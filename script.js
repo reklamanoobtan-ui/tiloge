@@ -353,6 +353,7 @@ async function fetchLeaderboard() {
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
+              AND email NOT LIKE 'guest_%'
             ORDER BY d_efficiency DESC, d_score DESC
             LIMIT 10
         `;
@@ -439,13 +440,13 @@ async function fetchGlobalRankings() {
     };
 
     try {
-        const topScores = await sql`SELECT nickname, best_score, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY best_score DESC LIMIT 10`;
+        const topScores = await sql`SELECT nickname, best_score, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY coins DESC LIMIT 10`;
+        const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' ORDER BY total_survival_time DESC LIMIT 10`;
+        const topTime = await sql`SELECT nickname, total_survival_time, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
     } catch (e) { console.error("Global Rankings Error:", e); }
 }
