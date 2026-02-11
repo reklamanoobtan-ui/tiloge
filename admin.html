@@ -480,7 +480,6 @@
                 <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
-                <div class="nav-item" data-tab="newgame" style="color: #ffcc00;">🎮 ახალი თამაში</div>
                 <div class="nav-item" data-tab="console" style="color: #00ff00;">💻 კონსოლი</div>
             </div>
 
@@ -558,58 +557,6 @@
                 </div>
             </div>
 
-            <!-- NEW GAME (WAVE SYSTEM) TAB -->
-            <div id="tab-newgame" class="tab-content">
-                <div class="header-bar">
-                    <h2 style="color: #ffcc00;">🎮 Wave System (Halo Loop Dynamics)</h2>
-                    <div class="flex-row">
-                        <button class="btn btn-danger" id="reset-wave-settings">🗑️ სისტემის გათიშვა</button>
-                    </div>
-                </div>
-
-                <div class="card mb-20"
-                    style="background: rgba(255, 204, 0, 0.05); border: 1px solid rgba(255, 204, 0, 0.3);">
-                    <h3>📝 სისტემის აღწერა</h3>
-                    <p style="opacity: 0.8; line-height: 1.6;">
-                        თამაში დაყოფილია 30-წამიან ციკლებად (Halo-ს პრინციპი), რაც ქმნის დინამიურ ტემპს:
-                    </p>
-                    <ul style="margin: 10px 0; padding-left: 20px; opacity: 0.9;">
-                        <li>👁️ <strong>PLAN (0-10წმ)</strong>: მშვიდი ფაზა, სტრატეგიის დაგეგმვა.</li>
-                        <li>⚔️ <strong>BATTLE (10-20წმ)</strong>: მაღალი ადრენალინი, სწრაფი სპაუნი, ძლიერი მტრები.</li>
-                        <li>💎 <strong>REWARD (20-30წმ)</strong>: "გადახდის" ფაზა, სუსტი მტრები, 2X ქულები.</li>
-                        <li>🛡️ <strong>SAFE ZONE</strong>: ყოველ 5 წუთში 30 წამიანი დასვენება.</li>
-                    </ul>
-                </div>
-
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h3>⚙️ სისტემის მართვა</h3>
-                        <div class="flex-row mt-10">
-                            <button class="btn btn-gold full-width" id="enable-wave-system">✅ სისტემის ჩართვა</button>
-                            <button class="btn btn-outline full-width" id="disable-wave-system">❌ სისტემის
-                                გათიშვა</button>
-                        </div>
-                        <div class="flex-row mt-10">
-                            <button class="btn btn-danger full-width" id="global-game-restart">🔄 ყველასთან
-                                რესტარტი</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>🔥 ინტენსივობის მოდიფიკატორები</h3>
-                        <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 10px;">ცალკეული პარამეტრების მართვა
-                        </p>
-                        <div class="flex-row mt-10" style="flex-direction: column; gap: 10px;">
-                            <button class="btn btn-primary full-width" onclick="triggerWaveMod('double_speed', 60)">⚡ 2X
-                                სიჩქარე (60წმ)</button>
-                            <button class="btn btn-gold full-width" onclick="triggerWaveMod('chaos_mode', 60)">🔥 CHAOS
-                                MODE (60წმ)</button>
-                            <button class="btn btn-outline full-width" onclick="triggerWaveMod('zen_mode', 60)">🧘 ZEN
-                                MODE (60წმ)</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- PLAYERS TAB -->
             <div id="tab-players" class="tab-content">
@@ -1555,52 +1502,6 @@
             }
         };
 
-        // --- Wave System Handlers ---
-        get('enable-wave-system').onclick = async () => {
-            try {
-                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                         VALUES ('wave_system_state', 'enabled', ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()})
-                         ON CONFLICT (event_type) DO UPDATE SET event_value = 'enabled'`;
-                log("Wave System ENABLED", "green");
-            } catch (e) { log("Error enabling wave system", "red"); }
-        };
-
-        get('disable-wave-system').onclick = async () => {
-            try {
-                await sql`INSERT INTO global_events (event_type, event_value) 
-                         VALUES ('wave_system_state', 'disabled')
-                         ON CONFLICT (event_type) DO UPDATE SET event_value = 'disabled'`;
-                log("Wave System DISABLED", "red");
-            } catch (e) { log("Error disabling wave system", "red"); }
-        };
-
-        get('reset-wave-settings').onclick = async () => {
-            try {
-                await sql`DELETE FROM global_events WHERE event_type LIKE 'wave_%'`;
-                log("Wave Settings Cleared", "red");
-            } catch (e) { log("Error clearing settings", "red"); }
-        };
-
-        get('global-game-restart').onclick = async () => {
-            if (confirm("RESTART GAME FOR ALL PLAYERS?")) {
-                try {
-                    await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                             VALUES ('game_command', 'restart', ${new Date(Date.now() + 5000).toISOString()})
-                             ON CONFLICT (event_type) DO UPDATE SET event_value = 'restart', expires_at = EXCLUDED.expires_at`;
-                    log("Global Restart Command Sent!", "gold");
-                } catch (e) { log("Error sending restart", "red"); }
-            }
-        };
-
-        window.triggerWaveMod = async (type, dur) => {
-            try {
-                const expiresAt = new Date(Date.now() + dur * 1000).toISOString();
-                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                         VALUES (${'wave_mod_' + type}, 'active', ${expiresAt})
-                         ON CONFLICT (event_type) DO UPDATE SET expires_at = EXCLUDED.expires_at`;
-                log(`Wave Mod Triggered: ${type} (${dur}s)`, "blue");
-            } catch (e) { log("Error triggering mod", "red"); }
-        };
 
         const triggerEvent = async (type, val, duration) => {
             try {

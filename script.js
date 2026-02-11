@@ -120,50 +120,6 @@ let defeatCheckInterval = null;
 let timerInterval = null;
 let syncLoopInterval = null;
 
-// --- Wave System State ---
-let lastPhaseName = "";
-let globalWaveSystemEnabled = true;
-let activeWaveMods = {}; // { type: expiry }
-
-function getWaveData() {
-    if (!globalWaveSystemEnabled) {
-        return { phase: 'NORMAL', spawnMod: 1.0, healthMod: 1.0, rewardMod: 1.0, color: '#fff', label: '' };
-    }
-
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const minute = Math.floor(elapsed / 60);
-    const secondOfMinute = elapsed % 60;
-    const secondOfLoop = elapsed % 30; // 30-second loop principle
-
-    let data = { phase: 'NORMAL', spawnMod: 1.0, healthMod: 1.0, rewardMod: 1.0, color: '#fff', label: '' };
-
-    // Meta-Cycle: Every 5th minute is "Safe Zone"
-    if (minute > 0 && (minute + 1) % 5 === 0 && secondOfMinute > 30) {
-        data = { phase: 'SAFE', spawnMod: 5.0, healthMod: 0.5, rewardMod: 2.0, color: '#00ff00', label: '🛡️ დაცული ზონა (დასვენება)' };
-    } else {
-        // Micro-Cycle (30s Loop)
-        if (secondOfLoop < 10) {
-            data = { phase: 'PLAN', spawnMod: 1.2, healthMod: 1.0, rewardMod: 1.0, color: '#4facfe', label: '👁️ დაგეგმვა' };
-        } else if (secondOfLoop < 20) {
-            data = { phase: 'BATTLE', spawnMod: 0.6, healthMod: 1.3, rewardMod: 1.2, color: '#ff4d4d', label: '⚔️ ბრძოლა' };
-        } else {
-            data = { phase: 'REWARD', spawnMod: 0.8, healthMod: 0.8, rewardMod: 2.0, color: '#ffd700', label: '💎 ჯილდო' };
-        }
-    }
-
-    // Apply Active Mods
-    Object.keys(activeWaveMods).forEach(mod => {
-        if (new Date(activeWaveMods[mod]) > new Date()) {
-            if (mod === 'wave_mod_double_speed') data.spawnMod *= 0.5;
-            if (mod === 'wave_mod_chaos_mode') { data.spawnMod *= 0.3; data.healthMod *= 1.5; data.label = "🔥 CHAOS MODE"; data.color = "#ff8c00"; }
-            if (mod === 'wave_mod_zen_mode') { data.spawnMod *= 2.0; data.healthMod *= 0.5; data.label = "🧘 ZEN MODE"; data.color = "#40e0d0"; }
-        } else {
-            delete activeWaveMods[mod];
-        }
-    });
-
-    return data;
-}
 
 // --- Helper Functions ---
 
@@ -520,9 +476,8 @@ let globalForcedVideo = null; // {id, title, thumb, link}
 function updateScore(points) {
     if (!gameActive) return;
     if (points > 0) {
-        // Apply Global Multiplier & Wave Multiplier
-        const wave = getWaveData();
-        const finalPoints = points * globalMultiplier * wave.rewardMod;
+        // Apply Global Multiplier
+        const finalPoints = points * globalMultiplier;
 
         const newScore = score + finalPoints;
 
@@ -1753,13 +1708,9 @@ function spawnSkinTrail(x, y) {
 function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
 
-    const wave = getWaveData();
     let baseInterval = 2500 - (score * 0.1);
 
-    // Intensity modulation
-    baseInterval *= wave.spawnMod;
-
-    baseInterval = Math.max(300, baseInterval);
+    baseInterval = Math.max(400, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
@@ -1781,8 +1732,7 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     // ==========================================
 
     // Difficulty Factor: Increases by 0.1 every 1000 score
-    const wave = getWaveData();
-    const difficulty = (1 + (score / 10000)) * wave.healthMod;
+    const difficulty = (1 + (score / 10000));
 
     let health = 100;
     let size = Math.random() * 100 + 50; // Random size 50-150px
@@ -2432,32 +2382,6 @@ async function checkGlobalEvents() {
                     showMassiveAnnouncement(ev.event_value, remainingSec);
                 }
             }
-
-            // --- New Game / Wave System Events ---
-            if (ev.event_type === 'wave_system_state') {
-                globalWaveSystemEnabled = (ev.event_value === 'enabled');
-                if (!globalWaveSystemEnabled) {
-                    const waveIndicator = get('diff-status');
-                    if (waveIndicator) waveIndicator.innerHTML = 'გამოიყენეთ ტილო საიტის გასაწმენდად';
-                    document.body.style.boxShadow = 'none';
-                }
-            }
-            if (ev.event_type.startsWith('wave_mod_')) {
-                if (new Date(ev.expires_at) > new Date()) {
-                    activeWaveMods[ev.event_type] = ev.expires_at;
-                }
-            }
-            if (ev.event_type === 'game_command') {
-                if (ev.event_value === 'restart' && new Date(ev.expires_at) > new Date()) {
-                    // One-time restart command
-                    const lastCmdId = localStorage.getItem('last_game_cmd_id');
-                    if (lastCmdId !== ev.expires_at) { // Use expires_at as a unique ID for the command
-                        localStorage.setItem('last_game_cmd_id', ev.expires_at);
-                        showStatusUpdate("🔄 ადმინისტრატორმა მოითხოვა რესტარტი...");
-                        setTimeout(() => location.reload(), 2000);
-                    }
-                }
-            }
         });
 
         // Restart loops if intervals changed
@@ -2748,19 +2672,6 @@ function resetGameLoops() {
             const m = Math.floor(elapsed / 60);
             const s = elapsed % 60;
             if (get('round-timer-val')) get('round-timer-val').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-
-            // Update Wave UI
-            const wave = getWaveData();
-            const waveIndicator = get('diff-status');
-            if (waveIndicator && wave.label !== lastPhaseName) {
-                lastPhaseName = wave.label;
-                waveIndicator.innerHTML = `<span style="color:${wave.color}; font-weight:800; text-shadow: 0 0 10px ${wave.color}">${wave.label}</span>`;
-
-                // Special effects for specific phases
-                if (wave.phase === 'BATTLE') document.body.style.boxShadow = 'inset 0 0 50px rgba(255,0,0,0.2)';
-                else if (wave.phase === 'REWARD') document.body.style.boxShadow = 'inset 0 0 50px rgba(255,215,0,0.2)';
-                else document.body.style.boxShadow = 'none';
-            }
         }
     }, 1000);
 }
