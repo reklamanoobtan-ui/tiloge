@@ -1276,6 +1276,29 @@ input:checked+.slider:before {
     text-align: center;
 }
 
+/* Sidebar Scrollable Content Wrapper */
+.sidebar-content-wrapper {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-right: 5px;
+    /* Space for scrollbar */
+    /* Custom Scrollbar for this container */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-content-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
 /* Premium Sidebar Buttons */
 .menu-sidebar-btn {
     display: flex;
@@ -1562,31 +1585,30 @@ input:checked+.slider:before {
         left: auto;
         right: 260px;
     }
-}
 
-/* Adjust HUD info text */
-.info-text {
-    top: 80px !important;
-    padding: 0 20px;
-}
+    /* Adjust HUD info text */
+    .info-text {
+        top: 80px !important;
+        padding: 0 20px;
+    }
 
-.info-text h1 {
-    font-size: 1rem !important;
-}
+    .info-text h1 {
+        font-size: 1rem !important;
+    }
 
-/* Buttons touch friendly */
-.action-btn,
-.glass-btn {
-    padding: 14px 20px !important;
-    /* Larger touch target */
-    font-size: 1rem !important;
-}
+    /* Buttons touch friendly */
+    .action-btn,
+    .glass-btn {
+        padding: 14px 20px !important;
+        /* Larger touch target */
+        font-size: 1rem !important;
+    }
 
-/* Cloth size slightly smaller locally */
-.cloth {
-    width: 140px !important;
-    height: 140px !important;
-}
+    /* Cloth size slightly smaller locally */
+    .cloth {
+        width: 140px !important;
+        height: 140px !important;
+    }
 }
 
 /* Very Small Screens */

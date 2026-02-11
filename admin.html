@@ -449,11 +449,102 @@
         .hidden {
             display: none !important;
         }
+
+        /* --- UI Polish & Responsive --- */
+
+        /* Better Card Styling */
+        .card,
+        .mini-card,
+        .login-card {
+            background: rgba(30, 30, 40, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Input Fields Polish */
+        input,
+        select {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 5000;
+                background: rgba(10, 10, 15, 0.98);
+                width: 280px;
+                box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.mobile-active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+                /* Space for toggle */
+            }
+
+            #mobile-nav-toggle {
+                display: flex !important;
+            }
+
+            .header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .header-bar .flex-row {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Mobile Toggle Button */
+        #mobile-nav-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 6000;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            transition: 0.3s;
+        }
+
+        #mobile-nav-toggle:active {
+            transform: scale(0.9);
+        }
     </style>
 </head>
 
 <body>
-
+    <button id="mobile-nav-toggle">☰</button>
     <!-- LOGIN SECTION -->
     <div id="login-section">
         <div class="login-card">
