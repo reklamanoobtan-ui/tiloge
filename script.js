@@ -1219,11 +1219,6 @@ function startLaserLoop() {
 function triggerLaser() {
     const stains = document.querySelectorAll('.stain');
     if (stains.length > 0) {
-        // Play Laser Sound
-        const audio = new Audio(encodeURIComponent('პიუ.mp3'));
-        audio.volume = 0.5; // Adjust volume as needed
-        audio.currentTime = 0; // Reset sound if playing
-        audio.play().catch(e => console.log('Audio play failed:', e));
         const hitCount = upgradeCounts['magnet'] || 1;
         const targets = Array.from(stains).slice(0, hitCount);
 
