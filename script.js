@@ -564,7 +564,7 @@ function updateStatsSidebar() {
                 'karcher': '🚿 კერხერი',
                 'bomb': '💣 ბომბი',
                 'coin_buff': '💰 ქოინები',
-                'magnet': '🧲 მაგნიტი',
+                'magnet': '⚡ ლაზერი',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
             return `<div class="upgrade-item"><span>${names[id] || id}</span> <strong>×${count}</strong></div>`;
@@ -587,7 +587,7 @@ function updateStatsSidebar() {
                 'karcher': '🚿 კერხერის სიმძლავრე',
                 'bomb': '💣 ბომბის სიმძლავრე',
                 'coin_buff': '💰 ქოინების ბონუსი',
-                'magnet': '🧲 მაგნიტის სიხშირე',
+                'magnet': '⚡ ლაზერის სიმძლავრე',
                 'bot_pow': '🦾 რობოტის ძალა'
             };
             return `<div class="upgrade-item pink-bonus-item"><span>${names[id] || id}</span> <strong>+${count * 50}%</strong></div>`;
@@ -1184,29 +1184,34 @@ function startHelperBot() {
     moveBot();
 }
 
-function startMagnetLoop() {
+function startLaserLoop() {
     if (!hasMagnetUpgrade) return;
 
     if (gameActive) {
-        triggerMagnet();
+        triggerLaser();
     }
-    setTimeout(startMagnetLoop, magnetInterval);
+    setTimeout(startLaserLoop, magnetInterval);
 }
 
-function triggerMagnet() {
+function triggerLaser() {
     const stains = document.querySelectorAll('.stain');
     if (stains.length > 0) {
-        const target = stains[0];
-        const rect = target.getBoundingClientRect();
-        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
-        // Lightning Effect
-        if (currentX && currentY) {
-            createLightning(currentX, currentY, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        }
-        let h = parseFloat(target.dataset.health);
-        target.dataset.health = h - 200;
-        if (h <= 200) target.dataset.health = 0;
-        checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        const hitCount = upgradeCounts['magnet'] || 1;
+        const targets = Array.from(stains).slice(0, hitCount);
+
+        targets.forEach(target => {
+            const rect = target.getBoundingClientRect();
+            createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
+            // Laser Lightning Effect
+            if (currentX && currentY) {
+                createLightning(currentX, currentY, rect.left + rect.width / 2, rect.top + rect.height / 2);
+            }
+            let h = parseFloat(target.dataset.health);
+            const dmg = 200 * (upgradeCounts['magnet'] || 1);
+            target.dataset.health = h - dmg;
+            if (h <= dmg) target.dataset.health = 0;
+            checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
     }
 }
 
@@ -1224,7 +1229,7 @@ function applyUpgrade(id) {
         case 'magnet':
             if (!hasMagnetUpgrade) {
                 hasMagnetUpgrade = true;
-                startMagnetLoop();
+                startLaserLoop();
             }
             break;
     }
@@ -1436,13 +1441,13 @@ function showPinkUpgradeOptions() {
         'karcher': 'კერხერის სიმძლავრე',
         'bomb': 'ბომბის სიმძლავრე',
         'coin_buff': 'ქოინების ბონუსი',
-        'magnet': 'მაგნიტის სიხშირე',
+        'magnet': 'ლაზერის სიმძლავრე',
         'bot_pow': 'რობოტის ძალა'
     };
 
     const icons = {
         'speed': '🚀', 'radius': '📏',
-        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '🧲', 'bot_pow': '🦾'
+        'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '⚡', 'bot_pow': '🦾'
     };
 
     // Filter upgrades player already has at least one of (Excluding 'diff' and 'bot' count)
@@ -1495,7 +1500,7 @@ function applyPinkUpgrade(id) {
     updateStatsSidebar();
     gameActive = true;
     scheduleNextStain();
-    showStatusUpdate('სუპერ-გაძლიერება მიღებულია! 💪🌸');
+    showStatusUpdate('სუპერ-გაძლიერება მიღებულია! 💪⚡');
 }
 
 function showUpgradeOptions() {
@@ -1507,26 +1512,29 @@ function showUpgradeOptions() {
         // 'diff' removed
         { id: 'speed', icon: '🤖', title: 'რობოტის სიჩქარე', desc: '+30% სისწრაფე', type: 'multi' },
         { id: 'bot', icon: '🤖', title: 'რობოტი', desc: '+1 რობოტი', type: 'multi' },
-        { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი', type: 'multi' },
-        { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა', type: 'multi' },
+        { id: 'radius', icon: '📏', title: 'რადიუსი', desc: '+30% რადიუსი (Max 10)', type: 'multi' },
+        { id: 'strength', icon: '💪', title: 'ტილოს ძალა', desc: '+30% ძალა (Max 10)', type: 'multi' },
         { id: 'karcher', icon: '🚿', title: 'კერხერი', desc: 'ორმაგი ძალა და რადიუსი (X2)', type: 'once' },
-        { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'წმენდისას ახლოს მყოფებსაც წმენდს', type: 'once' },
+        { id: 'bomb', icon: '💣', title: 'ბომბი', desc: 'აფეთქების რადიუსი და ძალა (Max 5)', type: 'multi' },
         { id: 'coin_buff', icon: '💰', title: 'ქოინების ბონუსი', desc: '+30% ქოინების მოგება (Max 5)', type: 'multi' },
-        { id: 'magnet', icon: '🧲', title: 'მაგნიტი', desc: 'ავტომატური წმენდა ყოველ 3 წამში', type: 'once' },
-        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 5)', type: 'multi' }
+        { id: 'magnet', icon: '⚡', title: 'ლაზერი', desc: 'ავტომატური წმენდა მრავალ ლაქაზე (Max 5)', type: 'multi' },
+        { id: 'bot_pow', icon: '🦾', title: 'რობოტის ძალა', desc: '+30% რობოტის ძალა (Max 10)', type: 'multi' }
     ];
 
     // Filter available upgrades based on limits
     const available = UPGRADE_POOL.filter(u => {
         // 'diff' logic removed
-        if (u.id === 'karcher' || u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 1;
+        if (u.id === 'karcher') return (upgradeCounts[u.id] || 0) < 1;
+        if (u.id === 'bomb' || u.id === 'magnet') return (upgradeCounts[u.id] || 0) < 5;
         if (u.id === 'bot') return (upgradeCounts[u.id] || 0) < 10;
-        // Only show Robot Power if player has > 5 bots
-        if (u.id === 'bot_pow') {
-            if (activeHelpers < 5) return false;
-            return (upgradeCounts[u.id] || 0) < 5;
+
+        // Use 10 for basic stats
+        if (u.id === 'radius' || u.id === 'strength' || u.id === 'bot_pow') {
+            if (u.id === 'bot_pow' && activeHelpers < 5) return false;
+            return (upgradeCounts[u.id] || 0) < 10;
         }
-        // Strict limit of 5 per repeatable upgrade (for others)
+
+        // Strict limit of 5 per repeatable upgrade (for others like coin_buff, speed)
         return (upgradeCounts[u.id] || 0) < 5;
     });
 
@@ -1652,8 +1660,12 @@ function createLightning(x1, y1, x2, y2) {
 function createFireExplosion(x, y) {
     const explo = document.createElement('div');
     explo.className = 'bomb-explosion';
-    explo.style.left = `${x - 75}px`;
-    explo.style.top = `${y - 75}px`;
+    const bombLvl = upgradeCounts['bomb'] || 1;
+    const size = 150 * (1 + (bombLvl * 0.2));
+    explo.style.width = `${size}px`;
+    explo.style.height = `${size}px`;
+    explo.style.left = `${x - size / 2}px`;
+    explo.style.top = `${y - size / 2}px`;
     document.body.appendChild(explo);
     setTimeout(() => explo.remove(), 500);
 }
@@ -1708,9 +1720,9 @@ function spawnSkinTrail(x, y) {
 function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
 
-    let baseInterval = 2000 - (score * 0.2);
+    let baseInterval = 1000 - (score * 0.5);
 
-    baseInterval = Math.max(200, baseInterval);
+    baseInterval = Math.max(100, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
@@ -2034,14 +2046,19 @@ function checkCleaning(bx, by) {
                 // Bomb Upgrade: Chain Reaction
                 if (hasBombUpgrade) {
                     createFireExplosion(sx, sy); // Visual effect
+                    const bombLvl = upgradeCounts['bomb'] || 1;
+                    const radius = 200 + (bombLvl * 100);
+                    const damage = 500 * bombLvl;
+
                     const allStains = document.querySelectorAll('.stain');
                     allStains.forEach(s => {
+                        if (s === stain) return;
                         const sRect = s.getBoundingClientRect();
                         const distS = Math.hypot(sx - (sRect.left + sRect.width / 2), sy - (sRect.top + sRect.height / 2));
-                        if (distS < 200 && s !== stain) {
+                        if (distS < radius) {
                             let sh = parseFloat(s.dataset.health);
-                            s.dataset.health = sh - 500; // Heavy damage to neighbors
-                            if (sh - 500 <= 0) checkCleaning(currentX, currentY); // Trigger cleanup
+                            s.dataset.health = sh - damage;
+                            if (sh - damage <= 0) checkCleaning(currentX, currentY); // Trigger cleanup
                         }
                     });
                 }
