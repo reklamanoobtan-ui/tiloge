@@ -13,35 +13,6 @@ let isDragging = false;
 let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 
-// Background Music Manager
-if (window.tiloBgMusic) {
-    window.tiloBgMusic.pause();
-    window.tiloBgMusic = null;
-}
-window.tiloBgMusic = new Audio('bg_music.mp3');
-window.tiloBgMusic.loop = true;
-window.tiloBgMusic.volume = 0.5;
-
-function startMusic() {
-    // Only play if paused
-    if (window.tiloBgMusic.paused) {
-        window.tiloBgMusic.play().then(() => {
-            console.log('Music started successfully!');
-            // Remove listeners once playing
-            document.removeEventListener('click', startMusic);
-            document.removeEventListener('touchstart', startMusic);
-            document.removeEventListener('keydown', startMusic);
-        }).catch(e => console.log('Autoplay blocked, waiting for user interaction...'));
-    }
-}
-
-// Try immediately on load
-startMusic();
-
-// Add global fallback listeners
-document.addEventListener('click', startMusic);
-document.addEventListener('touchstart', startMusic);
-document.addEventListener('keydown', startMusic);
 
 let score = 0;
 let accumulatedScore = 0; // Score from previous sub-sessions (before revives)
