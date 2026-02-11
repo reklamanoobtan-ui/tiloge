@@ -1166,6 +1166,10 @@ function startHelperBot() {
     const offsetX = (Math.random() - 0.5) * 40;
     const offsetY = (Math.random() - 0.5) * 40;
 
+    // Initial random position to avoid NaN or (0,0) jump
+    botEl.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+    botEl.style.top = `${Math.random() * (window.innerHeight - 60)}px`;
+
     function moveBot() {
         if (!botEl.parentElement) return;
 
@@ -1180,17 +1184,23 @@ function startHelperBot() {
                 let closest = null;
                 let minDist = Infinity;
 
-                // Use a faster way to get bot center without full rect if possible
-                const bx = parseFloat(botEl.style.left) + 25;
-                const by = parseFloat(botEl.style.top) + 25;
+                // Use a reliable way to get bot center
+                const rect = botEl.getBoundingClientRect();
+                const bx = rect.left + rect.width / 2;
+                const by = rect.top + rect.height / 2;
 
                 stains.forEach(s => {
                     // Skip if already being cleaned or not connected
                     if (s.dataset.cleaning === 'true' || !s.isConnected) return;
 
-                    const sx = parseFloat(s.dataset.cx);
-                    const sy = parseFloat(s.dataset.cy);
-                    if (isNaN(sx)) return; // Fallback if dataset not ready
+                    let sx = parseFloat(s.dataset.cx);
+                    let sy = parseFloat(s.dataset.cy);
+
+                    if (isNaN(sx) || isNaN(sy)) {
+                        const sRect = s.getBoundingClientRect();
+                        sx = sRect.left + sRect.width / 2;
+                        sy = sRect.top + sRect.height / 2;
+                    }
 
                     const d = Math.hypot(bx - sx, by - sy);
                     if (d < minDist) {
@@ -1200,8 +1210,13 @@ function startHelperBot() {
                 });
 
                 if (closest && closest.isConnected) {
-                    const sx = parseFloat(closest.dataset.cx);
-                    const sy = parseFloat(closest.dataset.cy);
+                    let sx = parseFloat(closest.dataset.cx);
+                    let sy = parseFloat(closest.dataset.cy);
+                    if (isNaN(sx) || isNaN(sy)) {
+                        const cRect = closest.getBoundingClientRect();
+                        sx = cRect.left + cRect.width / 2;
+                        sy = cRect.top + cRect.height / 2;
+                    }
 
                     // Move towards stain with unique offset
                     botEl.style.left = `${sx - 25 + offsetX}px`;
@@ -1211,7 +1226,7 @@ function startHelperBot() {
                         try {
                             if (closest && closest.isConnected && closest.parentElement) {
                                 let h = parseFloat(closest.dataset.health);
-                                const dmg = 250 * helperCleaningMultiplier; // Buffed again to 250
+                                const dmg = 250 * helperCleaningMultiplier;
                                 h -= dmg;
                                 closest.dataset.health = h;
 
