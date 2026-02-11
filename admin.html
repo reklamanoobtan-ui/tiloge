@@ -473,6 +473,7 @@
 
             <div class="nav-items">
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
+                <div class="nav-item" data-tab="online">🟢 ონლაინ</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
                 <div class="nav-item" data-tab="site">🌐 საიტის მართვა</div>
                 <div class="nav-item" data-tab="bosses">👾 ბოსები</div>
@@ -539,6 +540,20 @@
                             style="width: 80px; margin-bottom: 0;">
                         <button class="btn btn-gold full-width" id="send-massive">🔥 ყველასთან გაგზავნა</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- ONLINE TAB -->
+            <div id="tab-online" class="tab-content">
+                <div class="header-bar">
+                    <h2>🟢 მოთამაშეები ონლაინში</h2>
+                    <div class="flex-row">
+                        <span>ონლაინ: <strong id="online-count" style="color: #00ff00;">0</strong></span>
+                        <button class="btn btn-outline" id="refresh-online">🔄 განახლება</button>
+                    </div>
+                </div>
+                <div id="online-list" class="players-container">
+                    <!-- Loaded dynamically -->
                 </div>
             </div>
 
@@ -1349,6 +1364,7 @@
 
                 // Auto-load if entering tab
                 if (target === 'players') loadPlayers();
+                if (target === 'online') loadOnlinePlayers();
             };
         });
 
@@ -1920,6 +1936,46 @@
 
             modal.classList.remove('hidden');
         };
+
+        async function loadOnlinePlayers() {
+            try {
+                // Anyone active in the last 2 minutes is considered online
+                const online = await sql`SELECT nickname, email, score, coins, survival_time, last_active FROM users 
+                                        WHERE last_active > NOW() - INTERVAL '2 minute' 
+                                        ORDER BY last_active DESC`;
+
+                get('online-count').textContent = online.length;
+                const container = get('online-list');
+
+                if (online.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">ონლაინში არავინ არის</p>';
+                    return;
+                }
+
+                container.innerHTML = online.map(player => `
+                    <div class="player-card">
+                        <div class="player-details">
+                            <div class="player-name">🟢 ${player.nickname}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.5;">${player.email}</div>
+                        </div>
+                        <div class="stats">
+                            <span class="stat-badge">⭐ ქულა: <strong>${Math.floor(player.score)}</strong></span>
+                            <span class="stat-badge">🪙 ბალანსი: <strong>${player.coins}</strong></span>
+                            <span class="stat-badge">⏱️ დრო: <strong>${formatTime(player.survival_time)}</strong></span>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.7rem; color: #00ff00;">აქტიურია ახლა</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                log('ონლაინ მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
+            }
+        }
+
+        get('refresh-online').onclick = loadOnlinePlayers;
+        setInterval(() => {
+            if (get('tab-online').classList.contains('active')) loadOnlinePlayers();
+        }, 10000);
 
         window.saveUserEdit = async () => {
             const email = get('edit-user-email').value;

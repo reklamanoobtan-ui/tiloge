@@ -2999,24 +2999,72 @@ function drawWheel() {
     spinPrizes.forEach((prize, i) => {
         const angle = i * sliceAngle;
 
+        // Draw Slice
         ctx.beginPath();
-        ctx.fillStyle = prize.color;
+        const grad = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+        grad.addColorStop(0, prize.color);
+        grad.addColorStop(1, adjustColor(prize.color, -30)); // Slightly darker edge
+
+        ctx.fillStyle = grad;
         ctx.moveTo(radius, radius);
         ctx.arc(radius, radius, radius, angle, angle + sliceAngle);
         ctx.fill();
+
+        // Slice border
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Draw Text
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(angle + sliceAngle / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = (prize.color === "#ffffff") ? "#000" : "#fff";
-        ctx.font = "bold 12px Outfit";
-        ctx.fillText(prize.label, radius - 20, 0);
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.font = "bold 14px Outfit";
+        ctx.fillText(prize.label, radius - 30, 0);
         ctx.font = "10px Outfit";
-        ctx.fillText(`(${prize.probDisplay})`, radius - 20, 15);
+        ctx.fillText(`(${prize.probDisplay})`, radius - 30, 15);
         ctx.restore();
     });
+
+    // Outer Ring
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - 2, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Inner Shadow effect
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - 5, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.lineWidth = 10;
+    ctx.stroke();
+
+    // Center Circle
+    ctx.beginPath();
+    ctx.arc(radius, radius, 15, 0, 2 * Math.PI);
+    ctx.fillStyle = "#222";
+    ctx.fill();
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+function adjustColor(hex, amt) {
+    let usePound = false;
+    if (hex[0] == "#") { hex = hex.slice(1); usePound = true; }
+    let num = parseInt(hex, 16);
+    let r = (num >> 16) + amt;
+    if (r > 255) r = 255; else if (r < 0) r = 0;
+    let b = ((num >> 8) & 0x00FF) + amt;
+    if (b > 255) b = 255; else if (b < 0) b = 0;
+    let g = (num & 0x0000FF) + amt;
+    if (g > 255) g = 255; else if (g < 0) g = 0;
+    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
 }
 
 function showSpinWheel() {
@@ -3045,22 +3093,32 @@ function handleSpinResult() {
 
     const winner = spinPrizes[winnerIndex];
     const sliceAngle = 360 / spinPrizes.length;
-    const extraSpins = 5 * 360;
+    const extraSpins = 8 * 360; // More spins for drama
     const targetAngle = 360 - (winnerIndex * sliceAngle) - (sliceAngle / 2);
     const finalRotation = extraSpins + targetAngle;
 
     isSpinning = true;
     get('spin-btn').disabled = true;
+
+    // Apply drama easing
+    get('wheel-container').style.transition = "transform 5s cubic-bezier(0.1, 0, 0, 1)";
     get('wheel-container').style.transform = `rotate(${finalRotation}deg)`;
 
     setTimeout(() => {
         isSpinning = false;
         applyPrize(winner);
-        get('prize-announcement').innerHTML = `<span style="color:${winner.color}">🎉 მოიგეთ: ${winner.label}!</span>`;
+
+        // Visual feedback
+        get('wheel-container').style.boxShadow = `0 0 50px ${winner.color}`;
+        get('prize-announcement').style.transform = "scale(1.2)";
+        get('prize-announcement').innerHTML = `<span style="color:${winner.color}; font-size: 1.5rem; text-shadow: 0 0 10px ${winner.color}">🎉 მოიგეთ: ${winner.label}!</span>`;
+
         setTimeout(() => {
+            get('wheel-container').style.boxShadow = "none";
+            get('prize-announcement').style.transform = "scale(1)";
             get('spin-wheel-modal').classList.add('hidden');
-        }, 3000);
-    }, 4500);
+        }, 4000);
+    }, 5200);
 }
 
 function applyPrize(prize) {
