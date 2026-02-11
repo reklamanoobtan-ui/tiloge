@@ -1426,22 +1426,44 @@ input:checked+.slider:before {
 
 /* General Mobile Tweaks */
 @media (max-width: 768px) {
+
+    /* Main Menu / Start Container Scroll Fix */
     .start-container {
-        padding: 30px 20px !important;
+        padding: 25px 20px !important;
         width: 90% !important;
         max-width: 400px;
+        max-height: 85vh;
+        /* Prevent overflow off screen */
+        overflow-y: auto;
+        /* Enable scroll if zoomed */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        /* Align top for safer scrolling */
     }
 
     .game-title {
-        font-size: 2.5rem !important;
+        font-size: 2.2rem !important;
+        margin-top: 10px;
     }
 
-    /* Make modals fit better */
+    /* Make modals scrollable and fit */
     .modal-content {
-        padding: 25px 20px !important;
+        padding: 20px 15px !important;
         width: 95% !important;
-        max-height: 90vh;
+        max-height: 85vh;
+        /* Leave room for browser bars */
         overflow-y: auto;
+        /* Crucial for scrolling */
+        overscroll-behavior: contain;
+        /* Prevent body scroll */
+    }
+
+    /* Sidebar Internal Scroll Fix */
+    .sidebar-content-wrapper {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding-bottom: 20px;
     }
 
     /* Upgrade Cards - better grid or scroll */
