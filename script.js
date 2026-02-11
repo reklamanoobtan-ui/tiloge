@@ -1140,16 +1140,19 @@ function startHelperBot() {
     if (isVip) botEl.classList.add('vip-rainbow-trail');
     container.appendChild(botEl);
 
+    // Give each bot a slight unique offset so they don't stack perfectly
+    const offsetX = (Math.random() - 0.5) * 40;
+    const offsetY = (Math.random() - 0.5) * 40;
+
     function moveBot() {
         if (!botEl.parentElement) return;
         if (!gameActive) {
-            setTimeout(moveBot, 500); // Wait for resume
+            setTimeout(moveBot, 500);
             return;
         }
 
         const stains = document.querySelectorAll('.stain');
         if (stains.length > 0) {
-            // Find closest stain
             let closest = null;
             let minDist = Infinity;
             const botRect = botEl.getBoundingClientRect();
@@ -1169,43 +1172,30 @@ function startHelperBot() {
 
             if (closest) {
                 const rect = closest.getBoundingClientRect();
-                botEl.style.left = `${rect.left + rect.width / 2 - 30}px`;
-                botEl.style.top = `${rect.top + rect.height / 2 - 30}px`;
+                // Move towards stain with unique offset
+                botEl.style.left = `${rect.left + rect.width / 2 - 25 + offsetX}px`;
+                botEl.style.top = `${rect.top + rect.height / 2 - 25 + offsetY}px`;
 
                 setTimeout(() => {
-                    if (closest.parentElement) {
+                    if (closest && closest.parentElement) {
+                        const sx = rect.left + rect.width / 2;
+                        const sy = rect.top + rect.height / 2;
+
                         let h = parseFloat(closest.dataset.health);
-                        h -= (80 * helperCleaningMultiplier); // Dynamic robot cleaning power
+                        const dmg = 200 * helperCleaningMultiplier; // Buffed from 80 to 200
+                        h -= dmg;
                         closest.dataset.health = h;
-                        closest.style.opacity = Math.max(0.2, h / parseFloat(closest.dataset.maxHealth));
-                        if (h <= 0 && closest.dataset.cleaning !== 'true') {
-                            closest.dataset.cleaning = 'true';
-                            createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, closest.style.backgroundColor);
 
-                            const isBoss = closest.classList.contains('boss-stain');
-                            const isTriangle = closest.classList.contains('triangle-boss');
-                            const rMult = parseFloat(closest.dataset.rewardMult || 1.0);
+                        // Visual feedback on hit
+                        createParticles(sx, sy, closest.style.backgroundColor || '#fff', 5);
+                        closest.style.opacity = Math.max(0.1, h / parseFloat(closest.dataset.maxHealth));
 
-                            if (isTriangle) {
-                                bossesDefeated++;
-                                const finalRew = Math.floor(20 * rMult);
-                                updateScore(finalRew);
-                                showStatusUpdate(`ელიტარული ბოსი დამარცხებულია! +${finalRew} ✨`);
-                            } else if (isBoss) {
-                                bossesDefeated++;
-                                const finalRew = Math.floor(10 * rMult);
-                                updateScore(finalRew);
-                                showStatusUpdate(`ბოსი დამარცხებულია! +${finalRew} ✨`);
-                            } else {
-                                totalStainsCleanedRel++;
-                                updateScore(1);
-                            }
-
-                            setTimeout(() => closest.remove(), 400); // Faster cleanup animation
+                        if (h <= 0) {
+                            finalizeCleaning(closest, sx, sy);
                         }
                     }
                     moveBot();
-                }, (1000 / helperSpeedMultiplier)); // Faster base transition
+                }, (800 / helperSpeedMultiplier)); // Slightly faster interval (800ms base)
             } else {
                 setTimeout(moveBot, 500);
             }
