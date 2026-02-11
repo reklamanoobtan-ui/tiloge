@@ -18,7 +18,7 @@ if (window.tiloBgMusic) {
     window.tiloBgMusic.pause();
     window.tiloBgMusic = null;
 }
-window.tiloBgMusic = new Audio('VIDEO%20mus.mp3');
+window.tiloBgMusic = new Audio('bg_music.mp3');
 window.tiloBgMusic.loop = true;
 window.tiloBgMusic.volume = 0.5;
 
