@@ -485,7 +485,7 @@
                     <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
                 </div>
                 <div id="email-field" class="auth-field">
-                    <input type="text" id="auth-email" placeholder="ელ-ფოსტა / ნიკნეიმი">
+                    <input type="text" id="auth-email" placeholder="ემაილი ან ნებისმიერი სიტყვა">
                 </div>
                 <div id="pass-field" class="auth-field">
                     <input type="password" id="auth-password" placeholder="პაროლი">
@@ -584,8 +584,20 @@
     <div id="canvas-container"></div>
     <div id="cloth" class="cloth"></div>
 
+    <!-- Registration Notification Popup -->
+    <div id="reg-notification" class="hidden"
+        style="position: fixed; bottom: 100px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid #ff00ff; border-radius: 12px; padding: 15px; z-index: 10000; box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0; color: #ff00ff; font-size: 0.9rem;">🎁 გსურს შენახვა?</h3>
+            <button onclick="hideRegPopup()"
+                style="background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 12px; line-height: 1.4;">
+            დარეგისტრირდი ეხლავე, რომ შეინახო შენი ქულები და ქოინები!
+        </p>
+        <button id="reg-popup-btn" class="action-btn" style="padding: 8px; font-size: 0.85rem;">✨ რეგისტრაცია</button>
+    </div>
 
-    <script src="websocket-client.js"></script>
     <!-- Video Notification Popup -->
     <div id="video-notification" class="hidden"
         style="position: fixed; top: 20px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
@@ -598,11 +610,17 @@
         <div onclick="watchVideoHere(event)"
             style="position: relative; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; cursor: pointer;">
             <img id="video-thumb" src="" alt="Thumbnail"
-                style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;">
-            <div id="video-title-overlay"
-                style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 5px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                Title</div>
+                style="width: 100%; height: auto; display: block; filter: brightness(0.8);">
+            <div
+                style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,0,0,0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    ▶️</div>
+            </div>
         </div>
+        <div id="video-notif-title"
+            style="font-size: 0.8rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            Loading...</div>
 
         <div style="display: flex; gap: 5px;">
             <button id="btn-watch-here" onclick="watchVideoHere(event)"

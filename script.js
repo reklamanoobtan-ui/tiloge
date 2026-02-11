@@ -676,21 +676,43 @@ function initUI() {
     safeOnClick('buy-skin-rainbow', () => handleSkinAction('rainbow'));
 
     // UI Toggle Logic
-    const shopAction = () => get('shop-modal').classList.remove('hidden');
+    const shopAction = () => {
+        if (userEmail && userEmail.startsWith('guest_')) {
+            showRestrictedModal();
+            return;
+        }
+        get('shop-modal').classList.remove('hidden');
+    };
     const settingsAction = () => {
         if (userEmail && userEmail.startsWith('guest_')) {
             get('restricted-modal').classList.remove('hidden');
             return;
         }
+        // Assuming updateSettingsModal() is a new function or intended to be added
+        // If it's not defined, this line will cause an error.
+        // For now, I'll include it as per the instruction's snippet.
+        if (typeof updateSettingsModal === 'function') {
+            updateSettingsModal();
+        }
         get('settings-modal').classList.remove('hidden');
         get('settings-user-name').textContent = nickname || 'სტუმარი';
         get('settings-user-email').textContent = userEmail && !userEmail.startsWith('guest_') ? userEmail : 'სტუმრის ანგარიში';
     };
-    const themesAction = () => get('themes-modal').classList.remove('hidden');
+    const themesAction = () => {
+        if (userEmail && userEmail.startsWith('guest_')) {
+            showRestrictedModal();
+            return;
+        }
+        get('themes-modal').classList.remove('hidden');
+    };
     const ratingsAction = () => {
+        if (userEmail && userEmail.startsWith('guest_')) {
+            showRestrictedModal();
+            return;
+        }
         if (get('ratings-modal')) {
             get('ratings-modal').classList.remove('hidden');
-            fetchGlobalRankings();
+            fetchLeaderboard();
         }
     };
     const uiAction = () => get('ui-modal').classList.remove('hidden');
@@ -877,7 +899,7 @@ function initUI() {
             try {
                 const userCheck = await sql`SELECT id FROM users WHERE email = ${email}`;
                 if (userCheck.length === 0) {
-                    alert('მომხმარებელი ამ ემაილით არ მოიძებნა');
+                    alert('მომხმარებელი ამ მონაცემით არ მოიძებნა');
                     return;
                 }
 
@@ -886,7 +908,7 @@ function initUI() {
                 await sql`INSERT INTO reset_codes (email, code) VALUES (${email}, ${code})`;
 
                 // Simulating email send
-                alert(`თქვენს ემაილზე გაიგზავნა კოდი! (სიმულაცია: ${code})`);
+                alert(`კოდი გაიგზავნა! (სიმულაცია: ${code})`);
                 get('verify-reset-section').classList.remove('hidden');
                 get('request-reset-btn').textContent = 'კოდი თავიდან გაგზავნა';
             } catch (e) {
@@ -2247,24 +2269,54 @@ function finalizeCleaning(stain, sx, sy) {
     }
 }
 
+// Auth Mode Switchers
+let authMode = 'login';
+const switchToLogin = () => {
+    authMode = 'login';
+    const title = get('auth-title');
+    const nickField = get('nick-field');
+    const emailInput = get('auth-email');
+    const submitBtn = get('auth-submit-btn');
+    const loginToggle = get('show-login-btn');
+    const regToggle = get('show-register-btn');
+    const errorEl = get('auth-error');
+    const resetForm = get('reset-form');
+
+    if (title) title.textContent = "ავტორიზაცია";
+    if (nickField) nickField.style.display = 'none';
+    if (emailInput) emailInput.placeholder = "ემაილი ან ნებისმიერი სიტყვა";
+    if (submitBtn) submitBtn.textContent = "შესვლა";
+    if (loginToggle) loginToggle.style.background = 'var(--cloth-color)';
+    if (regToggle) regToggle.style.background = '';
+    if (errorEl) errorEl.textContent = '';
+    if (resetForm) resetForm.classList.add('hidden');
+};
+
+const switchToRegister = () => {
+    authMode = 'register';
+    const title = get('auth-title');
+    const nickField = get('nick-field');
+    const emailInput = get('auth-email');
+    const submitBtn = get('auth-submit-btn');
+    const regToggle = get('show-register-btn');
+    const loginToggle = get('show-login-btn');
+    const errorEl = get('auth-error');
+    const resetForm = get('reset-form');
+
+    if (title) title.textContent = "რეგისტრაცია";
+    if (nickField) nickField.style.display = 'block';
+    if (emailInput) emailInput.placeholder = "ემაილი ან ნებისმიერი სიტყვა";
+    if (submitBtn) submitBtn.textContent = "რეგისტრაცია";
+    if (regToggle) regToggle.style.background = 'var(--cloth-color)';
+    if (loginToggle) loginToggle.style.background = '';
+    if (errorEl) errorEl.textContent = '';
+    if (resetForm) resetForm.classList.add('hidden');
+};
+
 // Init
 window.onload = async () => {
     initUI();
     await initDatabase();
-
-    // Check persistent session for real users only
-    const savedEmail = localStorage.getItem('tilo_email');
-    if (savedEmail && !savedEmail.startsWith('guest_')) {
-        userEmail = savedEmail;
-        nickname = localStorage.getItem('tilo_nick');
-        coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
-        isVip = localStorage.getItem('tilo_vip') === 'true';
-        startGameSession(true);
-    } else {
-        document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
-    }
-
-    // Modals are handled in initUI
 
     // Modal Closers
     const closeAuth = () => {
@@ -2282,52 +2334,99 @@ window.onload = async () => {
         switchToRegister();
     });
 
-    // Mode Toggle Logic
-    let authMode = 'login';
-    const switchToLogin = () => {
-        authMode = 'login';
-        const title = get('auth-title');
-        const nickField = get('nick-field');
-        const emailInput = get('auth-email');
-        const submitBtn = get('auth-submit-btn');
-        const loginToggle = get('show-login-btn');
-        const regToggle = get('show-register-btn');
-        const errorEl = get('auth-error');
-        const resetForm = get('reset-form');
-
-        if (title) title.textContent = "ავტორიზაცია";
-        if (nickField) nickField.style.display = 'none';
-        if (emailInput) emailInput.placeholder = "ელ-ფოსტა / ნიკნეიმი";
-        if (submitBtn) submitBtn.textContent = "შესვლა";
-        if (loginToggle) loginToggle.style.background = 'var(--cloth-color)';
-        if (regToggle) regToggle.style.background = '';
-        if (errorEl) errorEl.textContent = '';
-        if (resetForm) resetForm.classList.add('hidden');
-    };
-
-    const switchToRegister = () => {
-        authMode = 'register';
-        const title = get('auth-title');
-        const nickField = get('nick-field');
-        const emailInput = get('auth-email');
-        const submitBtn = get('auth-submit-btn');
-        const regToggle = get('show-register-btn');
-        const loginToggle = get('show-login-btn');
-        const errorEl = get('auth-error');
-        const resetForm = get('reset-form');
-
-        if (title) title.textContent = "რეგისტრაცია";
-        if (nickField) nickField.style.display = 'block';
-        if (emailInput) emailInput.placeholder = "ელ-ფოსტა";
-        if (submitBtn) submitBtn.textContent = "რეგისტრაცია";
-        if (regToggle) regToggle.style.background = 'var(--cloth-color)';
-        if (loginToggle) loginToggle.style.background = '';
-        if (errorEl) errorEl.textContent = '';
-        if (resetForm) resetForm.classList.add('hidden');
-    };
-
     safeOnClick('show-login-btn', switchToLogin);
     safeOnClick('show-register-btn', switchToRegister);
+
+    window.hideRegPopup = () => {
+        const popup = get('reg-notification');
+        if (popup) popup.style.transform = 'translateX(-150%)';
+        setTimeout(() => popup && popup.classList.add('hidden'), 500);
+    };
+
+    window.showRegPopup = () => {
+        if (userEmail && !userEmail.startsWith('guest_')) return; // Already registered
+        const popup = get('reg-notification');
+        if (popup) {
+            popup.classList.remove('hidden');
+            setTimeout(() => popup.style.transform = 'translateX(0)', 100);
+        }
+    };
+
+    safeOnClick('reg-popup-btn', () => {
+        hideRegPopup();
+        if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
+        switchToRegister();
+    });
+
+    // Version Control for Startup Flow
+    const currentFlowVersion = 2; // Change to 1 for old behavior
+
+    async function initializeFlow1() {
+        // --- OLD LOGIC: Start Screen ---
+        const savedEmail = localStorage.getItem('tilo_email');
+        if (savedEmail && !savedEmail.startsWith('guest_')) {
+            userEmail = savedEmail;
+            nickname = localStorage.getItem('tilo_nick');
+            coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+            isVip = localStorage.getItem('tilo_vip') === 'true';
+            startGameSession(true);
+        } else {
+            document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
+        }
+    }
+
+    async function initializeFlow2() {
+        // --- NEW LOGIC: Immediate Start ---
+        const savedEmail = localStorage.getItem('tilo_email');
+        const savedNick = localStorage.getItem('tilo_nick');
+
+        if (savedEmail && !savedEmail.startsWith('guest_')) {
+            // Logged in user
+            userEmail = savedEmail;
+            nickname = savedNick;
+            coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+            isVip = localStorage.getItem('tilo_vip') === 'true';
+        } else {
+            // Guest or fresh landing
+            if (savedEmail && savedEmail.startsWith('guest_')) {
+                userEmail = savedEmail;
+                nickname = savedNick;
+            } else {
+                nickname = generateRandomGuestName();
+                userEmail = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                localStorage.setItem('tilo_nick', nickname);
+                localStorage.setItem('tilo_email', userEmail);
+            }
+            coins = 0;
+            isVip = false;
+        }
+
+        // Hide overlay and start immediately
+        const overlay = get('game-start-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        startGameSession(true);
+
+        // Schedule periodic registration prompt for guests
+        if (userEmail.startsWith('guest_')) {
+            setInterval(showRegPopup, 300000); // Every 5 minutes
+            setTimeout(showRegPopup, 30000); // First prompt at 30s
+        }
+    }
+
+    function generateRandomGuestName() {
+        const letters = "abcdefghijklmnopqrstuvwxyz";
+        const digits = "0123456789";
+        let res = "";
+        for (let i = 0; i < 5; i++) res += letters[Math.floor(Math.random() * letters.length)];
+        for (let i = 0; i < 5; i++) res += digits[Math.floor(Math.random() * digits.length)];
+        return res;
+    }
+
+    if (currentFlowVersion === 2) {
+        await initializeFlow2();
+    } else {
+        await initializeFlow1();
+    }
     safeOnClick('open-auth-btn', () => {
         const isStartScreen = get('game-start-overlay') && !get('game-start-overlay').classList.contains('hidden');
         if (get('auth-modal')) get('auth-modal').classList.remove('hidden');
@@ -3424,3 +3523,8 @@ setTimeout(() => {
     initVideoDraggable();
     safeOnClick('spin-btn', handleSpinResult);
 }, 2000);
+
+function showRestrictedModal() {
+    const modal = get('restricted-modal');
+    if (modal) modal.classList.remove('hidden');
+}
