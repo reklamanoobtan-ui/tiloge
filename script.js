@@ -122,28 +122,47 @@ let syncLoopInterval = null;
 
 // --- Wave System State ---
 let lastPhaseName = "";
+let globalWaveSystemEnabled = true;
+let activeWaveMods = {}; // { type: expiry }
+
 function getWaveData() {
+    if (!globalWaveSystemEnabled) {
+        return { phase: 'NORMAL', spawnMod: 1.0, healthMod: 1.0, rewardMod: 1.0, color: '#fff', label: '' };
+    }
+
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const minute = Math.floor(elapsed / 60);
     const secondOfMinute = elapsed % 60;
     const secondOfLoop = elapsed % 30; // 30-second loop principle
 
+    let data = { phase: 'NORMAL', spawnMod: 1.0, healthMod: 1.0, rewardMod: 1.0, color: '#fff', label: '' };
+
     // Meta-Cycle: Every 5th minute is "Safe Zone"
     if (minute > 0 && (minute + 1) % 5 === 0 && secondOfMinute > 30) {
-        return { phase: 'SAFE', spawnMod: 5.0, healthMod: 0.5, rewardMod: 2.0, color: '#00ff00', label: '🛡️ დაცული ზონა (დასვენება)' };
+        data = { phase: 'SAFE', spawnMod: 5.0, healthMod: 0.5, rewardMod: 2.0, color: '#00ff00', label: '🛡️ დაცული ზონა (დასვენება)' };
+    } else {
+        // Micro-Cycle (30s Loop)
+        if (secondOfLoop < 10) {
+            data = { phase: 'PLAN', spawnMod: 1.2, healthMod: 1.0, rewardMod: 1.0, color: '#4facfe', label: '👁️ დაგეგმვა' };
+        } else if (secondOfLoop < 20) {
+            data = { phase: 'BATTLE', spawnMod: 0.6, healthMod: 1.3, rewardMod: 1.2, color: '#ff4d4d', label: '⚔️ ბრძოლა' };
+        } else {
+            data = { phase: 'REWARD', spawnMod: 0.8, healthMod: 0.8, rewardMod: 2.0, color: '#ffd700', label: '💎 ჯილდო' };
+        }
     }
 
-    // Micro-Cycle (30s Loop)
-    if (secondOfLoop < 10) {
-        // 0-10s: Sight & Plan
-        return { phase: 'PLAN', spawnMod: 1.2, healthMod: 1.0, rewardMod: 1.0, color: '#4facfe', label: '👁️ დაგეგმვა' };
-    } else if (secondOfLoop < 20) {
-        // 10-20s: Fight & Adrenaline
-        return { phase: 'BATTLE', spawnMod: 0.6, healthMod: 1.3, rewardMod: 1.2, color: '#ff4d4d', label: '⚔️ ბრძოლა' };
-    } else {
-        // 20-30s: Payoff & Reward
-        return { phase: 'REWARD', spawnMod: 0.8, healthMod: 0.8, rewardMod: 2.0, color: '#ffd700', label: '💎 ჯილდო' };
-    }
+    // Apply Active Mods
+    Object.keys(activeWaveMods).forEach(mod => {
+        if (new Date(activeWaveMods[mod]) > new Date()) {
+            if (mod === 'wave_mod_double_speed') data.spawnMod *= 0.5;
+            if (mod === 'wave_mod_chaos_mode') { data.spawnMod *= 0.3; data.healthMod *= 1.5; data.label = "🔥 CHAOS MODE"; data.color = "#ff8c00"; }
+            if (mod === 'wave_mod_zen_mode') { data.spawnMod *= 2.0; data.healthMod *= 0.5; data.label = "🧘 ZEN MODE"; data.color = "#40e0d0"; }
+        } else {
+            delete activeWaveMods[mod];
+        }
+    });
+
+    return data;
 }
 
 // --- Helper Functions ---
@@ -2411,6 +2430,32 @@ async function checkGlobalEvents() {
                 const remainingSec = Math.floor((new Date(ev.expires_at) - new Date()) / 1000);
                 if (remainingSec > 0) {
                     showMassiveAnnouncement(ev.event_value, remainingSec);
+                }
+            }
+
+            // --- New Game / Wave System Events ---
+            if (ev.event_type === 'wave_system_state') {
+                globalWaveSystemEnabled = (ev.event_value === 'enabled');
+                if (!globalWaveSystemEnabled) {
+                    const waveIndicator = get('diff-status');
+                    if (waveIndicator) waveIndicator.innerHTML = 'გამოიყენეთ ტილო საიტის გასაწმენდად';
+                    document.body.style.boxShadow = 'none';
+                }
+            }
+            if (ev.event_type.startsWith('wave_mod_')) {
+                if (new Date(ev.expires_at) > new Date()) {
+                    activeWaveMods[ev.event_type] = ev.expires_at;
+                }
+            }
+            if (ev.event_type === 'game_command') {
+                if (ev.event_value === 'restart' && new Date(ev.expires_at) > new Date()) {
+                    // One-time restart command
+                    const lastCmdId = localStorage.getItem('last_game_cmd_id');
+                    if (lastCmdId !== ev.expires_at) { // Use expires_at as a unique ID for the command
+                        localStorage.setItem('last_game_cmd_id', ev.expires_at);
+                        showStatusUpdate("🔄 ადმინისტრატორმა მოითხოვა რესტარტი...");
+                        setTimeout(() => location.reload(), 2000);
+                    }
                 }
             }
         });
