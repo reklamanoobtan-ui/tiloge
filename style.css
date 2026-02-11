@@ -1421,3 +1421,111 @@ input:checked+.slider:before {
 .spin-active {
     filter: brightness(1.2);
 }
+
+/* --- MOBILE RESPONSIVENESS UPDATES --- */
+
+/* General Mobile Tweaks */
+@media (max-width: 768px) {
+    .start-container {
+        padding: 30px 20px !important;
+        width: 90% !important;
+        max-width: 400px;
+    }
+
+    .game-title {
+        font-size: 2.5rem !important;
+    }
+
+    /* Make modals fit better */
+    .modal-content {
+        padding: 25px 20px !important;
+        width: 95% !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Upgrade Cards - better grid or scroll */
+    #upgrade-cards-container,
+    #pink-upgrade-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px !important;
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-bottom: 20px !important;
+    }
+
+    .upgrade-card,
+    .pink-upgrade-card {
+        width: 100% !important;
+        min-width: unset !important;
+        max-width: 320px;
+        padding: 20px !important;
+    }
+
+    .upgrade-card h3 {
+        font-size: 1.1rem !important;
+        margin: 10px 0 !important;
+    }
+
+    .upgrade-card p {
+        font-size: 0.85rem !important;
+    }
+
+    /* Sidebars: Collapse partially or full hidden */
+    .premium-sidebar {
+        width: 250px !important;
+        left: -260px;
+        /* Hide by default */
+        bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+
+    .premium-sidebar.right {
+        right: -260px !important;
+        left: auto !important;
+    }
+
+    /* Show toggles properly */
+    .sidebar-toggle-side {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+
+    /* Adjust HUD info text */
+    .info-text {
+        top: 80px !important;
+        padding: 0 20px;
+    }
+
+    .info-text h1 {
+        font-size: 1rem !important;
+    }
+
+    /* Buttons touch friendly */
+    .action-btn,
+    .glass-btn {
+        padding: 14px 20px !important;
+        /* Larger touch target */
+        font-size: 1rem !important;
+    }
+
+    /* Cloth size slightly smaller locally */
+    .cloth {
+        width: 140px !important;
+        height: 140px !important;
+    }
+}
+
+/* Very Small Screens */
+@media (max-width: 480px) {
+    .game-title {
+        font-size: 2rem !important;
+    }
+
+    #half-health-status {
+        font-size: 0.9rem !important;
+        padding: 8px 15px !important;
+    }
+}
