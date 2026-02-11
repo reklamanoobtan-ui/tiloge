@@ -1189,6 +1189,10 @@ function triggerMagnet() {
         const target = stains[0];
         const rect = target.getBoundingClientRect();
         createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '#4facfe', 10);
+        // Lightning Effect
+        if (currentX && currentY) {
+            createLightning(currentX, currentY, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
         let h = parseFloat(target.dataset.health);
         target.dataset.health = h - 200;
         if (h <= 200) target.dataset.health = 0;
@@ -1594,7 +1598,6 @@ function triggerEndgame() {
     }, 60000);
 }
 
-
 function weightedRandom(items) {
     let totalProb = items.reduce((acc, item) => acc + item.prob, 0);
     let r = Math.random() * totalProb;
@@ -1605,7 +1608,6 @@ function weightedRandom(items) {
     }
     return items[0];
 }
-
 
 function createParticles(x, y, color, count = 15) {
     for (let i = 0; i < count; i++) {
@@ -1621,19 +1623,56 @@ function createParticles(x, y, color, count = 15) {
     }
 }
 
+function createLightning(x1, y1, x2, y2) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    const bolt = document.createElement('div');
+    bolt.className = 'lightning-bolt';
+    bolt.style.width = `${dist}px`;
+    bolt.style.left = `${x1}px`;
+    bolt.style.top = `${y1}px`;
+    bolt.style.transform = `rotate(${angle}deg)`;
+    document.body.appendChild(bolt);
+    setTimeout(() => {
+        bolt.style.opacity = '0';
+        setTimeout(() => bolt.remove(), 200);
+    }, 100);
+}
+
+function createFireExplosion(x, y) {
+    const explo = document.createElement('div');
+    explo.className = 'bomb-explosion';
+    explo.style.left = `${x - 75}px`;
+    explo.style.top = `${y - 75}px`;
+    document.body.appendChild(explo);
+    setTimeout(() => explo.remove(), 500);
+}
+
+function spawnSkinTrail(x, y) {
+    if (!gameActive) return;
+    const trail = document.createElement('div');
+    switch (currentSkin) {
+        case 'fire': trail.className = 'fire-trail'; break;
+        case 'ice': trail.className = 'ice-trail'; break;
+        case 'rainbow': trail.className = 'rainbow-trail'; break;
+        case 'electric': trail.className = 'electric-trail'; break;
+        default: return;
+    }
+    trail.style.left = `${x - 10}px`;
+    trail.style.top = `${y - 10}px`;
+    document.body.appendChild(trail);
+    setTimeout(() => trail.remove(), 1000);
+}
 
 function getSpawnInterval() {
-    // Global Event Override
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
-
-    // Roguelike Scaling: Starts at 2.5s, decreases by 0.1s every 1000 score. Min 0.4s
-    // Also affected by 'intervalMultiplier' upgrade (0.9x per upgrade)
     let baseInterval = 2500 - (score * 0.1);
-    baseInterval = Math.max(400, baseInterval); // Cap at 400ms (insane speed)
+    baseInterval = Math.max(400, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
 function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0) {
+
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
@@ -1898,6 +1937,7 @@ function moveCloth(x, y) {
         const offsetY = cloth.offsetHeight / 2;
         cloth.style.left = `${x - offsetX}px`;
         cloth.style.top = `${y - offsetY}px`;
+        spawnSkinTrail(x, y); // Spawn skin-specific trail
     }
 }
 
@@ -1950,6 +1990,7 @@ function checkCleaning(bx, by) {
 
                 // Bomb Upgrade: Chain Reaction
                 if (hasBombUpgrade) {
+                    createFireExplosion(sx, sy); // Visual effect
                     const allStains = document.querySelectorAll('.stain');
                     allStains.forEach(s => {
                         const sRect = s.getBoundingClientRect();
