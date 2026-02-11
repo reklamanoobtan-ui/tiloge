@@ -1650,19 +1650,42 @@ function createFireExplosion(x, y) {
 
 function spawnSkinTrail(x, y) {
     if (!gameActive) return;
-    const trail = document.createElement('div');
+
+    const createTrailPart = (className, offsetX = 0, offsetY = 0) => {
+        const t = document.createElement('div');
+        t.className = className;
+        t.style.left = `${x + offsetX - 15}px`;
+        t.style.top = `${y + offsetY - 15}px`;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1200);
+    };
+
     switch (currentSkin) {
-        case 'fire': trail.className = 'fire-trail'; break;
-        case 'ice': trail.className = 'ice-trail'; break;
-        case 'rainbow': trail.className = 'rainbow-trail'; break;
-        case 'electric': trail.className = 'electric-trail'; break;
-        default: return;
+        case 'fire':
+            // 3 lines/streams for fire
+            createTrailPart('fire-trail', -15, 0);
+            createTrailPart('fire-trail', 0, 0);
+            createTrailPart('fire-trail', 15, 0);
+            break;
+        case 'ice':
+            // 3 lines/streams for ice
+            createTrailPart('ice-trail', -12, -5);
+            createTrailPart('ice-trail', 0, 5);
+            createTrailPart('ice-trail', 12, -5);
+            break;
+        case 'rainbow':
+            // More bubbles
+            createTrailPart('rainbow-trail', (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 30);
+            if (Math.random() > 0.5) createTrailPart('rainbow-trail', (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+            break;
+        case 'electric':
+            // Larger and more frequent zaps
+            createTrailPart('electric-trail', (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+            createTrailPart('electric-trail', (Math.random() - 0.5) * 25, (Math.random() - 0.5) * 25);
+            break;
     }
-    trail.style.left = `${x - 10}px`;
-    trail.style.top = `${y - 10}px`;
-    document.body.appendChild(trail);
-    setTimeout(() => trail.remove(), 1000);
 }
+
 
 function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;

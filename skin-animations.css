@@ -65,72 +65,76 @@
 
 .fire-trail {
     position: fixed;
-    width: 20px;
-    height: 20px;
-    background: radial-gradient(circle, #ff4500, #ff8c00, transparent);
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle, #ff0000 0%, #ff4500 50%, transparent 80%);
     border-radius: 50%;
     pointer-events: none;
     z-index: 10;
-    filter: blur(2px);
-    animation: fadeUp 0.6s forwards;
+    filter: blur(4px);
+    animation: fadeUp 0.8s forwards;
+    box-shadow: 0 0 15px #ff4500;
 }
 
 .ice-trail {
     position: fixed;
-    width: 15px;
-    height: 15px;
-    background: white;
-    box-shadow: 0 0 10px #00bfff;
-    border-radius: 2px;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #ffffff 0%, #00bfff 60%, transparent 80%);
+    box-shadow: 0 0 20px #00bfff;
+    border-radius: 4px;
     pointer-events: none;
     z-index: 10;
-    animation: fadeUp 0.8s forwards;
+    animation: fadeUp 1s forwards;
+    filter: blur(1px);
 }
 
 .rainbow-trail {
     position: fixed;
-    width: 12px;
-    height: 12px;
+    width: 25px;
+    height: 25px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
     pointer-events: none;
     z-index: 10;
-    animation: bubbleUp 1s forwards;
+    animation: bubbleUp 1.2s forwards;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .electric-trail {
     position: fixed;
-    width: 4px;
-    height: 15px;
-    background: #ffd700;
-    box-shadow: 0 0 10px #ffff00;
+    width: 6px;
+    height: 25px;
+    background: #ffff00;
+    box-shadow: 0 0 15px #ffff00, 0 0 5px #fff;
     pointer-events: none;
     z-index: 10;
-    animation: zapFade 0.4s forwards;
+    animation: zapFade 0.5s forwards;
+    filter: brightness(1.5);
 }
 
 @keyframes fadeUp {
     0% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scale(1) translateY(0) rotate(0deg);
     }
 
     100% {
         opacity: 0;
-        transform: scale(0.5) translateY(-20px);
+        transform: scale(0.3) translateY(-30px) rotate(45deg);
     }
 }
 
 @keyframes bubbleUp {
     0% {
-        opacity: 0.8;
-        transform: scale(1) translateY(0);
+        opacity: 0.9;
+        transform: scale(0.5) translateY(0);
     }
 
     100% {
         opacity: 0;
-        transform: scale(1.5) translateY(-40px);
+        transform: scale(2.0) translateY(-60px);
     }
 }
 
@@ -141,12 +145,12 @@
     }
 
     50% {
-        transform: scaleY(1.5) rotate(15deg);
+        transform: scaleY(2) rotate(25deg);
     }
 
     100% {
         opacity: 0;
-        transform: scaleY(0) rotate(-15deg);
+        transform: scaleY(0) rotate(-25deg);
     }
 }
 
