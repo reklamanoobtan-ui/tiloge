@@ -1218,7 +1218,7 @@ function triggerLaser() {
     const stains = document.querySelectorAll('.stain');
     if (stains.length > 0) {
         // Play Laser Sound
-        const audio = new Audio('piu.mov');
+        const audio = new Audio('პიუ.mp3');
         audio.volume = 0.5; // Adjust volume as needed
         audio.play().catch(e => console.log('Audio play failed:', e));
         const hitCount = upgradeCounts['magnet'] || 1;
