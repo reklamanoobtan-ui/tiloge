@@ -1406,3 +1406,18 @@ input:checked+.slider:before {
         opacity: 1;
     }
 }
+
+/* Spin Wheel Styling */
+#wheel-container {
+    border: 8px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 204, 0, 0.2);
+}
+
+#wheel-canvas {
+    border-radius: 50%;
+}
+
+.spin-active {
+    filter: brightness(1.2);
+}

@@ -43,6 +43,7 @@ let totalStainsCleanedRel = 0;
 let totalRepeatablePicked = 0; // Cap at 10
 let soapClickCount = 0;
 let lastSoapMilestone = 0;
+let lastSpinMilestone = 0;
 let isSoapActive = false;
 let magnetInterval = 3000;
 let pendingUpgrades = 0;
@@ -182,9 +183,10 @@ function updateUIValues() {
                 btn.style.opacity = "1";
             }
         } else {
-            btn.textContent = `50 🪙`;
-            btn.disabled = coins < 50;
-            btn.style.opacity = coins < 50 ? "0.5" : "1";
+            const price = skinName === 'rainbow' ? 3000 : 1000;
+            btn.textContent = `${price} 🪙`;
+            btn.disabled = coins < price;
+            btn.style.opacity = coins < price ? "0.5" : "1";
         }
     };
 
@@ -523,6 +525,12 @@ function updateScore(points) {
             setTimeout(startMinigame, 500); // Small delay
         }
 
+        // Spin Wheel Milestone (Every 20,000 points)
+        if (Math.floor(score / 20000) > Math.floor(lastSpinMilestone / 20000)) {
+            lastSpinMilestone = score;
+            setTimeout(showSpinWheel, 1000);
+        }
+
         // Sync every 20 points for "immediate" reflection
         if (Math.floor(score) % 20 === 0) {
             syncUserData(true);
@@ -604,8 +612,9 @@ function handleSkinAction(name) {
         currentSkin = name;
         showStatusUpdate(`${name === 'default' ? 'ჩვეულებრივი' : name} სკინი არჩეულია! ✨`);
     } else {
-        if (coins >= 50) {
-            coins -= 50;
+        const price = name === 'rainbow' ? 3000 : 1000;
+        if (coins >= price) {
+            coins -= price;
             ownedSkins.push(name);
             currentSkin = name;
             showStatusUpdate(`${name} სკინი შეძენილია! 🔥`);
@@ -2401,6 +2410,7 @@ function startGameSession(dontReset = false) {
         nextUpgradeScore = 10;
         lastMinigameMilestone = 0;
         lastSoapMilestone = 0;
+        lastSpinMilestone = 0;
         healthHalvedActive = false;
         pinkBonuses = [];
         upgradeCounts = {
@@ -2928,10 +2938,127 @@ function showSystemAlert(msg) {
     }, duration);
 }
 
+/* --- Spin Wheel System --- */
+const spinPrizes = [
+    { label: "ტილოს ძალა +50%", type: "strength", chance: 0.24975, color: "#ff4d4d", probDisplay: "24.9%" },
+    { label: "ტილოს რადიუსი +50%", type: "radius", chance: 0.24975, color: "#4facfe", probDisplay: "24.9%" },
+    { label: "რობოტის ძალა +50%", type: "bot_pow", chance: 0.24975, color: "#ffd700", probDisplay: "24.9%" },
+    { label: "მაგნიტის სიხშირე +50%", type: "magnet", chance: 0.24975, color: "#ff69b4", probDisplay: "24.9%" },
+    { label: "1000 ქოინი", type: "coins", chance: 0.001, color: "#ffffff", probDisplay: "0.1%" }
+];
+
+let isSpinning = false;
+let currentRotation = 0;
+
+function drawWheel() {
+    const canvas = get('wheel-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const radius = canvas.width / 2;
+    const sliceAngle = (2 * Math.PI) / spinPrizes.length;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    spinPrizes.forEach((prize, i) => {
+        const angle = i * sliceAngle;
+
+        ctx.beginPath();
+        ctx.fillStyle = prize.color;
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, angle, angle + sliceAngle);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = (prize.color === "#ffffff") ? "#000" : "#fff";
+        ctx.font = "bold 12px Outfit";
+        ctx.fillText(prize.label, radius - 20, 0);
+        ctx.font = "10px Outfit";
+        ctx.fillText(`(${prize.probDisplay})`, radius - 20, 15);
+        ctx.restore();
+    });
+}
+
+function showSpinWheel() {
+    drawWheel();
+    get('spin-wheel-modal').classList.remove('hidden');
+    get('prize-announcement').textContent = "";
+    get('spin-btn').disabled = false;
+    get('wheel-container').style.transform = `rotate(0deg)`;
+    currentRotation = 0;
+}
+
+function handleSpinResult() {
+    if (isSpinning) return;
+
+    const rand = Math.random();
+    let cumulativeChance = 0;
+    let winnerIndex = 0;
+
+    for (let i = 0; i < spinPrizes.length; i++) {
+        cumulativeChance += spinPrizes[i].chance;
+        if (rand < cumulativeChance) {
+            winnerIndex = i;
+            break;
+        }
+    }
+
+    const winner = spinPrizes[winnerIndex];
+    const sliceAngle = 360 / spinPrizes.length;
+    const extraSpins = 5 * 360;
+    const targetAngle = 360 - (winnerIndex * sliceAngle) - (sliceAngle / 2);
+    const finalRotation = extraSpins + targetAngle;
+
+    isSpinning = true;
+    get('spin-btn').disabled = true;
+    get('wheel-container').style.transform = `rotate(${finalRotation}deg)`;
+
+    setTimeout(() => {
+        isSpinning = false;
+        applyPrize(winner);
+        get('prize-announcement').innerHTML = `<span style="color:${winner.color}">🎉 მოიგეთ: ${winner.label}!</span>`;
+        setTimeout(() => {
+            get('spin-wheel-modal').classList.add('hidden');
+        }, 3000);
+    }, 4500);
+}
+
+function applyPrize(prize) {
+    switch (prize.type) {
+        case 'strength':
+            strengthMultiplier *= 1.5;
+            showStatusUpdate('🔥 ტილოს ძალა გაიზარდა 50%-ით!');
+            break;
+        case 'radius':
+            radiusMultiplier *= 1.5;
+            showStatusUpdate('📏 რადიუსი გაიზარდა 50%-ით!');
+            break;
+        case 'bot_pow':
+            helperCleaningMultiplier *= 1.5;
+            showStatusUpdate('🤖 რობოტის ძალა გაიზარდა 50%-ით!');
+            break;
+        case 'magnet':
+            magnetInterval = Math.max(500, magnetInterval / 1.5);
+            showStatusUpdate('🧲 მაგნიტის სიხშირე გაიზარდა 50%-ით!');
+            break;
+        case 'coins':
+            coins += 1000;
+            showStatusUpdate('💰 მოიგეთ 1000 ქოინი! იღბლიანი ხარ!');
+            break;
+    }
+    updatePowerStats();
+    saveStatsToLocal();
+    updateUIValues();
+}
+
 // Start Systems
 setTimeout(() => {
     fetchYouTubeVideos();
     startVideoScheduler();
     setInterval(fetchYouTubeVideos, 300000);
     initVideoDraggable();
+    safeOnClick('spin-btn', handleSpinResult);
 }, 2000);

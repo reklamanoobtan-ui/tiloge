@@ -255,7 +255,7 @@
                             <p style="color: #ff6347;">მოწითალო მანათობელი, გზადაგზა ცეცხლის კვალს ტოვებს</p>
                         </div>
                         <button id="buy-skin-fire" class="action-btn"
-                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff4500, #ff6347); box-shadow: 0 0 20px rgba(255,69,0,0.5);">50
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff4500, #ff6347); box-shadow: 0 0 20px rgba(255,69,0,0.5);">1000
                             🪙</button>
                     </div>
                     <div class="shop-item"
@@ -268,7 +268,7 @@
                             <p style="color: #87ceeb;">ცისფერი მანათობელი, გზადაგზა ფიფქებს ტოვებს</p>
                         </div>
                         <button id="buy-skin-ice" class="action-btn"
-                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #00bfff, #87ceeb); box-shadow: 0 0 20px rgba(0,191,255,0.5);">50
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #00bfff, #87ceeb); box-shadow: 0 0 20px rgba(0,191,255,0.5);">1000
                             🪙</button>
                     </div>
                     <div class="shop-item"
@@ -283,7 +283,7 @@
                                 სხვადასხვა ფერები და მანათობელი, გზადაგზა ბუშტებს ტოვებს</p>
                         </div>
                         <button id="buy-skin-rainbow" class="action-btn"
-                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0); box-shadow: 0 0 20px rgba(255,105,180,0.5);">100
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0); box-shadow: 0 0 20px rgba(255,105,180,0.5);">3000
                             🪙</button>
                     </div>
                 </div>
@@ -299,7 +299,7 @@
                             <p style="color: #ffd700;">მოყვითალო მანათობელი, გზადაგზა ელვებს ტოვებს</p>
                         </div>
                         <button id="buy-skin-electric" class="action-btn"
-                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ffd700, #ffff00); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5);">50
+                            style="position: relative; z-index: 1; background: linear-gradient(135deg, #ffd700, #ffff00); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5);">1000
                             🪙</button>
                     </div>
                 </div>
@@ -349,6 +349,28 @@
             <button id="skip-minigame" class="action-btn"
                 style="background: rgba(255, 255, 255, 0.1); margin-top: 15px; font-size: 0.9rem; padding: 8px 15px; border: 1px solid rgba(255,255,255,0.2); color: white;">გამოტოვება
                 ⏩</button>
+        </div>
+    </div>
+
+    <!-- Spin Wheel Modal -->
+    <div id="spin-wheel-modal" class="modal hidden">
+        <div class="modal-content glass"
+            style="max-width: 500px; text-align: center; border: 3px solid #ffcc00; background: rgba(20, 20, 30, 0.95);">
+            <h2
+                style="color: #ffcc00; margin-bottom: 20px; font-size: 2rem; text-shadow: 0 0 15px rgba(255,204,0,0.5);">
+                🎯 იღბლიანი ბორბალი!</h2>
+            <div id="wheel-container"
+                style="position: relative; width: 300px; height: 300px; margin: 0 auto 30px; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);">
+                <canvas id="wheel-canvas" width="300" height="300"></canvas>
+                <div id="wheel-pointer"
+                    style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #fff; clip-path: polygon(50% 100%, 0% 0%, 100% 0%); z-index: 10;">
+                </div>
+            </div>
+            <button id="spin-btn" class="action-btn"
+                style="background: #ffcc00; color: #000; font-size: 1.2rem; padding: 15px 40px; border-radius: 50px; font-weight: 800; box-shadow: 0 10px 30px rgba(255,204,0,0.3);">დაატრიალე
+                🎰</button>
+            <div id="prize-announcement" style="margin-top: 20px; font-size: 1.2rem; min-height: 1.5em; color: white;">
+            </div>
         </div>
     </div>
 
