@@ -1494,50 +1494,99 @@ input:checked+.slider:before {
         font-size: 0.85rem !important;
     }
 
-    /* Sidebars: Collapse partially or full hidden */
+    /* Sidebars: Collapse but keep toggle visible */
     .premium-sidebar {
         width: 250px !important;
-        left: -260px;
-        /* Hide by default */
+        left: -250px;
+        /* Hide content but keep container relative */
         bottom: 15px;
         transition: transform 0.3s ease;
+        z-index: 5000;
+        /* Ensure it can slide in */
+    }
+
+    .premium-sidebar.side-expanded {
+        transform: translateX(250px);
     }
 
     .premium-sidebar.right {
-        right: -260px !important;
         left: auto !important;
+        right: -250px !important;
     }
 
-    /* Show toggles properly */
+    .premium-sidebar.right.side-expanded {
+        transform: translateX(-250px);
+    }
+
+    /* Video Notification - Smaller & Better Close Btn */
+    #video-notification {
+        width: 200px !important;
+        /* Smaller width */
+        font-size: 0.8rem !important;
+        padding: 10px !important;
+        top: 10px !important;
+        left: 10px !important;
+    }
+
+    #video-notification h3 {
+        font-size: 0.8rem !important;
+    }
+
+    #video-notification button {
+        font-size: 1.5rem !important;
+        /* Bigger close X */
+        padding: 5px 10px !important;
+        background: rgba(255, 0, 0, 0.4) !important;
+        /* Visible bg */
+        border-radius: 5px;
+    }
+
+    #video-notification img {
+        height: auto !important;
+    }
+
+    /* Show toggles properly always */
     .sidebar-toggle-side {
         width: 45px;
         height: 45px;
         font-size: 1.2rem;
+        /* Ensure they stick out when sidebar is hidden */
+        position: absolute;
+        top: -50px;
+        /* Move above sidebar or to side depending on design */
+        /* For left sidebar */
+        left: 260px;
     }
 
-    /* Adjust HUD info text */
-    .info-text {
-        top: 80px !important;
-        padding: 0 20px;
+    .premium-sidebar.right .sidebar-toggle-side {
+        left: auto;
+        right: 260px;
     }
+}
 
-    .info-text h1 {
-        font-size: 1rem !important;
-    }
+/* Adjust HUD info text */
+.info-text {
+    top: 80px !important;
+    padding: 0 20px;
+}
 
-    /* Buttons touch friendly */
-    .action-btn,
-    .glass-btn {
-        padding: 14px 20px !important;
-        /* Larger touch target */
-        font-size: 1rem !important;
-    }
+.info-text h1 {
+    font-size: 1rem !important;
+}
 
-    /* Cloth size slightly smaller locally */
-    .cloth {
-        width: 140px !important;
-        height: 140px !important;
-    }
+/* Buttons touch friendly */
+.action-btn,
+.glass-btn {
+    padding: 14px 20px !important;
+    /* Larger touch target */
+    font-size: 1rem !important;
+}
+
+/* Cloth size slightly smaller locally */
+.cloth {
+    width: 140px !important;
+    height: 140px !important;
+}
 }
 
 /* Very Small Screens */

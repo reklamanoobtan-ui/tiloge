@@ -532,14 +532,14 @@ function updateScore(points) {
         }
 
         // Dynamic Soap Milestone
-        const soapThresh = globalSoapThresholdOverride || 2500;
+        const soapThresh = globalSoapThresholdOverride || 1250; // 2x Faster (was 2500)
         if (Math.floor(score / soapThresh) > Math.floor(lastSoapMilestone / soapThresh)) {
             lastSoapMilestone = score;
             createSoap();
         }
 
         // Dynamic Minigame Milestone
-        const minigameThresh = globalMinigameThresholdOverride || 3750;
+        const minigameThresh = globalMinigameThresholdOverride || 1875; // 2x Faster (was 3750)
         if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
             lastMinigameMilestone = score;
             setTimeout(startMinigame, 500); // Small delay
