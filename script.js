@@ -1482,8 +1482,8 @@ function showPinkUpgradeOptions() {
         'spawn_speed': '⏩', 'boss_weaken': '💀'
     };
 
-    // Filter upgrades player already has at least one of (Excluding 'diff' and 'bot' count)
-    const excludes = ['diff', 'bot'];
+    // Filter upgrades player already has at least one of (Excluding 'diff', 'bot', and 'spawn_speed')
+    const excludes = ['diff', 'bot', 'spawn_speed'];
     const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && upgradeCounts[id] > 0);
 
     // If none owned, offer fallback
