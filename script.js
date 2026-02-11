@@ -1708,9 +1708,9 @@ function spawnSkinTrail(x, y) {
 function getSpawnInterval() {
     if (globalSpawnIntervalOverride !== null) return globalSpawnIntervalOverride;
 
-    let baseInterval = 2500 - (score * 0.1);
+    let baseInterval = 2000 - (score * 0.2);
 
-    baseInterval = Math.max(400, baseInterval);
+    baseInterval = Math.max(200, baseInterval);
     return baseInterval * intervalMultiplier;
 }
 
