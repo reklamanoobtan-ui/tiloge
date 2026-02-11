@@ -1662,26 +1662,34 @@ function spawnSkinTrail(x, y) {
 
     switch (currentSkin) {
         case 'fire':
-            // 3 lines/streams for fire
-            createTrailPart('fire-trail', -15, 0);
+            // 6 lines/streams for fire (Doubled)
+            createTrailPart('fire-trail', -20, 0);
+            createTrailPart('fire-trail', -10, 5);
             createTrailPart('fire-trail', 0, 0);
-            createTrailPart('fire-trail', 15, 0);
+            createTrailPart('fire-trail', 0, 10);
+            createTrailPart('fire-trail', 10, -5);
+            createTrailPart('fire-trail', 20, 0);
             break;
         case 'ice':
-            // 3 lines/streams for ice
-            createTrailPart('ice-trail', -12, -5);
-            createTrailPart('ice-trail', 0, 5);
-            createTrailPart('ice-trail', 12, -5);
+            // 6 lines/streams for ice (Doubled)
+            createTrailPart('ice-trail', -15, -5);
+            createTrailPart('ice-trail', -7, 5);
+            createTrailPart('ice-trail', 0, -5);
+            createTrailPart('ice-trail', 7, 5);
+            createTrailPart('ice-trail', 15, -5);
+            createTrailPart('ice-trail', 0, 15);
             break;
         case 'rainbow':
-            // More bubbles
-            createTrailPart('rainbow-trail', (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 30);
-            if (Math.random() > 0.5) createTrailPart('rainbow-trail', (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+            // Even more bubbles (Doubled)
+            for (let i = 0; i < 4; i++) {
+                createTrailPart('rainbow-trail', (Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50);
+            }
             break;
         case 'electric':
-            // Larger and more frequent zaps
-            createTrailPart('electric-trail', (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
-            createTrailPart('electric-trail', (Math.random() - 0.5) * 25, (Math.random() - 0.5) * 25);
+            // Doubled frequency and amount of zaps
+            for (let i = 0; i < 4; i++) {
+                createTrailPart('electric-trail', (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+            }
             break;
     }
 }

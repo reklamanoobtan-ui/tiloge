@@ -765,7 +765,7 @@ body.fx-disco {
 /* Skin Overrides for Image-based Cloth */
 
 .cloth-skin-fire {
-    filter: drop-shadow(0 0 35px #ff0000) grayscale(1) sepia(1) hue-rotate(-50deg) saturate(35) brightness(1.1) contrast(1.1);
+    filter: drop-shadow(0 0 35px #ff4500) grayscale(1) sepia(1) hue-rotate(-45deg) saturate(15) brightness(1.0) contrast(1.1);
 }
 
 .cloth-skin-ice {
