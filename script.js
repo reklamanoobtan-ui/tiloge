@@ -1618,6 +1618,18 @@ function showUpgradeOptions() {
             weight *= 1.5;
         }
 
+        // 6. Speed Demon: If Spawn Speed < 0.3s, boost Robot Speed
+        const currentSpdVal = (1000 - (score * 0.5)) * spawnSpeedUpgradeMultiplier;
+        if (currentSpdVal < 300 && u.id === 'speed') {
+            weight *= 1.5;
+        }
+
+        // 7. Lonely Warrior: If 5 mins passed and 0 bots, boost Cloth Strength
+        const elapsedMin = (Date.now() - startTime) / 60000;
+        if (elapsedMin > 5 && activeHelpers === 0 && u.id === 'strength') {
+            weight *= 2.0;
+        }
+
         // Existing Logic: Spawn Speed vs Strength
         if (u.id === 'strength' && (upgradeCounts['spawn_speed'] || 0) > (upgradeCounts['strength'] || 0)) {
             weight *= 0.05; // Reduced from 0.2 to 0.05 as requested
