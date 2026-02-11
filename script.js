@@ -1223,6 +1223,10 @@ function startHelperBot() {
                     botEl.style.top = `${sy - 25 + offsetY}px`;
 
                     setTimeout(() => {
+                        if (!gameActive) {
+                            moveBot();
+                            return;
+                        }
                         try {
                             if (closest && closest.isConnected && closest.parentElement) {
                                 let h = parseFloat(closest.dataset.health);
@@ -1263,10 +1267,15 @@ function startHelperBot() {
 function startLaserLoop() {
     if (!hasMagnetUpgrade) return;
 
-    if (gameActive) {
-        triggerLaser();
+    try {
+        if (gameActive) {
+            triggerLaser();
+        }
+    } catch (e) {
+        console.error("Laser Trigger Error", e);
     }
-    setTimeout(startLaserLoop, magnetInterval);
+    const nextInterval = Math.max(100, isNaN(magnetInterval) ? 3000 : magnetInterval);
+    setTimeout(startLaserLoop, nextInterval);
 }
 
 function triggerLaser() {
@@ -1852,7 +1861,7 @@ function createFireExplosion(x, y) {
     explo.style.left = `${x - size / 2}px`;
     explo.style.top = `${y - size / 2}px`;
     container.appendChild(explo);
-    setTimeout(() => explo.remove(), 500);
+    setTimeout(() => explo.remove(), 900);
 }
 
 function spawnSkinTrail(x, y) {
