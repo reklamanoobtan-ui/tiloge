@@ -51,6 +51,7 @@ let lastMinigameMilestone = 0;
 let isMinigameActive = false;
 let minigameTimer = null;
 let healthHalvedActive = false;
+let consecutiveCoinBuffs = 0;
 
 async function logToAdmin(msg, level = 'INFO') {
     try {
@@ -1224,6 +1225,12 @@ function triggerLaser() {
 }
 
 function applyUpgrade(id) {
+    if (id === 'coin_buff') {
+        consecutiveCoinBuffs++;
+    } else {
+        consecutiveCoinBuffs = 0;
+    }
+
     switch (id) {
         // case 'diff' removed
         case 'speed': helperSpeedMultiplier *= globalUpgradePower; break;
@@ -1568,13 +1575,43 @@ function showUpgradeOptions() {
         return (upgradeCounts[u.id] || 0) < 5;
     });
 
-    // Probability Logic: Lower chance for Strength if Spawn Speed > Strength
+    // Probability Logic:
     let finalPool = [];
     available.forEach(u => {
+        let weight = 1.0;
+
+        // 1. Greed's Curse: If 2+ consecutive coin buffs, offensive items become very rare
+        if (consecutiveCoinBuffs >= 2 && (u.id === 'strength' || u.id === 'radius' || u.id === 'bomb' || u.id === 'magnet')) {
+            weight *= 0.2;
+        }
+
+        // 2. Quality over Quantity: If > 5 bots but low power, new bots become rare
+        if (u.id === 'bot' && activeHelpers > 5 && (upgradeCounts['bot_pow'] || 0) < 3) {
+            weight = 0.05;
+        }
+
+        // 3. Pity System: If score > 5000 and no Elite upgrades, boost their chance
+        if ((u.id === 'karcher' || u.id === 'bomb') && score > 5000 && (upgradeCounts['karcher'] || 0) === 0 && (upgradeCounts['bomb'] || 0) === 0) {
+            weight = 10.0;
+        }
+
+        // 4. Glass Cannon: If Strength >= 8 but Radius <= 3, boost Bomb chance
+        if (u.id === 'bomb' && (upgradeCounts['strength'] || 0) >= 8 && (upgradeCounts['radius'] || 0) <= 3) {
+            weight *= 3.0;
+        }
+
+        // 5. Panic Button: If too many stains (> 15), boost emergency tools (Bomb/Laser)
+        const stainCount = document.querySelectorAll('.stain').length;
+        if (stainCount > 15 && (u.id === 'bomb' || u.id === 'magnet')) {
+            weight *= 1.5;
+        }
+
+        // Existing Logic: Spawn Speed vs Strength
         if (u.id === 'strength' && (upgradeCounts['spawn_speed'] || 0) > (upgradeCounts['strength'] || 0)) {
-            // 20% chance to include strength in the draw pool
-            if (Math.random() < 0.2) finalPool.push(u);
-        } else {
+            weight *= 0.2;
+        }
+
+        if (Math.random() < weight) {
             finalPool.push(u);
         }
     });
