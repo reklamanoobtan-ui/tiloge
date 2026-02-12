@@ -116,8 +116,9 @@ let globalTriangleBossHP = 30000; // Triangle boss HP override
 let globalTriangleBossImage = null;
 let globalTriangleBossScale = 1.0;
 let globalTriangleBossOpacity = 1.0;
-let globalRegularBossThreshold = 125; // Halved again
-let globalTriangleBossThreshold = 250; // Halved again
+let globalRegularBossThreshold = 125; // Halved
+let globalTriangleBossThreshold = 250; // Halved
+let globalSpinThresholdOverride = 2500; // Lowered default
 let lastSpawnEventId = 0; // Track last processed immediate spawn
 
 // Global Interval IDs to prevent stacking
@@ -533,7 +534,7 @@ let globalStrengthMult = 1;
 let globalRadiusMult = 1;
 let globalCoinMult = 1;
 let globalBossHPOverride = null;
-let globalSoapThresholdOverride = null;
+let globalSoapThresholdOverride = 625;
 let globalMinigameThresholdOverride = null;
 let globalSoapCutsceneTimeOverride = null;
 let soapUseCount = 0;
@@ -609,7 +610,7 @@ function updateScore(points) {
         }
 
         // Spin Wheel Milestone
-        const spinThresh = globalSpinThresholdOverride || 10000;
+        const spinThresh = globalSpinThresholdOverride || 2500;
         if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
             if (!isSpinning && !isUpgradeOpen) {
                 lastSpinMilestone = score;
@@ -2681,7 +2682,7 @@ async function checkGlobalEvents() {
         globalRadiusMult = 1;
         globalCoinMult = 1;
         globalBossHPOverride = null;
-        globalSoapThresholdOverride = null;
+        globalSoapThresholdOverride = 625;
         globalMinigameThresholdOverride = null;
         globalSoapCutsceneTimeOverride = null;
         globalGodMode = false;
@@ -2689,14 +2690,14 @@ async function checkGlobalEvents() {
         globalBossImage = null;
         globalBossScale = 1.0;
         globalBossOpacity = 1.0;
-        globalBossInterval = 60000;
-        globalRegularBossThreshold = 500;
-        globalTriangleBossHP = 30000;
+        globalBossInterval = 15000;
+        globalRegularBossThreshold = 125;
+        globalTriangleBossHP = 7500;
         globalTriangleBossImage = null;
         globalTriangleBossScale = 1.0;
         globalTriangleBossOpacity = 1.0;
-        globalTriangleBossThreshold = 1000;
-        globalTriangleBossInterval = 120000;
+        globalTriangleBossThreshold = 250;
+        globalTriangleBossInterval = 30000;
         globalUpgradePower = 1.3;
         globalPinkUpgradePower = 1.5;
         globalUpgradeFactor = 1.3;
