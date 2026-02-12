@@ -1700,13 +1700,13 @@ input:checked+.slider:before {
     position: absolute;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, #fff 10%, #ffcc00 30%, #ff4d4d 60%, transparent 80%);
+    background: radial-gradient(circle, #ffffff 5%, #fff700 20%, #ff8800 40%, #ff0000 60%, transparent 80%);
     border-radius: 50%;
     pointer-events: none;
-    z-index: 5000;
-    /* Above everything inside container */
+    z-index: 10000;
+    box-shadow: inset 0 0 50px #fff;
     animation: explode 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    filter: drop-shadow(0 0 20px #ff4d4d);
+    filter: drop-shadow(0 0 30px #ff0000) brightness(1.5);
 }
 
 @keyframes explode {

@@ -1366,7 +1366,11 @@ function applyUpgrade(id) {
         case 'radius': radiusMultiplier *= globalUpgradePower; updatePowerStats(); break;
         case 'strength': strengthMultiplier *= globalUpgradePower; updatePowerStats(); break;
         case 'karcher': strengthMultiplier *= (globalUpgradePower * 0.7 + 1); radiusMultiplier *= (globalUpgradePower * 0.7 + 1); updatePowerStats(); break;
-        case 'bomb': hasBombUpgrade = true; break;
+        case 'bomb':
+            hasBombUpgrade = true;
+            strengthMultiplier *= 1.25; // Give 25% strength boost per bomb level
+            updatePowerStats();
+            break;
         case 'coin_buff': coinBonusMultiplier += (globalUpgradePower - 1); break;
         case 'bot_pow': helperCleaningMultiplier *= globalUpgradePower; break;
         case 'magnet':
@@ -1907,7 +1911,8 @@ function createFireExplosion(x, y) {
     const explo = document.createElement('div');
     explo.className = 'bomb-explosion';
     const bombLvl = upgradeCounts['bomb'] || 1;
-    const size = 150 * (1 + (bombLvl * 0.2));
+    // Visual size should be larger to match the effect radius (approx 300-600px)
+    const size = 300 * (1 + (bombLvl * 0.2));
     explo.style.width = `${size}px`;
     explo.style.height = `${size}px`;
     explo.style.left = `${x - size / 2}px`;
