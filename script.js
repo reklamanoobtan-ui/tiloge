@@ -338,6 +338,9 @@ async function syncUserData(isFinal = false) {
 async function fetchLeaderboard() {
     console.log("Leaderboard: Starting fetch...");
     const list = get('mini-lb-list');
+    const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
+    const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql``;
+
     try {
         const result = await sql`
             SELECT nickname, 
@@ -346,7 +349,7 @@ async function fetchLeaderboard() {
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
-              AND email NOT LIKE 'guest_%'
+              ${filter}
             ORDER BY d_score DESC
             LIMIT 10
         `;
@@ -458,13 +461,16 @@ async function fetchGlobalRankings() {
     };
 
     try {
-        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY best_score DESC LIMIT 10`;
+        const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
+        const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql``;
+
+        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, coins FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY coins DESC LIMIT 10`;
+        const topCoins = await sql`SELECT nickname, coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY total_survival_time DESC LIMIT 10`;
+        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
         // Cache Global Rankings
         const globalCache = { topScores, topCoins, topTime };
@@ -741,13 +747,10 @@ function initUI() {
         get('themes-modal').classList.remove('hidden');
     };
     const ratingsAction = () => {
-        if (userEmail && userEmail.startsWith('guest_')) {
-            showRestrictedModal();
-            return;
-        }
         if (get('ratings-modal')) {
             get('ratings-modal').classList.remove('hidden');
             fetchLeaderboard();
+            fetchGlobalRankings();
         }
     };
     const uiAction = () => get('ui-modal').classList.remove('hidden');
@@ -772,6 +775,13 @@ function initUI() {
     safeOnClick('close-settings', () => get('settings-modal').classList.add('hidden'));
     safeOnClick('close-themes', () => get('themes-modal').classList.add('hidden'));
     safeOnClick('close-ratings', () => get('ratings-modal').classList.add('hidden'));
+
+    if (get('lb-filter-registered')) {
+        get('lb-filter-registered').onchange = () => {
+            fetchLeaderboard();
+            fetchGlobalRankings();
+        };
+    }
 
     // Premium Sidebar Logic
     const statsSidebar = get('stats-sidebar');

@@ -438,7 +438,15 @@
                 <h2
                     style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #ffd700, #fff); -webkit-background-clip: text; background-clip: text; color: transparent;">
                     🌍 GLOBAL TOP 10</h2>
-                <p style="opacity: 0.5; font-size: 0.9rem;">საუკეთესო მოთამაშეები მთელი მსოფლიოდან</p>
+                <div id="lb-filter-container"
+                    style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px;">
+                    <span style="font-size: 0.8rem; opacity: 0.8;">ყველა</span>
+                    <label class="switch">
+                        <input type="checkbox" id="lb-filter-registered">
+                        <span class="slider round"></span>
+                    </label>
+                    <span style="font-size: 0.8rem; opacity: 0.8;">მხოლოდ რეგისტრირებული</span>
+                </div>
             </div>
 
             <div id="global-rankings-view" class="ratings-grid-global">
@@ -462,8 +470,9 @@
                 </div>
             </div>
 
-            <div style="margin-top: 20px; text-align: center; font-size: 0.8rem; opacity: 0.6; color: #ffd700;">
-                ✨ რეიტინგი ეხება მხოლოდ რეგისტრირებულ მომხმარებლებს
+            <div id="lb-footer-text"
+                style="margin-top: 20px; text-align: center; font-size: 0.8rem; opacity: 0.6; color: #ffd700;">
+                ✨ გამოიყენეთ ფილტრი ყველას ან მხოლოდ რეგისტრირებულების სანახავად
             </div>
         </div>
     </div>
