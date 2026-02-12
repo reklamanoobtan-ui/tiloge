@@ -107,8 +107,8 @@ let clothStrength = 0;
 let cleaningRadius = 1;
 
 // Admin-controlled game parameters
-let globalBossInterval = 60000; // Boss spawn interval in milliseconds (default 60s)
-let globalTriangleBossInterval = 120000; // Triangle boss spawn interval
+let globalBossInterval = 30000; // Halved
+let globalTriangleBossInterval = 60000; // Halved
 let globalUpgradePower = 1.3; // Upgrade multiplier (default 1.3 = +30%)
 let globalPinkUpgradePower = 1.5; // Pink upgrade multiplier (default 1.5 = +50%)
 let globalBossOpacity = 1.0; // Boss opacity (1-10 scale, converted to 0.1-1.0)
@@ -116,8 +116,8 @@ let globalTriangleBossHP = 30000; // Triangle boss HP override
 let globalTriangleBossImage = null;
 let globalTriangleBossScale = 1.0;
 let globalTriangleBossOpacity = 1.0;
-let globalRegularBossThreshold = 500; // Score threshold for regular bosses
-let globalTriangleBossThreshold = 1000; // Score threshold for triangle bosses
+let globalRegularBossThreshold = 250; // Halved
+let globalTriangleBossThreshold = 500; // Halved
 let lastSpawnEventId = 0; // Track last processed immediate spawn
 
 // Global Interval IDs to prevent stacking
@@ -2011,11 +2011,11 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
         // Formula: 5000 * (1 + score/20000)^2
         const bossScaling = Math.pow(1 + (score / 20000), 2);
 
-        let baseBossHP = (globalBossHPOverride || 5000) * bossWeaknessMultiplier;
+        let baseBossHP = (globalBossHPOverride || 2500) * bossWeaknessMultiplier;
 
         if (isTriangle) {
-            // ELITE BOSS (Every 20k score)
-            baseBossHP = 15000 * bossWeaknessMultiplier; // 3x Normal Boss
+            // ELITE BOSS
+            baseBossHP = 7500 * bossWeaknessMultiplier; // Halved
             stain.classList.add('triangle-boss');
             stain.innerHTML = '<div class="boss-title" style="color: #ffd700 !important; text-shadow: 0 0 10px gold;">ELITE BOSS</div>';
             size = 350 * (globalTriangleBossScale || 1.0);
