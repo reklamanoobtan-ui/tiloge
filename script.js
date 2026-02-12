@@ -1913,8 +1913,8 @@ function createFireExplosion(x, y) {
     explo.className = 'bomb-explosion';
     const bombLvl = upgradeCounts['bomb'] || 1;
     // Visual size should be larger to match the effect radius (approx 300-600px)
-    // Visual size halved (was 300)
-    const size = 150 * (1 + (bombLvl * 0.2));
+    // Visual size halved again (was 150)
+    const size = 75 * (1 + (bombLvl * 0.2));
     explo.style.width = `${size}px`;
     explo.style.height = `${size}px`;
     explo.style.left = `${x - size / 2}px`;
@@ -2333,8 +2333,8 @@ function finalizeCleaning(stain, sx, sy, canTriggerBomb = false) {
     if (hasBombUpgrade && canTriggerBomb) {
         createFireExplosion(sx, sy);
         const bombLvl = upgradeCounts['bomb'] || 1;
-        const radius = 100 + (bombLvl * 50); // Halved radius (was 200+100)
-        const damage = 1000 * bombLvl; // Buffet damage
+        const radius = 50 + (bombLvl * 25); // Halved radius again (was 100+50)
+        const damage = 500 * bombLvl; // Halved damage (was 1000)
 
         // Optimization: allPending will decrease in size as recursion progresses due to stain.remove()
         const allStains = document.querySelectorAll('.stain');
