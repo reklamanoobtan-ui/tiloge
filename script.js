@@ -1624,7 +1624,12 @@ function showPinkUpgradeOptions() {
     const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && (upgradeCounts[id] || 0) > 0);
 
     // If none owned, offer based on what's available in the main pool names
-    const availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(names).filter(id => !excludes.includes(id));
+    let availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(names).filter(id => !excludes.includes(id));
+
+    // Limit Spawn Speed: Don't offer if already extremely fast (0.05 limit)
+    if (spawnSpeedUpgradeMultiplier <= 0.05) {
+        availablePool = availablePool.filter(id => id !== 'spawn_speed');
+    }
 
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
