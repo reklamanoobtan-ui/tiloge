@@ -2003,7 +2003,13 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     // ==========================================
 
     // Difficulty Factor: Increases by 0.1 every 1000 score
-    const difficulty = (1 + (score / 10000));
+    let difficulty = (1 + (score / 10000));
+
+    // SUPER HARD MODE: At 5000 score, everything becomes 2x stronger
+    if (score >= 5000) {
+        difficulty *= 2;
+        if (score === 5000) showStatusUpdate("⚠️ ყურადღება! მტრები გაძლიერდნენ! (x2 HP) ☠️");
+    }
 
     let health = 100;
     let size = Math.random() * 100 + 50; // Random size 50-150px
