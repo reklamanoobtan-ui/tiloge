@@ -1286,7 +1286,7 @@ function startHelperBot() {
                                 closest.style.opacity = Math.max(0.1, h / parseFloat(closest.dataset.maxHealth));
 
                                 if (h <= 0) {
-                                    finalizeCleaning(closest, sx, sy);
+                                    finalizeCleaning(closest, sx, sy, false); // Bots don't trigger bombs
                                 }
                             }
                         } catch (e) {
@@ -1343,7 +1343,7 @@ function triggerLaser() {
             const dmg = 200 * (upgradeCounts['magnet'] || 1);
             target.dataset.health = h - dmg;
             if (h <= dmg) target.dataset.health = 0;
-            checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            checkCleaning(rect.left + rect.width / 2, rect.top + rect.height / 2, false); // Laser doesn't trigger bombs
         });
     }
 }
@@ -1908,7 +1908,8 @@ function createFireExplosion(x, y) {
     explo.className = 'bomb-explosion';
     const bombLvl = upgradeCounts['bomb'] || 1;
     // Visual size should be larger to match the effect radius (approx 300-600px)
-    const size = 300 * (1 + (bombLvl * 0.2));
+    // Visual size halved (was 300)
+    const size = 150 * (1 + (bombLvl * 0.2));
     explo.style.width = `${size}px`;
     explo.style.height = `${size}px`;
     explo.style.left = `${x - size / 2}px`;
@@ -2240,7 +2241,7 @@ document.addEventListener('touchmove', (e) => {
 setInterval(() => {
     if (!gameActive) return;
     if (currentX && currentY) {
-        checkCleaning(currentX, currentY);
+        checkCleaning(currentX, currentY, true); // Manual cleaning allows bombs
         // lastActivityTime handled in mouse/touch move
     }
 }, 50);
@@ -2257,7 +2258,7 @@ function moveCloth(x, y) {
     }
 }
 
-function checkCleaning(bx, by) {
+function checkCleaning(bx, by, isManual = false) {
     if (!gameActive) return;
     const stains = document.querySelectorAll('.stain');
     stains.forEach(stain => {
@@ -2283,13 +2284,13 @@ function checkCleaning(bx, by) {
             stain.style.opacity = Math.max(0, h / maxH);
 
             if (h <= 0) {
-                finalizeCleaning(stain, sx, sy);
+                finalizeCleaning(stain, sx, sy, isManual);
             }
         }
     });
 }
 
-function finalizeCleaning(stain, sx, sy) {
+function finalizeCleaning(stain, sx, sy, canTriggerBomb = false) {
     if (stain.dataset.cleaning === 'true') return;
     stain.dataset.cleaning = 'true';
     stain.remove(); // Remove immediately to prevent ghosting and optimize queries
@@ -2317,11 +2318,11 @@ function finalizeCleaning(stain, sx, sy) {
         createParticles(sx, sy, stain.style.backgroundColor || '#fff', 10);
     }
 
-    // Bomb Upgrade: Chain Reaction
-    if (hasBombUpgrade) {
+    // Bomb Upgrade: Chain Reaction (Only if triggered by manual cloth)
+    if (hasBombUpgrade && canTriggerBomb) {
         createFireExplosion(sx, sy);
         const bombLvl = upgradeCounts['bomb'] || 1;
-        const radius = 200 + (bombLvl * 100);
+        const radius = 100 + (bombLvl * 50); // Halved radius (was 200+100)
         const damage = 1000 * bombLvl; // Buffet damage
 
         // Optimization: allPending will decrease in size as recursion progresses due to stain.remove()
@@ -2345,7 +2346,7 @@ function finalizeCleaning(stain, sx, sy) {
                 s.style.opacity = Math.max(0, sh / sMaxH);
 
                 if (sh <= 0) {
-                    finalizeCleaning(s, scx, scy);
+                    finalizeCleaning(s, scx, scy, true); // Chain reaction should continue
                 }
             }
         });
