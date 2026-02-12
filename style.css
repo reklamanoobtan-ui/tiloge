@@ -1700,24 +1700,50 @@ input:checked+.slider:before {
     position: absolute;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, #ffcc00, #ff4d4d, transparent 70%);
+    background: radial-gradient(circle, #fff 10%, #ffcc00 30%, #ff4d4d 60%, transparent 80%);
     border-radius: 50%;
     pointer-events: none;
-    z-index: 3000;
-    mix-blend-mode: screen;
+    z-index: 5000;
+    /* Above everything inside container */
     animation: explode 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    filter: drop-shadow(0 0 20px #ff4d4d);
 }
 
 @keyframes explode {
     0% {
         transform: scale(0.1);
         opacity: 1;
-        filter: brightness(2);
     }
 
     100% {
-        transform: scale(2.5);
+        transform: scale(3.5);
         opacity: 0;
-        filter: brightness(1);
+    }
+}
+
+.shake {
+    animation: shake-anim 0.3s ease-in-out;
+}
+
+@keyframes shake-anim {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translate(-5px, -5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translate(5px, 5px);
     }
 }

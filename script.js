@@ -1913,6 +1913,11 @@ function createFireExplosion(x, y) {
     explo.style.left = `${x - size / 2}px`;
     explo.style.top = `${y - size / 2}px`;
     container.appendChild(explo);
+
+    // Screen Shake
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 300);
+
     setTimeout(() => explo.remove(), 900);
 }
 
@@ -2252,6 +2257,7 @@ function moveCloth(x, y) {
 }
 
 function checkCleaning(bx, by) {
+    if (!gameActive) return;
     const stains = document.querySelectorAll('.stain');
     stains.forEach(stain => {
         if (stain.dataset.cleaning === 'true') return;
@@ -2814,6 +2820,12 @@ function startGameSession(dontReset = false) {
         coinBonusMultiplier = 1.0;
         hasMagnetUpgrade = false;
         lastMilestoneScore = 0;
+        isSoapActive = false;
+        isUpgradeOpen = false;
+        isMinigameActive = false;
+        magnetInterval = 3000;
+        spawnSpeedUpgradeMultiplier = 1.0;
+        bossWeaknessMultiplier = 1.0;
         document.querySelectorAll('.helper-bot').forEach(b => b.remove());
     }
 
