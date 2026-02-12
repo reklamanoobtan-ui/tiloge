@@ -104,7 +104,7 @@ let bossWeaknessMultiplier = 1.0;
 // Base stats
 let baseClothStrength = 20; // Reverted to 20 (Harder)
 let clothStrength = 0;
-let cleaningRadius = 1;
+let cleaningRadius = 0.5;
 
 // Admin-controlled game parameters
 let globalBossInterval = 15000; // Halved again (15s)
@@ -142,7 +142,7 @@ function updatePowerStats() {
     let power = baseClothStrength * strengthMultiplier * globalStrengthMult;
     const clothEl = get('cloth');
 
-    cleaningRadius = 1 * radiusMultiplier * globalRadiusMult;
+    cleaningRadius = 0.5 * radiusMultiplier * globalRadiusMult;
     clothStrength = power;
 
     // Apply Current Skin (Clean removal of ALL possible skin classes)
