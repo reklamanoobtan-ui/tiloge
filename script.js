@@ -23,7 +23,7 @@ let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
-let isVip = localStorage.getItem('tilo_vip') === 'true';
+let isVip = false;
 let currentTheme = localStorage.getItem('tilo_theme') || 'light';
 document.body.className = `theme-${currentTheme}`;
 
@@ -159,7 +159,6 @@ function updatePowerStats() {
 
 function saveStatsToLocal() {
     localStorage.setItem('tilo_coins', coins);
-    localStorage.setItem('tilo_vip', isVip);
     localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
     localStorage.setItem('tilo_current_skin', currentSkin);
     localStorage.setItem('tilo_upgrades', JSON.stringify(upgradeCounts));
@@ -343,18 +342,12 @@ async function fetchLeaderboard() {
         const result = await sql`
             SELECT nickname, 
                    GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
-                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
-                   CASE 
-                       WHEN GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) > 0 
-                       THEN CAST(GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) AS FLOAT) / NULLIF(CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END, 0)
-                       ELSE 0 
-                   END as d_efficiency,
-                   is_vip
+                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time
             FROM users 
             WHERE nickname IS NOT NULL 
               AND nickname != ''
               AND email NOT LIKE 'guest_%'
-            ORDER BY d_efficiency DESC, d_score DESC
+            ORDER BY d_score DESC
             LIMIT 10
         `;
 
@@ -373,16 +366,13 @@ async function fetchLeaderboard() {
 
                     const scoreVal = parseFloat(entry.d_score || 0);
                     const timeVal = parseFloat(entry.d_time || 0);
-                    const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
 
-                    const crown = entry.is_vip ? '👑 ' : '';
-                    const nameColor = entry.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
                     const safeNick = entry.nickname.substring(0, 10);
 
                     item.innerHTML = `
                         <div class="mini-lb-info">
-                            <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${safeNick}</span>
-                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}s)</span>
+                            <span class="mini-lb-name">${i + 1}. ${safeNick}</span>
+                            <span class="mini-lb-stat">⏱️ ${timeVal}s</span>
                         </div>
                         <span class="mini-lb-score">${scoreVal} ✨</span>
                     `;
@@ -414,16 +404,13 @@ async function fetchLeaderboard() {
 
                     const scoreVal = parseFloat(entry.d_score || 0);
                     const timeVal = parseFloat(entry.d_time || 0);
-                    const ld = entry.d_efficiency ? parseFloat(entry.d_efficiency).toFixed(2) : '0.00';
 
-                    const crown = entry.is_vip ? '👑 ' : '';
-                    const nameColor = entry.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
                     const safeNick = entry.nickname.substring(0, 10);
 
                     item.innerHTML = `
                         <div class="mini-lb-info">
-                            <span class="mini-lb-name" style="${nameColor}">${i + 1}. ${crown}${safeNick}</span>
-                            <span class="mini-lb-stat">LD: ${ld} (⏱️ ${timeVal}s)</span>
+                            <span class="mini-lb-name">${i + 1}. ${safeNick}</span>
+                            <span class="mini-lb-stat">⏱️ ${timeVal}s</span>
                         </div>
                         <span class="mini-lb-score">${scoreVal} ✨</span>
                     `;
@@ -450,11 +437,7 @@ async function fetchGlobalRankings() {
         data.forEach((u, i) => {
             const item = document.createElement('div');
             item.className = 'mini-lb-item';
-            if (u.is_vip) item.classList.add('vip-lb-item');
-
             const val = u[statKey] || 0;
-            const crown = u.is_vip ? '👑 ' : '';
-            const nameColor = u.is_vip ? 'color: #ffd700; font-weight: 800;' : '';
 
             let rankBadge = '';
             if (i < 3) {
@@ -466,7 +449,7 @@ async function fetchGlobalRankings() {
             item.innerHTML = `
                 <div class="mini-lb-info">
                     ${rankBadge}
-                    <span class="mini-lb-name" style="${nameColor}">${crown}${u.nickname.substring(0, 10)}</span>
+                    <span class="mini-lb-name">${u.nickname.substring(0, 10)}</span>
                 </div>
                 <span class="mini-lb-score">${val}${suffix}</span>
             `;
@@ -475,14 +458,14 @@ async function fetchGlobalRankings() {
     };
 
     try {
-        const topScores = await sql`SELECT nickname, best_score, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY best_score DESC LIMIT 10`;
+        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, coins, is_vip FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY coins DESC LIMIT 10`;
+        const topCoins = await sql`SELECT nickname, coins FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'coins');
 
+        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' AND email NOT LIKE 'guest_%' ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
-
         // Cache Global Rankings
         const globalCache = { topScores, topCoins, topTime };
         localStorage.setItem('global_lb_cache', JSON.stringify(globalCache));
@@ -510,11 +493,11 @@ async function shareScore(scoreVal, timeVal) {
 
 
     try {
-        const efficiency = timeVal > 0 ? scoreVal / timeVal : 0;
+        // Removed efficiency calculation
         console.log("🌍 Attempting to auto-share score to rankings...", { nick: nickname, score: scoreVal });
 
-        await sql`INSERT INTO shared_scores (nickname, score, survival_time, efficiency, is_vip)
-                  VALUES (${nickname}, ${scoreVal}, ${timeVal}, ${efficiency}, ${isVip})`;
+        await sql`INSERT INTO shared_scores (nickname, score, survival_time)
+                  VALUES (${nickname}, ${scoreVal}, ${timeVal})`;
 
         console.log("✅ Match automatically shared to global rankings.");
     } catch (e) {
@@ -1104,8 +1087,8 @@ function setupAdmin() {
         const nick = getVal('admin-target-nick');
         if (!nick) return;
         try {
-            await sql`UPDATE users SET is_vip = true WHERE nickname = ${nick} `;
-            setStatus(`VIP granted to ${nick} `);
+            // Removed VIP status update SQL query
+            setStatus(`მოთამაშე ${nick}-ს მიენიჭა VIP სტატუსი (ვიზუალური მხოლოდ)`);
         } catch (e) { setStatus('Error', 'red'); }
     };
 
@@ -1114,7 +1097,7 @@ function setupAdmin() {
         if (!nick) return;
         if (confirm(`Ban ${nick}? This will reset their stats.`)) {
             try {
-                await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${nick} `;
+                await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0 WHERE nickname = ${nick} `;
                 setStatus(`${nick} has been reset / banned`, 'red');
             } catch (e) { setStatus('Error', 'red'); }
         }
@@ -1180,7 +1163,7 @@ function setupChat() {
 async function fetchChat() {
     try {
         const msgs = await sql`
-            SELECT DISTINCT ON (cm.id) cm.*, u.is_vip
+            SELECT DISTINCT ON (cm.id) cm.*
             FROM chat_messages cm
             LEFT JOIN users u ON cm.nickname = u.nickname
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds'
@@ -1194,11 +1177,7 @@ async function fetchChat() {
             const el = document.createElement('div');
             el.className = 'chat-msg';
 
-            const isVipUser = m.is_vip === true;
-            const nameClass = isVipUser ? 'vip-rainbow-text chat-vip-name' : '';
-            const crown = isVipUser ? '👑 ' : '';
-
-            el.innerHTML = `<strong class="${nameClass}">${crown}${m.nickname}:</strong> ${m.message}`;
+            el.innerHTML = `<strong>${m.nickname}:</strong> ${m.message}`;
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         });
@@ -1211,7 +1190,6 @@ function startHelperBot() {
     const botEl = document.createElement('div');
     botEl.className = 'helper-bot';
     botEl.innerHTML = '🤖';
-    if (isVip) botEl.classList.add('vip-rainbow-trail');
     container.appendChild(botEl);
 
     // Give each bot a slight unique offset so they don't stack perfectly
@@ -2455,7 +2433,7 @@ window.onload = async () => {
             userEmail = savedEmail;
             nickname = localStorage.getItem('tilo_nick');
             coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
-            isVip = localStorage.getItem('tilo_vip') === 'true';
+            isVip = false;
             startGameSession(true);
         } else {
             document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
@@ -2474,7 +2452,7 @@ window.onload = async () => {
             userEmail = savedEmail;
             nickname = savedNick;
             coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
-            isVip = localStorage.getItem('tilo_vip') === 'true';
+            isVip = false;
         } else {
             // Guest or fresh landing
             if (savedEmail && savedEmail.startsWith('guest_')) {
@@ -2558,13 +2536,14 @@ window.onload = async () => {
                 nickname = user.nickname;
                 userEmail = user.email;
                 coins = user.coins || 0;
-                isVip = user.is_vip || false;
+                isVip = false;
             }
 
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
-            localStorage.setItem('tilo_vip', isVip);
+            isVip = false;
+            // Removed tilo_vip storage syncing
 
             const authModal = get('auth-modal');
             if (authModal) {
