@@ -535,7 +535,7 @@ let globalStrengthMult = 1;
 let globalRadiusMult = 1;
 let globalCoinMult = 1;
 let globalBossHPOverride = null;
-let globalSoapThresholdOverride = 625;
+
 let globalMinigameThresholdOverride = null;
 let globalSoapCutsceneTimeOverride = null;
 let soapUseCount = 0;
