@@ -262,6 +262,8 @@ async function initDatabase() {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT NOW()`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS owned_skins TEXT DEFAULT '["default"]'`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS current_skin TEXT DEFAULT 'default'`;
 
         // Drop UNIQUE constraint on nickname if it exists (for existing databases)
         try {
@@ -311,6 +313,8 @@ async function syncUserData(isFinal = false) {
         await sql`UPDATE users SET 
             score = ${totalScoreToSync},
             coins = ${coins},
+            owned_skins = ${JSON.stringify(ownedSkins)},
+            current_skin = ${currentSkin},
             survival_time = ${currentSurvival},
             best_score = GREATEST(best_score, ${totalScoreToSync}),
             best_survival_time = GREATEST(best_survival_time, ${currentSurvival}),
@@ -329,8 +333,11 @@ async function syncUserData(isFinal = false) {
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
                      VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${earned}, NOW())`;
 
-            await sql`UPDATE users SET total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
-            console.log("✅ Match achievement recorded successfully.");
+            // Add earned coins to balance
+            coins += earned;
+            await sql`UPDATE users SET coins = ${coins}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
+            saveStatsToLocal();
+            console.log("✅ Match achievement recorded successfully. Coins earned:", earned);
         }
     } catch (e) { console.error("Sync Error:", e); }
 }
@@ -2439,10 +2446,27 @@ window.onload = async () => {
     async function initializeFlow1() {
         // --- OLD LOGIC: Start Screen ---
         const savedEmail = localStorage.getItem('tilo_email');
-        if (savedEmail && !savedEmail.startsWith('guest_')) {
+        if (savedEmail) {
             userEmail = savedEmail;
             nickname = localStorage.getItem('tilo_nick');
-            coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+            try {
+                const res = await sql`SELECT coins, owned_skins, current_skin FROM users WHERE email = ${userEmail}`;
+                if (res.length > 0) {
+                    const u = res[0];
+                    coins = u.coins || 0;
+                    if (u.owned_skins) {
+                        try { ownedSkins = JSON.parse(u.owned_skins); } catch (e) { ownedSkins = ["default"]; }
+                    }
+                    currentSkin = u.current_skin || "default";
+                    localStorage.setItem('tilo_coins', coins);
+                    localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
+                    localStorage.setItem('tilo_current_skin', currentSkin);
+                } else {
+                    coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+                }
+            } catch (e) {
+                coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+            }
             isVip = false;
             startGameSession(true);
         } else {
@@ -2457,26 +2481,45 @@ window.onload = async () => {
         const savedEmail = localStorage.getItem('tilo_email');
         const savedNick = localStorage.getItem('tilo_nick');
 
-        if (savedEmail && !savedEmail.startsWith('guest_')) {
-            // Logged in user
+        if (savedEmail) {
             userEmail = savedEmail;
             nickname = savedNick;
-            coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
-            isVip = false;
-        } else {
-            // Guest or fresh landing
-            if (savedEmail && savedEmail.startsWith('guest_')) {
-                userEmail = savedEmail;
-                nickname = savedNick;
-            } else {
-                nickname = generateRandomGuestName();
-                userEmail = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-                localStorage.setItem('tilo_nick', nickname);
-                localStorage.setItem('tilo_email', userEmail);
+            // Fetch latest coins from DB if possible
+            try {
+                const res = await sql`SELECT coins, owned_skins, current_skin FROM users WHERE email = ${userEmail}`;
+                if (res.length > 0) {
+                    const u = res[0];
+                    coins = u.coins || 0;
+                    if (u.owned_skins) {
+                        try { ownedSkins = JSON.parse(u.owned_skins); } catch (e) { ownedSkins = ["default"]; }
+                    }
+                    currentSkin = u.current_skin || "default";
+                    localStorage.setItem('tilo_coins', coins);
+                    localStorage.setItem('tilo_owned_skins', JSON.stringify(ownedSkins));
+                    localStorage.setItem('tilo_current_skin', currentSkin);
+                } else {
+                    // Not in DB yet
+                    await sql`INSERT INTO users (email, nickname, coins) VALUES (${userEmail}, ${nickname}, 0) ON CONFLICT (email) DO NOTHING`;
+                    coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+                }
+            } catch (e) {
+                coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
             }
+        } else {
+            // Fresh landing
+            nickname = generateRandomGuestName();
+            userEmail = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
             coins = 0;
-            isVip = false;
+            localStorage.setItem('tilo_nick', nickname);
+            localStorage.setItem('tilo_email', userEmail);
+            localStorage.setItem('tilo_coins', coins);
+
+            // Record new guest in DB
+            try {
+                await sql`INSERT INTO users (email, nickname, coins) VALUES (${userEmail}, ${nickname}, 0) ON CONFLICT (email) DO NOTHING`;
+            } catch (e) { }
         }
+        isVip = false;
 
         // Hide overlay and start immediately
         const overlay = get('game-start-overlay');
@@ -2546,6 +2589,14 @@ window.onload = async () => {
                 nickname = user.nickname;
                 userEmail = user.email;
                 coins = user.coins || 0;
+                if (user.owned_skins) {
+                    try {
+                        ownedSkins = JSON.parse(user.owned_skins);
+                    } catch (e) {
+                        ownedSkins = ["default"];
+                    }
+                }
+                currentSkin = user.current_skin || "default";
                 isVip = false;
             }
 
