@@ -118,7 +118,8 @@ let globalTriangleBossScale = 1.0;
 let globalTriangleBossOpacity = 1.0;
 let globalRegularBossThreshold = 125; // Halved
 let globalTriangleBossThreshold = 250; // Halved
-let globalSpinThresholdOverride = 2500; // Lowered default
+let globalSpinThresholdOverride = 1000; // Updated default
+let globalSoapThresholdOverride = 500; // Updated default step
 let lastSpawnEventId = 0; // Track last processed immediate spawn
 
 // Global Interval IDs to prevent stacking
@@ -591,17 +592,16 @@ function updateScore(points) {
             saveStatsToLocal();
         }
 
-        // Dynamic Soap Milestone
-        const soapThresh = globalSoapThresholdOverride || 1250;
-        if (Math.floor(score / soapThresh) > Math.floor(lastSoapMilestone / soapThresh)) {
+        // Dynamic Soap Milestone (Start 50, every 500)
+        if (score >= 50 && (lastSoapMilestone < 50 || Math.floor((score - 50) / 500) > Math.floor((lastSoapMilestone - 50) / 500))) {
             if (!isSoapActive && !isUpgradeOpen) {
                 lastSoapMilestone = score;
                 createSoap();
             }
         }
 
-        // Dynamic Minigame Milestone
-        const minigameThresh = globalMinigameThresholdOverride || 1875;
+        // Dynamic Minigame Milestone (Every 750)
+        const minigameThresh = globalMinigameThresholdOverride || 750;
         if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
             if (!isMinigameActive && !isUpgradeOpen) {
                 lastMinigameMilestone = score;
@@ -609,8 +609,8 @@ function updateScore(points) {
             }
         }
 
-        // Spin Wheel Milestone
-        const spinThresh = globalSpinThresholdOverride || 2500;
+        // Spin Wheel Milestone (Every 1000)
+        const spinThresh = globalSpinThresholdOverride || 1000;
         if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
             if (!isSpinning && !isUpgradeOpen) {
                 lastSpinMilestone = score;
@@ -2682,8 +2682,8 @@ async function checkGlobalEvents() {
         globalRadiusMult = 1;
         globalCoinMult = 1;
         globalBossHPOverride = null;
-        globalSoapThresholdOverride = 625;
-        globalMinigameThresholdOverride = null;
+        globalSoapThresholdOverride = 500;
+        globalMinigameThresholdOverride = 750;
         globalSoapCutsceneTimeOverride = null;
         globalGodMode = false;
         globalFreezeEnemies = false;
