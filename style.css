@@ -1747,3 +1747,18 @@ input:checked+.slider:before {
         transform: translate(5px, 5px);
     }
 }
+
+#pink-upgrade-modal {
+    z-index: 10001 !important;
+}
+
+.pink-upgrade-card {
+    border: 2px solid #ff69b4 !important;
+    background: rgba(255, 105, 180, 0.1) !important;
+    box-shadow: 0 0 20px rgba(255, 105, 180, 0.3) !important;
+}
+
+.pink-upgrade-card:hover {
+    background: rgba(255, 105, 180, 0.2) !important;
+    transform: scale(1.05) translateY(-5px) !important;
+}
