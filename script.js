@@ -317,6 +317,17 @@ async function initDatabase() {
 
         try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS duel_wins INTEGER DEFAULT 0`; } catch (e) { }
 
+        await sql`CREATE TABLE IF NOT EXISTS duel_stains (
+            id SERIAL PRIMARY KEY,
+            duel_id INTEGER NOT NULL,
+            stain_id TEXT NOT NULL,
+            x FLOAT NOT NULL,
+            y FLOAT NOT NULL,
+            color TEXT,
+            cleaned_by VARCHAR(255),
+            UNIQUE(duel_id, stain_id)
+        )`;
+
     } catch (e) { console.error("DB Init Error", e); }
 }
 

@@ -105,8 +105,8 @@
         /* Opponent Ghost Cloth */
         .opponent-cloth {
             position: absolute;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             background-image: url('tilo.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -114,8 +114,8 @@
             pointer-events: none;
             z-index: 900;
             opacity: 0.6;
-            filter: drop-shadow(0 0 10px rgba(255, 65, 108, 0.5)) hue-rotate(150deg);
-            transition: left 0.4s linear, top 0.4s linear, opacity 0.3s;
+            filter: drop-shadow(0 0 15px rgba(255, 65, 108, 0.6)) hue-rotate(150deg);
+            transition: left 0.15s linear, top 0.15s linear;
         }
 
         .opponent-name-tag {
@@ -125,17 +125,18 @@
             transform: translateX(-50%);
             background: rgba(255, 65, 108, 0.8);
             color: white;
-            padding: 2px 8px;
-            border-radius: 5px;
-            font-size: 0.7rem;
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             white-space: nowrap;
-            font-weight: bold;
+            font-weight: 800;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
         }
 
         .winner-overlay {
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle, rgba(20, 20, 30, 0.95) 0%, rgba(5, 5, 10, 1) 100%);
+            background: radial-gradient(circle, rgba(20, 20, 30, 0.98) 0%, rgba(5, 5, 10, 1) 100%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -162,8 +163,9 @@
         .stain {
             position: absolute;
             border-radius: 50%;
-            transition: transform 0.2s;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 100;
+            filter: blur(2px);
         }
 
         .cloth {
@@ -171,6 +173,17 @@
             height: 150px;
             z-index: 1100;
             pointer-events: none;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -181,30 +194,31 @@
     <div class="duel-hud">
         <div class="duel-status-bar">
             <div class="duel-score-box">
-                <span id="p1-name">ჩემი სახელი</span>
+                <span id="p1-name">Loading...</span>
                 <strong id="p1-score-display">0</strong>
             </div>
             <div class="duel-timer" id="duel-timer">01:00</div>
             <div class="duel-score-box">
-                <span id="p2-name">მოწინააღმდეგე</span>
+                <span id="p2-name">Loading...</span>
                 <strong id="p2-score-display">0</strong>
             </div>
         </div>
     </div>
 
     <div class="duel-container" id="duel-field">
-        <!-- Stains will be spawned here -->
+        <!-- Stains will be synced here -->
         <div id="opponent-cloth" class="opponent-cloth hidden">
-            <div class="opponent-name-tag" id="opp-tag">Names</div>
+            <div class="opponent-name-tag" id="opp-tag">Name</div>
         </div>
     </div>
 
     <div id="winner-modal" class="winner-overlay hidden">
         <div class="winner-title" id="winner-text">გამარჯვებული!</div>
         <div class="winner-reward" id="winner-reward-text">პრიზი: 0 🪙</div>
-        <div style="font-size: 1rem; opacity: 0.6; margin-top: 5px;">ტოპ დუელებში დაგემატათ +1 მოგება!</div>
+        <div style="font-size: 1.1rem; opacity: 0.7; margin-top: 10px;">ტოპ დუელებში დაგემატათ +1 მოგება!</div>
         <button class="glass-btn" onclick="exitDuel()"
-            style="margin-top: 40px; padding: 15px 30px; font-size: 1.1rem;">მთავარ მენიუში დაბრუნება</button>
+            style="margin-top: 50px; padding: 18px 40px; font-size: 1.2rem; border-radius: 50px;">მთავარ მენიუში
+            დაბრუნება</button>
     </div>
 
     <div id="cloth" class="cloth" style="position: fixed;"></div>
@@ -225,9 +239,10 @@
         let isPlayer1 = false;
         let myScore = 0;
         let opponentScore = 0;
-        let timeLeft = 60; // 1 minute
+        let timeLeft = 60;
         let duelActive = false;
         let lastX = 0, lastY = 0;
+        let activeStains = new Map(); // stain_id -> element
 
         const get = id => document.getElementById(id);
         const field = get('duel-field');
@@ -252,7 +267,7 @@
 
                 duelActive = true;
                 startTimer();
-                spawnStainsLoop();
+                if (isPlayer1) spawnStainsLoop(); // Only host spawns
                 syncLoop();
             } catch (e) { console.error(e); }
         }
@@ -273,43 +288,72 @@
                 try {
                     const pos = { x: lastX / window.innerWidth, y: lastY / window.innerHeight };
 
-                    // Update server state
+                    // 1. Update my state
                     if (isPlayer1) {
                         await sql`UPDATE duels SET player1_score = ${myScore}, player1_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     } else {
                         await sql`UPDATE duels SET player2_score = ${myScore}, player2_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     }
 
-                    // Get opponent state
-                    const res = await sql`SELECT player1_score, player2_score, player1_pos, player2_pos, status FROM duels WHERE id = ${duelId}`;
-                    if (res.length === 0) return;
+                    // 2. Fetch current duel state & stains
+                    const [dRes, stainsRes] = await Promise.all([
+                        sql`SELECT * FROM duels WHERE id = ${duelId}`,
+                        sql`SELECT stain_id, x, y, color FROM duel_stains WHERE duel_id = ${duelId} AND cleaned_by IS NULL`
+                    ]);
 
-                    const d = res[0];
-                    if (d.status === 'finished' && duelActive) {
-                        duelActive = false;
-                        finishDuel();
-                        return;
-                    }
+                    const d = dRes[0];
+                    if (d.status === 'finished' && duelActive) { duelActive = false; finishDuel(); return; }
 
-                    opponentScore = isPlayer1 ? (d.player2_score || 0) : (d.player1_score || 0);
+                    opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
                     const oppPos = isPlayer1 ? d.player2_pos : d.player1_pos;
 
                     if (oppPos && typeof oppPos === 'object') {
                         oppCloth.style.left = (oppPos.x * window.innerWidth) + 'px';
                         oppCloth.style.top = (oppPos.y * window.innerHeight) + 'px';
-                        oppCloth.style.opacity = '0.6';
                     }
 
+                    // 3. Sync stains on screen
+                    const serverStainIds = new Set(stainsRes.map(s => s.stain_id));
+
+                    // Remove stains cleaned by others
+                    for (let [sid, el] of activeStains) {
+                        if (!serverStainIds.has(sid)) {
+                            el.style.transform = 'scale(0)';
+                            setTimeout(() => el.remove(), 300);
+                            activeStains.delete(sid);
+                        }
+                    }
+
+                    // Add new stains from server
+                    stainsRes.forEach(s => {
+                        if (!activeStains.has(s.stain_id)) {
+                            createStain(s);
+                        }
+                    });
+
                     updateUI();
-                } catch (e) { console.error("Sync error:", e); }
-            }, 300); // 300ms for much smoother movement
+                } catch (e) { console.error("Sync Error:", e); }
+            }, 400);
+        }
+
+        function createStain(s) {
+            const el = document.createElement('div');
+            el.className = 'stain';
+            const size = 60 + Math.random() * 40;
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            el.style.background = s.color || 'white';
+            el.style.left = (s.x * 100) + '%';
+            el.style.top = (s.y * 100) + '%';
+            el.style.transform = 'scale(0)';
+            field.appendChild(el);
+            setTimeout(() => el.style.transform = 'scale(1)', 50);
+            activeStains.set(s.stain_id, el);
         }
 
         function updateUI() {
             const p1Sc = get('p1-score-display');
             const p2Sc = get('p2-score-display');
-            if (!p1Sc || !p2Sc) return;
-
             if (isPlayer1) {
                 p1Sc.textContent = myScore;
                 p2Sc.textContent = opponentScore;
@@ -319,51 +363,59 @@
             }
         }
 
-        function spawnStainsLoop() {
+        async function spawnStainsLoop() {
             if (!duelActive) return;
-            const stain = document.createElement('div');
-            stain.className = 'stain';
-            const size = 50 + Math.random() * 50;
-            stain.style.width = size + 'px';
-            stain.style.height = size + 'px';
-            stain.style.background = `hsla(${Math.random() * 360}, 70%, 50%, 0.6)`;
-            stain.style.left = (10 + Math.random() * 80) + '%';
-            stain.style.top = (15 + Math.random() * 70) + '%';
-            stain.id = 'stain-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-            field.appendChild(stain);
+            try {
+                const sid = 'stain-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                const x = 0.1 + Math.random() * 0.8;
+                const y = 0.15 + Math.random() * 0.7;
+                const color = `hsla(${Math.random() * 360}, 75%, 60%, 0.7)`;
+
+                await sql`INSERT INTO duel_stains (duel_id, stain_id, x, y, color) VALUES (${duelId}, ${sid}, ${x}, ${y}, ${color})`;
+            } catch (e) { }
 
             setTimeout(spawnStainsLoop, 800);
         }
 
-        function checkClean(mx, my) {
+        async function checkClean(mx, my) {
             if (!duelActive) return;
-            const stains = document.querySelectorAll('.stain');
-            stains.forEach(s => {
-                const rect = s.getBoundingClientRect();
+            for (let [sid, el] of activeStains) {
+                const rect = el.getBoundingClientRect();
                 const sx = rect.left + rect.width / 2;
                 const sy = rect.top + rect.height / 2;
                 const dist = Math.hypot(mx - sx, my - sy);
-                if (dist < 70) {
-                    s.style.transform = 'scale(0)';
-                    setTimeout(() => s.remove(), 200);
-                    myScore++;
-                    updateUI();
+
+                if (dist < 75) {
+                    // Try to claim it
+                    try {
+                        const claim = await sql`
+                            UPDATE duel_stains 
+                            SET cleaned_by = ${userEmail} 
+                            WHERE duel_id = ${duelId} AND stain_id = ${sid} AND cleaned_by IS NULL 
+                            RETURNING id
+                        `;
+                        if (claim.length > 0) {
+                            myScore++;
+                            el.style.transform = 'scale(0)';
+                            setTimeout(() => el.remove(), 300);
+                            activeStains.delete(sid);
+                            updateUI();
+                        }
+                    } catch (e) { }
                 }
-            });
+            }
         }
 
         async function finishDuel() {
             if (!duelActive && get('winner-modal').classList.contains('hidden') === false) return;
             duelActive = false;
 
-            // Final check of scores
             const res = await sql`SELECT player1_score, player2_score FROM duels WHERE id = ${duelId}`;
             const p1Final = res[0].player1_score;
             const p2Final = res[0].player2_score;
 
-            const p1Win = p1Final > p2Final;
-            const winnerEmail = p1Win ? duelData.player1_email : duelData.player2_email;
-            const isWinner = (userEmail === winnerEmail);
+            const isWinner = isPlayer1 ? (p1Final > p2Final) : (p2Final > p1Final);
+            const winnerEmail = (p1Final > p2Final) ? duelData.player1_email : duelData.player2_email;
             const prize = Math.floor((p1Final + p2Final) / 20);
 
             get('winner-modal').classList.remove('hidden');
@@ -373,6 +425,8 @@
             if (isWinner) {
                 await sql`UPDATE users SET coins = coins + ${prize}, total_coins = total_coins + ${prize}, duel_wins = COALESCE(duel_wins, 0) + 1 WHERE email = ${userEmail}`;
                 await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
+                // Clean up stains for this duel
+                await sql`DELETE FROM duel_stains WHERE duel_id = ${duelId}`;
             }
         }
 
