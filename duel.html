@@ -287,13 +287,18 @@
                         await sql`UPDATE duels SET player2_score = ${myScore}, p2_last_active = NOW() WHERE id = ${duelId}`;
                     }
 
-                    // Fetch current state
-                    const dRes = await sql`SELECT player1_score, player2_score, p1_last_active, p2_last_active, status FROM duels WHERE id = ${duelId}`;
+                    // Fetch current state with server-side age check
+                    const dRes = await sql`
+                        SELECT player1_score, player2_score, status,
+                        (p1_last_active < NOW() - INTERVAL '25 seconds') as p1_dead,
+                        (p2_last_active < NOW() - INTERVAL '25 seconds') as p2_dead
+                        FROM duels WHERE id = ${duelId}
+                    `;
                     const d = dRes[0];
 
                     if (d.status === 'cancelled') {
                         duelActive = false;
-                        alert("თამაში ჩაიშალა - მოწინააღმდეგე გავიდა.");
+                        alert("თამაში ჩაიშალა - მოწინააღმდეგემ დატოვა დუელი.");
                         window.location.href = 'index.html';
                         return;
                     }
@@ -304,21 +309,20 @@
                         return;
                     }
 
-                    // Check disconnect
-                    const now = new Date();
-                    const otherActive = isPlayer1 ? new Date(d.p2_last_active) : new Date(d.p1_last_active);
-                    if (now - otherActive > 10000) { // 10s inactivity
+                    // Check disconnect (server-side age)
+                    const isOtherDead = isPlayer1 ? d.p2_dead : d.p1_dead;
+                    if (isOtherDead) {
                         duelActive = false;
                         await sql`UPDATE duels SET status = 'cancelled' WHERE id = ${duelId}`;
-                        alert("თამაში ჩაიშალა - მოწინააღმდეგე გავიდა.");
+                        alert("თამაში ჩაიშალა - მოწინააღმდეგესთან კავშირი შეწყდა.");
                         window.location.href = 'index.html';
                         return;
                     }
 
                     opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
                     updateUI();
-                } catch (e) { }
-            }, 2000);
+                } catch (e) { console.error("Sync Error:", e); }
+            }, 1000); // Sync every 1s for better stability
         }
 
         function updateUI() {
