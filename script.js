@@ -374,19 +374,28 @@ async function fetchLeaderboard() {
                     const isMe = nickname && entry.nickname === nickname;
                     const item = document.createElement('div');
                     item.className = 'mini-lb-item';
-                    if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
+                    if (isMe) item.style.border = "1px solid #ffd700";
 
                     const scoreVal = parseFloat(entry.d_score || 0);
                     const timeVal = parseFloat(entry.d_time || 0);
-
                     const safeNick = entry.nickname.substring(0, 10);
+
+                    let rankBadge = '';
+                    if (i < 3) {
+                        rankBadge = `<span class="top-rank-badge rank-${i + 1}">${i + 1}</span>`;
+                    } else {
+                        rankBadge = `<span style="width: 24px; text-align: center; font-size: 0.8rem; opacity: 0.3;">${i + 1}</span>`;
+                    }
 
                     item.innerHTML = `
                         <div class="mini-lb-info">
-                            <span class="mini-lb-name">${i + 1}. ${safeNick}</span>
-                            <span class="mini-lb-stat">⏱️ ${timeVal}s</span>
+                            ${rankBadge}
+                            <span class="mini-lb-name">${safeNick}</span>
                         </div>
-                        <span class="mini-lb-score">${scoreVal} ✨</span>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                           <span class="mini-lb-score" style="font-size: 0.9rem;">${scoreVal} ✨</span>
+                           <span style="font-size: 0.6rem; opacity: 0.5;">⏱️ ${timeVal}ს</span>
+                        </div>
                     `;
                     list.appendChild(item);
                 });
@@ -439,8 +448,8 @@ async function fetchLeaderboard() {
 
 // fetchSharedScores removed
 
-async function fetchGlobalRankings() {
-    if (get('ratings-modal').classList.contains('hidden')) return;
+async function fetchGlobalRankings(force = false) {
+    if (!force && get('ratings-modal').classList.contains('hidden')) return;
 
     const renderList = (id, data, suffix, statKey) => {
         const list = get(id);
@@ -476,8 +485,8 @@ async function fetchGlobalRankings() {
         const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY coins DESC LIMIT 10`;
-        renderList('top-coins-list', topCoins, '🪙', 'coins');
+        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY total_coins DESC LIMIT 10`;
+        renderList('top-coins-list', topCoins, '🪙', 'total_coins');
 
         const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
@@ -2152,7 +2161,7 @@ function checkDefeatCondition() {
 }
 
 
-function gameOver() {
+async function gameOver() {
     gameActive = false;
     clearTimeout(spawnTimeout);
     if (bossScalingInterval) clearInterval(bossScalingInterval);
@@ -2184,10 +2193,14 @@ function gameOver() {
     localStorage.setItem('tilo_prev_score', JSON.stringify(lastPrevScore));
 
     saveStatsToLocal();
-    syncUserData(true); // Final sync
+    await syncUserData(true); // Final sync
 
     // 📊 Auto-share result to global rankings
-    shareScore(totalScore, survival);
+    await shareScore(totalScore, survival);
+
+    // Refresh leaderboards for the main menu
+    fetchLeaderboard();
+    fetchGlobalRankings(true);
 }
 
 async function reviveGame() {
@@ -2412,6 +2425,10 @@ const switchToRegister = () => {
 window.onload = async () => {
     initUI();
     await initDatabase();
+
+    // Initial data fetch
+    fetchLeaderboard();
+    fetchGlobalRankings(true);
 
     // Modal Closers
     const closeAuth = () => {
