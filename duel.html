@@ -115,7 +115,7 @@
             z-index: 900;
             opacity: 0.6;
             filter: drop-shadow(0 0 10px rgba(255, 65, 108, 0.5)) hue-rotate(150deg);
-            transition: all 0.1s linear;
+            transition: left 0.4s linear, top 0.4s linear, opacity 0.3s;
         }
 
         .opponent-name-tag {
@@ -273,36 +273,49 @@
                 try {
                     const pos = { x: lastX / window.innerWidth, y: lastY / window.innerHeight };
 
+                    // Update server state
                     if (isPlayer1) {
                         await sql`UPDATE duels SET player1_score = ${myScore}, player1_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     } else {
                         await sql`UPDATE duels SET player2_score = ${myScore}, player2_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     }
 
-                    const res = await sql`SELECT * FROM duels WHERE id = ${duelId}`;
-                    if (res[0].status === 'finished') { duelActive = false; finishDuel(); return; }
+                    // Get opponent state
+                    const res = await sql`SELECT player1_score, player2_score, player1_pos, player2_pos, status FROM duels WHERE id = ${duelId}`;
+                    if (res.length === 0) return;
 
                     const d = res[0];
-                    opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
+                    if (d.status === 'finished' && duelActive) {
+                        duelActive = false;
+                        finishDuel();
+                        return;
+                    }
+
+                    opponentScore = isPlayer1 ? (d.player2_score || 0) : (d.player1_score || 0);
                     const oppPos = isPlayer1 ? d.player2_pos : d.player1_pos;
 
-                    if (oppPos) {
+                    if (oppPos && typeof oppPos === 'object') {
                         oppCloth.style.left = (oppPos.x * window.innerWidth) + 'px';
                         oppCloth.style.top = (oppPos.y * window.innerHeight) + 'px';
+                        oppCloth.style.opacity = '0.6';
                     }
 
                     updateUI();
-                } catch (e) { }
-            }, 1000);
+                } catch (e) { console.error("Sync error:", e); }
+            }, 300); // 300ms for much smoother movement
         }
 
         function updateUI() {
+            const p1Sc = get('p1-score-display');
+            const p2Sc = get('p2-score-display');
+            if (!p1Sc || !p2Sc) return;
+
             if (isPlayer1) {
-                get('p1-score-display').textContent = myScore;
-                get('p2-score-display').textContent = opponentScore;
+                p1Sc.textContent = myScore;
+                p2Sc.textContent = opponentScore;
             } else {
-                get('p2-score-display').textContent = myScore;
-                get('p1-score-display').textContent = opponentScore;
+                p1Sc.textContent = opponentScore;
+                p2Sc.textContent = myScore;
             }
         }
 
