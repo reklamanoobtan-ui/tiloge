@@ -2458,6 +2458,15 @@ function checkDefeatCondition() {
 
     // Trigger crisis only if screen is actually dirty AND player is inactive
     const limitStains = globalStainLimitOverride || 50;
+    const hardLimitStains = 60; // Absolute max
+
+    // Instant game over if hard limit reached
+    if (totalCount >= hardLimitStains) {
+        if (defeatTimer) { clearInterval(defeatTimer); defeatTimer = null; }
+        gameOver();
+        return;
+    }
+
     const limitBoss = globalBossLimitOverride || 10;
     const limitElite = globalBossLimitOverride ? Math.ceil(globalBossLimitOverride / 2) : 5;
 
