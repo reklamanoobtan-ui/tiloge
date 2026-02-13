@@ -535,13 +535,23 @@ async function fetchOnlinePlayers() {
     }
 }
 
+let lastDuelInvitationTime = 0;
 window.sendDuelInvitation = async (opponentEmail, opponentNick) => {
     if (!userEmail) {
         showStatusUpdate("გთხოვთ გაიაროთ ავტორიზაცია! 👤");
         return;
     }
+
+    const now = Date.now();
+    if (now - lastDuelInvitationTime < 30000) {
+        const remaining = Math.ceil((30000 - (now - lastDuelInvitationTime)) / 1000);
+        showStatusUpdate(`გთხოვთ მოიცადოთ ${remaining} წამი შემდეგ მოწვევამდე! ⏳`);
+        return;
+    }
+
     try {
         await sql`INSERT INTO duel_invitations (sender_email, receiver_email) VALUES (${userEmail}, ${opponentEmail})`;
+        lastDuelInvitationTime = now;
         showStatusUpdate(`მოწვევა გაეგზავნა ${opponentNick}-ს! ⚔️`);
     } catch (e) {
         console.error("Duel invite error:", e);
@@ -689,13 +699,17 @@ async function fetchGlobalRankings(force = false) {
         const topScores = await sql`SELECT nickname, COALESCE(best_score, 0) as best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topWins = await sql`SELECT nickname, COALESCE(duel_wins, 0) as duel_wins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY duel_wins DESC LIMIT 10`;
-        renderList('top-coins-list', topWins, '⚔️', 'duel_wins');
+        const topDuels = await sql`SELECT nickname, COALESCE(duel_wins, 0) as duel_wins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY duel_wins DESC LIMIT 10`;
+        renderList('top-duels-list', topDuels, '⚔️', 'duel_wins');
 
         const topTime = await sql`SELECT nickname, COALESCE(total_survival_time, 0) as total_survival_time FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
+
+        const topCoins = await sql`SELECT nickname, COALESCE(coins, 0) as coins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY coins DESC LIMIT 10`;
+        renderList('top-coins-list', topCoins, '🪙', 'coins');
+
         // Cache Global Rankings
-        const globalCache = { topScores, topWins, topTime };
+        const globalCache = { topScores, topDuels, topTime, topCoins };
         localStorage.setItem('global_lb_cache', JSON.stringify(globalCache));
 
     } catch (e) {
@@ -703,16 +717,17 @@ async function fetchGlobalRankings(force = false) {
         const cached = localStorage.getItem('global_lb_cache');
         if (cached) {
             try {
-                const { topScores, topCoins, topTime } = JSON.parse(cached);
+                const { topScores, topDuels, topTime, topCoins } = JSON.parse(cached);
                 showStatusUpdate('⚠️ კავშირი გაწყდა - ნაჩვენებია შენახული რეიტინგები');
                 renderList('top-scores-list', topScores, '✨', 'best_score');
-                renderList('top-coins-list', topWins, '⚔️', 'duel_wins');
+                renderList('top-duels-list', topDuels, '⚔️', 'duel_wins');
                 renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
+                renderList('top-coins-list', topCoins, '🪙', 'coins');
             } catch (ce) {
                 console.error("Cache Parse Error:", ce);
             }
         } else {
-            ['top-scores-list', 'top-coins-list', 'top-time-list'].forEach(id => {
+            ['top-scores-list', 'top-duels-list', 'top-time-list', 'top-coins-list'].forEach(id => {
                 const el = get(id);
                 if (el) el.innerHTML = '<p style="text-align: center; opacity: 0.5; font-size: 0.8rem;">მონაცემები ვერ მოიძებნა</p>';
             });

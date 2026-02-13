@@ -1,7 +1,7 @@
 /* Global Ratings Premium Diamond Styling */
 .ratings-grid-global {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
     padding: 20px;
     flex: 1;

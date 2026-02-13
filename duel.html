@@ -179,12 +179,14 @@
     <div class="duel-hud">
         <div class="duel-status-bar">
             <div class="duel-score-box">
-                <span id="p1-name">ჩემი სახელი</span>
+                <span id="p1-label" style="color: #4facfe;">თქვენ</span>
+                <span id="p1-name" style="font-size: 0.6rem; opacity: 0.4;">...</span>
                 <strong id="p1-score-display">0</strong>
             </div>
             <div class="duel-timer" id="duel-timer">01:00</div>
             <div class="duel-score-box">
-                <span id="p2-name">მოწინააღმდეგე</span>
+                <span id="p2-label" style="color: #ff4d4d;">მოწინააღმდეგე</span>
+                <span id="p2-name" style="font-size: 0.6rem; opacity: 0.4;">...</span>
                 <strong id="p2-score-display">0</strong>
             </div>
         </div>
@@ -258,6 +260,17 @@
 
                 get('p1-name').textContent = p1Row[0].nickname;
                 get('p2-name').textContent = p2Row[0].nickname;
+
+                if (isPlayer1) {
+                    get('p1-label').textContent = "თქვენ";
+                    get('p2-label').textContent = "მოწინააღმდეგე";
+                } else {
+                    get('p1-label').textContent = "მოწინააღმდეგე";
+                    get('p2-label').textContent = "თქვენ";
+                    // Swap colors too
+                    get('p1-label').style.color = "#ff4d4d";
+                    get('p2-label').style.color = "#4facfe";
+                }
 
                 duelActive = true;
                 startTimer();

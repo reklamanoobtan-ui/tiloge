@@ -61,7 +61,34 @@
 
         <div class="info-text"
             style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; text-align: center; z-index: 4000;">
-            <h1 id="diff-status" style="margin-bottom: 10px;">გამოიყენეთ ტილო საიტის გასაწმენდად</h1>
+            <h1 id="diff-status" style="margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;">გამოიყენეთ ტილო
+                საიტის გასაწმენდად</h1>
+
+            <div id="hud-stats"
+                style="display: flex; gap: 30px; justify-content: center; margin-bottom: 20px; pointer-events: auto;">
+                <div class="hud-item" style="display: flex; flex-direction: column; align-items: center;">
+                    <span
+                        style="font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; font-weight: bold; color: #fff;">✨
+                        ქულა</span>
+                    <strong id="score-val"
+                        style="font-size: 1.8rem; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.3);">0</strong>
+                </div>
+                <div class="hud-item" style="display: flex; flex-direction: column; align-items: center;">
+                    <span
+                        style="font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; font-weight: bold; color: #ffd700;">💰
+                        ქოინები</span>
+                    <strong id="coins-val"
+                        style="font-size: 1.8rem; color: #ffd700; text-shadow: 0 0 15px rgba(255,215,0,0.3);">0</strong>
+                </div>
+                <div class="hud-item" style="display: flex; flex-direction: column; align-items: center;">
+                    <span
+                        style="font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; font-weight: bold; color: #4facfe;">⏱️
+                        დრო</span>
+                    <strong id="time-val"
+                        style="font-size: 1.8rem; color: #4facfe; text-shadow: 0 0 15px rgba(79,172,254,0.3);">0:00</strong>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
                 <button id="pause-btn" class="glass-btn">⏸️ პაუზა</button>
                 <button id="end-game-btn" class="glass-btn"
@@ -472,13 +499,19 @@
                 </div>
                 <div class="global-col">
                     <h4>⚔️ მოგებული დუელები</h4>
-                    <div id="top-coins-list" class="mini-lb-list">
+                    <div id="top-duels-list" class="mini-lb-list">
                         <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
                     </div>
                 </div>
                 <div class="global-col">
                     <h4>⏱️ ყველაზე მეტი დრო</h4>
                     <div id="top-time-list" class="mini-lb-list">
+                        <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
+                    </div>
+                </div>
+                <div class="global-col">
+                    <h4>💰 ყველაზე მეტი ქოინი</h4>
+                    <div id="top-coins-list" class="mini-lb-list">
                         <p style="text-align: center; opacity: 0.3;">იტვირთება...</p>
                     </div>
                 </div>
