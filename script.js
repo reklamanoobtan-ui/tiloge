@@ -339,6 +339,7 @@ async function syncUserData(isFinal = false) {
             coins += earned;
             await sql`UPDATE users SET coins = ${coins}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
             saveStatsToLocal();
+            updateUIValues();
             console.log("✅ Match achievement recorded successfully. Coins earned:", earned);
         }
     } catch (e) { console.error("Sync Error:", e); }
@@ -353,7 +354,8 @@ async function fetchLeaderboard() {
         const result = await sql`
             SELECT nickname, 
                    GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
-                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time
+                   CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
+                   COALESCE(coins, 0) as d_coins
             FROM users 
             WHERE (nickname IS NOT NULL AND nickname != '')
               AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered})
@@ -376,7 +378,8 @@ async function fetchLeaderboard() {
 
                     const scoreVal = parseFloat(entry.d_score || 0);
                     const timeVal = parseFloat(entry.d_time || 0);
-                    const safeNick = entry.nickname.substring(0, 10);
+                    const coinVal = parseInt(entry.d_coins || 0);
+                    const safeNick = (entry.nickname || 'Unknown').substring(0, 10);
 
                     let rankBadge = '';
                     if (i < 3) {
@@ -388,11 +391,16 @@ async function fetchLeaderboard() {
                     item.innerHTML = `
                         <div class="mini-lb-info">
                             ${rankBadge}
-                            <span class="mini-lb-name">${safeNick}</span>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="mini-lb-name">${safeNick}</span>
+                                <div style="display: flex; gap: 8px; align-items: center; margin-top: 2px;">
+                                    <span style="font-size: 0.65rem; opacity: 0.6; color: #fff;">⏱️ ${timeVal}ს</span>
+                                    <span style="font-size: 0.65rem; color: #ffd700; font-weight: bold;">🪙 ${coinVal}</span>
+                                </div>
+                            </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                           <span class="mini-lb-score" style="font-size: 0.9rem;">${scoreVal} ✨</span>
-                           <span style="font-size: 0.6rem; opacity: 0.5;">⏱️ ${timeVal}ს</span>
+                           <span class="mini-lb-score" style="font-size: 1rem; color: var(--primary);">${scoreVal} ✨</span>
                         </div>
                     `;
                     list.appendChild(item);
@@ -488,13 +496,13 @@ async function fetchGlobalRankings(force = false) {
     try {
         const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
 
-        const topScores = await sql`SELECT nickname, best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
+        const topScores = await sql`SELECT nickname, COALESCE(best_score, 0) as best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_coins DESC LIMIT 10`;
-        renderList('top-coins-list', topCoins, '🪙', 'total_coins');
+        const topCoins = await sql`SELECT nickname, COALESCE(coins, 0) as coins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY coins DESC LIMIT 10`;
+        renderList('top-coins-list', topCoins, '🪙', 'coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_survival_time DESC LIMIT 10`;
+        const topTime = await sql`SELECT nickname, COALESCE(total_survival_time, 0) as total_survival_time FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
         // Cache Global Rankings
         const globalCache = { topScores, topCoins, topTime };
@@ -508,7 +516,7 @@ async function fetchGlobalRankings(force = false) {
                 const { topScores, topCoins, topTime } = JSON.parse(cached);
                 showStatusUpdate('⚠️ კავშირი გაწყდა - ნაჩვენებია შენახული რეიტინგები');
                 renderList('top-scores-list', topScores, '✨', 'best_score');
-                renderList('top-coins-list', topCoins, '🪙', 'total_coins');
+                renderList('top-coins-list', topCoins, '🪙', 'coins');
                 renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
             } catch (ce) {
                 console.error("Cache Parse Error:", ce);
