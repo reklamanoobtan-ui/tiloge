@@ -59,6 +59,9 @@ let pinkBonusTypeCounts = {}; // Track how many times each pink bonus was chosen
 let soapScoreBonusCount = 0;
 let soapIntervalMultiplier = 1.0;
 let soapUseCount = 0; // Already exists but let's ensure it's tracked properly
+let onlinePollingInterval = null;
+let invitationPollingInterval = null;
+let activeDuelId = null;
 
 async function logToAdmin(msg, level = 'INFO') {
     try {
@@ -329,6 +332,9 @@ async function syncUserData(isFinal = false) {
             last_active = NOW()
             WHERE email = ${userEmail}`;
 
+        // Ensure we are marked as online
+        localStorage.setItem('tilo_last_sync', Date.now());
+
         // If game is over, record this achievement in history and update total_coins
         if (isFinal) {
             const finalScore = totalScoreToSync;
@@ -462,6 +468,163 @@ async function fetchLeaderboard() {
             list.innerHTML = '<p style="text-align: center; color: #ff4d4d; font-size: 0.7rem; padding: 10px;">ბაზასთან კავშირი ვერ მოხერხდა</p>';
         }
     }
+}
+
+async function fetchOnlinePlayers() {
+    if (!userEmail) return;
+    const list = get('online-list');
+    if (!list) return;
+
+    try {
+        // Users active in the last 2 minutes
+        const onlineUsers = await sql`
+            SELECT nickname, email, coins, best_score, total_survival_time 
+            FROM users 
+            WHERE last_active > NOW() - INTERVAL '2 minutes'
+              AND email != ${userEmail}
+            ORDER BY last_active DESC 
+            LIMIT 50
+        `;
+
+        list.innerHTML = '';
+        if (onlineUsers.length === 0) {
+            list.innerHTML = '<p style="text-align: center; opacity: 0.5; padding: 20px;">ონლაინ მოთამაშეები ვერ მოიძებნა</p>';
+            return;
+        }
+
+        onlineUsers.forEach(u => {
+            const card = document.createElement('div');
+            card.className = 'online-user-card';
+            card.innerHTML = `
+                <div class="online-user-info">
+                    <span class="online-nick">${u.nickname}</span>
+                    <div class="online-stats">
+                        <span>✨ ${u.best_score}</span>
+                        <span>🪙 ${u.coins}</span>
+                        <span>⏱️ ${u.total_survival_time}წ</span>
+                    </div>
+                </div>
+                <button class="duel-btn" onclick="sendDuelInvitation('${u.email}', '${u.nickname}')">⚔️ დუელი</button>
+            `;
+            list.appendChild(card);
+        });
+    } catch (e) {
+        console.error("Online characters fetch error:", e);
+    }
+}
+
+window.sendDuelInvitation = async (opponentEmail, opponentNick) => {
+    if (!userEmail) {
+        showStatusUpdate("გთხოვთ გაიაროთ ავტორიზაცია! 👤");
+        return;
+    }
+    try {
+        await sql`INSERT INTO duel_invitations (sender_email, receiver_email) VALUES (${userEmail}, ${opponentEmail})`;
+        showStatusUpdate(`მოწვევა გაეგზავნა ${opponentNick}-ს! ⚔️`);
+    } catch (e) {
+        console.error("Duel invite error:", e);
+        showStatusUpdate("მოწვევის გაგზავნა ვერ მოხერხდა.");
+    }
+};
+
+async function checkDuelInvitations() {
+    if (!userEmail || activeDuelId) return;
+
+    try {
+        const inv = await sql`
+            SELECT i.id, i.sender_email, u.nickname 
+            FROM duel_invitations i
+            JOIN users u ON i.sender_email = u.email
+            WHERE i.receiver_email = ${userEmail} 
+              AND i.status = 'pending'
+              AND i.created_at > NOW() - INTERVAL '15 seconds'
+            ORDER BY i.created_at DESC
+            LIMIT 1
+        `;
+
+        if (inv.length > 0) {
+            showInvitationToast(inv[0]);
+        }
+    } catch (e) {
+        console.error("Check invitations error:", e);
+    }
+}
+
+let toastTimer = null;
+function showInvitationToast(inv) {
+    const toast = get('invitation-toast');
+    const nameEl = get('inv-sender-name');
+    const timerBar = get('inv-toast-timer');
+    if (!toast || !nameEl) return;
+
+    nameEl.textContent = inv.nickname;
+    toast.classList.remove('hidden');
+
+    // Timer animation
+    if (timerBar) {
+        timerBar.style.width = '100%';
+        timerBar.style.animation = 'inv-timer 10s linear forwards';
+    }
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        rejectInvitation(inv.id);
+    }, 10000);
+
+    get('inv-accept-btn').onclick = () => acceptInvitation(inv.id);
+    get('inv-reject-btn').onclick = () => {
+        toast.classList.add('hidden');
+        clearTimeout(toastTimer);
+        rejectInvitation(inv.id);
+    };
+}
+
+async function acceptInvitation(invId) {
+    try {
+        // Create actual duel record
+        const invData = await sql`SELECT sender_email, receiver_email FROM duel_invitations WHERE id = ${invId}`;
+        if (invData.length === 0) return;
+
+        const { sender_email, receiver_email } = invData[0];
+
+        // Update invitation status
+        await sql`UPDATE duel_invitations SET status = 'accepted' WHERE id = ${invId}`;
+
+        // Create duel
+        const duel = await sql`
+            INSERT INTO duels (player1_email, player2_email, status) 
+            VALUES (${sender_email}, ${receiver_email}, 'active') 
+            RETURNING id
+        `;
+
+        const duelId = duel[0].id;
+        window.location.href = `duel.html?id=${duelId}`;
+    } catch (e) {
+        console.error("Accept error:", e);
+    }
+}
+
+async function rejectInvitation(invId) {
+    try {
+        await sql`UPDATE duel_invitations SET status = 'rejected' WHERE id = ${invId}`;
+    } catch (e) { }
+}
+
+async function pollForAcceptedDuels() {
+    if (!userEmail || activeDuelId) return;
+    try {
+        const accepted = await sql`
+            SELECT id FROM duels 
+            WHERE player1_email = ${userEmail} 
+              AND status = 'active' 
+              AND start_time > NOW() - INTERVAL '30 seconds'
+            LIMIT 1
+        `;
+        if (accepted.length > 0) {
+            window.location.href = `duel.html?id=${accepted[0].id}`;
+        }
+    } catch (e) { }
 }
 
 
@@ -848,6 +1011,42 @@ function initUI() {
         scheduleNextStain();
         showStatusUpdate('თამაში გაგრძელდა ▶️');
     };
+
+    // Online Modal Actions
+    const onlineAction = () => {
+        if (!userEmail) {
+            showStatusUpdate("გთხოვთ გაიაროთ ავტორიზაცია ონლაინ რეჟიმისთვის! 👤");
+            switchToLogin();
+            get('auth-modal').classList.remove('hidden');
+            return;
+        }
+        get('online-modal').classList.remove('hidden');
+        fetchOnlinePlayers();
+        if (onlinePollingInterval) clearInterval(onlinePollingInterval);
+        onlinePollingInterval = setInterval(fetchOnlinePlayers, 5000);
+    };
+
+    const closeOnline = () => {
+        get('online-modal').classList.add('hidden');
+        if (onlinePollingInterval) {
+            clearInterval(onlinePollingInterval);
+            onlinePollingInterval = null;
+        }
+    };
+
+    safeOnClick('online-btn-side', onlineAction);
+    safeOnClick('online-close', closeOnline);
+
+    // Duel Polling
+    if (invitationPollingInterval) clearInterval(invitationPollingInterval);
+    invitationPollingInterval = setInterval(() => {
+        checkDuelInvitations();
+        pollForAcceptedDuels();
+        // Heartbeat sync
+        if (Date.now() - lastSyncTime > 45000) {
+            syncUserData();
+        }
+    }, 3000);
 
     safeOnClick('chat-modal-btn', openChat);
     safeOnClick('close-chat-modal', closeChat);

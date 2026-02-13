@@ -85,6 +85,7 @@
                 <button id="settings-btn-side" class="menu-sidebar-btn"><span>⚙️</span> პარამეტრები</button>
                 <button id="themes-btn-side" class="menu-sidebar-btn"><span>🖼️</span> თემები</button>
                 <button id="ratings-btn-side" class="menu-sidebar-btn"><span>📊</span> რეიტინგი</button>
+                <button id="online-btn-side" class="menu-sidebar-btn"><span>🌐</span> ონლაინი</button>
 
             </div>
 
@@ -767,6 +768,35 @@
             transform: translateX(0) !important;
         }
     </style>
+
+    <!-- Online Modal -->
+    <div id="online-modal" class="premium-modal hidden">
+        <div class="modal-card wide-modal">
+            <div class="modal-header">
+                <h2>🌐 ონლაინ მოთამაშეები</h2>
+                <button id="online-close" class="close-btn">&times;</button>
+            </div>
+            <div id="online-list" class="online-list-container">
+                <!-- Online users injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Invitation Notification -->
+    <div id="invitation-toast" class="invitation-toast hidden">
+        <div class="inv-toast-content">
+            <div class="inv-toast-icon">⚔️</div>
+            <div class="inv-toast-msg">
+                <span id="inv-sender-name">მოთამაშე</span>
+                <p>გიწვევთ დუელში!</p>
+            </div>
+            <div class="inv-toast-actions">
+                <button id="inv-accept-btn" class="inv-action-btn accept">✅</button>
+                <button id="inv-reject-btn" class="inv-action-btn reject">❌</button>
+            </div>
+        </div>
+        <div id="inv-toast-timer" class="inv-toast-timer"></div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
