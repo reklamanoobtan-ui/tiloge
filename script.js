@@ -46,6 +46,8 @@ let totalRepeatablePicked = 0; // Cap at 10
 let soapClickCount = 0;
 let lastSoapMilestone = 0;
 let lastSpinMilestone = 0;
+let nextSpinMilestone = 1000;
+let currentSpinInterval = 1000;
 let isSoapActive = false;
 let magnetInterval = 3000;
 let pendingUpgrades = 0;
@@ -866,11 +868,13 @@ async function updateScore(points) {
             }
         }
 
-        // Spin Wheel Milestone (Every 1000)
-        const spinThresh = globalSpinThresholdOverride || 1000;
-        if (Math.floor(score / spinThresh) > Math.floor(lastSpinMilestone / spinThresh)) {
+        // Spin Wheel Milestone (Scaling: 1000, 2500, 4750...)
+        const totalSessionScore = score + accumulatedScore;
+        if (totalSessionScore >= nextSpinMilestone) {
             if (!isSpinning && !isUpgradeOpen) {
-                lastSpinMilestone = score;
+                lastSpinMilestone = totalSessionScore;
+                currentSpinInterval = Math.floor(currentSpinInterval * 1.5);
+                nextSpinMilestone = totalSessionScore + currentSpinInterval;
                 setTimeout(showSpinWheel, 1000);
             }
         }
@@ -3197,6 +3201,8 @@ function startGameSession(dontReset = false) {
         lastMinigameMilestone = 0;
         lastSoapMilestone = 0;
         lastSpinMilestone = 0;
+        currentSpinInterval = globalSpinThresholdOverride || 1000;
+        nextSpinMilestone = currentSpinInterval;
         healthHalvedActive = false;
         pinkBonuses = [];
         pinkBonusTypeCounts = {};
