@@ -1437,20 +1437,22 @@ function setupAdmin() {
 
     document.getElementById('admin-send-broadcast').onclick = async () => {
         const msg = getVal('admin-broadcast-msg');
-        if (!msg) return;
+        const dur = getVal('admin-broadcast-duration'); // Assuming this input exists in admin.html
+        if (!msg || !dur) return;
         try {
-            // Send to chat
-            await sql`INSERT INTO chat_messages(nickname, message) VALUES('📢 SYSTEM', ${msg})`;
+            // Encode duration in value: "message:::duration"
+            const eventValue = `${msg}:::${dur}`;
 
-            // Trigger global system alert for everyone
-            await sql`INSERT INTO global_events (event_type, event_value, expires_at)
-                      VALUES ('info', ${msg}, NOW() + INTERVAL '1 minute')
-                      ON CONFLICT (event_type) DO UPDATE 
-                      SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
+            await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
+                         VALUES ('massive_announcement', ${eventValue}, NOW() + CAST(${dur} || ' seconds' AS INTERVAL))
+                         ON CONFLICT (event_type) DO UPDATE SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
 
-            document.getElementById('admin-broadcast-msg').value = '';
-            setStatus("Broadcast sent (Chat & Screen)");
-        } catch (e) { setStatus('Error', 'red'); }
+            // Removed chat_messages insert to avoid confusion ("instead of" feedback)
+            log(`MASSIVE SENT: ${msg} (${dur}s)`);
+            get('admin-broadcast-msg').value = ''; // Changed from 'massive-msg' to 'admin-broadcast-msg'
+        } catch (e) {
+            setStatus('Error', 'red');
+        }
     };
 
     document.getElementById('admin-save-config').onclick = async () => {
@@ -1791,7 +1793,7 @@ function createSoap() {
     showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! (15წმ) 🧼✨');
 }
 
-function createBubbles(x, y, count, isPink = false) {
+function createBubbles(x, y, count = 15, isPink = false) {
     const container = get('canvas-container') || document.body;
     for (let i = 0; i < count; i++) {
         const bubble = document.createElement('div');
@@ -3016,10 +3018,12 @@ window.onload = async () => {
     setInterval(checkGlobalEvents, 3000); // Poll every 3 seconds for better responsiveness
 };
 
+let lastMassiveExpiry = null; // Global variable to track the last processed massive announcement expiry
+
 async function checkGlobalEvents() {
-    console.log("🔍 Checking Global Events...");
     try {
-        const events = await sql`SELECT * FROM global_events WHERE expires_at > (NOW() AT TIME ZONE 'UTC')`;
+        // Query events that haven't expired or expired very recently (handles clock drift)
+        const events = await sql`SELECT * FROM global_events WHERE expires_at > (NOW() - INTERVAL '5 minutes')`;
         if (events.length > 0) console.log("📡 Found active events:", events.length);
 
         const oldRegInt = globalBossInterval;
@@ -3167,9 +3171,28 @@ async function checkGlobalEvents() {
                 const now = Date.now();
                 const remainingSec = Math.floor((expiry - now) / 1000);
 
-                console.log(`📢 Massive Alert Found: "${ev.event_value}", remaining: ${remainingSec}s`);
-                if (remainingSec > 2) { // Show if at least 2s left
-                    showMassiveAnnouncement(ev.event_value, remainingSec);
+                // Use expires_at as a unique instance ID to avoid re-triggering the same event
+                if (remainingSec > -60 && ev.expires_at !== lastMassiveExpiry) {
+                    lastMassiveExpiry = ev.expires_at;
+
+                    let displayMsg = ev.event_value;
+                    let displayDur = remainingSec;
+
+                    // Parse original duration if provided in "msg:::dur" format
+                    if (ev.event_value.includes(':::')) {
+                        const parts = ev.event_value.split(':::');
+                        displayMsg = parts[0];
+                        const originalDur = parseInt(parts[1]);
+                        // If it's a fresh event (remaining time is close to original or in future), 
+                        // use the full original duration for the UI.
+                        if (remainingSec > originalDur - 10) {
+                            displayDur = originalDur;
+                        }
+                    }
+
+                    if (displayDur > 0) {
+                        showMassiveAnnouncement(displayMsg, displayDur);
+                    }
                 }
             }
         });

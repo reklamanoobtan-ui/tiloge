@@ -1629,13 +1629,13 @@
             const dur = parseInt(get('massive-dur').value) || 10;
             if (!msg) return alert("შეიყვანეთ ტექსტი");
             try {
-                // Ensure we use a direct timestamp for precision
-                const expireDate = new Date(Date.now() + dur * 1000);
+                // Encode duration in value: "message:::duration"
+                const eventValue = `${msg}:::${dur}`;
+
                 await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                         VALUES ('massive_announcement', ${msg}, NOW() + CAST(${dur} || ' seconds' AS INTERVAL))
+                         VALUES ('massive_announcement', ${eventValue}, NOW() + CAST(${dur} || ' seconds' AS INTERVAL))
                          ON CONFLICT (event_type) DO UPDATE SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
 
-                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 MASSIVE', ${msg})`;
                 log(`MASSIVE SENT: ${msg} (${dur}s)`);
                 get('massive-msg').value = '';
             } catch (e) {
