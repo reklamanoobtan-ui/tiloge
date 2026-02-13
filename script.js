@@ -54,6 +54,7 @@ let isMinigameActive = false;
 let minigameTimer = null;
 let healthHalvedActive = false;
 let consecutiveCoinBuffs = 0;
+let lastMinigameTime = 0;
 
 async function logToAdmin(msg, level = 'INFO') {
     try {
@@ -630,11 +631,10 @@ function updateScore(points) {
             }
         }
 
-        // Dynamic Minigame Milestone (Every 750)
-        const minigameThresh = globalMinigameThresholdOverride || 750;
-        if (Math.floor(score / minigameThresh) > Math.floor(lastMinigameMilestone / minigameThresh)) {
-            if (!isMinigameActive && !isUpgradeOpen) {
-                lastMinigameMilestone = score;
+        // Dynamic Minigame check - Time Based (Every 2 minutes)
+        if (gameActive && !isMinigameActive && !isUpgradeOpen) {
+            if (Date.now() - lastMinigameTime >= 120000) { // 2 minutes
+                lastMinigameTime = Date.now();
                 setTimeout(startMinigame, 500);
             }
         }
@@ -2946,6 +2946,7 @@ function startGameSession(dontReset = false) {
     // Start Loops
     gameActive = true;
     startTime = Date.now();
+    lastMinigameTime = Date.now();
     lastActivityTime = Date.now();
     scheduleNextStain();
 
