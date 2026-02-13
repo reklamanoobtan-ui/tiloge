@@ -338,10 +338,7 @@
             overflow: hidden;
         }
 
-        .player-card.vip {
-            border-color: var(--accent);
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
-        }
+
 
         .player-details {
             margin-bottom: 15px;
@@ -596,9 +593,17 @@
                         <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.9rem;">მოთამაშის მონაცემების სწრაფი
                             ცვლილება</p>
                         <input type="text" id="target-nick" placeholder="მოთამაშის ნიკნეიმი...">
+                        <div class="flex-row mt-10" style="gap: 5px; flex-wrap: wrap;">
+                            <input type="number" id="coin-amount" placeholder="რაოდენობა"
+                                style="width: 100px; margin-bottom: 0;">
+                            <button class="btn btn-gold" id="give-coins">🪙 ქოინის მიცემა</button>
+                        </div>
+                        <div class="flex-row mt-10" style="gap: 5px; flex-wrap: wrap;">
+                            <input type="text" id="new-nick-val" placeholder="ახალი სახელი"
+                                style="flex: 1; margin-bottom: 0;">
+                            <button class="btn btn-primary" id="change-nick-btn">✏️ სახელის შეცვლა</button>
+                        </div>
                         <div class="flex-row mt-10" style="flex-wrap: wrap;">
-                            <button class="btn btn-gold" id="give-coins">🪙 +1000 Coins</button>
-                            <button class="btn btn-primary" id="give-vip">👑 Grant VIP</button>
                             <button class="btn btn-danger" id="ban-user">🚫 BAN ACCOUNT</button>
                         </div>
                     </div>
@@ -1449,10 +1454,8 @@
                     <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
                 </div>
                 <div class="mini-card">
-                    <span class="mini-label">👑 VIP</span>
-                    <div style="margin-top: 5px;">
-                        <input type="checkbox" id="edit-user-vip" style="width: 25px; height: 25px;">
-                    </div>
+                    <span class="mini-label">💰 სულ ქოინები</span>
+                    <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
                 </div>
             </div>
             <div class="flex-row gap-10">
@@ -1565,28 +1568,39 @@
 
         get('give-coins').onclick = async () => {
             const name = get('target-nick').value.trim();
-            if (!name) return;
+            const amount = parseInt(get('coin-amount').value) || 0;
+            if (!name || amount <= 0) return alert('მიუთითეთ ნიკნეიმი და რაოდენობა!');
             try {
-                await sql`UPDATE users SET coins = coins + 1000 WHERE nickname = ${name}`;
-                log(`Sent 1000 coins to ${name}`);
-            } catch (e) { log('Error updating database', 'red'); }
+                await sql`UPDATE users SET coins = coins + ${amount}, total_coins = total_coins + ${amount} WHERE nickname = ${name}`;
+                log(`წარმატებით გაიგზავნა ${amount} ქოინი მოთამაშესთან: ${name}`, 'gold');
+                get('coin-amount').value = '';
+            } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
         };
 
-        get('give-vip').onclick = async () => {
-            const name = get('target-nick').value.trim();
-            if (!name) return;
+        get('change-nick-btn').onclick = async () => {
+            const oldName = get('target-nick').value.trim();
+            const newName = get('new-nick-val').value.trim();
+            if (!oldName || !newName) return alert('მიუთითეთ ძველი და ახალი ნიკნეიმი!');
             try {
-                await sql`UPDATE users SET is_vip = true WHERE nickname = ${name}`;
-                log(`Given VIP to ${name}`);
-            } catch (e) { log('Error updating database', 'red'); }
+                // Check if new name exists
+                const check = await sql`SELECT id FROM users WHERE nickname = ${newName}`;
+                if (check.length > 0) return alert('ეს ნიკნეიმი უკვე დაკავებულია!');
+
+                await sql`UPDATE users SET nickname = ${newName} WHERE nickname = ${oldName}`;
+                log(`სახელი შეიცვალა: ${oldName} -> ${newName}`, 'var(--primary)');
+                get('target-nick').value = newName;
+                get('new-nick-val').value = '';
+            } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
         };
+
+
 
         get('ban-user').onclick = async () => {
             const name = get('target-nick').value.trim();
             if (!name) return;
             if (confirm(`Are you sure you want to BAN ${name}?`)) {
                 try {
-                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, is_vip = false, best_score = 0 WHERE nickname = ${name}`;
+                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0 WHERE nickname = ${name}`;
                     log(`Banned/Reset ${name}`, 'red');
                 } catch (e) { log('Error updating database', 'red'); }
             }
@@ -1987,15 +2001,15 @@
                 let players;
 
                 if (sortBy === 'newest') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY id DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY id DESC LIMIT 1000`;
                 } else if (sortBy === 'score') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY score DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY score DESC LIMIT 1000`;
                 } else if (sortBy === 'coins') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY coins DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY coins DESC LIMIT 1000`;
                 } else if (sortBy === 'time') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY survival_time DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY survival_time DESC LIMIT 1000`;
                 } else {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, is_vip, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
                 }
 
                 allPlayers = players;
@@ -2022,10 +2036,10 @@
                 const lastActive = player.last_active ? new Date(player.last_active).toLocaleString('ka-GE') : 'არასდროს';
 
                 return `
-                    <div class="player-card ${player.is_vip ? 'vip' : ''}">
+                    <div class="player-card">
                         <div class="player-details">
                             <div class="player-name">
-                                ${player.is_vip ? '👑 ' : ''}${player.nickname}
+                                ${player.nickname}
                                 ${isGuest ? '<span style="font-size: 0.65rem; background: #333; padding: 2px 6px; border-radius: 4px;">GUEST</span>' : ''}
                             </div>
                             <div style="font-size: 0.8rem; opacity: 0.5;">${player.email}</div>
@@ -2067,7 +2081,6 @@
             get('edit-user-score').value = Math.floor(player.score);
             get('edit-user-coins').value = player.coins;
             get('edit-user-total-coins').value = player.total_coins || 0;
-            get('edit-user-vip').checked = player.is_vip;
 
             modal.classList.remove('hidden');
         };
@@ -2118,15 +2131,12 @@
             const score = parseInt(get('edit-user-score').value) || 0;
             const coins = parseInt(get('edit-user-coins').value) || 0;
             const totalCoins = parseInt(get('edit-user-total-coins').value) || 0;
-            const isVip = get('edit-user-vip').checked;
-
             try {
                 await sql`UPDATE users SET 
                     nickname = ${nick}, 
                     score = ${score}, 
                     coins = ${coins}, 
-                    total_coins = ${totalCoins}, 
-                    is_vip = ${isVip} 
+                    total_coins = ${totalCoins}
                     WHERE email = ${email}`;
 
                 log(`მონაცემები განახლდა: ${nick}`, 'green');
@@ -2198,7 +2208,7 @@
             log('Setup იწყება...', 'var(--accent)');
             try {
                 // 1. Users table update
-                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, total_coins INTEGER DEFAULT 0, is_vip BOOLEAN DEFAULT FALSE, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, best_survival_time INTEGER DEFAULT 0, total_survival_time INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, total_coins INTEGER DEFAULT 0, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, best_survival_time INTEGER DEFAULT 0, total_survival_time INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }

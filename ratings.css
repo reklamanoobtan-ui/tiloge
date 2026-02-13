@@ -89,12 +89,8 @@
     color: var(--cloth-color);
 }
 
-/* Diamond Effect for VIPs */
-.vip-lb-item {
-    border-color: #ffd700 !important;
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%) !important;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15) !important;
-}
+
+
 
 /* Scrollbar */
 .ratings-grid-global::-webkit-scrollbar {

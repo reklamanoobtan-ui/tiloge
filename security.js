@@ -97,8 +97,7 @@ const STORAGE_HASH_KEY = 'tilo_integrity_hash';
 function generateStorageHash() {
     const data = {
         coins: localStorage.getItem('tilo_coins'),
-        nick: localStorage.getItem('tilo_nick'),
-        vip: localStorage.getItem('tilo_vip')
+        nick: localStorage.getItem('tilo_nick')
     };
     return btoa(JSON.stringify(data));
 }

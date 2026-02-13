@@ -343,9 +343,7 @@ body.fx-disco {
 
 /* Obsolete Side Menu Styles Removed */
 
-.vip-hidden {
-    display: none !important;
-}
+
 
 @keyframes pulse-gold {
     0% {
@@ -656,10 +654,7 @@ body.fx-disco {
     font-size: 1.5rem;
 }
 
-.helper-bot.vip-rainbow-trail {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
-    animation: bot-glow 2s infinite alternate;
-}
+
 
 @keyframes bot-glow {
     from {
@@ -976,24 +971,7 @@ body.fx-disco {
     word-break: break-word;
 }
 
-.vip-rainbow-text {
-    background: linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    font-weight: 800;
-    animation: rainbow 3s linear infinite;
-}
 
-@keyframes rainbow {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    100% {
-        background-position: 100% 50%;
-    }
-}
 
 @media (max-width: 768px) {
     .chat-container {

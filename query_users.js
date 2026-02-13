@@ -6,7 +6,7 @@ const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-
 async function checkUsers() {
     try {
         const users = await sql`
-            SELECT nickname, score, survival_time, best_score, best_survival_time, is_vip, last_seen 
+            SELECT nickname, score, survival_time, best_score, best_survival_time, last_seen 
             FROM users 
             WHERE nickname IS NOT NULL 
             ORDER BY best_score DESC

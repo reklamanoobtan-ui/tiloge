@@ -23,7 +23,7 @@ let userEmail = localStorage.getItem('tilo_email') || '';
 let coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
 if (isNaN(coins)) coins = 0;
 
-let isVip = false;
+
 let currentTheme = localStorage.getItem('tilo_theme') || 'light';
 document.body.className = `theme-${currentTheme}`;
 
@@ -262,8 +262,7 @@ async function initDatabase() {
             best_survival_time INTEGER DEFAULT 0,
             total_survival_time INTEGER DEFAULT 0,
             last_active TIMESTAMP DEFAULT NOW(),
-            created_at TIMESTAMP DEFAULT NOW(),
-            is_vip BOOLEAN DEFAULT FALSE
+            created_at TIMESTAMP DEFAULT NOW()
         )`;
 
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0`;
@@ -287,7 +286,7 @@ async function initDatabase() {
             score INTEGER NOT NULL,
             survival_time INTEGER NOT NULL,
             efficiency FLOAT,
-            is_vip BOOLEAN DEFAULT FALSE,
+            efficiency FLOAT,
             shared_at TIMESTAMP DEFAULT NOW()
         )`;
 
@@ -343,7 +342,6 @@ async function syncUserData(isFinal = false) {
         // Update user profile with latest stats
         await sql`UPDATE users SET 
             score = ${totalScoreToSync},
-            coins = ${coins},
             owned_skins = ${JSON.stringify(ownedSkins)},
             current_skin = ${currentSkin},
             survival_time = ${currentSurvival},
@@ -367,11 +365,16 @@ async function syncUserData(isFinal = false) {
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
                      VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${earned}, NOW())`;
 
-            // Add earned coins to balance
-            coins += earned;
-            await sql`UPDATE users SET coins = ${coins}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
-            saveStatsToLocal();
-            updateUIValues();
+            // Add earned coins to balance (Atomic update to total_coins and balance)
+            await sql`UPDATE users SET coins = coins + ${earned}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
+
+            // Re-fetch final coins from DB to ensure memory is in sync with possible duel wins
+            const fresh = await sql`SELECT coins FROM users WHERE email = ${userEmail}`;
+            if (fresh.length > 0) {
+                coins = fresh[0].coins;
+                saveStatsToLocal();
+                updateUIValues();
+            }
             console.log("✅ Match achievement recorded successfully. Coins earned:", earned);
         }
     } catch (e) { console.error("Sync Error:", e); }
@@ -824,6 +827,8 @@ function updateScore(points) {
             showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
             lastMilestoneScore = score;
             saveStatsToLocal();
+            // Atomic DB Update
+            if (userEmail) sql`UPDATE users SET coins = coins + ${addAmt}, total_coins = total_coins + ${addAmt} WHERE email = ${userEmail}`;
         }
 
         // Dynamic Soap Milestone (Start 50, every X)
@@ -943,7 +948,11 @@ function handleSkinAction(name) {
     updatePowerStats();
     saveStatsToLocal();
     updateUIValues();
-    syncUserData();
+    if (userEmail) {
+        // Explicitly set the new coin value when spending
+        sql`UPDATE users SET coins = ${coins} WHERE email = ${userEmail}`;
+        syncUserData();
+    }
 }
 
 function safeOnClick(id, action) {
@@ -1371,14 +1380,7 @@ function setupAdmin() {
         } catch (e) { setStatus('Error', 'red'); }
     };
 
-    document.getElementById('admin-give-vip').onclick = async () => {
-        const nick = getVal('admin-target-nick');
-        if (!nick) return;
-        try {
-            // Removed VIP status update SQL query
-            setStatus(`მოთამაშე ${nick}-ს მიენიჭა VIP სტატუსი (ვიზუალური მხოლოდ)`);
-        } catch (e) { setStatus('Error', 'red'); }
-    };
+
 
     document.getElementById('admin-ban-user').onclick = async () => {
         const nick = getVal('admin-target-nick');
@@ -2507,6 +2509,7 @@ async function reviveGame() {
         coins -= 1000;
         saveStatsToLocal();
         updateUIValues();
+        if (userEmail) sql`UPDATE users SET coins = ${coins} WHERE email = ${userEmail}`;
 
         // Clear all stains
         document.querySelectorAll('.stain').forEach(s => s.remove());
@@ -2791,7 +2794,7 @@ window.onload = async () => {
             } catch (e) {
                 coins = parseInt(localStorage.getItem('tilo_coins')) || 0;
             }
-            isVip = false;
+
             startGameSession(true);
         } else {
             document.querySelectorAll('.hidden-game-ui').forEach(el => el.classList.add('hidden'));
@@ -2843,7 +2846,7 @@ window.onload = async () => {
                 await sql`INSERT INTO users (email, nickname, coins) VALUES (${userEmail}, ${nickname}, 0) ON CONFLICT (email) DO NOTHING`;
             } catch (e) { }
         }
-        isVip = false;
+
 
         // Hide overlay and start immediately
         const overlay = get('game-start-overlay');
@@ -2901,11 +2904,11 @@ window.onload = async () => {
                 const check = await sql`SELECT id FROM users WHERE nickname = ${nickValue} OR email = ${identValue}`;
                 if (check.length > 0) { errorEl.textContent = "ნიკნეიმი ან ემაილი დაკავებულია!"; return; }
 
-                await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${identValue}, ${passValue}, ${nickValue}, 0)`;
+                // Carry over existing (guest) coins to the new account
+                await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${identValue}, ${passValue}, ${nickValue}, ${coins})`;
                 userEmail = identValue;
                 nickname = nickValue;
                 coins = 0;
-                isVip = false;
             } else {
                 const res = await sql`SELECT * FROM users WHERE (email = ${identValue} OR nickname = ${identValue}) AND password = ${passValue}`;
                 if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
@@ -2921,13 +2924,11 @@ window.onload = async () => {
                     }
                 }
                 currentSkin = user.current_skin || "default";
-                isVip = false;
             }
 
             localStorage.setItem('tilo_nick', nickname);
             localStorage.setItem('tilo_email', userEmail);
             localStorage.setItem('tilo_coins', coins);
-            isVip = false;
             // Removed tilo_vip storage syncing
 
             const authModal = get('auth-modal');
@@ -3162,7 +3163,7 @@ async function checkGlobalEvents() {
 
 function startGameSession(dontReset = false) {
     if (!dontReset) {
-        // Meta-progress (isVip, coins, skins) is kept from global loads
+        // Meta-progress (coins, skins) is kept from global loads
         bossesDefeated = 0;
         totalRepeatablePicked = 0;
         pendingUpgrades = 0;
