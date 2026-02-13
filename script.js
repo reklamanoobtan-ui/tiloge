@@ -3018,7 +3018,7 @@ window.onload = async () => {
     setInterval(checkGlobalEvents, 3000); // Poll every 3 seconds for better responsiveness
 };
 
-let lastMassiveExpiry = null; // Global variable to track the last processed massive announcement expiry
+let lastMassiveExpiry = ""; // Global variable to track the last processed massive announcement expiry
 
 async function checkGlobalEvents() {
     try {
@@ -3168,12 +3168,13 @@ async function checkGlobalEvents() {
             }
             if (ev.event_type === 'massive_announcement') {
                 const expiry = new Date(ev.expires_at).getTime();
+                const expiryStr = new Date(ev.expires_at).toISOString();
                 const now = Date.now();
                 const remainingSec = Math.floor((expiry - now) / 1000);
 
-                // Use expires_at as a unique instance ID to avoid re-triggering the same event
-                if (remainingSec > -60 && ev.expires_at !== lastMassiveExpiry) {
-                    lastMassiveExpiry = ev.expires_at;
+                // Use expires_at string as a unique instance ID to avoid re-triggering the same event
+                if (remainingSec > 0 && expiryStr !== lastMassiveExpiry) {
+                    lastMassiveExpiry = expiryStr;
 
                     let displayMsg = ev.event_value;
                     let displayDur = remainingSec;
