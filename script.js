@@ -55,6 +55,10 @@ let minigameTimer = null;
 let healthHalvedActive = false;
 let consecutiveCoinBuffs = 0;
 let lastMinigameTime = 0;
+let pinkBonusTypeCounts = {}; // Track how many times each pink bonus was chosen
+let soapScoreBonusCount = 0;
+let soapIntervalMultiplier = 1.0;
+let soapUseCount = 0; // Already exists but let's ensure it's tracked properly
 
 async function logToAdmin(msg, level = 'INFO') {
     try {
@@ -569,7 +573,6 @@ let globalBossHPOverride = null;
 
 let globalMinigameThresholdOverride = null;
 let globalSoapCutsceneTimeOverride = null;
-let soapUseCount = 0;
 let globalGodMode = false;
 let globalFreezeEnemies = false;
 let globalBossImage = null;
@@ -623,8 +626,9 @@ function updateScore(points) {
             saveStatsToLocal();
         }
 
-        // Dynamic Soap Milestone (Start 50, every 500)
-        if (score >= 50 && (lastSoapMilestone < 50 || Math.floor((score - 50) / 500) > Math.floor((lastSoapMilestone - 50) / 500))) {
+        // Dynamic Soap Milestone (Start 50, every X)
+        const soapThresh = 500 * soapIntervalMultiplier;
+        if (score >= 50 && (lastSoapMilestone < 50 || Math.floor((score - 50) / soapThresh) > Math.floor((lastSoapMilestone - 50) / soapThresh))) {
             if (!isSoapActive && !isUpgradeOpen) {
                 lastSoapMilestone = score;
                 createSoap();
@@ -1640,25 +1644,28 @@ function showPinkUpgradeOptions() {
         'magnet': 'ლაზერის სიმძლავრე',
         'bot_pow': 'რობოტის ძალა',
         'spawn_speed': 'სპაუნის აჩქარება',
-        'boss_weaken': 'ბოსების დასუსტება'
+        'boss_weaken': 'ბოსების დასუსტება',
+        'score_bonus': 'ქულების ბონუსი'
     };
 
     const icons = {
         'speed': '🚀', 'radius': '📏',
         'strength': '💪', 'karcher': '🚿', 'bomb': '💣', 'coin_buff': '💰', 'magnet': '⚡', 'bot_pow': '🦾',
-        'spawn_speed': '⏩', 'boss_weaken': '💀'
+        'spawn_speed': '⏩', 'boss_weaken': '💀', 'score_bonus': '✨'
     };
 
-    // Filter upgrades player already has at least one of (Excluding 'diff', 'bot')
-    const excludes = ['diff', 'bot'];
-    const ownedIds = Object.keys(upgradeCounts).filter(id => !excludes.includes(id) && (upgradeCounts[id] || 0) > 0);
+    const excludes = ['diff', 'bot', 'score_bonus'];
 
-    // If none owned, offer based on what's available in the main pool names
-    let availablePool = ownedIds.length >= 3 ? ownedIds : Object.keys(names).filter(id => !excludes.includes(id));
+    // Filter out bonuses that reached 4 selections
+    let availablePool = Object.keys(names).filter(id => {
+        if (excludes.includes(id)) return false;
+        return (pinkBonusTypeCounts[id] || 0) < 4;
+    });
 
-    // Limit Spawn Speed: Don't offer if already extremely fast (0.05 limit)
-    if (spawnSpeedUpgradeMultiplier <= 0.05) {
-        availablePool = availablePool.filter(id => id !== 'spawn_speed');
+    // If all regular bonuses are maxed, offer only the infinite score bonus
+    if (availablePool.length === 0) {
+        if (soapIntervalMultiplier === 1.0) soapIntervalMultiplier = 2.0;
+        availablePool = ['score_bonus'];
     }
 
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
@@ -1667,11 +1674,23 @@ function showPinkUpgradeOptions() {
     selected.forEach(id => {
         const card = document.createElement('div');
         card.className = 'upgrade-card pink-upgrade-card';
-        const percent = Math.round((globalPinkUpgradePower - 1) * 100);
+
+        let titleText = '';
+        let descText = '';
+
+        if (id === 'score_bonus') {
+            titleText = '+20% ქულების ბონუსი';
+            descText = 'მიიღეთ მეტი ქულა ყოველი გაწმენდისას! (ულიმიტო)';
+        } else {
+            const percent = Math.round((globalPinkUpgradePower - 1) * 100);
+            titleText = `+${percent}% ${names[id] || id}`;
+            descText = `თქვენი არსებული ${names[id] || 'უნარი'} გაძლიერდება!`;
+        }
+
         card.innerHTML = `
             <div style="font-size: 3rem; margin-bottom: 10px;">${icons[id] || '✨'}</div>
-            <h3>+${percent}% ${names[id] || id}</h3>
-            <p>თქვენი არსებული ${names[id] || 'უნარი'} გაძლიერდება!</p>
+            <h3>${titleText}</h3>
+            <p>${descText}</p>
         `;
         card.onclick = () => applyPinkUpgrade(id);
         container.appendChild(card);
@@ -1683,24 +1702,34 @@ function applyPinkUpgrade(id) {
     isUpgradeOpen = false;
 
     // Track the bonus
-    // Allow stacking
     pinkBonuses.push(id);
-    if (upgradeCounts[id] !== undefined) upgradeCounts[id]++;
+    if (id === 'score_bonus') {
+        soapScoreBonusCount++;
+        globalMultiplier *= 1.2;
+        // Every 5 selections, make soap 1.5x rarer
+        if (soapScoreBonusCount % 5 === 0) {
+            soapIntervalMultiplier *= 1.5;
+            showStatusUpdate('საპონი უფრო იშვიათი გახდა! 🧼📉');
+        }
+    } else {
+        pinkBonusTypeCounts[id] = (pinkBonusTypeCounts[id] || 0) + 1;
+        if (upgradeCounts[id] !== undefined) upgradeCounts[id]++;
 
-    // Apply boost to the benefit
-    switch (id) {
-        case 'diff': intervalMultiplier *= (1 / globalPinkUpgradePower); break;
-        case 'speed': helperSpeedMultiplier *= globalPinkUpgradePower; break;
-        case 'bot': helperSpeedMultiplier *= globalPinkUpgradePower; break; // Boost robots overall
-        case 'radius': radiusMultiplier *= globalPinkUpgradePower; break;
-        case 'strength': strengthMultiplier *= globalPinkUpgradePower; break;
-        case 'karcher': strengthMultiplier *= globalPinkUpgradePower; radiusMultiplier *= globalPinkUpgradePower; break;
-        case 'bomb': strengthMultiplier *= globalPinkUpgradePower; break;
-        case 'coin_buff': coinBonusMultiplier *= globalPinkUpgradePower; break;
-        case 'magnet': magnetInterval *= (1 / globalPinkUpgradePower); break;
-        case 'bot_pow': helperCleaningMultiplier *= globalPinkUpgradePower; break;
-        case 'spawn_speed': spawnSpeedUpgradeMultiplier *= 0.8; break;
-        case 'boss_weaken': bossWeaknessMultiplier *= 0.9; break;
+        // Apply boost to the benefit
+        switch (id) {
+            case 'diff': intervalMultiplier *= (1 / globalPinkUpgradePower); break;
+            case 'speed': helperSpeedMultiplier *= globalPinkUpgradePower; break;
+            case 'bot': helperSpeedMultiplier *= globalPinkUpgradePower; break;
+            case 'radius': radiusMultiplier *= globalPinkUpgradePower; break;
+            case 'strength': strengthMultiplier *= globalPinkUpgradePower; break;
+            case 'karcher': strengthMultiplier *= globalPinkUpgradePower; radiusMultiplier *= globalPinkUpgradePower; break;
+            case 'bomb': strengthMultiplier *= globalPinkUpgradePower; break;
+            case 'coin_buff': coinBonusMultiplier *= globalPinkUpgradePower; break;
+            case 'magnet': magnetInterval *= (1 / globalPinkUpgradePower); break;
+            case 'bot_pow': helperCleaningMultiplier *= globalPinkUpgradePower; break;
+            case 'spawn_speed': spawnSpeedUpgradeMultiplier *= 0.8; break;
+            case 'boss_weaken': bossWeaknessMultiplier *= 0.9; break;
+        }
     }
 
     updatePowerStats();
@@ -2900,6 +2929,10 @@ function startGameSession(dontReset = false) {
         lastSpinMilestone = 0;
         healthHalvedActive = false;
         pinkBonuses = [];
+        pinkBonusTypeCounts = {};
+        soapScoreBonusCount = 0;
+        soapIntervalMultiplier = 1.0;
+        soapUseCount = 0;
         upgradeCounts = {
             'diff': 0, 'speed': 0, 'bot': 0, 'radius': 0, 'strength': 0, 'karcher': 0,
             'bomb': 0, 'coin_buff': 0, 'magnet': 0, 'bot_pow': 0, 'spawn_speed': 0, 'boss_weaken': 0
