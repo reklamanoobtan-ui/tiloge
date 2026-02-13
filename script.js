@@ -313,7 +313,9 @@ async function initDatabase() {
 
         // Duel System Tables (Automated setup)
         await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
-        await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+        await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, player1_pos JSONB, player2_pos JSONB, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS duel_wins INTEGER DEFAULT 0`; } catch (e) { }
 
     } catch (e) { console.error("DB Init Error", e); }
 }
@@ -371,7 +373,8 @@ async function fetchLeaderboard() {
             SELECT nickname, 
                    GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
                    CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
-                   COALESCE(coins, 0) as d_coins
+                   COALESCE(coins, 0) as d_coins,
+                   COALESCE(duel_wins, 0) as d_wins
             FROM users 
             WHERE (nickname IS NOT NULL AND nickname != '')
               AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered})
@@ -411,7 +414,7 @@ async function fetchLeaderboard() {
                                 <span class="mini-lb-name">${safeNick}</span>
                                 <div style="display: flex; gap: 8px; align-items: center; margin-top: 2px;">
                                     <span style="font-size: 0.65rem; opacity: 0.6; color: #fff;">⏱️ ${timeVal}ს</span>
-                                    <span style="font-size: 0.65rem; color: #ffd700; font-weight: bold;">🪙 ${coinVal}</span>
+                                    <span style="font-size: 0.65rem; color: #ffd700; font-weight: bold;">⚔️ ${entry.d_wins || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -672,13 +675,13 @@ async function fetchGlobalRankings(force = false) {
         const topScores = await sql`SELECT nickname, COALESCE(best_score, 0) as best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, COALESCE(coins, 0) as coins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY coins DESC LIMIT 10`;
-        renderList('top-coins-list', topCoins, '🪙', 'coins');
+        const topWins = await sql`SELECT nickname, COALESCE(duel_wins, 0) as duel_wins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY duel_wins DESC LIMIT 10`;
+        renderList('top-coins-list', topWins, '⚔️', 'duel_wins');
 
         const topTime = await sql`SELECT nickname, COALESCE(total_survival_time, 0) as total_survival_time FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
         // Cache Global Rankings
-        const globalCache = { topScores, topCoins, topTime };
+        const globalCache = { topScores, topWins, topTime };
         localStorage.setItem('global_lb_cache', JSON.stringify(globalCache));
 
     } catch (e) {
@@ -689,7 +692,7 @@ async function fetchGlobalRankings(force = false) {
                 const { topScores, topCoins, topTime } = JSON.parse(cached);
                 showStatusUpdate('⚠️ კავშირი გაწყდა - ნაჩვენებია შენახული რეიტინგები');
                 renderList('top-scores-list', topScores, '✨', 'best_score');
-                renderList('top-coins-list', topCoins, '🪙', 'coins');
+                renderList('top-coins-list', topWins, '⚔️', 'duel_wins');
                 renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
             } catch (ce) {
                 console.error("Cache Parse Error:", ce);

@@ -12,30 +12,17 @@
             background: #050505;
             flex-direction: column;
             overflow: hidden;
+            margin: 0;
+            user-select: none;
         }
 
+        /* Single Field Duel */
         .duel-container {
-            display: flex;
             width: 100vw;
             height: 100vh;
             position: relative;
-        }
-
-        .duel-split {
-            flex: 1;
-            position: relative;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
+            background: #0a0a0a;
             overflow: hidden;
-        }
-
-        .duel-side-left {
-            border-right: 2px solid var(--primary, #ffd700);
-        }
-
-        .duel-side-right {
-            border-left: 2px solid var(--primary, #ffd700);
         }
 
         /* HUD for Duel */
@@ -50,99 +37,44 @@
         }
 
         .duel-status-bar {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 10px 30px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 12px 35px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
             display: flex;
-            gap: 40px;
+            gap: 50px;
             align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .duel-score-box {
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-width: 100px;
         }
 
         .duel-score-box span {
-            font-size: 0.7rem;
-            opacity: 0.6;
+            font-size: 0.75rem;
+            opacity: 0.7;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
         }
 
         .duel-score-box strong {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
         }
 
         .duel-timer {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 2.5rem;
+            font-weight: 900;
             color: #fff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        /* Split Line */
-        .duel-divider {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(to bottom, transparent, #ffd700, transparent);
-            z-index: 500;
-            box-shadow: 0 0 20px #ffd700;
-        }
-
-        /* Player Names */
-        .player-label {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            padding: 8px 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            z-index: 1000;
-        }
-
-        /* Mobile Layout */
-        @media (max-width: 800px) {
-            .duel-container {
-                flex-direction: column;
-            }
-
-            .duel-divider {
-                left: 0;
-                right: 0;
-                top: 50%;
-                bottom: auto;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(to right, transparent, #ffd700, transparent);
-            }
-
-            .duel-side-left {
-                border-right: none;
-                border-bottom: 2px solid #ffd700;
-            }
-
-            .duel-side-right {
-                border-left: none;
-                border-top: 2px solid #ffd700;
-            }
-        }
-
-        .canvas-side {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            font-family: 'Outfit', sans-serif;
         }
 
         .duel-exit {
@@ -151,22 +83,59 @@
             left: 20px;
             z-index: 2000;
             background: rgba(255, 255, 255, 0.1);
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             padding: 10px;
             border-radius: 50%;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: 0.3s;
+            pointer-events: auto;
+        }
+
+        .duel-exit:hover {
+            background: rgba(255, 77, 77, 0.3);
+            border-color: #ff4d4d;
+        }
+
+        /* Opponent Ghost Cloth */
+        .opponent-cloth {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background-image: url('tilo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 900;
+            opacity: 0.6;
+            filter: drop-shadow(0 0 10px rgba(255, 65, 108, 0.5)) hue-rotate(150deg);
+            transition: all 0.1s linear;
+        }
+
+        .opponent-name-tag {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 65, 108, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            font-weight: bold;
         }
 
         .winner-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: radial-gradient(circle, rgba(20, 20, 30, 0.95) 0%, rgba(5, 5, 10, 1) 100%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -177,15 +146,31 @@
         }
 
         .winner-title {
-            font-size: 3rem;
-            font-weight: 800;
+            font-size: 4rem;
+            font-weight: 900;
             color: #ffd700;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
         }
 
         .winner-reward {
-            font-size: 1.5rem;
-            opacity: 0.8;
+            font-size: 1.8rem;
+            margin-top: 10px;
+            color: #fff;
+        }
+
+        .stain {
+            position: absolute;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            z-index: 100;
+        }
+
+        .cloth {
+            width: 150px;
+            height: 150px;
+            z-index: 1100;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -196,42 +181,38 @@
     <div class="duel-hud">
         <div class="duel-status-bar">
             <div class="duel-score-box">
-                <span id="p1-name">Player 1</span>
+                <span id="p1-name">ჩემი სახელი</span>
                 <strong id="p1-score-display">0</strong>
             </div>
-            <div class="duel-timer" id="duel-timer">05:00</div>
+            <div class="duel-timer" id="duel-timer">01:00</div>
             <div class="duel-score-box">
-                <span id="p2-name">Player 2</span>
+                <span id="p2-name">მოწინააღმდეგე</span>
                 <strong id="p2-score-display">0</strong>
             </div>
         </div>
     </div>
 
-    <div class="duel-container">
-        <div class="duel-side-left" id="p1-area">
-            <div class="canvas-side" id="p1-canvas"></div>
-            <div class="player-label" id="p1-label">მოთამაშე 1</div>
-        </div>
-
-        <div class="duel-divider"></div>
-
-        <div class="duel-side-right" id="p2-area">
-            <div class="canvas-side" id="p2-canvas"></div>
-            <div class="player-label" id="p2-label">მოთამაშე 2</div>
+    <div class="duel-container" id="duel-field">
+        <!-- Stains will be spawned here -->
+        <div id="opponent-cloth" class="opponent-cloth hidden">
+            <div class="opponent-name-tag" id="opp-tag">Names</div>
         </div>
     </div>
 
     <div id="winner-modal" class="winner-overlay hidden">
         <div class="winner-title" id="winner-text">გამარჯვებული!</div>
         <div class="winner-reward" id="winner-reward-text">პრიზი: 0 🪙</div>
-        <button class="glass-btn" onclick="exitDuel()" style="margin-top: 30px;">მთავარ მენიუში დაბრუნება</button>
+        <div style="font-size: 1rem; opacity: 0.6; margin-top: 5px;">ტოპ დუელებში დაგემატათ +1 მოგება!</div>
+        <button class="glass-btn" onclick="exitDuel()"
+            style="margin-top: 40px; padding: 15px 30px; font-size: 1.1rem;">მთავარ მენიუში დაბრუნება</button>
     </div>
 
-    <div id="cloth" class="cloth" style="position: fixed; z-index: 3000;"></div>
+    <div id="cloth" class="cloth" style="position: fixed;"></div>
 
     <script type="module">
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
-        const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
+        const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
+        const sql = neon(DB_URL);
 
         const params = new URLSearchParams(window.location.search);
         const duelId = params.get('id');
@@ -242,13 +223,16 @@
 
         let duelData = null;
         let isPlayer1 = false;
-        let p1Score = 0;
-        let p2Score = 0;
-        let timeLeft = 300; // 5 minutes
+        let myScore = 0;
+        let opponentScore = 0;
+        let timeLeft = 60; // 1 minute
         let duelActive = false;
-        let lastSync = 0;
+        let lastX = 0, lastY = 0;
 
         const get = id => document.getElementById(id);
+        const field = get('duel-field');
+        const myCloth = get('cloth');
+        const oppCloth = get('opponent-cloth');
 
         async function initDuel() {
             try {
@@ -258,36 +242,28 @@
                 duelData = res[0];
                 isPlayer1 = (userEmail === duelData.player1_email);
 
-                // Set names
                 const p1Row = await sql`SELECT nickname FROM users WHERE email = ${duelData.player1_email}`;
                 const p2Row = await sql`SELECT nickname FROM users WHERE email = ${duelData.player2_email}`;
 
                 get('p1-name').textContent = p1Row[0].nickname;
                 get('p2-name').textContent = p2Row[0].nickname;
-                get('p1-label').textContent = p1Row[0].nickname;
-                get('p2-label').textContent = p2Row[0].nickname;
+                get('opp-tag').textContent = isPlayer1 ? p2Row[0].nickname : p1Row[0].nickname;
+                oppCloth.classList.remove('hidden');
 
                 duelActive = true;
                 startTimer();
                 spawnStainsLoop();
                 syncLoop();
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function startTimer() {
             const int = setInterval(() => {
                 if (!duelActive) return clearInterval(int);
                 timeLeft--;
-                const m = Math.floor(timeLeft / 60);
-                const s = timeLeft % 60;
-                get('duel-timer').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(int);
-                    finishDuel();
-                }
+                const s = timeLeft;
+                get('duel-timer').textContent = `00:${s < 10 ? '0' : ''}${s}`;
+                if (timeLeft <= 0) { clearInterval(int); finishDuel(); }
             }, 1000);
         }
 
@@ -295,116 +271,109 @@
             const int = setInterval(async () => {
                 if (!duelActive) return clearInterval(int);
                 try {
-                    // Update my score
-                    const myScore = isPlayer1 ? p1Score : p2Score;
+                    const pos = { x: lastX / window.innerWidth, y: lastY / window.innerHeight };
+
                     if (isPlayer1) {
-                        await sql`UPDATE duels SET player1_score = ${myScore} WHERE id = ${duelId}`;
+                        await sql`UPDATE duels SET player1_score = ${myScore}, player1_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     } else {
-                        await sql`UPDATE duels SET player2_score = ${myScore} WHERE id = ${duelId}`;
+                        await sql`UPDATE duels SET player2_score = ${myScore}, player2_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
                     }
 
-                    // Fetch opponent score
-                    const res = await sql`SELECT player1_score, player2_score, status FROM duels WHERE id = ${duelId}`;
-                    if (res[0].status === 'finished') {
-                        duelActive = false;
-                        finishDuel();
-                        return;
-                    }
-                    p1Score = res[0].player1_score;
-                    p2Score = res[0].player2_score;
+                    const res = await sql`SELECT * FROM duels WHERE id = ${duelId}`;
+                    if (res[0].status === 'finished') { duelActive = false; finishDuel(); return; }
 
-                    get('p1-score-display').textContent = p1Score;
-                    get('p2-score-display').textContent = p2Score;
+                    const d = res[0];
+                    opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
+                    const oppPos = isPlayer1 ? d.player2_pos : d.player1_pos;
+
+                    if (oppPos) {
+                        oppCloth.style.left = (oppPos.x * window.innerWidth) + 'px';
+                        oppCloth.style.top = (oppPos.y * window.innerHeight) + 'px';
+                    }
+
+                    updateUI();
                 } catch (e) { }
-            }, 2000);
+            }, 1000);
         }
 
-        // Mini Game Logic
-        const cloth = get('cloth');
-        let x = window.innerWidth / 2, y = window.innerHeight / 2;
-
-        document.body.onmousemove = (e) => {
-            x = e.clientX;
-            y = e.clientY;
-            cloth.style.left = `${x - 100}px`;
-            cloth.style.top = `${y - 100}px`;
-            checkClean(x, y);
-        };
+        function updateUI() {
+            if (isPlayer1) {
+                get('p1-score-display').textContent = myScore;
+                get('p2-score-display').textContent = opponentScore;
+            } else {
+                get('p2-score-display').textContent = myScore;
+                get('p1-score-display').textContent = opponentScore;
+            }
+        }
 
         function spawnStainsLoop() {
             if (!duelActive) return;
-            const area = isPlayer1 ? get('p1-area') : get('p2-area');
             const stain = document.createElement('div');
             stain.className = 'stain';
-            stain.style.width = '60px';
-            stain.style.height = '60px';
-            stain.style.background = `hsl(${Math.random() * 360}, 50%, 50%)`;
-            stain.style.left = `${Math.random() * 80}%`;
-            stain.style.top = `${Math.random() * 80}%`;
-            stain.style.pointerEvents = 'none';
-            stain.style.filter = 'blur(5px)';
-            area.appendChild(stain);
+            const size = 50 + Math.random() * 50;
+            stain.style.width = size + 'px';
+            stain.style.height = size + 'px';
+            stain.style.background = `hsla(${Math.random() * 360}, 70%, 50%, 0.6)`;
+            stain.style.left = (10 + Math.random() * 80) + '%';
+            stain.style.top = (15 + Math.random() * 70) + '%';
+            stain.id = 'stain-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            field.appendChild(stain);
 
-            setTimeout(spawnStainsLoop, 1000 - ((p1Score + p2Score) * 0.1));
+            setTimeout(spawnStainsLoop, 800);
         }
 
         function checkClean(mx, my) {
             if (!duelActive) return;
-            const areaId = isPlayer1 ? 'p1-area' : 'p2-area';
-            const area = get(areaId);
-            const stains = area.querySelectorAll('.stain');
-
+            const stains = document.querySelectorAll('.stain');
             stains.forEach(s => {
                 const rect = s.getBoundingClientRect();
-                const dist = Math.hypot(mx - (rect.left + 30), my - (rect.top + 30));
-                if (dist < 80) {
-                    s.remove();
-                    if (isPlayer1) p1Score++; else p2Score++;
-                    updateLocalUI();
+                const sx = rect.left + rect.width / 2;
+                const sy = rect.top + rect.height / 2;
+                const dist = Math.hypot(mx - sx, my - sy);
+                if (dist < 70) {
+                    s.style.transform = 'scale(0)';
+                    setTimeout(() => s.remove(), 200);
+                    myScore++;
+                    updateUI();
                 }
             });
         }
 
-        function updateLocalUI() {
-            get('p1-score-display').textContent = p1Score;
-            get('p2-score-display').textContent = p2Score;
-        }
-
         async function finishDuel() {
+            if (!duelActive && get('winner-modal').classList.contains('hidden') === false) return;
             duelActive = false;
-            const winner = p1Score > p2Score ? duelData.player1_email : duelData.player2_email;
-            const isWinner = (userEmail === winner);
-            const totalPrize = Math.floor((p1Score + p2Score) * 0.5);
+
+            // Final check of scores
+            const res = await sql`SELECT player1_score, player2_score FROM duels WHERE id = ${duelId}`;
+            const p1Final = res[0].player1_score;
+            const p2Final = res[0].player2_score;
+
+            const p1Win = p1Final > p2Final;
+            const winnerEmail = p1Win ? duelData.player1_email : duelData.player2_email;
+            const isWinner = (userEmail === winnerEmail);
+            const prize = Math.floor((p1Final + p2Final) / 20);
 
             get('winner-modal').classList.remove('hidden');
             get('winner-text').textContent = isWinner ? "თქვენ გაიმარჯვეთ! 🎉" : "თქვენ წააგეთ... 📉";
-            get('winner-reward-text').textContent = isWinner ? `პრიზი: ${totalPrize} 🪙` : "შემდეგში უკეთესად!";
+            get('winner-reward-text').textContent = isWinner ? `პრიზი: ${prize} 🪙` : "შემდეგში უკეთესად!";
 
             if (isWinner) {
-                await sql`UPDATE users SET coins = coins + ${totalPrize}, total_coins = total_coins + ${totalPrize} WHERE email = ${userEmail}`;
+                await sql`UPDATE users SET coins = coins + ${prize}, total_coins = total_coins + ${prize}, duel_wins = COALESCE(duel_wins, 0) + 1 WHERE email = ${userEmail}`;
+                await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
             }
-            await sql`UPDATE duels SET status = 'finished', winner_email = ${winner} WHERE id = ${duelId}`;
         }
 
-        window.exitDuel = () => {
-            window.location.href = 'index.html';
+        window.exitDuel = () => { window.location.href = 'index.html'; };
+
+        const handleInput = (ex, ey) => {
+            lastX = ex; lastY = ey;
+            myCloth.style.left = (ex - 75) + 'px';
+            myCloth.style.top = (ey - 75) + 'px';
+            checkClean(ex, ey);
         };
 
-        window.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            x = touch.clientX; y = touch.clientY;
-            cloth.style.left = `${x - 100}px`;
-            cloth.style.top = `${y - 100}px`;
-            checkClean(x, y);
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            x = touch.clientX; y = touch.clientY;
-            cloth.style.left = `${x - 100}px`;
-            cloth.style.top = `${y - 100}px`;
-            checkClean(x, y);
-        });
+        window.onmousemove = (e) => handleInput(e.clientX, e.clientY);
+        window.ontouchmove = (e) => { e.preventDefault(); handleInput(e.touches[0].clientX, e.touches[0].clientY); };
 
         initDuel();
     </script>
