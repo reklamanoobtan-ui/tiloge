@@ -348,7 +348,7 @@ async function fetchLeaderboard() {
     console.log("Leaderboard: Starting fetch...");
     const list = get('mini-lb-list');
     const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
-    const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql``;
+    const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql`AND 1=1`;
 
     try {
         const result = await sql`
@@ -421,19 +421,28 @@ async function fetchLeaderboard() {
                     const isMe = nickname && entry.nickname === nickname;
                     const item = document.createElement('div');
                     item.className = 'mini-lb-item';
-                    if (isMe) item.style.background = "rgba(255, 215, 0, 0.2)";
+                    if (isMe) item.style.border = "1px solid #ffd700";
 
                     const scoreVal = parseFloat(entry.d_score || 0);
                     const timeVal = parseFloat(entry.d_time || 0);
+                    const safeNick = (entry.nickname || 'Unknown').substring(0, 10);
 
-                    const safeNick = entry.nickname.substring(0, 10);
+                    let rankBadge = '';
+                    if (i < 3) {
+                        rankBadge = `<span class="top-rank-badge rank-${i + 1}">${i + 1}</span>`;
+                    } else {
+                        rankBadge = `<span style="width: 24px; text-align: center; font-size: 0.8rem; opacity: 0.3;">${i + 1}</span>`;
+                    }
 
                     item.innerHTML = `
                         <div class="mini-lb-info">
-                            <span class="mini-lb-name">${i + 1}. ${safeNick}</span>
-                            <span class="mini-lb-stat">⏱️ ${timeVal}s</span>
+                            ${rankBadge}
+                            <span class="mini-lb-name">${safeNick}</span>
                         </div>
-                        <span class="mini-lb-score">${scoreVal} ✨</span>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                           <span class="mini-lb-score" style="font-size: 0.9rem;">${scoreVal} ✨</span>
+                           <span style="font-size: 0.6rem; opacity: 0.5;">⏱️ ${timeVal}ს</span>
+                        </div>
                     `;
                     list.appendChild(item);
                 });
@@ -470,7 +479,7 @@ async function fetchGlobalRankings(force = false) {
             item.innerHTML = `
                 <div class="mini-lb-info">
                     ${rankBadge}
-                    <span class="mini-lb-name">${u.nickname.substring(0, 10)}</span>
+                    <span class="mini-lb-name">${(u.nickname || 'Unknown').substring(0, 10)}</span>
                 </div>
                 <span class="mini-lb-score">${val}${suffix}</span>
             `;
@@ -480,15 +489,15 @@ async function fetchGlobalRankings(force = false) {
 
     try {
         const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
-        const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql``;
+        const filterStr = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql`AND 1=1`;
 
-        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY best_score DESC LIMIT 10`;
+        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY total_coins DESC LIMIT 10`;
+        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY total_coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'total_coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filter} ORDER BY total_survival_time DESC LIMIT 10`;
+        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
         // Cache Global Rankings
         const globalCache = { topScores, topCoins, topTime };
@@ -502,9 +511,16 @@ async function fetchGlobalRankings(force = false) {
                 const { topScores, topCoins, topTime } = JSON.parse(cached);
                 showStatusUpdate('⚠️ კავშირი გაწყდა - ნაჩვენებია შენახული რეიტინგები');
                 renderList('top-scores-list', topScores, '✨', 'best_score');
-                renderList('top-coins-list', topCoins, '🪙', 'coins');
+                renderList('top-coins-list', topCoins, '🪙', 'total_coins');
                 renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
-            } catch (ce) { }
+            } catch (ce) {
+                console.error("Cache Parse Error:", ce);
+            }
+        } else {
+            ['top-scores-list', 'top-coins-list', 'top-time-list'].forEach(id => {
+                const el = get(id);
+                if (el) el.innerHTML = '<p style="text-align: center; opacity: 0.5; font-size: 0.8rem;">მონაცემები ვერ მოიძებნა</p>';
+            });
         }
     }
 }
@@ -767,7 +783,7 @@ function initUI() {
         if (get('ratings-modal')) {
             get('ratings-modal').classList.remove('hidden');
             fetchLeaderboard();
-            fetchGlobalRankings();
+            fetchGlobalRankings(true);
         }
     };
     const uiAction = () => get('ui-modal').classList.remove('hidden');
