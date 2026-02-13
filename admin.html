@@ -1632,7 +1632,7 @@
                 // Ensure we use a direct timestamp for precision
                 const expireDate = new Date(Date.now() + dur * 1000);
                 await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
-                         VALUES ('massive_announcement', ${msg}, ${expireDate.toISOString()})
+                         VALUES ('massive_announcement', ${msg}, ${expireDate})
                          ON CONFLICT (event_type) DO UPDATE SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
 
                 await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 MASSIVE', ${msg})`;

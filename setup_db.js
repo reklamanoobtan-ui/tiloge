@@ -77,7 +77,7 @@ async function initDatabase() {
         await sql`CREATE TABLE IF NOT EXISTS global_events (
             event_type TEXT PRIMARY KEY,
             event_value TEXT,
-            expires_at TIMESTAMP
+            expires_at TIMESTAMPTZ
         )`;
 
         // 7. Duel System

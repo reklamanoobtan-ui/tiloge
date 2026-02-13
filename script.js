@@ -309,7 +309,7 @@ async function initDatabase() {
         await sql`CREATE TABLE IF NOT EXISTS global_events (
             event_type TEXT PRIMARY KEY,
             event_value TEXT,
-            expires_at TIMESTAMP
+            expires_at TIMESTAMPTZ
         )`;
 
         // Duel System Tables (Automated setup)
@@ -3157,7 +3157,10 @@ async function checkGlobalEvents() {
                 showStatusUpdate(`🧹 ლაქების ლიმიტი: ${globalStainLimitOverride}!`);
             }
             if (ev.event_type === 'massive_announcement') {
-                const remainingSec = Math.floor((new Date(ev.expires_at) - new Date()) / 1000);
+                const expiry = new Date(ev.expires_at).getTime();
+                const now = Date.now();
+                const remainingSec = Math.floor((expiry - now) / 1000);
+
                 if (remainingSec > 0) {
                     showMassiveAnnouncement(ev.event_value, remainingSec);
                 }
@@ -3759,10 +3762,10 @@ function showSystemAlert(msg) {
 
 let currentMassiveAnnouncement = "";
 function showMassiveAnnouncement(text, durationSeconds) {
-    if (!text || text === currentMassiveAnnouncement) return;
+    const container = get('massive-announcement-container');
+    if (!text || (text === currentMassiveAnnouncement && container && !container.classList.contains('hidden'))) return;
     currentMassiveAnnouncement = text;
 
-    const container = get('massive-announcement-container');
     const box = get('massive-announcement-box');
     const textBox = get('massive-announcement-text');
 
