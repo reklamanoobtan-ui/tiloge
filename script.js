@@ -353,17 +353,17 @@ async function syncUserData(isFinal = false) {
 
         // Ensure we are marked as online
         localStorage.setItem('tilo_last_sync', Date.now());
+        lastSyncTime = Date.now();
 
         // If game is over, record this achievement in history and update total_coins
         if (isFinal) {
-            const finalScore = totalScoreToSync;
-            const subSessionScore = Math.floor(score);
-            const earned = Math.floor((Math.floor(subSessionScore * 0.5) + Math.floor(currentSurvival * 0.2)) * (coinBonusMultiplier || 1.0));
+            const totalScoreToSync = Math.floor(score + accumulatedScore);
+            const earned = Math.floor((Math.floor(totalScoreToSync * 0.5) + Math.floor(currentSurvival * 0.2)) * (coinBonusMultiplier || 1.0));
 
-            console.log("📊 Attempting to record match achievement...", { email: userEmail, score: finalScore, earned });
+            console.log("📊 Attempting to record match achievement...", { email: userEmail, score: totalScoreToSync, earned });
 
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
-                     VALUES (${userEmail}, ${finalScore}, ${currentSurvival}, ${earned}, NOW())`;
+                     VALUES (${userEmail}, ${totalScoreToSync}, ${currentSurvival}, ${earned}, NOW())`;
 
             // Add earned coins to balance (Atomic update to total_coins and balance)
             await sql`UPDATE users SET coins = coins + ${earned}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
@@ -802,7 +802,7 @@ let videoTimings = [10, 30, 60, 300];
 let videoLoopInterval = 300;
 let globalForcedVideo = null; // {id, title, thumb, link}
 
-function updateScore(points) {
+async function updateScore(points) {
     if (!gameActive) return;
     if (points > 0) {
         // Apply Global Multiplier
@@ -830,16 +830,23 @@ function updateScore(points) {
             showUpgradeOptions();
             syncUserData(); // NOT true, we don't want a full reward sync on upgrade
         }
-        // 1000 score milestone reward
-        if (Math.floor(score / 1000) > Math.floor(lastMilestoneScore / 1000)) {
+        // 1000 score milestone reward (Using total session score)
+        const totalSessionScore = score + accumulatedScore;
+        if (Math.floor(totalSessionScore / 1000) > Math.floor(lastMilestoneScore / 1000)) {
             const addAmt = (1 * globalCoinMult);
             coins += addAmt;
             sessionCoinsEarned += addAmt;
             showStatusUpdate('+1 ქოინი ბონუსი! 🪙');
-            lastMilestoneScore = score;
+            lastMilestoneScore = totalSessionScore;
             saveStatsToLocal();
-            // Atomic DB Update
-            if (userEmail) sql`UPDATE users SET coins = coins + ${addAmt}, total_coins = total_coins + ${addAmt} WHERE email = ${userEmail}`;
+            // Atomic DB Update - Await to ensure persistence before next sync
+            if (userEmail) {
+                try {
+                    await sql`UPDATE users SET coins = coins + ${addAmt}, total_coins = total_coins + ${addAmt} WHERE email = ${userEmail}`;
+                } catch (e) {
+                    console.error("Milestone coin update failed:", e);
+                }
+            }
         }
 
         // Dynamic Soap Milestone (Start 50, every X)
@@ -941,7 +948,7 @@ function showStatusUpdate(text) {
     }, 2000);
 }
 
-function handleSkinAction(name) {
+async function handleSkinAction(name) {
     if (name === 'default' || ownedSkins.includes(name)) {
         currentSkin = name;
         showStatusUpdate(`${name === 'default' ? 'ჩვეულებრივი' : name} სკინი არჩეულია! ✨`);
@@ -952,6 +959,15 @@ function handleSkinAction(name) {
             ownedSkins.push(name);
             currentSkin = name;
             showStatusUpdate(`${name} სკინი შეძენილია! 🔥`);
+
+            // Persist immediately to DB
+            if (userEmail) {
+                try {
+                    await sql`UPDATE users SET coins = ${coins}, owned_skins = ${JSON.stringify(ownedSkins)}, current_skin = ${currentSkin} WHERE email = ${userEmail}`;
+                } catch (e) {
+                    console.error("Skin purchase DB sync error:", e);
+                }
+            }
         } else {
             showStatusUpdate('არ გაქვს საკმარისი ქოინები! ❌');
         }
@@ -960,9 +976,7 @@ function handleSkinAction(name) {
     saveStatsToLocal();
     updateUIValues();
     if (userEmail) {
-        // Explicitly set the new coin value when spending
-        sql`UPDATE users SET coins = ${coins} WHERE email = ${userEmail}`;
-        syncUserData();
+        await syncUserData();
     }
 }
 
@@ -2520,7 +2534,7 @@ async function reviveGame() {
         coins -= 1000;
         saveStatsToLocal();
         updateUIValues();
-        if (userEmail) sql`UPDATE users SET coins = ${coins} WHERE email = ${userEmail}`;
+        if (userEmail) await sql`UPDATE users SET coins = ${coins} WHERE email = ${userEmail}`;
 
         // Clear all stains
         document.querySelectorAll('.stain').forEach(s => s.remove());
@@ -3989,6 +4003,9 @@ function applyPrize(prize) {
     updatePowerStats();
     saveStatsToLocal();
     updateUIValues();
+    if (userEmail) {
+        sql`UPDATE users SET coins = ${coins}, total_coins = total_coins + ${prize.type === 'coins' ? 1000 : 0} WHERE email = ${userEmail}`;
+    }
 }
 
 // Start Systems
