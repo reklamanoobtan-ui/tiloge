@@ -3009,7 +3009,7 @@ window.onload = async () => {
 
     setupChat();
     checkGlobalEvents();
-    setInterval(checkGlobalEvents, 10000);
+    setInterval(checkGlobalEvents, 3000); // Poll every 3 seconds for better responsiveness
 };
 
 async function checkGlobalEvents() {
@@ -3161,7 +3161,8 @@ async function checkGlobalEvents() {
                 const now = Date.now();
                 const remainingSec = Math.floor((expiry - now) / 1000);
 
-                if (remainingSec > 0) {
+                console.log(`📢 Massive Alert Found: "${ev.event_value}", remaining: ${remainingSec}s`);
+                if (remainingSec > 2) { // Show if at least 2s left
                     showMassiveAnnouncement(ev.event_value, remainingSec);
                 }
             }
@@ -3763,31 +3764,44 @@ function showSystemAlert(msg) {
 let currentMassiveAnnouncement = "";
 function showMassiveAnnouncement(text, durationSeconds) {
     const container = get('massive-announcement-container');
-    if (!text || (text === currentMassiveAnnouncement && container && !container.classList.contains('hidden'))) return;
-    currentMassiveAnnouncement = text;
-
     const box = get('massive-announcement-box');
     const textBox = get('massive-announcement-text');
 
-    if (!container || !box || !textBox) return;
+    if (!text || !container || !box || !textBox) return;
+
+    // If already showing the SAME text, don't restart animation
+    if (text === currentMassiveAnnouncement && !container.classList.contains('hidden')) {
+        return;
+    }
+
+    console.log("🎬 Showing Massive Announcement:", text);
+    currentMassiveAnnouncement = text;
 
     textBox.textContent = text;
     container.classList.remove('hidden');
 
-    // Animate In (Fall down to position)
-    setTimeout(() => {
-        box.style.opacity = "1";
-        box.style.transform = "translateY(0)";
-    }, 50);
+    // Force reflow
+    void box.offsetWidth;
 
-    // Auto Hide (Slide away)
-    setTimeout(() => {
+    // Animate in
+    box.style.transition = "all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+    box.style.opacity = "1";
+    box.style.transform = "translateY(0)";
+
+    // Clear any existing timeout to avoid flickering
+    if (window.massiveTimeout) clearTimeout(window.massiveTimeout);
+    if (window.massiveHideTimeout) clearTimeout(window.massiveHideTimeout);
+
+    // Hold for duration then animate out
+    window.massiveTimeout = setTimeout(() => {
         box.style.opacity = "0";
         box.style.transform = "translateY(50px)";
-        setTimeout(() => {
+        window.massiveHideTimeout = setTimeout(() => {
             container.classList.add('hidden');
-            currentMassiveAnnouncement = "";
-        }, 500);
+            if (currentMassiveAnnouncement === text) {
+                currentMassiveAnnouncement = "";
+            }
+        }, 600);
     }, durationSeconds * 1000);
 }
 
