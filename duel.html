@@ -389,7 +389,7 @@
             const p1Final = res[0].player1_score;
             const p2Final = res[0].player2_score;
             const total = p1Final + p2Final;
-            const prize = Math.floor(total / 20);
+            const prize = Math.floor(total / 100);
 
             const isWinner = isPlayer1 ? (p1Final >= p2Final) : (p2Final > p1Final);
             const winnerEmail = (p1Final >= p2Final) ? duelData.player1_email : duelData.player2_email;
@@ -402,7 +402,14 @@
             get('res-prize').textContent = isWinner ? `${prize} 🪙` : "0 🪙";
 
             if (isWinner) {
+                // Update DB
                 await sql`UPDATE users SET coins = coins + ${prize}, total_coins = total_coins + ${prize}, duel_wins = COALESCE(duel_wins, 0) + 1 WHERE email = ${userEmail}`;
+                await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
+
+                // CRITICAL: Update localStorage so that when we return to index.html, it has the latest coins even if DB fetch is slow/cached
+                const currentLocalCoins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+                localStorage.setItem('tilo_coins', currentLocalCoins + prize);
+            } else {
                 await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
             }
         }
