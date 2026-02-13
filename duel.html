@@ -333,7 +333,7 @@
 
                     updateUI();
                 } catch (e) { console.error("Sync Error:", e); }
-            }, 400);
+            }, 200);
         }
 
         function createStain(s) {
@@ -374,7 +374,7 @@
                 await sql`INSERT INTO duel_stains (duel_id, stain_id, x, y, color) VALUES (${duelId}, ${sid}, ${x}, ${y}, ${color})`;
             } catch (e) { }
 
-            setTimeout(spawnStainsLoop, 800);
+            setTimeout(spawnStainsLoop, 50);
         }
 
         async function checkClean(mx, my) {
