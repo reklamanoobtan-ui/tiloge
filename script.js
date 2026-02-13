@@ -376,6 +376,17 @@ async function syncUserData(isFinal = false) {
                 updateUIValues();
             }
             console.log("✅ Match achievement recorded successfully. Coins earned:", earned);
+        } else {
+            // Regular Sync: Also refresh coins to reflect admin grants or duel wins
+            const fresh = await sql`SELECT coins FROM users WHERE email = ${userEmail}`;
+            if (fresh.length > 0) {
+                if (coins !== fresh[0].coins) {
+                    console.log(`💰 Coins synced from DB: ${coins} -> ${fresh[0].coins}`);
+                    coins = fresh[0].coins;
+                    saveStatsToLocal();
+                    updateUIValues();
+                }
+            }
         }
     } catch (e) { console.error("Sync Error:", e); }
 }
@@ -2908,7 +2919,7 @@ window.onload = async () => {
                 await sql`INSERT INTO users (email, password, nickname, coins) VALUES (${identValue}, ${passValue}, ${nickValue}, ${coins})`;
                 userEmail = identValue;
                 nickname = nickValue;
-                coins = 0;
+                // coins variable already holds the guest coins we just migrated
             } else {
                 const res = await sql`SELECT * FROM users WHERE (email = ${identValue} OR nickname = ${identValue}) AND password = ${passValue}`;
                 if (res.length === 0) { errorEl.textContent = "არასწორი მონაცემები!"; return; }
