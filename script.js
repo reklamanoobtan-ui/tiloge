@@ -348,7 +348,6 @@ async function fetchLeaderboard() {
     console.log("Leaderboard: Starting fetch...");
     const list = get('mini-lb-list');
     const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
-    const filter = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql`AND 1=1`;
 
     try {
         const result = await sql`
@@ -356,9 +355,8 @@ async function fetchLeaderboard() {
                    GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
                    CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time
             FROM users 
-            WHERE nickname IS NOT NULL 
-              AND nickname != ''
-              ${filter}
+            WHERE (nickname IS NOT NULL AND nickname != '')
+              AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered})
             ORDER BY d_score DESC
             LIMIT 10
         `;
@@ -489,15 +487,14 @@ async function fetchGlobalRankings(force = false) {
 
     try {
         const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
-        const filterStr = onlyRegistered ? sql`AND email NOT LIKE 'guest_%'` : sql`AND 1=1`;
 
-        const topScores = await sql`SELECT nickname, best_score FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY best_score DESC LIMIT 10`;
+        const topScores = await sql`SELECT nickname, best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
         renderList('top-scores-list', topScores, '✨', 'best_score');
 
-        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY total_coins DESC LIMIT 10`;
+        const topCoins = await sql`SELECT nickname, total_coins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_coins DESC LIMIT 10`;
         renderList('top-coins-list', topCoins, '🪙', 'total_coins');
 
-        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE nickname IS NOT NULL AND nickname != '' ${filterStr} ORDER BY total_survival_time DESC LIMIT 10`;
+        const topTime = await sql`SELECT nickname, total_survival_time FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY total_survival_time DESC LIMIT 10`;
         renderList('top-time-list', topTime, 'წმ', 'total_survival_time');
         // Cache Global Rankings
         const globalCache = { topScores, topCoins, topTime };
