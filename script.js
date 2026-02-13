@@ -1455,7 +1455,7 @@ function createSoap() {
     soap.style.left = `${spawnX - 60}px`;
     soap.style.top = `${spawnY - 40}px`;
 
-    // 30 Seconds Disappear Logic
+    // 15 Seconds Disappear Logic
     if (soapTimer) clearTimeout(soapTimer);
     if (soapWarningTimer) clearTimeout(soapWarningTimer);
 
@@ -1477,7 +1477,7 @@ function createSoap() {
                 s.style.transform = toggle ? 'scale(1.1)' : 'scale(1.0)';
             }, 500);
         }
-    }, 20000);
+    }, 10000);
 
     // Disappear at 30s
     soapTimer = setTimeout(() => {
@@ -1487,7 +1487,7 @@ function createSoap() {
             isSoapActive = false;
             showStatusUpdate('საპონი გაქრა... 😞🧼');
         }
-    }, 30000);
+    }, 15000);
 
     soapClickCount = 0;
     soap.onclick = (e) => {
@@ -1518,7 +1518,7 @@ function createSoap() {
     };
 
     container.appendChild(soap);
-    showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! (30წმ) 🧼✨');
+    showStatusUpdate('საპონი გამოჩნდა! მიიტანე ტილო და დააკლიკე! (15წმ) 🧼✨');
 }
 
 function createBubbles(x, y, count, isPink = false) {
@@ -1656,9 +1656,17 @@ function showPinkUpgradeOptions() {
 
     const excludes = ['diff', 'bot', 'score_bonus'];
 
-    // Filter out bonuses that reached 4 selections
+    // Filter out bonuses based on limits
     let availablePool = Object.keys(names).filter(id => {
         if (excludes.includes(id)) return false;
+
+        // Spawn Speed limit
+        if (id === 'spawn_speed' && spawnSpeedUpgradeMultiplier <= 0.05) return false;
+
+        // Radius limit (Max 1)
+        if (id === 'radius' && (pinkBonusTypeCounts[id] || 0) >= 1) return false;
+
+        // Default 4 selection limit for others
         return (pinkBonusTypeCounts[id] || 0) < 4;
     });
 
