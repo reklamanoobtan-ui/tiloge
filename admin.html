@@ -1404,8 +1404,10 @@
                             style="margin-bottom: 10px;">RESET
                             PROGRESS (Keep Accounts)</button>
                         <button class="btn btn-danger full-width" id="full-wipe-btn"
-                            style="background: #ff0000; border: 2px solid white;">🔥 FULL RESET (Delete All
+                            style="margin-bottom: 10px; background: #ff0000; border: 2px solid white;">🔥 FULL RESET (Delete All
                             Accounts)</button>
+                        <button class="btn btn-outline full-width" id="drop-vip-col-btn"
+                            style="border-color: #ffd700; color: #ffd700;">🗑️ DROP LEGACY VIP COLUMN</button>
                     </div>
                 </div>
             </div>
@@ -2201,6 +2203,14 @@
                 log('💥 ბაზა სრულად წაიშალა!', 'red');
                 loadPlayers();
             } catch (e) { log('Error: ' + e.message, 'red'); }
+        };
+
+        get('drop-vip-col-btn').onclick = async () => {
+            if (!confirm("⚠️ Remove 'is_vip' column from database? This matches the VIP removal update.")) return;
+            try {
+                await sql`ALTER TABLE users DROP COLUMN IF EXISTS is_vip`;
+                log('✅ VIP column removed from database!', 'green');
+            } catch (e) { log('Error dropping column: ' + e.message, 'red'); }
         };
 
         get('run-setup-btn').onclick = async () => {
