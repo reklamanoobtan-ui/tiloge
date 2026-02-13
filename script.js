@@ -311,6 +311,10 @@ async function initDatabase() {
             event_value TEXT,
             expires_at TIMESTAMPTZ
         )`;
+        // Force column type update if table already existed
+        try {
+            await sql`ALTER TABLE global_events ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC'`;
+        } catch (e) { console.log("DB: Info - global_events already updated or busy"); }
 
         // Duel System Tables (Automated setup)
         await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
@@ -3013,8 +3017,10 @@ window.onload = async () => {
 };
 
 async function checkGlobalEvents() {
+    console.log("🔍 Checking Global Events...");
     try {
-        const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
+        const events = await sql`SELECT * FROM global_events WHERE expires_at > (NOW() AT TIME ZONE 'UTC')`;
+        if (events.length > 0) console.log("📡 Found active events:", events.length);
 
         const oldRegInt = globalBossInterval;
         const oldTriInt = globalTriangleBossInterval;
