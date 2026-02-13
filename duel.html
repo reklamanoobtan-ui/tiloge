@@ -114,8 +114,10 @@
             pointer-events: none;
             z-index: 900;
             opacity: 0.6;
-            filter: drop-shadow(0 0 15px rgba(255, 65, 108, 0.6)) hue-rotate(150deg);
-            transition: left 0.15s linear, top 0.15s linear;
+            filter: drop-shadow(0 0 20px rgba(255, 65, 108, 0.9)) hue-rotate(150deg);
+            transition: left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
         }
 
         .opponent-name-tag {
@@ -241,7 +243,7 @@
         let opponentScore = 0;
         let timeLeft = 60;
         let duelActive = false;
-        let lastX = 0, lastY = 0;
+        let lastX = window.innerWidth / 2, lastY = window.innerHeight / 2;
         let activeStains = new Map(); // stain_id -> element
 
         const get = id => document.getElementById(id);
@@ -288,21 +290,30 @@
                 try {
                     const pos = { x: lastX / window.innerWidth, y: lastY / window.innerHeight };
 
-                    // 1. Update my state
+                    // 1. Update my state (Heartbeat + Score + Pos)
                     if (isPlayer1) {
-                        await sql`UPDATE duels SET player1_score = ${myScore}, player1_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
+                        await sql`UPDATE duels SET player1_score = ${myScore}, player1_pos = ${pos}, p1_last_active = NOW() WHERE id = ${duelId}`;
                     } else {
-                        await sql`UPDATE duels SET player2_score = ${myScore}, player2_pos = ${JSON.stringify(pos)} WHERE id = ${duelId}`;
+                        await sql`UPDATE duels SET player2_score = ${myScore}, player2_pos = ${pos}, p2_last_active = NOW() WHERE id = ${duelId}`;
                     }
 
                     // 2. Fetch current duel state & stains
                     const [dRes, stainsRes] = await Promise.all([
-                        sql`SELECT * FROM duels WHERE id = ${duelId}`,
+                        sql`SELECT player1_score, player2_score, player1_pos, player2_pos, p1_last_active, p2_last_active, status FROM duels WHERE id = ${duelId}`,
                         sql`SELECT stain_id, x, y, color FROM duel_stains WHERE duel_id = ${duelId} AND cleaned_by IS NULL`
                     ]);
 
                     const d = dRes[0];
                     if (d.status === 'finished' && duelActive) { duelActive = false; finishDuel(); return; }
+
+                    // Check Disconnect (Automated Win)
+                    const otherActive = isPlayer1 ? new Date(d.p2_last_active) : new Date(d.p1_last_active);
+                    const now = new Date();
+                    if (now - otherActive > 8000) { // 8 seconds timeout
+                        console.log("Opponent disconnected! Auto-win triggered.");
+                        finishDuel(userEmail);
+                        return;
+                    }
 
                     opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
                     const oppPos = isPlayer1 ? d.player2_pos : d.player1_pos;
@@ -310,6 +321,7 @@
                     if (oppPos && typeof oppPos === 'object') {
                         oppCloth.style.left = (oppPos.x * window.innerWidth) + 'px';
                         oppCloth.style.top = (oppPos.y * window.innerHeight) + 'px';
+                        oppCloth.style.opacity = '0.6';
                     }
 
                     // 3. Sync stains on screen
@@ -333,7 +345,7 @@
 
                     updateUI();
                 } catch (e) { console.error("Sync Error:", e); }
-            }, 200);
+            }, 300);
         }
 
         function createStain(s) {
@@ -406,20 +418,28 @@
             }
         }
 
-        async function finishDuel() {
+        async function finishDuel(forcedWinner = null) {
             if (!duelActive && get('winner-modal').classList.contains('hidden') === false) return;
             duelActive = false;
 
             const res = await sql`SELECT player1_score, player2_score FROM duels WHERE id = ${duelId}`;
-            const p1Final = res[0].player1_score;
-            const p2Final = res[0].player2_score;
+            let p1Final = res[0].player1_score;
+            let p2Final = res[0].player2_score;
 
-            const isWinner = isPlayer1 ? (p1Final > p2Final) : (p2Final > p1Final);
-            const winnerEmail = (p1Final > p2Final) ? duelData.player1_email : duelData.player2_email;
+            let winnerEmail = forcedWinner;
+            if (!winnerEmail) {
+                winnerEmail = (p1Final > p2Final) ? duelData.player1_email : duelData.player2_email;
+            }
+
+            const isWinner = (userEmail === winnerEmail);
             const prize = Math.floor((p1Final + p2Final) / 20);
 
             get('winner-modal').classList.remove('hidden');
-            get('winner-text').textContent = isWinner ? "თქვენ გაიმარჯვეთ! 🎉" : "თქვენ წააგეთ... 📉";
+            if (forcedWinner) {
+                get('winner-text').textContent = isWinner ? "მოწინააღმდეგე გავიდა! მოგება თქვენია 🏆" : "თქვენ გახვედით თამაშიდან.";
+            } else {
+                get('winner-text').textContent = isWinner ? "თქვენ გაიმარჯვეთ! 🎉" : "თქვენ წააგეთ... 📉";
+            }
             get('winner-reward-text').textContent = isWinner ? `პრიზი: ${prize} 🪙` : "შემდეგში უკეთესად!";
 
             if (isWinner) {

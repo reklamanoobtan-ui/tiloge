@@ -313,7 +313,10 @@ async function initDatabase() {
 
         // Duel System Tables (Automated setup)
         await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
-        await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, player1_pos JSONB, player2_pos JSONB, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+        await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, player1_pos JSONB, player2_pos JSONB, p1_last_active TIMESTAMP DEFAULT NOW(), p2_last_active TIMESTAMP DEFAULT NOW(), start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+
+        try { await sql`ALTER TABLE duels ADD COLUMN IF NOT EXISTS p1_last_active TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+        try { await sql`ALTER TABLE duels ADD COLUMN IF NOT EXISTS p2_last_active TIMESTAMP DEFAULT NOW()`; } catch (e) { }
 
         try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS duel_wins INTEGER DEFAULT 0`; } catch (e) { }
 
