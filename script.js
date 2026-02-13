@@ -869,7 +869,6 @@ async function updateScore(points) {
         }
 
         // Spin Wheel Milestone (Scaling: 1000, 2500, 4750...)
-        const totalSessionScore = score + accumulatedScore;
         if (totalSessionScore >= nextSpinMilestone) {
             if (!isSpinning && !isUpgradeOpen) {
                 lastSpinMilestone = totalSessionScore;
@@ -2324,10 +2323,9 @@ function createStain(isBoss = false, isTriangle = false, healthMultiplier = 1.0)
     const container = get('canvas-container');
     if (!container || !gameActive) return;
 
-    // Strict limit to prevent crash, but allow more chaos later
-    const maxStains = 60 + Math.floor(score / 5000);
+    // Strict limit of 60 stains (don't spawn more if at limit)
     const currentStains = document.querySelectorAll('.stain').length;
-    if (currentStains >= Math.min(100, maxStains)) return;
+    if (currentStains >= 60) return;
 
     const stain = document.createElement('div');
     stain.className = 'stain';
@@ -2458,14 +2456,6 @@ function checkDefeatCondition() {
 
     // Trigger crisis only if screen is actually dirty AND player is inactive
     const limitStains = globalStainLimitOverride || 50;
-    const hardLimitStains = 60; // Absolute max
-
-    // Instant game over if hard limit reached
-    if (totalCount >= hardLimitStains) {
-        if (defeatTimer) { clearInterval(defeatTimer); defeatTimer = null; }
-        gameOver();
-        return;
-    }
 
     const limitBoss = globalBossLimitOverride || 10;
     const limitElite = globalBossLimitOverride ? Math.ceil(globalBossLimitOverride / 2) : 5;
