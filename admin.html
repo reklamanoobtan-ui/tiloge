@@ -1400,6 +1400,8 @@
                     <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
                         <h3 style="color: var(--danger);">🧹 WIPE DATA</h3>
                         <p style="opacity: 0.6; margin-bottom: 20px;">პროგრესის ან მთლიანი ბაზის გასუფთავება.</p>
+                        <button class="btn btn-gold full-width" id="reset-scores-only-btn"
+                            style="margin-bottom: 10px;">🏆 მხოლოდ ქულების დარესტარტება</button>
                         <button class="btn btn-danger full-width" id="wipe-progress-btn"
                             style="margin-bottom: 10px;">RESET
                             PROGRESS (Keep Accounts)</button>
@@ -2157,6 +2159,24 @@
 
         get('refresh-players').onclick = loadPlayers;
         get('sort-players').onchange = loadPlayers;
+
+
+        // RESET SCORES ONLY Logic
+        get('reset-scores-only-btn').onclick = async () => {
+            const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების (Score & Best Score) განულება?\n\nქოინები, დრო და ექაუნთები (იმეილი/პაროლი) შენარჩუნდება!");
+            if (!confirmed) return;
+
+            log('Resetting all scores...', 'var(--yellow)');
+            try {
+                await sql`UPDATE users SET score = 0, best_score = 0`;
+                await sql`DELETE FROM shared_scores`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა ქულების გლობალური განულება! 🧼')`;
+                log('🎉 ყველა მოთამაშის ქულა წარმატებით განულდა!', 'var(--accent)');
+            } catch (e) {
+                console.error(e);
+                log('Error resetting scores', 'red');
+            }
+        };
 
 
         // DB SETUP
