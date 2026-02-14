@@ -2166,11 +2166,11 @@
             const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების (Score & Best Score) განულება?\n\nქოინები, დრო და ექაუნთები (იმეილი/პაროლი) შენარჩუნდება!");
             if (!confirmed) return;
 
-            log('Resetting all scores...', 'var(--yellow)');
+            log('Resetting competitive scores...', 'var(--yellow)');
             try {
-                await sql`UPDATE users SET score = 0, best_score = 0`;
+                await sql`UPDATE users SET competition_score = 0`;
                 await sql`DELETE FROM shared_scores`;
-                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა ქულების გლობალური განულება! 🧼')`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა რეიტინგების გლობალური განულება! დაიწყო ახალი სეზონი! 🏆')`;
                 log('🎉 ყველა მოთამაშის ქულა წარმატებით განულდა!', 'var(--accent)');
             } catch (e) {
                 console.error(e);

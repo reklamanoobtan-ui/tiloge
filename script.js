@@ -316,7 +316,10 @@ async function initDatabase() {
             await sql`ALTER TABLE global_events ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC'`;
         } catch (e) { console.log("DB: Info - global_events already updated or busy"); }
 
-        // Duel System Tables (Automated setup)
+        // Wettbewerb-Score (Seasonal/Leaderboard)
+        try {
+            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS competition_score INTEGER DEFAULT 0`;
+        } catch (e) { }
         await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
         await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, player1_pos JSONB, player2_pos JSONB, p1_last_active TIMESTAMP DEFAULT NOW(), p2_last_active TIMESTAMP DEFAULT NOW(), start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
 
@@ -371,6 +374,15 @@ async function syncUserData(isFinal = false) {
             await sql`INSERT INTO game_results (user_email, score, duration_seconds, coins_earned, played_at)
                      VALUES (${userEmail}, ${totalScoreToSync}, ${currentSurvival}, ${earned}, NOW())`;
 
+            // Record score achievements (Lifetime Best vs Competition Score)
+            const currentBestData = await sql`SELECT best_score, competition_score FROM users WHERE email = ${userEmail}`;
+            if (currentBestData.length > 0) {
+                const oldBest = currentBestData[0].best_score || 0;
+                const oldComp = currentBestData[0].competition_score || 0;
+                if (totalScoreToSync > oldBest) await sql`UPDATE users SET best_score = ${totalScoreToSync} WHERE email = ${userEmail}`;
+                if (totalScoreToSync > oldComp) await sql`UPDATE users SET competition_score = ${totalScoreToSync} WHERE email = ${userEmail}`;
+            }
+
             // Add earned coins to balance (Atomic update to total_coins and balance)
             await sql`UPDATE users SET coins = coins + ${earned}, total_coins = total_coins + ${earned} WHERE email = ${userEmail}`;
 
@@ -405,7 +417,7 @@ async function fetchLeaderboard() {
     try {
         const result = await sql`
             SELECT nickname, 
-                   GREATEST(COALESCE(best_score, 0), COALESCE(score, 0)) as d_score, 
+                   COALESCE(competition_score, 0) as d_score, 
                    CASE WHEN COALESCE(best_score, 0) > 0 THEN COALESCE(best_survival_time, 0) ELSE COALESCE(survival_time, 0) END as d_time,
                    COALESCE(coins, 0) as d_coins,
                    COALESCE(duel_wins, 0) as d_wins
@@ -716,8 +728,8 @@ async function fetchGlobalRankings(force = false) {
     try {
         const onlyRegistered = get('lb-filter-registered') && get('lb-filter-registered').checked;
 
-        const topScores = await sql`SELECT nickname, COALESCE(best_score, 0) as best_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY best_score DESC LIMIT 10`;
-        renderList('top-scores-list', topScores, '✨', 'best_score');
+        const topScores = await sql`SELECT nickname, COALESCE(competition_score, 0) as competition_score FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY competition_score DESC LIMIT 10`;
+        renderList('top-scores-list', topScores, '✨', 'competition_score');
 
         const topDuels = await sql`SELECT nickname, COALESCE(duel_wins, 0) as duel_wins FROM users WHERE (nickname IS NOT NULL AND nickname != '') AND (email NOT LIKE 'guest_%' OR NOT ${onlyRegistered}) ORDER BY duel_wins DESC LIMIT 10`;
         renderList('top-duels-list', topDuels, '⚔️', 'duel_wins');
