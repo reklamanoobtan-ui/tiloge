@@ -1800,12 +1800,14 @@ input:checked+.slider:before {
 .inv-toast-msg #inv-sender-name {
     font-weight: 800;
     display: block;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    color: #fff;
 }
 
 .inv-toast-msg p {
-    font-size: 0.85rem;
-    opacity: 0.7;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .inv-toast-actions {
