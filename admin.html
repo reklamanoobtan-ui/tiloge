@@ -2453,32 +2453,72 @@
         // --- ADMIN ABUSE LOGIC ---
         window.loadAdminAbuse = async () => {
             try {
-                const slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
-                const container = get('abuse-slots-container');
+                let slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+
+                // If table is empty, auto-populate it
+                if (slots.length === 0) {
+                    log('Initializing Abuse Slots...', 'var(--accent)');
+                    for (let i = 1; i <= 5; i++) {
+                        await sql`INSERT INTO admin_abuse (id, title, image_url, end_time, link_url) 
+                                  VALUES (${i}, 'ADMIN ABUSE #${i}', '', NOW() + INTERVAL '1 day', 'https://tilo.life')`;
+                    }
+                    slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+                }
                 container.innerHTML = slots.map(s => `
                     <div class="card" style="border: 1px solid var(--news-primary);">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                            <span style="background:var(--news-primary); color:white; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:900;">${s.id}</span>
-                            <h3 style="margin:0;">SLOT #${s.id}</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="background:var(--news-primary); color:white; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:900;">${s.id}</span>
+                                <h3 style="margin:0;">სლოტი #${s.id}</h3>
+                            </div>
+                            <span style="font-size:0.7rem; opacity:0.5;">ID: ${s.id}</span>
                         </div>
                         
-                        <label>სათაური (TITLE)</label>
-                        <input type="text" id="abuse-title-${s.id}" value="${s.title || ''}" placeholder="შეიყვანეთ სათაური">
+                        <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">სათაური (TITLE)</label>
+                        <input type="text" id="abuse-title-${s.id}" value="${s.title || ''}" placeholder="მაგ: ახალი გათამაშება!">
                         
-                        <label>სურათის ლინკი (IMAGE URL)</label>
-                        <input type="text" id="abuse-img-${s.id}" value="${s.image_url || ''}" placeholder="https://...">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">სურათის ლინკი (IMAGE URL)</label>
+                            <input type="text" id="abuse-img-${s.id}" value="${s.image_url || ''}" placeholder="https://...">
+                        </div>
 
-                        <label>დასრულების დრო (END TIME)</label>
-                        <p style="font-size:0.75rem; opacity:0.5; margin-bottom:5px;">მიმდინარე: ${s.end_time ? new Date(s.end_time).toLocaleString() : 'არ არის'}</p>
-                        <input type="datetime-local" id="abuse-time-${s.id}">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">დასრულების დრო (END TIME)</label>
+                            <p style="font-size:0.7rem; color:var(--accent); margin-bottom:5px;">მიმდინარე: ${s.end_time ? new Date(s.end_time).toLocaleString('ka-GE') : 'არ არის'}</p>
+                            <input type="datetime-local" id="abuse-time-${s.id}" style="font-size:0.8rem; padding:8px;">
+                        </div>
 
-                        <label>გადასასვლელი ლინკი (REDIRECT URL)</label>
-                        <input type="text" id="abuse-link-${s.id}" value="${s.link_url || ''}" placeholder="https://...">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">გადასასვლელი ლინკი (REDIRECT URL)</label>
+                            <input type="text" id="abuse-link-${s.id}" value="${s.link_url || ''}" placeholder="https://...">
+                        </div>
 
-                        <button class="btn btn-primary full-width mt-10" onclick="saveAbuseSlot(${s.id})">💾 შენახვა</button>
+                        <button class="btn btn-primary full-width" onclick="saveAbuseSlot(${s.id})" style="background:var(--news-primary); border:none; padding:12px; font-weight:800; border-radius:12px; cursor:pointer;">
+                            💾 მონაცემების შენახვა
+                        </button>
                     </div>
                 `).join('');
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                log('❌ შეცდომა: ' + e.message, 'red');
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+                        <h3 style="color:var(--danger);">ცხრილი 'admin_abuse' ვერ მოიძებნა</h3>
+                        <p style="opacity:0.6; margin:15px 0;">გთხოვთ დააჭიროთ ღილაკს ცხრილის შესაქმნელად:</p>
+                        <button class="btn btn-gold" onclick="initAbuseTable()">⚡ ცხრილის შექმნა</button>
+                    </div>
+                `;
+            }
+        };
+
+        window.initAbuseTable = async () => {
+            try {
+                log('Creating admin_abuse table...', 'var(--accent)');
+                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id INTEGER PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT)`;
+                loadAdminAbuse();
+            } catch (e) {
+                log('Error creating table: ' + e.message, 'red');
+            }
         };
 
         window.saveAbuseSlot = async (id) => {
@@ -2488,15 +2528,18 @@
             const link = get(`abuse-link-${id}`).value.trim();
 
             try {
-                log(`Savin Slot #${id}...`, 'var(--primary)');
+                log(`Saving Slot #${id}...`, 'var(--primary)');
                 if (timeVal) {
                     await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${timeVal}, link_url=${link} WHERE id=${id}`;
                 } else {
                     await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
                 }
-                log(`✅ Slot #${id} შენახულია!`, 'var(--accent)');
+                log(`✅ სლოტი #${id} წარმატებით განახლდა!`, 'var(--accent)');
                 loadAdminAbuse();
-            } catch (e) { console.error(e); log('შეცდომა შენახვისას', 'red'); }
+            } catch (e) {
+                console.error(e);
+                log('❌ შეცდომა შენახვისას: ' + e.message, 'red');
+            }
         };
 
         // Initialize news list if tab is active
@@ -2707,6 +2750,15 @@
                 // 4. Duel System Tables
                 await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
                 await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+
+                // 5. Admin Abuse Table
+                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id INTEGER PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT)`;
+                const abuseCount = await sql`SELECT COUNT(*) as count FROM admin_abuse`;
+                if (abuseCount[0].count == 0) {
+                    for (let i = 1; i <= 5; i++) {
+                        await sql`INSERT INTO admin_abuse (id, title, image_url, end_time, link_url) VALUES (${i}, 'ADMIN ABUSE #${i}', '', NOW() + INTERVAL '1 day', 'https://tilo.life')`;
+                    }
+                }
 
                 log('🎉 SETUP დასრულებულია!', 'green');
                 loadPlayers();

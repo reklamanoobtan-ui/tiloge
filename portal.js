@@ -134,6 +134,11 @@ async function loadAdminAbuseSidebar() {
                 const timerEl = get(timerId);
                 if (!timerEl) return;
 
+                if (!s.end_time) {
+                    timerEl.textContent = "დაელოდეთ...";
+                    return;
+                }
+
                 const now = new Date();
                 const end = new Date(s.end_time);
                 const diff = end - now;
