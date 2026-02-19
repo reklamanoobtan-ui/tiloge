@@ -125,18 +125,16 @@
     <!-- Floating Game Button -->
     <a href="game.html" class="floating-game-btn">🧼</a>
 
-    <!-- Auth Modal (Re-using design from script.js) -->
+    <!-- Auth Modal -->
     <div id="auth-modal" class="modal hidden">
-        <div class="modal-content glass"
-            style="max-width: 400px; background: rgba(0,0,0,0.9); border: 2px solid var(--news-primary);">
+        <div class="modal-content glass" style="max-width: 400px;">
             <span class="close-modal" id="close-auth">&times;</span>
-            <div id="auth-mode-toggle" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button id="show-login-btn" class="action-btn"
-                    style="background: var(--news-primary); color: #fff;">შესვლა</button>
+            <div id="auth-mode-toggle" style="display: flex; gap: 10px; margin-bottom: 25px;">
+                <button id="show-login-btn" class="action-btn">შესვლა</button>
                 <button id="show-register-btn" class="action-btn second-btn">რეგისტრაცია</button>
             </div>
-            <h2 id="auth-title" style="color: #fff;">ავტორიზაცია</h2>
-            <div style="margin-top: 20px;">
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            <div style="margin-top: 25px;">
                 <div id="nick-field" class="auth-field hidden">
                     <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
                 </div>
@@ -146,8 +144,7 @@
                 <div class="auth-field">
                     <input type="password" id="auth-password" placeholder="პაროლი">
                 </div>
-                <button id="auth-submit-btn" class="action-btn"
-                    style="background: var(--news-primary); margin-top: 20px;">შესვლა</button>
+                <button id="auth-submit-btn" class="action-btn" style="width: 100%; margin-top: 20px;">შესვლა</button>
             </div>
         </div>
     </div>

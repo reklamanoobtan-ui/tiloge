@@ -628,3 +628,63 @@ body.dark-mode .sidebar-item:hover {
     margin-top: 5px;
     color: var(--news-text);
 }
+/* Auth Modal Design Enhancements */
+.modal-content.glass {
+    background: var(--news-card-bg) !important;
+    border: 1px solid var(--news-border) !important;
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--news-shadow);
+    color: var(--news-text);
+    animation: dropdownAnim 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 12px 18px;
+    background: var(--news-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    color: var(--news-text);
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.auth-field input:focus {
+    outline: none;
+    border-color: var(--news-primary);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.action-btn {
+    background: var(--news-primary);
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.action-btn.second-btn {
+    background: var(--news-bg);
+    color: var(--news-text);
+    border: 1px solid var(--news-border);
+}
+
+.close-modal {
+    color: var(--news-text-dim);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+}
