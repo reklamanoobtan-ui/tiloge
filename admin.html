@@ -576,7 +576,7 @@
             </div>
 
             <div style="margin-top: auto;">
-                <button class="btn btn-outline full-width" onclick="location.reload()">🔒 გამოსვლა</button>
+                <button class="btn btn-outline full-width" id="admin-logout-btn">🔒 გამოსვლა</button>
             </div>
         </div>
 
@@ -1406,8 +1406,9 @@
                     </div>
 
                     <div class="card" style="grid-column: span 2;">
-                        <h3>🆕 ახალი სიახლის დამატება</h3>
+                        <h3 id="news-form-title">🆕 ახალი სიახლის დამატება</h3>
                         <div style="margin-top: 20px; display: grid; gap: 15px;">
+                            <input type="hidden" id="edit-news-id">
                             <input type="text" id="news-title-input" placeholder="სათაური">
                             <div style="display: flex; gap: 15px;">
                                 <input type="text" id="news-category-input" placeholder="კატეგორია (მაგ: პოლიტიკა)"
@@ -1418,7 +1419,24 @@
                             </div>
                             <textarea id="news-content-input" placeholder="სიახლის ტექსტი (HTML მხარდაჭერით)"
                                 style="height: 300px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: #fff; padding: 15px; font-family: inherit; resize: vertical;"></textarea>
-                            <button class="btn btn-primary" id="publish-news-btn">🚀 გამოქვეყნება</button>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-primary" id="publish-news-btn" style="flex: 3;">🚀
+                                    გამოქვეყნება</button>
+                                <button class="btn btn-outline hidden" id="cancel-news-edit-btn"
+                                    style="flex: 1;">გაუქმება</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="grid-column: span 3;">
+                        <h3>📋 არსებული სიახლეები</h3>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-outline" onclick="loadAdminNews()"
+                                style="margin-bottom: 15px; font-size: 0.8rem;">🔄 განახლება</button>
+                            <div id="admin-news-list"
+                                style="display: grid; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
+                                <!-- News items will load here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1583,6 +1601,27 @@
         setInterval(() => { if (get('tab-console')?.classList.contains('active')) updateConsole(); }, 3000);
 
         // Auth Logic
+        const adminPass = "unoobi123!123!";
+
+        // Auto-login check
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedPass = localStorage.getItem('tilo_admin_auth');
+            const authTime = parseInt(localStorage.getItem('tilo_admin_auth_time') || '0');
+            const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+            if (savedPass === adminPass && (Date.now() - authTime) < thirtyDays) {
+                enterAdmin();
+            }
+        });
+
+        function enterAdmin() {
+            get('login-section').style.display = 'none';
+            get('admin-controls').style.display = 'flex';
+            log('მოგესალმებით, ადმინ!', 'var(--primary)');
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            loadPlayers();
+        }
+
         const loginBtn = get('login-btn');
         if (loginBtn) {
             loginBtn.onclick = async () => {
@@ -1593,24 +1632,24 @@
                 if (!pass) return;
                 if (loginStatus) loginStatus.textContent = "ამოწმებს...";
 
-                console.log("Admin Login Attempt...");
-
-                // The password is: unoobi123!123!
-                if (pass === "unoobi123!123!") {
-                    get('login-section').style.display = 'none';
-                    get('admin-controls').style.display = 'flex';
-                    log('მოგესალმებით, ადმინ!', 'var(--primary)');
-                    if (typeof updateDashboardStats === 'function') updateDashboardStats();
-                    loadPlayers(); // Load players immediately
+                if (pass === adminPass) {
+                    localStorage.setItem('tilo_admin_auth', pass);
+                    localStorage.setItem('tilo_admin_auth_time', Date.now().toString());
+                    enterAdmin();
                 } else {
                     if (loginStatus) {
                         loginStatus.textContent = "პაროლი არასწორია!";
                         loginStatus.style.color = "var(--danger)";
                     }
-                    console.warn("Invalid admin password attempt.");
                 }
             };
         }
+
+        get('admin-logout-btn').onclick = () => {
+            localStorage.removeItem('tilo_admin_auth');
+            localStorage.removeItem('tilo_admin_auth_time');
+            location.reload();
+        };
 
         get('give-coins').onclick = async () => {
             const name = get('target-nick').value.trim();
@@ -2228,6 +2267,7 @@
         if (localStorage.getItem('admin_discord_token')) discordTokenInput.value = localStorage.getItem('admin_discord_token');
 
         get('publish-news-btn').onclick = async () => {
+            const id = get('edit-news-id').value;
             const title = get('news-title-input').value.trim();
             const category = get('news-category-input').value.trim() || 'სიახლე';
             const imageUrl = get('news-image-input').value.trim();
@@ -2240,22 +2280,90 @@
             }
 
             try {
-                log('სიახლის გამოქვეყნება...', 'var(--primary)');
-                await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category})`;
-                log('✅ სიახლე წარმატებით გამოქვეყნდა!', 'var(--accent)');
+                if (id) {
+                    log('სიახლის განახლება...', 'var(--primary)');
+                    await sql`UPDATE news SET title=${title}, content=${content}, image_url=${imageUrl}, video_url=${videoUrl}, category=${category} WHERE id=${id}`;
+                    log('✅ სიახლე წარმატებით განახლდა!', 'var(--accent)');
+                } else {
+                    log('სიახლის გამოქვეყნება...', 'var(--primary)');
+                    await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category})`;
+                    log('✅ სიახლე წარმატებით გამოქვეყნდა!', 'var(--accent)');
+                }
 
-                // Clear fields
-                get('news-title-input').value = '';
-                get('news-category-input').value = '';
-                get('news-image-input').value = '';
-                get('news-video-input').value = '';
-                get('news-content-input').value = '';
-
+                resetNewsForm();
+                loadAdminNews();
             } catch (e) {
                 console.error(e);
-                log('შეცდომა სიახლის გამოქვეყნებისას', 'red');
+                log('შეცდომა ბაზასთან', 'red');
             }
         };
+
+        function resetNewsForm() {
+            get('edit-news-id').value = '';
+            get('news-title-input').value = '';
+            get('news-category-input').value = '';
+            get('news-image-input').value = '';
+            get('news-video-input').value = '';
+            get('news-content-input').value = '';
+            get('news-form-title').textContent = '🆕 ახალი სიახლის დამატება';
+            get('publish-news-btn').textContent = '🚀 გამოქვეყნება';
+            get('cancel-news-edit-btn').classList.add('hidden');
+        }
+
+        get('cancel-news-edit-btn').onclick = resetNewsForm;
+
+        window.loadAdminNews = async () => {
+            try {
+                const news = await sql`SELECT * FROM news ORDER BY created_at DESC LIMIT 50`;
+                const container = get('admin-news-list');
+                container.innerHTML = news.map(item => `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.5; margin-top: 4px;">📅 ${new Date(item.created_at).toLocaleDateString()} | 🏷️ ${item.category}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-left: 15px;">
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="editAdminNews(${item.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAdminNews(${item.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        };
+
+        window.editAdminNews = async (id) => {
+            try {
+                const res = await sql`SELECT * FROM news WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const item = res[0];
+
+                get('edit-news-id').value = item.id;
+                get('news-title-input').value = item.title;
+                get('news-category-input').value = item.category;
+                get('news-image-input').value = item.image_url || '';
+                get('news-video-input').value = item.video_url || '';
+                get('news-content-input').value = item.content;
+
+                get('news-form-title').textContent = '✏️ სიახლის რედაქტირება';
+                get('publish-news-btn').textContent = '💾 ცვლილებების შენახვა';
+                get('cancel-news-edit-btn').classList.remove('hidden');
+
+                // Scroll to form
+                get('news-form-title').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        };
+
+        window.deleteAdminNews = async (id) => {
+            if (!confirm("ნამდვილად გსურთ ამ სიახლის წაშლა?")) return;
+            try {
+                await sql`DELETE FROM news WHERE id = ${id}`;
+                log('🗑️ სიახლე წაიშალა', 'var(--danger)');
+                loadAdminNews();
+            } catch (e) { console.error(e); }
+        };
+
+        // Initialize news list if tab is active
+        document.querySelector('[data-tab="news"]').addEventListener('click', loadAdminNews);
 
         get('sync-discord-btn').onclick = async () => {
             const token = get('discord-token').value.trim();
