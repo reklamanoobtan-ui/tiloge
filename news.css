@@ -792,3 +792,38 @@ body.dark-mode .bg-stain {
 .bg-stain {
     z-index: 5; /* Above background, below main content */
 }
+
+/* Tilo Sponge Design Overhaul (Game Sync) */
+#tilo-sponge {
+    width: 140px;
+    height: 140px;
+    background-image: url("tilo.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+}
+
+#tilo-sponge:active {
+    transform: scale(1.1) rotate(2deg);
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
+}
+
+/* Sync Filters from Game */
+.cloth-skin-fire {
+    filter: drop-shadow(0 0 35px #ff4500) grayscale(1) sepia(1) hue-rotate(-45deg) saturate(15) brightness(1.0) contrast(1.1) !important;
+}
+.cloth-skin-ice {
+    filter: drop-shadow(0 0 35px #00f2fe) grayscale(1) sepia(1) hue-rotate(175deg) saturate(30) brightness(1.2) contrast(1.1) !important;
+}
+.cloth-skin-electric {
+    filter: drop-shadow(0 0 35px #ffff00) grayscale(1) sepia(1) hue-rotate(5deg) saturate(35) brightness(1.4) contrast(1.2) !important;
+}
+.cloth-skin-rainbow {
+    animation: skin-rainbow-anim 3s linear infinite !important;
+}
+
+@keyframes skin-rainbow-anim {
+    0% { filter: drop-shadow(0 0 15px red) hue-rotate(0deg); }
+    100% { filter: drop-shadow(0 0 15px red) hue-rotate(360deg); }
+}
