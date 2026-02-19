@@ -7,6 +7,7 @@ let userEmail = localStorage.getItem('tilo_email');
 let nickname = localStorage.getItem('tilo_nick');
 let currentNewsId = null;
 let currentCategory = null;
+let replyingToId = null;
 
 const get = id => document.getElementById(id);
 
@@ -164,25 +165,69 @@ async function loadComments(id) {
     const list = get('comments-list');
     list.innerHTML = '<p style="opacity:0.5;">იტვირთება...</p>';
     try {
-        const comments = await sql`SELECT * FROM news_comments WHERE news_id = ${id} ORDER BY created_at DESC`;
+        const comments = await sql`SELECT * FROM news_comments WHERE news_id = ${id} ORDER BY created_at ASC`;
         list.innerHTML = '';
         if (comments.length === 0) {
             list.innerHTML = '<p style="opacity:0.5;">კომენტარები ჯერ არ არის.</p>';
         } else {
+            const commentMap = {};
+            const roots = [];
+
             comments.forEach(c => {
-                const date = new Date(c.created_at).toLocaleString('ka-GE');
-                const div = document.createElement('div');
-                div.className = 'comment-item';
-                div.innerHTML = `
-                    <span class="comment-user">${c.nickname || 'Unknown'}</span>
-                    <span class="comment-date">${date}</span>
-                    <p class="comment-text">${c.comment_text}</p>
-                `;
-                list.appendChild(div);
+                c.replies = [];
+                commentMap[c.id] = c;
+                if (c.parent_id) {
+                    if (commentMap[c.parent_id]) commentMap[c.parent_id].replies.push(c);
+                } else {
+                    roots.push(c);
+                }
+            });
+
+            // Render roots with recursion for replies
+            roots.reverse().forEach(root => {
+                list.appendChild(renderCommentItem(root, 0));
             });
         }
     } catch (e) { console.error(e); }
 }
+
+function renderCommentItem(c, depth) {
+    const date = new Date(c.created_at).toLocaleString('ka-GE');
+    const div = document.createElement('div');
+    div.className = 'comment-item';
+    if (depth > 0) div.style.marginLeft = (depth * 30) + 'px';
+    if (depth > 0) div.style.borderLeft = '2px solid #ddd';
+    if (depth > 0) div.style.paddingLeft = '15px';
+
+    div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span class="comment-user">${c.nickname || 'Unknown'}</span>
+            <span class="comment-date">${date}</span>
+        </div>
+        <p class="comment-text">${c.comment_text}</p>
+        <button onclick="replyToComment(${c.id}, '${c.nickname}')" style="background: none; border: none; color: var(--news-primary); font-size: 0.8rem; cursor: pointer; font-weight: 700; padding: 0;">↩ პასუხი</button>
+    `;
+
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(div);
+
+    if (c.replies && c.replies.length > 0) {
+        c.replies.forEach(reply => {
+            fragment.appendChild(renderCommentItem(reply, depth + 1));
+        });
+    }
+
+    return fragment;
+}
+
+window.replyToComment = (id, name) => {
+    if (!userEmail) return alert("გთხოვთ გაიაროთ ავტორიზაცია");
+    replyingToId = id;
+    const input = get('comment-input');
+    input.placeholder = `პასუხი ${name}-ს:`;
+    input.focus();
+    input.scrollIntoView({ behavior: 'smooth' });
+};
 
 async function loadLikes(id) {
     try {
@@ -334,12 +379,26 @@ function setupEventListeners() {
 
     get('submit-comment-btn').onclick = async () => {
         if (!userEmail) return alert("გთხოვთ გაიაროთ ავტორიზაცია");
+
+        // Ban Check
+        try {
+            const user = await sql`SELECT banned_until FROM users WHERE email = ${userEmail}`;
+            if (user[0].banned_until && new Date(user[0].banned_until) > new Date()) {
+                const date = new Date(user[0].banned_until).toLocaleString('ka-GE');
+                return alert(`თქვენი ანგარიში დაბლოკილია ${date}-მდე!`);
+            }
+        } catch (e) { console.error(e); }
+
         const txt = get('comment-input').value.trim();
         if (!txt) return;
 
         try {
-            await sql`INSERT INTO news_comments (news_id, user_email, nickname, comment_text) VALUES (${currentNewsId}, ${userEmail}, ${nickname}, ${txt})`;
+            await sql`INSERT INTO news_comments (news_id, user_email, nickname, comment_text, parent_id) 
+                      VALUES (${currentNewsId}, ${userEmail}, ${nickname}, ${txt}, ${replyingToId})`;
+
             get('comment-input').value = '';
+            get('comment-input').placeholder = 'დაწერეთ თქვენი აზრი...';
+            replyingToId = null;
             loadComments(currentNewsId);
         } catch (e) { console.error(e); }
     };

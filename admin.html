@@ -2456,9 +2456,15 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                             <div>
                                 <span style="font-weight: 800; color: var(--primary);">${c.nickname}</span>
-                                <span style="font-size: 0.75rem; opacity: 0.5; margin-left: 10px;">${new Date(c.created_at).toLocaleString()}</span>
+                                <span style="font-size: 0.75rem; opacity: 0.5; margin-left: 10px;">${c.user_email} • ${new Date(c.created_at).toLocaleString()}</span>
                             </div>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.7rem;" onclick="deleteAdminComment(${c.id})">🗑️ წაშლა</button>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.7rem; border-color: #ff9800; color: #ff9800;" onclick="moderateUser('${c.user_email}', 1)">⏳ 1დ</button>
+                                <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.7rem; border-color: #ff9800; color: #ff9800;" onclick="moderateUser('${c.user_email}', 7)">⏳ 1კ</button>
+                                <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.7rem; border-color: #ff9800; color: #ff9800;" onclick="moderateUser('${c.user_email}', 30)">⏳ 1თ</button>
+                                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.7rem;" onclick="moderateUser('${c.user_email}', 'ban')">🚫 BAN</button>
+                                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.7rem; background: #666; border-color: #666;" onclick="deleteAdminComment(${c.id})">🗑️ წაშლა</button>
+                            </div>
                         </div>
                         <div style="font-size: 0.9rem; margin-bottom: 10px; line-height: 1.5; color: #ddd;">${c.comment_text}</div>
                         <div style="font-size: 0.7rem; opacity: 0.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
@@ -2467,6 +2473,28 @@
                     </div>
                 `).join('');
             } catch (e) { console.error(e); log('Error loading comments', 'red'); }
+        };
+
+        window.moderateUser = async (email, type) => {
+            let until = null;
+            let msg = "";
+
+            if (type === 'ban') {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ის სამუდამოდ დაბლოკვა?`)) return;
+                until = new Date('2099-01-01');
+                msg = "🚫 მომხმარებელი დაიბლოკა სამუდამოდ";
+            } else {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ${type} დღიანი ტაიმაუტის დადება?`)) return;
+                until = new Date();
+                until.setDate(until.getDate() + type);
+                msg = `⏳ მომხმარებელს დაედო ${type} დღიანი ტაიმაუტი`;
+            }
+
+            try {
+                await sql`UPDATE users SET banned_until = ${until} WHERE email = ${email}`;
+                log(msg, 'var(--danger)');
+                alert(msg);
+            } catch (e) { console.error(e); log('Error moderating user', 'red'); }
         };
 
         window.deleteAdminComment = async (id) => {
