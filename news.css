@@ -257,7 +257,7 @@ body.dark-mode .sidebar-item:hover {
     width: 80px;
     height: 60px;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: 12px;
 }
 
 .sidebar-item-info {
@@ -600,6 +600,7 @@ body.dark-mode .sidebar-item:hover {
     background: var(--news-header-bg);
     border-top: 1px solid var(--news-border);
     color: var(--news-text);
+    padding: 60px 20px;
 }
 
 .comment-list {

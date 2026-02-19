@@ -208,8 +208,9 @@ function renderCommentItem(c, depth) {
     const div = document.createElement('div');
     div.className = 'comment-item';
     if (depth > 0) div.style.marginLeft = (depth * 30) + 'px';
-    if (depth > 0) div.style.borderLeft = '2px solid #ddd';
-    if (depth > 0) div.style.paddingLeft = '15px';
+    if (depth > 0) div.style.borderLeft = '3px solid var(--news-border)';
+    if (depth > 0) div.style.paddingLeft = '20px';
+    if (depth > 0) div.style.borderRadius = '0 15px 15px 0';
 
     div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
