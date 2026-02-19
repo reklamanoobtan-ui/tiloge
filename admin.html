@@ -2795,7 +2795,8 @@
                 await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
                 await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
 
-                // 5. Admin Abuse Table
+                // 5. Admin Abuse Table (Force Recreate for Schema Update)
+                try { await sql`DROP TABLE IF EXISTS admin_abuse`; } catch (e) { }
                 await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
 
                 log('🎉 SETUP დასრულებულია!', 'green');
