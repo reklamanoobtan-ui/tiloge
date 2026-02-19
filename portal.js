@@ -138,12 +138,17 @@ async function openNews(id) {
         }
 
         get('detail-content').innerHTML = `
-            <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 20px;">${item.title}</h1>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 20px;">
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin: 0; line-height: 1.1;">${item.title}</h1>
+                <button onclick="shareNews()" class="nav-link" style="background: var(--news-bg); border: 1px solid var(--news-border); padding: 8px 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    🔗 გაზიარება
+                </button>
+            </div>
             <div style="font-size: 0.9rem; color: #888; margin-bottom: 30px;">
                 ავტორი: <strong>${item.author}</strong> • გამოქვეყნდა: ${date} • კატეგორია: ${item.category}
             </div>
             ${visualContent}
-            <div style="line-height: 1.8; font-size: 1.1rem; color: #333;">${item.content}</div>
+            <div style="line-height: 1.8; font-size: 1.1rem; color: var(--news-text);">${item.content}</div>
         `;
 
         loadComments(id);
@@ -234,6 +239,67 @@ window.replyToComment = (id, name) => {
     input.placeholder = `პასუხი ${name}-ს:`;
     input.focus();
     input.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.shareNews = () => {
+    const url = window.location.origin + window.location.pathname + '?id=' + currentNewsId;
+    const modal = document.createElement('div');
+    modal.className = 'premium-modal'; // Use existing class if possible, but let's make it inline for safety
+    modal.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+    `;
+    modal.onclick = () => modal.remove();
+
+    const card = document.createElement('div');
+    card.style = `
+        background: var(--news-card-bg);
+        padding: 40px;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 450px;
+        text-align: center;
+        border: 1px solid var(--news-border);
+        box-shadow: var(--news-shadow);
+        animation: dropdownAnim 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    `;
+    card.onclick = (e) => e.stopPropagation();
+
+    card.innerHTML = `
+        <h2 style="font-weight: 900; margin-bottom: 25px; color: var(--news-text);">🔗 გაზიარება</h2>
+        
+        <div style="margin-bottom: 25px;">
+            <p style="font-size: 0.8rem; color: var(--news-text-dim); text-align: left; margin-bottom: 8px; font-weight: 700;">პირდაპირი ლინკი:</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="share-url-input" value="${url}" readonly style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--news-border); background: var(--news-bg); color: var(--news-text); font-size: 0.9rem;">
+                <button id="copy-share-btn" style="padding: 10px 20px; border-radius: 12px; border: none; background: var(--news-primary); color: #fff; cursor: pointer; font-weight: 800;">📋</button>
+            </div>
+        </div>
+
+        <a href="https://discord.com/channels/@me" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #5865F2; color: #fff; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: 800; transition: transform 0.2s;">
+            <span>🎮</span> გაზიარება Discord-ზე
+        </a>
+        
+        <button onclick="this.parentElement.parentElement.remove()" style="margin-top: 20px; background: none; border: none; color: var(--news-text-dim); cursor: pointer; font-weight: 700;">დახურვა</button>
+    `;
+
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    const copyBtn = card.querySelector('#copy-share-btn');
+    copyBtn.onclick = () => {
+        const input = card.querySelector('#share-url-input');
+        input.select();
+        document.execCommand('copy');
+        copyBtn.textContent = '✅';
+        copyBtn.style.background = '#2ecc71';
+        setTimeout(() => {
+            copyBtn.textContent = '📋';
+            copyBtn.style.background = 'var(--news-primary)';
+        }, 2000);
+    };
 };
 
 async function loadLikes(id) {
