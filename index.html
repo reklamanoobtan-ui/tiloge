@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TILO.LIFE - სიახლეების პორტალი</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@400;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="news.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" href="ratings.css">
@@ -25,10 +27,18 @@
 
             <div class="auth-nav">
                 <div id="user-profile-header" class="hidden"
-                    style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    style="display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;">
                     <span id="header-nickname"
                         style="font-weight: 800; color: var(--news-primary); font-size: 0.9rem;"></span>
                     <div id="profile-btn" class="profile-circle">U</div>
+
+                    <!-- Dropdown -->
+                    <div id="profile-dropdown" class="profile-dropdown">
+                        <a href="profile.html" class="dropdown-item">👤 პროფილი</a>
+                        <div class="dropdown-divider"></div>
+                        <div id="nav-logout-btn" class="dropdown-item" style="color: var(--news-accent);">🔒 გასვლა
+                        </div>
+                    </div>
                 </div>
                 <button id="login-nav-btn" class="nav-link"
                     style="border: none; background: none; cursor: pointer; font-family: inherit;">🔐 შესვლა</button>
@@ -140,6 +150,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="news-footer">
+        <div class="footer-container">
+            <h2 class="logo-text">TILO<span>.LIFE</span></h2>
+            <p style="opacity: 0.6; margin-top: 10px;">ყველა უფლება დაცულია &copy; 2024</p>
+
+            <div class="footer-counters">
+                <!-- TOP.GE ASYNC COUNTER CODE -->
+                <div id="top-ge-counter-container" data-site-id="118538"></div>
+                <script async src="//counter.top.ge/counter.js"></script>
+                <!-- / END OF TOP.GE COUNTER CODE -->
+
+                <!-- WAUST.AT COUNTER CODE -->
+                <script
+                    id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
+                <script async src="//waust.at/d.js"></script>
+                <!-- / END OF WAUST.AT COUNTER CODE -->
+            </div>
+        </div>
+    </footer>
 
     <script type="module" src="portal.js"></script>
 </body>

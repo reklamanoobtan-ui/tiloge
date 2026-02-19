@@ -571,6 +571,7 @@
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="youtube">📺 იუთუბი</div>
                 <div class="nav-item" data-tab="news">📰 სიახლეები</div>
+                <div class="nav-item" data-tab="comments">💬 კომენტარები</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
                 <div class="nav-item" data-tab="console" style="color: #00ff00;">💻 კონსოლი</div>
             </div>
@@ -1405,6 +1406,16 @@
                         <div id="sync-status" style="margin-top: 10px; font-size: 0.8rem; min-height: 1.2em;"></div>
                     </div>
 
+                    <div class="card" style="border-color: #5865F2;">
+                        <h3 style="color: #5865F2;">📢 Discord Webhook</h3>
+                        <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.85rem;">ავტომატური შეტყობინება სიახლის
+                            დადებისას.</p>
+                        <input type="password" id="discord-webhook-url" placeholder="Discord Webhook URL"
+                            style="background: rgba(88, 101, 242, 0.1);">
+                        <p style="font-size: 0.7rem; opacity: 0.4; margin-top: 5px;">ჩაწერე ლინკი, რომ სიახლე
+                            ავტომატურად გაიგზავნოს ჩატში.</p>
+                    </div>
+
                     <div class="card" style="grid-column: span 2;">
                         <h3 id="news-form-title">🆕 ახალი სიახლის დამატება</h3>
                         <div style="margin-top: 20px; display: grid; gap: 15px;">
@@ -1437,6 +1448,23 @@
                                 style="display: grid; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
                                 <!-- News items will load here -->
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMMENTS TAB -->
+            <div id="tab-comments" class="tab-content">
+                <div class="header-bar">
+                    <h2>💬 კომენტარების მართვა</h2>
+                    <button class="btn btn-outline" onclick="loadAdminComments()">🔄 განახლება</button>
+                </div>
+
+                <div class="dashboard-grid" style="display: block;">
+                    <div class="card">
+                        <h3>ყველა კომენტარი</h3>
+                        <div id="admin-comments-list" style="margin-top: 20px; display: grid; gap: 15px;">
+                            <!-- Comments will load here -->
                         </div>
                     </div>
                 </div>
@@ -1562,6 +1590,7 @@
                 // Auto-load if entering tab
                 if (target === 'players') loadPlayers();
                 if (target === 'online') loadOnlinePlayers();
+                if (target === 'comments') loadAdminComments();
             };
         });
 
@@ -2266,6 +2295,9 @@
         const discordTokenInput = get('discord-token');
         if (localStorage.getItem('admin_discord_token')) discordTokenInput.value = localStorage.getItem('admin_discord_token');
 
+        const webhookInput = get('discord-webhook-url');
+        if (localStorage.getItem('admin_discord_webhook')) webhookInput.value = localStorage.getItem('admin_discord_webhook');
+
         get('publish-news-btn').onclick = async () => {
             const id = get('edit-news-id').value;
             const title = get('news-title-input').value.trim();
@@ -2273,21 +2305,29 @@
             const imageUrl = get('news-image-input').value.trim();
             const videoUrl = get('news-video-input').value.trim();
             const content = get('news-content-input').value.trim();
+            const webhookUrl = webhookInput.value.trim();
 
             if (!title || !content) {
                 alert("სათაური და ტექსტი აუცილებელია!");
                 return;
             }
 
+            if (webhookUrl) localStorage.setItem('admin_discord_webhook', webhookUrl);
+
             try {
+                let newsId = id;
                 if (id) {
                     log('სიახლის განახლება...', 'var(--primary)');
                     await sql`UPDATE news SET title=${title}, content=${content}, image_url=${imageUrl}, video_url=${videoUrl}, category=${category} WHERE id=${id}`;
                     log('✅ სიახლე წარმატებით განახლდა!', 'var(--accent)');
                 } else {
                     log('სიახლის გამოქვეყნება...', 'var(--primary)');
-                    await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category})`;
+                    const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category}) RETURNING id`;
+                    newsId = res[0].id;
                     log('✅ სიახლე წარმატებით გამოქვეყნდა!', 'var(--accent)');
+
+                    // Send to Discord
+                    if (webhookUrl) sendDiscordNotification(webhookUrl, title, content, imageUrl, newsId);
                 }
 
                 resetNewsForm();
@@ -2297,6 +2337,35 @@
                 log('შეცდომა ბაზასთან', 'red');
             }
         };
+
+        async function sendDiscordNotification(url, title, content, image, id) {
+            try {
+                const siteUrl = `https://tilo.life/index.html?id=${id}`;
+                const plainText = content.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+
+                const embed = {
+                    title: `🗞️ ${title}`,
+                    description: `${plainText}\n\n🔗 [წაიკითხე სრულად საიტზე](${siteUrl})`,
+                    color: 3447003, // Blue-ish
+                    footer: { text: "TILO.LIFE News Portal" },
+                    timestamp: new Date().toISOString()
+                };
+
+                if (image) embed.image = { url: image };
+
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: "🔔 **ახალი სიახლე დაიდო საიტზე!**",
+                        embeds: [embed]
+                    })
+                });
+                console.log("Discord notification sent!");
+            } catch (e) {
+                console.error("Discord Webhook Error:", e);
+            }
+        }
 
         function resetNewsForm() {
             get('edit-news-id').value = '';
@@ -2364,6 +2433,50 @@
 
         // Initialize news list if tab is active
         document.querySelector('[data-tab="news"]').addEventListener('click', loadAdminNews);
+
+        // COMMENTS Logic
+        window.loadAdminComments = async () => {
+            try {
+                const comments = await sql`
+                    SELECT c.*, n.title as news_title 
+                    FROM news_comments c 
+                    LEFT JOIN news n ON c.news_id = n.id 
+                    ORDER BY c.created_at DESC 
+                    LIMIT 200
+                `;
+                const container = get('admin-comments-list');
+
+                if (comments.length === 0) {
+                    container.innerHTML = '<p style="opacity: 0.5; text-align: center; padding: 20px;">კომენტარები არ მოიძებნა.</p>';
+                    return;
+                }
+
+                container.innerHTML = comments.map(c => `
+                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border); position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <div>
+                                <span style="font-weight: 800; color: var(--primary);">${c.nickname}</span>
+                                <span style="font-size: 0.75rem; opacity: 0.5; margin-left: 10px;">${new Date(c.created_at).toLocaleString()}</span>
+                            </div>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.7rem;" onclick="deleteAdminComment(${c.id})">🗑️ წაშლა</button>
+                        </div>
+                        <div style="font-size: 0.9rem; margin-bottom: 10px; line-height: 1.5; color: #ddd;">${c.comment_text}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                            📌 სიახლე: <span style="color: #4facfe;">${c.news_title || 'წაშლილი სიახლე'}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); log('Error loading comments', 'red'); }
+        };
+
+        window.deleteAdminComment = async (id) => {
+            if (!confirm("ნამდვილად გსურთ ამ კომენტარის წაშლა?")) return;
+            try {
+                await sql`DELETE FROM news_comments WHERE id = ${id}`;
+                log('🗑️ კომენტარი წაიშალა', 'var(--danger)');
+                loadAdminComments();
+            } catch (e) { console.error(e); log('Error deleting comment', 'red'); }
+        };
 
         get('sync-discord-btn').onclick = async () => {
             const token = get('discord-token').value.trim();

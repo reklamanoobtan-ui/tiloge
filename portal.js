@@ -14,6 +14,13 @@ async function init() {
     updateAuthUI();
     loadNews();
     setupEventListeners();
+
+    // Check for direct news link
+    const params = new URLSearchParams(window.location.search);
+    const newsId = params.get('id');
+    if (newsId) {
+        setTimeout(() => openNews(newsId), 500);
+    }
 }
 
 function updateAuthUI() {
@@ -207,9 +214,26 @@ function setupEventListeners() {
         get('auth-modal').classList.remove('hidden');
     };
 
-    get('profile-btn').onclick = () => {
-        get('edit-nick').value = nickname || '';
-        get('settings-modal').classList.remove('hidden');
+    get('user-profile-header').onclick = (e) => {
+        e.stopPropagation();
+        get('profile-dropdown').classList.toggle('active');
+    };
+
+    window.onclick = () => {
+        get('profile-dropdown').classList.remove('active');
+    };
+
+    get('nav-logout-btn').onclick = () => {
+        localStorage.removeItem('tilo_email');
+        localStorage.removeItem('tilo_nick');
+        location.reload();
+    };
+
+    get('profile-btn').onclick = (e) => {
+        // Now profile page is separate, but we can keep the old modal for quick edits if needed
+        // Or just let the dropdown handle it. User requested separate page.
+        e.stopPropagation();
+        get('profile-dropdown').classList.toggle('active');
     };
 
     get('close-auth').onclick = () => get('auth-modal').classList.add('hidden');
@@ -241,8 +265,20 @@ function setupEventListeners() {
         try {
             if (mode === 'reg') {
                 if (!nick) return alert("შეიყვანეთ ნიკნეიმი");
+
+                // Fix: Check if exists
+                const checkEm = await sql`SELECT id FROM users WHERE email = ${em}`;
+                if (checkEm.length > 0) return alert("ეს ელ-ფოსტა უკვე გამოყენებულია");
+
+                const checkNick = await sql`SELECT id FROM users WHERE nickname = ${nick}`;
+                if (checkNick.length > 0) return alert("ეს ნიკნეიმი უკვე დაკავებულია");
+
                 await sql`INSERT INTO users (email, password, nickname) VALUES (${em}, ${pas}, ${nick})`;
-                alert("რეგისტრაცია წარმატებით დასრულდა!");
+                alert("რეგისტრაცია წარმატებით დასრულდა! ახლა შეგიძლიათ შეხვიდეთ.");
+
+                // Switch to login
+                get('show-login-btn').click();
+                return;
             }
 
             const res = await sql`SELECT * FROM users WHERE email = ${em} AND password = ${pas}`;
