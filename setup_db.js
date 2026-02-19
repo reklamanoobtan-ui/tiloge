@@ -126,6 +126,34 @@ async function initDatabase() {
             played_at TIMESTAMP DEFAULT NOW()
         )`;
 
+        // 9. News System
+        await sql`CREATE TABLE IF NOT EXISTS news (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            image_url TEXT,
+            video_url TEXT,
+            category TEXT DEFAULT 'სიახლე',
+            author TEXT DEFAULT 'Admin',
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS news_comments (
+            id SERIAL PRIMARY KEY,
+            news_id INTEGER REFERENCES news(id) ON DELETE CASCADE,
+            user_email TEXT NOT NULL,
+            nickname TEXT,
+            comment_text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS news_likes (
+            id SERIAL PRIMARY KEY,
+            news_id INTEGER REFERENCES news(id) ON DELETE CASCADE,
+            user_email TEXT NOT NULL,
+            UNIQUE(news_id, user_email)
+        )`;
+
         console.log("✅ Database schema sync complete!");
     } catch (e) {
         console.error("❌ DB Sync Error:", e);
