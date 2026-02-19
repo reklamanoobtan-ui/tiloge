@@ -1,10 +1,25 @@
-/* News Portal Styles */
 :root {
-    --news-primary: #003366;
-    --news-accent: #ff0000;
-    --news-bg: #f5f5f5;
-    --news-text: #222;
-    --news-border: #ddd;
+    --news-primary: #0066cc;
+    --news-accent: #ff4757;
+    --news-bg: #f0f2f5;
+    --news-card-bg: #ffffff;
+    --news-text: #2f3542;
+    --news-text-dim: #57606f;
+    --news-border: #dfe4ea;
+    --news-header-bg: #ffffff;
+    --news-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --radius: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark-mode {
+    --news-bg: #0a0b10;
+    --news-card-bg: #161a23;
+    --news-text: #f1f2f6;
+    --news-text-dim: #a4b0be;
+    --news-border: #2f3542;
+    --news-header-bg: #161a23;
+    --news-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 .hidden {
@@ -21,13 +36,15 @@ body.news-portal {
 }
 
 .news-header {
-    background: #fff;
-    border-bottom: 3px solid var(--news-primary);
-    padding: 15px 0;
+    background: var(--news-header-bg);
+    border-bottom: 1px solid var(--news-border);
+    padding: 12px 0;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--news-shadow);
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
 }
 
 .header-container {
@@ -176,16 +193,18 @@ body.news-portal {
 }
 
 .news-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    margin: 0 0 10px 0;
-    color: #333;
-    line-height: 1.4;
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin: 0 0 12px 0;
+    color: var(--news-text);
+    line-height: 1.3;
+    font-family: 'Outfit', sans-serif;
 }
 
 .news-excerpt {
-    font-size: 0.9rem;
-    color: #666;
+    font-size: 0.95rem;
+    color: var(--news-text-dim);
+    line-height: 1.6;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
@@ -261,18 +280,19 @@ body.news-portal {
 
 .profile-dropdown {
     position: absolute;
-    top: 50px;
+    top: 60px;
     right: 0;
-    background: #fff;
+    background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    width: 200px;
+    border-radius: 20px;
+    box-shadow: var(--news-shadow);
+    width: 240px;
     z-index: 2000;
     overflow: hidden;
     display: none;
     transform-origin: top right;
-    animation: dropdownAnim 0.2s ease-out;
+    animation: dropdownAnim 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    backdrop-filter: blur(15px);
 }
 
 .profile-dropdown.active {
@@ -292,21 +312,22 @@ body.news-portal {
 }
 
 .dropdown-item {
-    padding: 12px 15px;
+    padding: 14px 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: #333;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--news-text);
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: var(--transition);
 }
 
 .dropdown-item:hover {
-    background: #f8f8f8;
-    color: var(--news-accent);
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--news-primary);
 }
 
 .dropdown-divider {
@@ -431,23 +452,134 @@ body.news-portal {
     transition: 0.3s;
 }
 
-/* Comment Section */
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--news-border);
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--news-primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+/* Transitions for Dark Mode */
+body,
+.news-header,
+.news-card,
+.sidebar-list,
+.comment-section,
+.profile-dropdown,
+.news-footer {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Comment Section UI */
 .comment-section {
     margin-top: 40px;
-    background: #fff;
+    background: var(--news-card-bg);
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius);
+    box-shadow: var(--news-shadow);
+    border: 1px solid var(--news-border);
 }
 
 .comment-input {
     width: 100%;
-    padding: 15px;
+    padding: 18px;
+    background: var(--news-bg);
     border: 1px solid var(--news-border);
-    border-radius: 8px;
-    margin-bottom: 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
     font-family: inherit;
+    color: var(--news-text);
+    transition: var(--transition);
     resize: none;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: var(--news-primary);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.comment-user {
+    font-weight: 800;
+    color: var(--news-primary);
+    font-size: 1rem;
+}
+
+.comment-date {
+    font-size: 0.8rem;
+    color: var(--news-text-dim);
+}
+
+.comment-text {
+    color: var(--news-text);
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.sidebar-list {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--news-shadow);
+}
+
+.sidebar-item {
+    border-bottom: 1px solid var(--news-border);
+    padding: 15px;
+    transition: var(--transition);
+}
+
+.sidebar-item:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.news-footer {
+    background: var(--news-header-bg);
+    border-top: 1px solid var(--news-border);
+    color: var(--news-text);
 }
 
 .comment-list {
@@ -457,7 +589,7 @@ body.news-portal {
 .comment-item {
     margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--news-border);
 }
 
 .comment-user {
@@ -468,10 +600,10 @@ body.news-portal {
 
 .comment-date {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--news-text-dim);
 }
 
 .comment-text {
     margin-top: 5px;
-    color: #444;
+    color: var(--news-text);
 }

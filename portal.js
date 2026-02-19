@@ -16,6 +16,13 @@ async function init() {
     loadNews();
     setupEventListeners();
 
+    // Dark mode init
+    if (localStorage.getItem('tilo_dark_mode') === 'true') {
+        document.body.classList.add('dark-mode');
+        const cb = get('dark-mode-checkbox');
+        if (cb) cb.checked = true;
+    }
+
     // Check for direct news link
     const params = new URLSearchParams(window.location.search);
     const newsId = params.get('id');
@@ -262,6 +269,25 @@ function setupEventListeners() {
     get('user-profile-header').onclick = (e) => {
         e.stopPropagation();
         get('profile-dropdown').classList.toggle('active');
+
+        // Update checkbox state in case it was changed elsewhere
+        const cb = get('dark-mode-checkbox');
+        if (cb) cb.checked = document.body.classList.contains('dark-mode');
+    };
+
+    get('dark-mode-toggle').onclick = (e) => {
+        e.stopPropagation();
+        const cb = get('dark-mode-checkbox');
+        const isDark = !document.body.classList.contains('dark-mode');
+
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('tilo_dark_mode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('tilo_dark_mode', 'false');
+        }
+        if (cb) cb.checked = isDark;
     };
 
     window.onclick = () => {
