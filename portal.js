@@ -435,6 +435,9 @@ function setupEventListeners() {
         get('auth-title').textContent = "შესვლა";
         get('show-login-btn').style.background = "var(--news-primary)";
         get('show-register-btn').style.background = "";
+        get('auth-submit-btn').textContent = "შესვლა";
+        get('forgot-password-container').classList.remove('hidden');
+        get('auth-password').parentElement.classList.remove('hidden');
     };
 
     get('show-register-btn').onclick = () => {
@@ -442,22 +445,55 @@ function setupEventListeners() {
         get('auth-title').textContent = "რეგისტრაცია";
         get('show-register-btn').style.background = "var(--news-primary)";
         get('show-login-btn').style.background = "";
+        get('auth-submit-btn').textContent = "რეგისტრაცია";
+        get('forgot-password-container').classList.add('hidden');
+        get('auth-password').parentElement.classList.remove('hidden');
+    };
+
+    get('forgot-password-link').onclick = (e) => {
+        e.preventDefault();
+        get('auth-title').textContent = "პაროლის აღდგენა";
+        get('nick-field').classList.add('hidden');
+        get('auth-password').parentElement.classList.add('hidden'); // Hide password field
+        get('forgot-password-container').classList.add('hidden');
+        get('auth-submit-btn').textContent = "გაგზავნა";
+        get('show-login-btn').style.background = "";
+        get('show-register-btn').style.background = "";
     };
 
     get('auth-submit-btn').onclick = async () => {
-        const mode = get('auth-title').textContent === "რეგისტრაცია" ? 'reg' : 'login';
+        const title = get('auth-title').textContent;
+        let mode = 'login';
+        if (title === "რეგისტრაცია") mode = 'reg';
+        if (title === "პაროლის აღდგენა") mode = 'recovery';
+
         const em = get('auth-email').value.trim();
         const pas = get('auth-password').value.trim();
         const nickNode = get('nickname-input');
         const nick = nickNode.value.trim();
 
-        if (!em || !pas) return alert("შეავსეთ ველები");
+        if (!em) return alert("შეიყვანეთ ელ-ფოსტა");
+
+        // Recovery Logic
+        if (mode === 'recovery') {
+            try {
+                // Simulate checking email existence
+                const check = await sql`SELECT id FROM users WHERE email = ${em}`;
+                if (check.length === 0) return alert("ეს ელ-ფოსტა არ არის რეგისტრირებული");
+
+                // In a real app, send email here. For now, mock it.
+                alert(`პაროლის აღდგენის ინსტრუქცია გაგზავნილია ${em}-ზე! (სიმულაცია)`);
+                get('show-login-btn').click(); // Back to login
+            } catch (e) { alert("შეცდომა: " + e.message); }
+            return;
+        }
+
+        if (!pas) return alert("შეიყვანეთ პაროლი");
 
         try {
             if (mode === 'reg') {
                 if (!nick) return alert("შეიყვანეთ ნიკნეიმი");
 
-                // Fix: Check if exists
                 const checkEm = await sql`SELECT id FROM users WHERE email = ${em}`;
                 if (checkEm.length > 0) return alert("ეს ელ-ფოსტა უკვე გამოყენებულია");
 
@@ -467,11 +503,11 @@ function setupEventListeners() {
                 await sql`INSERT INTO users (email, password, nickname) VALUES (${em}, ${pas}, ${nick})`;
                 alert("რეგისტრაცია წარმატებით დასრულდა! ახლა შეგიძლიათ შეხვიდეთ.");
 
-                // Switch to login
                 get('show-login-btn').click();
                 return;
             }
 
+            // Login Logic
             const res = await sql`SELECT * FROM users WHERE email = ${em} AND password = ${pas}`;
             if (res.length > 0) {
                 const user = res[0];
