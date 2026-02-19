@@ -745,3 +745,50 @@ body.dark-mode .bg-stain {
     transform: scale(1.5);
     opacity: 0 !important;
 }
+
+/* Tilo Sponge (Global Cleaner) */
+#tilo-sponge {
+    position: fixed;
+    width: 80px;
+    height: 80px;
+    bottom: 30px;
+    right: 120px;
+    z-index: 3000;
+    cursor: grab;
+    transition: transform 0.1s;
+    user-select: none;
+    touch-action: none;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+    background-size: cover;
+    background-position: center;
+}
+
+#tilo-sponge.dragging {
+    cursor: grabbing;
+    transition: none;
+}
+
+/* Syncing Skins with Game */
+.cloth-skin-default { background-image: url("img/tilo_default.png"); }
+.cloth-skin-fire { background-image: url("img/tilo_fire.png"); }
+.cloth-skin-ice { background-image: url("img/tilo_ice.png"); }
+.cloth-skin-electric { background-image: url("img/tilo_electric.png"); }
+.cloth-skin-rainbow { background-image: url("img/tilo_rainbow.png"); }
+
+/* Default fallback if images missing */
+#tilo-sponge:not([style*="background-image"]) {
+    background-color: #ffd700;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+#tilo-sponge:not([style*="background-image"])::after {
+    content: "🧽";
+}
+
+/* Stains Layering */
+.bg-stain {
+    z-index: 5; /* Above background, below main content */
+}

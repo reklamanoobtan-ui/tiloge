@@ -511,7 +511,12 @@ function stripHtml(html) {
 
 function setupBackgroundInteractions() {
     const layer = get('bg-layer');
-    if (!layer) return;
+    const sponge = get('tilo-sponge');
+    if (!layer || !sponge) return;
+
+    // Skin Sync
+    const savedSkin = localStorage.getItem('tilo_current_skin') || 'default';
+    sponge.classList.add(`cloth-skin-${savedSkin}`);
 
     // Create watermarks
     for (let i = 0; i < 4; i++) {
@@ -526,6 +531,8 @@ function setupBackgroundInteractions() {
 
     // Stain spawning
     let stainCount = 0;
+    const activeStains = new Set();
+
     setInterval(() => {
         if (stainCount >= 5) return;
 
@@ -538,15 +545,94 @@ function setupBackgroundInteractions() {
             if (stain.classList.contains('cleaning')) return;
             stain.classList.add('cleaning');
             stainCount--;
+            activeStains.delete(stain);
             setTimeout(() => stain.remove(), 500);
         };
 
         stain.onclick = clean;
-        stain.onmouseover = (e) => { if (e.buttons === 1) clean(); }; // clean while dragging
-
         layer.appendChild(stain);
+        activeStains.add(stain);
         stainCount++;
     }, 5000);
+
+    // Sponge Dragging Logic
+    let isDragging = false;
+    let currentX, currentY;
+
+    sponge.onmousedown = (e) => {
+        isDragging = true;
+        sponge.classList.add('dragging');
+    };
+
+    window.onmousemove = (e) => {
+        if (!isDragging) return;
+
+        const x = e.clientX - 40;
+        const y = e.clientY - 40;
+        sponge.style.left = x + 'px';
+        sponge.style.top = y + 'px';
+        sponge.style.bottom = 'auto';
+        sponge.style.right = 'auto';
+
+        // Collision Detection with Stains
+        activeStains.forEach(stain => {
+            const sRect = stain.getBoundingClientRect();
+            const spongeRect = sponge.getBoundingClientRect();
+
+            if (!(spongeRect.right < sRect.left ||
+                spongeRect.left > sRect.right ||
+                spongeRect.bottom < sRect.top ||
+                spongeRect.top > sRect.bottom)) {
+
+                // Trigger clean logic if overlap is enough
+                if (!stain.classList.contains('cleaning')) {
+                    stain.classList.add('cleaning');
+                    stainCount--;
+                    activeStains.delete(stain);
+                    setTimeout(() => stain.remove(), 500);
+                }
+            }
+        });
+    };
+
+    window.onmouseup = () => {
+        isDragging = false;
+        sponge.classList.remove('dragging');
+    };
+
+    // Touch Support
+    sponge.ontouchstart = (e) => {
+        isDragging = true;
+        sponge.classList.add('dragging');
+    };
+    window.ontouchmove = (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        const x = touch.clientX - 40;
+        const y = touch.clientY - 40;
+        sponge.style.left = x + 'px';
+        sponge.style.top = y + 'px';
+        sponge.style.bottom = 'auto';
+        sponge.style.right = 'auto';
+
+        activeStains.forEach(stain => {
+            const sRect = stain.getBoundingClientRect();
+            const spongeRect = sponge.getBoundingClientRect();
+            if (!(spongeRect.right < sRect.left || spongeRect.left > sRect.right ||
+                spongeRect.bottom < sRect.top || spongeRect.top > sRect.bottom)) {
+                if (!stain.classList.contains('cleaning')) {
+                    stain.classList.add('cleaning');
+                    stainCount--;
+                    activeStains.delete(stain);
+                    setTimeout(() => stain.remove(), 500);
+                }
+            }
+        });
+    };
+    window.ontouchend = () => {
+        isDragging = false;
+        sponge.classList.remove('dragging');
+    };
 }
 
 init();
