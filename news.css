@@ -840,3 +840,7 @@ body.dark-mode .bg-stain {
 
 #video-player-modal .hidden { display: none !important; }
 
+
+.chat-msg { font-size: 0.85rem; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 8px; word-break: break-word; }
+body.dark-mode .chat-msg { background: rgba(255,255,255,0.05); }
+

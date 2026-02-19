@@ -123,6 +123,22 @@
             <div id="sidebar-abuse-list" class="sidebar-list">
                 <!-- Admin Abuse items injected here -->
             </div>
+
+            <!-- Global Chat Sidebar -->
+            <div class="sidebar-title" style="margin-top: 30px; background: linear-gradient(135deg, #00c6ff, #0072ff);">
+                💬 გლობალური ჩატი</div>
+            <div class="sidebar-list" style="padding: 15px; height: 400px; display: flex; flex-direction: column;">
+                <div id="chat-messages"
+                    style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding-right: 5px;">
+                    <p style="text-align: center; opacity: 0.5; font-size: 0.8rem;">იტვირთება...</p>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="chat-input" placeholder="მესიჯი..." maxlength="50"
+                        style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--news-border); background: var(--news-bg); color: var(--news-text);">
+                    <button id="send-chat-btn"
+                        style="background: var(--news-primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">➤</button>
+                </div>
+            </div>
         </aside>
     </div>
 

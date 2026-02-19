@@ -33,6 +33,7 @@ async function init() {
     }
 
     initVideoSystem();
+    setupChat();
 }
 
 function updateAuthUI() {
@@ -852,6 +853,64 @@ function setupVideoPlayerDrag() {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onEnd);
     }
+}
+
+// --- GLOBAL CHAT SYSTEM (Port from game.js) ---
+function setupChat() {
+    const chatInput = get('chat-input');
+    const sendBtn = get('send-chat-btn');
+
+    async function sendMsg() {
+        const text = chatInput.value.trim().substring(0, 50);
+        if (!text) return;
+
+        let nick = nickname || 'Guest'; // Use 'Guest' if not logged in
+
+        try {
+            await sql`INSERT INTO chat_messages(nickname, message) VALUES(${nick}, ${text})`;
+            chatInput.value = '';
+            fetchChat();
+        } catch (e) { console.error("Chat send error:", e); }
+    }
+
+    if (sendBtn) sendBtn.onclick = sendMsg;
+    if (chatInput) chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };
+
+    // Initial fetch and interval
+    fetchChat();
+    setInterval(fetchChat, 3000);
+}
+
+async function fetchChat() {
+    try {
+        const msgs = await sql`
+            SELECT DISTINCT ON (cm.id) cm.*
+            FROM chat_messages cm
+            WHERE cm.created_at > NOW() - INTERVAL '30 seconds'
+              AND cm.nickname != 'SYSTEM_LOG'
+            ORDER BY cm.id, cm.created_at ASC
+        `;
+        const container = get('chat-messages');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (msgs.length === 0) {
+            container.innerHTML = '<p style="text-align: center; opacity: 0.5; font-size: 0.8rem; margin-top: 20px;">ჩატი ცარიელია...</p>';
+            return;
+        }
+
+        msgs.forEach(m => {
+            const el = document.createElement('div');
+            el.className = 'chat-msg'; // Styled in news.css
+            // Simple sanitization
+            const cleanMsg = m.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const cleanNick = m.nickname.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            el.innerHTML = `<strong style="color: var(--news-primary);">${cleanNick}:</strong> ${cleanMsg}`;
+            container.appendChild(el);
+        });
+        container.scrollTop = container.scrollHeight;
+    } catch (e) { console.error("Chat fetch error:", e); }
 }
 
 init();
