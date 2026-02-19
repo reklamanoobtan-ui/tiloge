@@ -162,11 +162,12 @@ body.news-portal {
 }
 
 .news-card {
-    background: #fff;
-    border-radius: 8px;
+    background: var(--news-card-bg);
+    border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: 0.3s;
+    box-shadow: var(--news-shadow);
+    transition: var(--transition);
+    border: 1px solid var(--news-border);
 }
 
 .news-card:hover {
@@ -223,8 +224,11 @@ body.news-portal {
 }
 
 .sidebar-list {
-    background: #fff;
+    background: var(--news-card-bg);
     border: 1px solid var(--news-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--news-shadow);
 }
 
 .sidebar-item {
@@ -242,7 +246,11 @@ body.news-portal {
 }
 
 .sidebar-item:hover {
-    background: #f9f9f9;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .sidebar-item img {
@@ -332,16 +340,17 @@ body.news-portal {
 
 .dropdown-divider {
     height: 1px;
-    background: #eee;
+    background: var(--news-border);
 }
 
 /* Footer Section */
 .news-footer {
-    background: #fff;
-    border-top: 2px solid #eee;
+    background: var(--news-header-bg);
+    border-top: 1px solid var(--news-border);
     padding: 40px 20px;
     margin-top: 50px;
     text-align: center;
+    color: var(--news-text);
 }
 
 .footer-container {
@@ -355,9 +364,20 @@ body.news-portal {
     gap: 20px;
     margin-top: 20px;
     padding: 15px;
-    background: #f9f9f9;
+    background: var(--news-bg);
     border-radius: 12px;
     display: inline-flex;
+    border: 1px solid var(--news-border);
+}
+
+/* News Detail Container */
+#news-detail {
+    background: var(--news-card-bg);
+    padding: 40px;
+    border-radius: var(--radius);
+    box-shadow: var(--news-shadow);
+    border: 1px solid var(--news-border);
+    margin-bottom: 30px;
 }
 
 /* Floating Game Button */
@@ -434,7 +454,7 @@ body.news-portal {
     align-items: center;
     font-weight: 900;
     cursor: pointer;
-    border: 2px solid #fff;
+    border: 2px solid var(--news-card-bg);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: 0.3s;
 }

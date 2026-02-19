@@ -2341,29 +2341,33 @@
         async function sendDiscordNotification(url, title, content, image, id) {
             try {
                 const siteUrl = `https://tilo.life/index.html?id=${id}`;
-                const plainText = content.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+                const plainText = content.replace(/<[^>]*>/g, '').substring(0, 300) + '...';
 
                 const embed = {
-                    title: `🗞️ ${title}`,
-                    description: `${plainText}\n\n🔗 [წაიკითხე სრულად საიტზე](${siteUrl})`,
-                    color: 3447003, // Blue-ish
-                    footer: { text: "TILO.LIFE News Portal" },
+                    title: `🔥 ${title.toUpperCase()}`,
+                    url: siteUrl,
+                    description: `\n${plainText}\n\n**[👉 სრული სიახლის წაკითხვა]( ${siteUrl} )**\n`,
+                    color: 0x0066cc,
+                    image: image ? { url: image } : null,
+                    footer: {
+                        text: "TILO.LIFE News • ყველაფერი თამაშების შესახებ",
+                        icon_url: "https://tilo.life/favicon.ico"
+                    },
                     timestamp: new Date().toISOString()
                 };
-
-                if (image) embed.image = { url: image };
 
                 await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        content: "🔔 **ახალი სიახლე დაიდო საიტზე!**",
+                        content: "📢 **ახალი პოსტი დაიდო TILO.LIFE-ზე!** @everyone",
                         embeds: [embed]
                     })
                 });
-                console.log("Discord notification sent!");
+                log('📢 Discord-ზე გაიგზავნა!', 'var(--accent)');
             } catch (e) {
                 console.error("Discord Webhook Error:", e);
+                log('❌ Discord შეცდომა', 'red');
             }
         }
 
