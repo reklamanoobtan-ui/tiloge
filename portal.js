@@ -138,17 +138,21 @@ async function openNews(id) {
         }
 
         get('detail-content').innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 20px;">
-                <h1 style="font-size: 2.5rem; font-weight: 900; margin: 0; line-height: 1.1;">${item.title}</h1>
-                <button onclick="shareNews()" class="nav-link" style="background: var(--news-bg); border: 1px solid var(--news-border); padding: 8px 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; gap: 20px;">
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin: 0; line-height: 1.1; color: var(--news-text);">${item.title}</h1>
+                <button onclick="shareNews()" class="nav-link" style="background: var(--news-bg); border: 1px solid var(--news-border); color: var(--news-text); padding: 10px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800;">
                     🔗 გაზიარება
                 </button>
             </div>
-            <div style="font-size: 0.9rem; color: #888; margin-bottom: 30px;">
-                ავტორი: <strong>${item.author}</strong> • გამოქვეყნდა: ${date} • კატეგორია: ${item.category}
+            <div style="font-size: 0.95rem; color: var(--news-text-dim); margin-bottom: 35px; display: flex; align-items: center; gap: 10px; font-weight: 600;">
+                <span>✍️ ${item.author}</span>
+                <span>•</span>
+                <span>📅 ${date}</span>
+                <span>•</span>
+                <span style="color: var(--news-primary);">🏷️ ${item.category}</span>
             </div>
             ${visualContent}
-            <div style="line-height: 1.8; font-size: 1.1rem; color: var(--news-text);">${item.content}</div>
+            <div style="line-height: 1.8; font-size: 1.15rem; color: var(--news-text); font-family: 'Inter', sans-serif;">${item.content}</div>
         `;
 
         loadComments(id);

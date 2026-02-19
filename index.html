@@ -82,19 +82,20 @@
             </div>
 
             <!-- News Detail View (Hidden Initially) -->
-            <div id="news-detail" class="hidden"
-                style="margin-top: 30px; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
-                <button onclick="showNewsList()"
-                    style="background: none; border: none; color: var(--news-primary); cursor: pointer; font-weight: 800; margin-bottom: 20px;">←
-                    უკან დაბრუნება</button>
+            <div id="news-detail" class="hidden">
+                <button onclick="showNewsList()" class="nav-link"
+                    style="margin-bottom: 25px; border: none; background: none; cursor: pointer; padding: 0;">
+                    ← უკან დაბრუნება
+                </button>
                 <div id="detail-content"></div>
 
                 <!-- Like & Interaction Part -->
                 <div class="interaction-bar"
-                    style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; display: flex; gap: 20px;">
+                    style="margin-top: 30px; border-top: 1px solid var(--news-border); padding-top: 25px; display: flex; gap: 20px;">
                     <button id="like-btn"
-                        style="border: none; background: #f0f0f0; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: 700;">❤️
-                        <span id="like-count">0</span> მოწონება</button>
+                        style="border: 1px solid var(--news-border); background: var(--news-bg); color: var(--news-text); padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: 700; transition: var(--transition);">
+                        ❤️ <span id="like-count">0</span> მოწონება
+                    </button>
                 </div>
 
                 <!-- Comments -->
