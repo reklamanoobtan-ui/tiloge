@@ -2477,8 +2477,23 @@
         };
 
         // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
+        // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
         window.loadAdminAbuse = async () => {
             try {
+                // Auto-fix schema check: Ensure 'id' is SERIAL
+                const schemaCheck = await sql`
+                    SELECT column_default 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'admin_abuse' AND column_name = 'id'
+                `;
+
+                if (schemaCheck.length > 0 && schemaCheck[0].column_default === null) {
+                    log('Fixing Admin Abuse Schema...', 'var(--accent)');
+                    await sql`DROP TABLE IF EXISTS admin_abuse`;
+                    await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
+                    log('✅ Schema Fixed!', 'green');
+                }
+
                 const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
                 const container = get('admin-abuse-list');
                 if (!container) return;
