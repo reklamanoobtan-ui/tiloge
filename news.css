@@ -688,3 +688,60 @@ body.dark-mode .sidebar-item:hover {
     right: 20px;
     top: 15px;
 }
+
+/* Interactive Background Elements */
+.bg-interactive-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bg-watermark {
+    position: absolute;
+    font-size: 8rem;
+    font-weight: 900;
+    opacity: 0.03;
+    color: var(--news-primary);
+    user-select: none;
+    pointer-events: none;
+    transform: rotate(-15deg);
+}
+
+body.dark-mode .bg-watermark {
+    opacity: 0.05;
+}
+
+.bg-stain {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(139, 69, 19, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: opacity 0.5s, transform 0.2s;
+    filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: stainAppear 0.5s ease-out;
+}
+
+body.dark-mode .bg-stain {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+@keyframes stainAppear {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.bg-stain.cleaning {
+    transform: scale(1.5);
+    opacity: 0 !important;
+}

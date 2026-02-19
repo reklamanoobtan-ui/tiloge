@@ -23,6 +23,8 @@ async function init() {
         if (cb) cb.checked = true;
     }
 
+    setupBackgroundInteractions();
+
     // Check for direct news link
     const params = new URLSearchParams(window.location.search);
     const newsId = params.get('id');
@@ -505,6 +507,46 @@ function stripHtml(html) {
     let tmp = document.createElement("DIV");
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
+}
+
+function setupBackgroundInteractions() {
+    const layer = get('bg-layer');
+    if (!layer) return;
+
+    // Create watermarks
+    for (let i = 0; i < 4; i++) {
+        const mark = document.createElement('div');
+        mark.className = 'bg-watermark';
+        mark.textContent = 'TILO';
+        mark.style.left = Math.random() * 80 + '%';
+        mark.style.top = Math.random() * 80 + '%';
+        mark.style.fontSize = (Math.random() * 4 + 4) + 'rem';
+        layer.appendChild(mark);
+    }
+
+    // Stain spawning
+    let stainCount = 0;
+    setInterval(() => {
+        if (stainCount >= 5) return;
+
+        const stain = document.createElement('div');
+        stain.className = 'bg-stain';
+        stain.style.left = Math.random() * 90 + '%';
+        stain.style.top = Math.random() * 90 + '%';
+
+        const clean = () => {
+            if (stain.classList.contains('cleaning')) return;
+            stain.classList.add('cleaning');
+            stainCount--;
+            setTimeout(() => stain.remove(), 500);
+        };
+
+        stain.onclick = clean;
+        stain.onmouseover = (e) => { if (e.buttons === 1) clean(); }; // clean while dragging
+
+        layer.appendChild(stain);
+        stainCount++;
+    }, 5000);
 }
 
 init();
