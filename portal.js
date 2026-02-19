@@ -31,6 +31,8 @@ async function init() {
     if (newsId) {
         setTimeout(() => openNews(newsId), 500);
     }
+
+    initVideoSystem();
 }
 
 function updateAuthUI() {
@@ -680,6 +682,179 @@ function setupBackgroundInteractions() {
         isDragging = false;
         sponge.classList.remove('dragging');
     };
+}
+
+// --- VIDEO NOTIFICATION SYSTEM (Port from game.js) ---
+let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
+let allChannelVideos = {};
+let videoPopupTimers = [];
+let currentVideoId = '';
+let hasWatchedOneVideo = false;
+
+async function initVideoSystem() {
+    await fetchChannelVideos();
+    // Schedule first popup after 5 seconds
+    setTimeout(showVideoPopup, 5000);
+    // Loop every 5 min
+    setInterval(showVideoPopup, 300000);
+    setupVideoPlayerDrag();
+};
+
+async function fetchChannelVideos() {
+    const newAllVideos = {};
+    for (const channel of videoChannels) {
+        const chId = channel.id;
+        if (!chId) continue;
+        let rss = `https://www.youtube.com/feeds/videos.xml?user=${chId}`;
+        if (chId.startsWith('UC')) {
+            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${chId}`;
+        }
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
+        try {
+            const res = await fetch(api);
+            const data = await res.json();
+            if (data.status === 'ok') {
+                newAllVideos[chId] = data.items;
+            } else {
+                console.warn('Video Fetch fail for ' + chId);
+            }
+        } catch (e) { console.error('Video fetch error for ' + chId, e); }
+    }
+    allChannelVideos = newAllVideos;
+}
+
+window.showVideoPopup = () => {
+    if (Object.keys(allChannelVideos).length === 0) return;
+    // Don't show if modal is open
+    if (get('video-player-modal') && !get('video-player-modal').classList.contains('hidden')) return;
+
+    const activeChannels = videoChannels.filter(ch => allChannelVideos[ch.id] && allChannelVideos[ch.id].length > 0);
+    if (activeChannels.length === 0) return;
+
+    // Simple selection since only 1 channel usually
+    const videos = allChannelVideos[activeChannels[0].id];
+    const vid = videos[Math.floor(Math.random() * videos.length)];
+
+    const popup = get('video-notification');
+    const thumb = get('video-thumb');
+    const titleOverlay = get('video-notif-title'); // Changed ID in HTML
+    const btnWatch = get('btn-watch-here');
+    const btnYoutube = get('btn-youtube');
+
+    // Extract ID
+    let videoId = vid.guid.split(':')[2];
+    if (!videoId && vid.link) {
+        try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+    }
+    currentVideoId = videoId;
+
+    if (thumb) thumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    if (titleOverlay) titleOverlay.textContent = vid.title;
+    if (btnYoutube) btnYoutube.href = vid.link;
+
+    if (btnWatch) {
+        btnWatch.onclick = window.watchVideoHere;
+        btnWatch.textContent = 'აქ ვუყურებ 👁️';
+    }
+
+    if (popup) {
+        popup.classList.remove('hidden');
+        void popup.offsetWidth; // Trigger reflow
+        popup.classList.add('slide-in');
+
+        // Auto hide after 10s
+        setTimeout(() => {
+            popup.classList.remove('slide-in');
+        }, 10000);
+    }
+};
+
+window.hideVideoPopup = function () {
+    const popup = get('video-notification');
+    if (popup) popup.classList.remove('slide-in');
+};
+
+window.watchVideoHere = function (event) {
+    if (event) event.preventDefault();
+    const modal = get('video-player-modal');
+    const iframe = get('video-iframe');
+
+    if (!iframe || !currentVideoId) return;
+
+    iframe.src = `https://www.youtube.com/embed/${currentVideoId}?autoplay=1`;
+    modal.classList.remove('hidden');
+    hideVideoPopup();
+};
+
+window.closeVideoPlayer = function () {
+    const modal = get('video-player-modal');
+    const iframe = get('video-iframe');
+    if (iframe) iframe.src = '';
+    if (modal) modal.classList.add('hidden');
+};
+
+function setupVideoPlayerDrag() {
+    const modal = get('video-player-modal');
+    const handle = get('video-player-handle');
+    const resizer = get('video-player-resizer');
+
+    if (!modal || !handle || !resizer) return;
+
+    let isDragging = false;
+    let isResizing = false;
+    let startX, startY;
+    let startWidth, startHeight, startLeft, startTop;
+
+    handle.onmousedown = (e) => {
+        if (e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = modal.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        // Switch from bottom/right to left/top for free movement
+        modal.style.bottom = 'auto';
+        modal.style.right = 'auto';
+        modal.style.left = startLeft + 'px';
+        modal.style.top = startTop + 'px';
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        e.preventDefault();
+    };
+
+    resizer.onmousedown = (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = modal.offsetWidth;
+        startHeight = modal.offsetHeight;
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    function onMove(e) {
+        if (isDragging) {
+            modal.style.left = (startLeft + e.clientX - startX) + 'px';
+            modal.style.top = (startTop + e.clientY - startY) + 'px';
+        }
+        if (isResizing) {
+            const newWidth = Math.max(200, startWidth + (e.clientX - startX));
+            modal.style.width = newWidth + 'px';
+        }
+    }
+
+    function onEnd() {
+        isDragging = false;
+        isResizing = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+    }
 }
 
 init();

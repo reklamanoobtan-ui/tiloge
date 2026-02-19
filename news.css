@@ -827,3 +827,16 @@ body.dark-mode .bg-stain {
     0% { filter: drop-shadow(0 0 15px red) hue-rotate(0deg); }
     100% { filter: drop-shadow(0 0 15px red) hue-rotate(360deg); }
 }
+
+/* --- Video Notification & Player Styles --- */
+#video-notification.slide-in {
+    transform: translateX(0) !important;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px cyan, 0 0 10px cyan; }
+    to { text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px #00ffff; }
+}
+
+#video-player-modal .hidden { display: none !important; }
+
