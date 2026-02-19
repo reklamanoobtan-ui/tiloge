@@ -328,16 +328,22 @@ async function initDatabase() {
 
         try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS duel_wins INTEGER DEFAULT 0`; } catch (e) { }
 
-        await sql`CREATE TABLE IF NOT EXISTS duel_stains (
-            id SERIAL PRIMARY KEY,
-            duel_id INTEGER NOT NULL,
-            stain_id TEXT NOT NULL,
-            x FLOAT NOT NULL,
-            y FLOAT NOT NULL,
-            color TEXT,
-            cleaned_by VARCHAR(255),
-            UNIQUE(duel_id, stain_id)
+        await sql`CREATE TABLE IF NOT EXISTS admin_abuse (
+            id INTEGER PRIMARY KEY,
+            title TEXT,
+            image_url TEXT,
+            end_time TIMESTAMPTZ,
+            link_url TEXT
         )`;
+
+        // Pre-fill 5 slots if empty
+        const abuseCount = await sql`SELECT COUNT(*) as count FROM admin_abuse`;
+        if (abuseCount[0].count == 0) {
+            for (let i = 1; i <= 5; i++) {
+                await sql`INSERT INTO admin_abuse (id, title, image_url, end_time, link_url) 
+                          VALUES (${i}, 'ADMIN ABUSE #${i}', '', NOW() + INTERVAL '1 day', 'https://tilo.life')`;
+            }
+        }
 
     } catch (e) { console.error("DB Init Error", e); }
 }

@@ -54,7 +54,7 @@ async function loadNews() {
             news = await sql`SELECT * FROM news ORDER BY created_at DESC`;
         }
         renderNewsGrid(news);
-        renderSidebarNews(news);
+        loadAdminAbuseSidebar();
     } catch (e) {
         console.error("News Load Error:", e);
     }
@@ -93,28 +93,70 @@ function renderNewsGrid(news) {
     });
 }
 
-function renderSidebarNews(news) {
-    const sidebar = get('sidebar-news-list');
+async function loadAdminAbuseSidebar() {
+    const sidebar = get('sidebar-abuse-list');
     if (!sidebar) return;
-    sidebar.innerHTML = '';
 
-    news.slice(0, 10).forEach(item => {
-        const time = new Date(item.created_at).getHours() + ":" + (new Date(item.created_at).getMinutes() < 10 ? '0' : '') + new Date(item.created_at).getMinutes();
-        const el = document.createElement('div');
-        el.className = 'sidebar-item';
-        el.onclick = () => openNews(item.id);
+    try {
+        const slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+        sidebar.innerHTML = '';
 
-        const img = item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1000';
+        slots.forEach(s => {
+            const el = document.createElement('div');
+            el.className = 'sidebar-item';
+            el.style.flexDirection = 'column';
+            el.style.alignItems = 'flex-start';
+            el.style.padding = '15px';
+            el.style.gap = '12px';
+            el.style.cursor = 'default';
 
-        el.innerHTML = `
-            <img src="${img}">
-            <div class="sidebar-item-info">
-                <span class="sidebar-item-time">${time}</span>
-                <div class="sidebar-item-title">${item.title}</div>
-            </div>
-        `;
-        sidebar.appendChild(el);
-    });
+            const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
+
+            // Countdown logic
+            const timerId = `timer-${s.id}`;
+
+            el.innerHTML = `
+                <div style="display: flex; gap: 12px; width: 100%;">
+                    <img src="${img}" style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: hidden;">
+                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--news-text); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.title}</div>
+                        <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: var(--news-primary); font-size: 1.1rem; letter-spacing: 1px;">00:00:00</div>
+                    </div>
+                </div>
+                <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width: 100%; padding: 10px; font-size: 0.85rem; border-radius: 12px; background: var(--news-primary); color: white; border: none; cursor: pointer; font-weight: 800; transition: var(--transition);">
+                    🚀 გადასვლა
+                </button>
+            `;
+            sidebar.appendChild(el);
+
+            // Timer interval
+            const updateTimer = () => {
+                const timerEl = get(timerId);
+                if (!timerEl) return;
+
+                const now = new Date();
+                const end = new Date(s.end_time);
+                const diff = end - now;
+
+                if (diff <= 0) {
+                    timerEl.textContent = "დასრულდა";
+                    timerEl.style.color = "#ff4757";
+                    return;
+                }
+
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s_val = Math.floor((diff % 60000) / 1000);
+
+                timerEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s_val.toString().padStart(2, '0')}`;
+            };
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        });
+    } catch (e) {
+        console.error("Sidebar Abuse Load Error:", e);
+    }
 }
 
 async function openNews(id) {

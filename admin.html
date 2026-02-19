@@ -572,6 +572,7 @@
                 <div class="nav-item" data-tab="youtube">📺 იუთუბი</div>
                 <div class="nav-item" data-tab="news">📰 სიახლეები</div>
                 <div class="nav-item" data-tab="comments">💬 კომენტარები</div>
+                <div class="nav-item" data-tab="abuse" style="color: #ffd700;">💠 ADMIN ABUSE</div>
                 <div class="nav-item" data-tab="critical" style="color: var(--danger);">⚠️ კრიტიკული</div>
                 <div class="nav-item" data-tab="console" style="color: #00ff00;">💻 კონსოლი</div>
             </div>
@@ -1506,6 +1507,19 @@
                 </div>
             </div>
 
+            <!-- ADMIN ABUSE TAB -->
+            <div id="tab-abuse" class="tab-content">
+                <div class="header-bar">
+                    <h2>💠 ADMIN ABUSE (TOP 5)</h2>
+                </div>
+
+                <div class="dashboard-grid" id="abuse-slots-container"
+                    style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+                    <!-- 5 slots will be injected here -->
+                    <p style="opacity:0.5; text-align:center;">იტვირთება...</p>
+                </div>
+            </div>
+
             <!-- CONSOLE TAB -->
             <div id="tab-console" class="tab-content">
                 <div class="header-bar">
@@ -1591,6 +1605,7 @@
                 if (target === 'players') loadPlayers();
                 if (target === 'online') loadOnlinePlayers();
                 if (target === 'comments') loadAdminComments();
+                if (target === 'abuse') loadAdminAbuse();
             };
         });
 
@@ -2433,6 +2448,55 @@
                 log('🗑️ სიახლე წაიშალა', 'var(--danger)');
                 loadAdminNews();
             } catch (e) { console.error(e); }
+        };
+
+        // --- ADMIN ABUSE LOGIC ---
+        window.loadAdminAbuse = async () => {
+            try {
+                const slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+                const container = get('abuse-slots-container');
+                container.innerHTML = slots.map(s => `
+                    <div class="card" style="border: 1px solid var(--news-primary);">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                            <span style="background:var(--news-primary); color:white; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:900;">${s.id}</span>
+                            <h3 style="margin:0;">SLOT #${s.id}</h3>
+                        </div>
+                        
+                        <label>სათაური (TITLE)</label>
+                        <input type="text" id="abuse-title-${s.id}" value="${s.title || ''}" placeholder="შეიყვანეთ სათაური">
+                        
+                        <label>სურათის ლინკი (IMAGE URL)</label>
+                        <input type="text" id="abuse-img-${s.id}" value="${s.image_url || ''}" placeholder="https://...">
+
+                        <label>დასრულების დრო (END TIME)</label>
+                        <p style="font-size:0.75rem; opacity:0.5; margin-bottom:5px;">მიმდინარე: ${s.end_time ? new Date(s.end_time).toLocaleString() : 'არ არის'}</p>
+                        <input type="datetime-local" id="abuse-time-${s.id}">
+
+                        <label>გადასასვლელი ლინკი (REDIRECT URL)</label>
+                        <input type="text" id="abuse-link-${s.id}" value="${s.link_url || ''}" placeholder="https://...">
+
+                        <button class="btn btn-primary full-width mt-10" onclick="saveAbuseSlot(${s.id})">💾 შენახვა</button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        };
+
+        window.saveAbuseSlot = async (id) => {
+            const title = get(`abuse-title-${id}`).value.trim();
+            const img = get(`abuse-img-${id}`).value.trim();
+            const timeVal = get(`abuse-time-${id}`).value;
+            const link = get(`abuse-link-${id}`).value.trim();
+
+            try {
+                log(`Savin Slot #${id}...`, 'var(--primary)');
+                if (timeVal) {
+                    await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${timeVal}, link_url=${link} WHERE id=${id}`;
+                } else {
+                    await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
+                }
+                log(`✅ Slot #${id} შენახულია!`, 'var(--accent)');
+                loadAdminAbuse();
+            } catch (e) { console.error(e); log('შეცდომა შენახვისას', 'red'); }
         };
 
         // Initialize news list if tab is active
