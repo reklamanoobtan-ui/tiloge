@@ -1510,13 +1510,39 @@
             <!-- ADMIN ABUSE TAB -->
             <div id="tab-abuse" class="tab-content">
                 <div class="header-bar">
-                    <h2>💠 ADMIN ABUSE (TOP 5)</h2>
+                    <h2 id="abuse-form-title">💠 ADMIN ABUSE მართვა</h2>
                 </div>
 
-                <div class="dashboard-grid" id="abuse-slots-container"
-                    style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
-                    <!-- 5 slots will be injected here -->
-                    <p style="opacity:0.5; text-align:center;">იტვირთება...</p>
+                <div class="dashboard-grid">
+                    <div class="card" style="border-color: var(--news-primary);">
+                        <input type="hidden" id="edit-abuse-id">
+                        <label>სლოტის სათაური</label>
+                        <input type="text" id="abuse-title-input" placeholder="შეიყვანეთ სათაური...">
+
+                        <label>სურათის ლინკი</label>
+                        <input type="text" id="abuse-image-input" placeholder="https://...">
+
+                        <label>დასრულების დრო (Countdown)</label>
+                        <input type="datetime-local" id="abuse-time-input">
+
+                        <label>გადასასვლელი ლინკი</label>
+                        <input type="text" id="abuse-link-input" placeholder="https://...">
+
+                        <div class="flex-row mt-10" style="gap: 10px;">
+                            <button class="btn btn-primary" id="publish-abuse-btn" onclick="publishAbuseItem()"
+                                style="flex:2;">🚀 გამოქვეყნება</button>
+                            <button class="btn btn-outline hidden" id="cancel-abuse-edit-btn" onclick="resetAbuseForm()"
+                                style="flex:1;">გაუქმება</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📋 არსებული სლოტები (ბოლო 10)</h3>
+                        <div id="admin-abuse-list"
+                            style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <!-- Items list -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2450,96 +2476,114 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- ADMIN ABUSE LOGIC ---
+        // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
         window.loadAdminAbuse = async () => {
             try {
-                let slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+                const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
+                const container = get('admin-abuse-list');
+                if (!container) return;
 
-                // If table is empty, auto-populate it
                 if (slots.length === 0) {
-                    log('Initializing Abuse Slots...', 'var(--accent)');
-                    for (let i = 1; i <= 5; i++) {
-                        await sql`INSERT INTO admin_abuse (id, title, image_url, end_time, link_url) 
-                                  VALUES (${i}, 'ADMIN ABUSE #${i}', '', NOW() + INTERVAL '1 day', 'https://tilo.life')`;
-                    }
-                    slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+                    container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">სლოტები ჯერ არ არის.</p>';
+                    return;
                 }
+
                 container.innerHTML = slots.map(s => `
-                    <div class="card" style="border: 1px solid var(--news-primary);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <span style="background:var(--news-primary); color:white; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:900;">${s.id}</span>
-                                <h3 style="margin:0;">სლოტი #${s.id}</h3>
-                            </div>
-                            <span style="font-size:0.7rem; opacity:0.5;">ID: ${s.id}</span>
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
+                            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 4px;">⏳ ${s.end_time ? new Date(s.end_time).toLocaleString('ka-GE') : 'არ არის'}</div>
                         </div>
-                        
-                        <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">სათაური (TITLE)</label>
-                        <input type="text" id="abuse-title-${s.id}" value="${s.title || ''}" placeholder="მაგ: ახალი გათამაშება!">
-                        
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">სურათის ლინკი (IMAGE URL)</label>
-                            <input type="text" id="abuse-img-${s.id}" value="${s.image_url || ''}" placeholder="https://...">
+                        <div style="display: flex; gap: 8px; margin-left: 15px;">
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="editAbuseItem(${s.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAbuseItem(${s.id})">🗑️</button>
                         </div>
-
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">დასრულების დრო (END TIME)</label>
-                            <p style="font-size:0.7rem; color:var(--accent); margin-bottom:5px;">მიმდინარე: ${s.end_time ? new Date(s.end_time).toLocaleString('ka-GE') : 'არ არის'}</p>
-                            <input type="datetime-local" id="abuse-time-${s.id}" style="font-size:0.8rem; padding:8px;">
-                        </div>
-
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block; font-size:0.8rem; margin-bottom:5px; opacity:0.7;">გადასასვლელი ლინკი (REDIRECT URL)</label>
-                            <input type="text" id="abuse-link-${s.id}" value="${s.link_url || ''}" placeholder="https://...">
-                        </div>
-
-                        <button class="btn btn-primary full-width" onclick="saveAbuseSlot(${s.id})" style="background:var(--news-primary); border:none; padding:12px; font-weight:800; border-radius:12px; cursor:pointer;">
-                            💾 მონაცემების შენახვა
-                        </button>
                     </div>
                 `).join('');
             } catch (e) {
                 console.error(e);
-                log('❌ შეცდომა: ' + e.message, 'red');
-                container.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align:center; padding:40px;">
-                        <h3 style="color:var(--danger);">ცხრილი 'admin_abuse' ვერ მოიძებნა</h3>
-                        <p style="opacity:0.6; margin:15px 0;">გთხოვთ დააჭიროთ ღილაკს ცხრილის შესაქმნელად:</p>
-                        <button class="btn btn-gold" onclick="initAbuseTable()">⚡ ცხრილის შექმნა</button>
-                    </div>
-                `;
+                log('❌ შეცდომა ჩატვირთვისას: ' + e.message, 'red');
             }
         };
 
-        window.initAbuseTable = async () => {
-            try {
-                log('Creating admin_abuse table...', 'var(--accent)');
-                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id INTEGER PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT)`;
-                loadAdminAbuse();
-            } catch (e) {
-                log('Error creating table: ' + e.message, 'red');
-            }
-        };
+        window.publishAbuseItem = async () => {
+            const id = get('edit-abuse-id').value;
+            const title = get('abuse-title-input').value.trim();
+            const img = get('abuse-image-input').value.trim();
+            const time = get('abuse-time-input').value;
+            const link = get('abuse-link-input').value.trim();
 
-        window.saveAbuseSlot = async (id) => {
-            const title = get(`abuse-title-${id}`).value.trim();
-            const img = get(`abuse-img-${id}`).value.trim();
-            const timeVal = get(`abuse-time-${id}`).value;
-            const link = get(`abuse-link-${id}`).value.trim();
+            if (!title) return alert('სათაური აუცილებელია!');
 
             try {
-                log(`Saving Slot #${id}...`, 'var(--primary)');
-                if (timeVal) {
-                    await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${timeVal}, link_url=${link} WHERE id=${id}`;
+                log(id ? 'ანახლებს...' : 'აქვეყნებს...', 'var(--primary)');
+
+                if (id) {
+                    if (time) {
+                        await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${time}, link_url=${link} WHERE id=${id}`;
+                    } else {
+                        await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
+                    }
+                    log('✅ წარმატებით განახლდა!', 'var(--accent)');
                 } else {
-                    await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
+                    await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) VALUES (${title}, ${img}, ${time || null}, ${link})`;
+                    log('✅ წარმატებით გამოქვეყნდა!', 'var(--accent)');
                 }
-                log(`✅ სლოტი #${id} წარმატებით განახლდა!`, 'var(--accent)');
+
+                resetAbuseForm();
                 loadAdminAbuse();
             } catch (e) {
                 console.error(e);
-                log('❌ შეცდომა შენახვისას: ' + e.message, 'red');
+                log('❌ შეცდომა: ' + e.message, 'red');
             }
+        };
+
+        window.editAbuseItem = async (id) => {
+            try {
+                const res = await sql`SELECT * FROM admin_abuse WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const s = res[0];
+
+                get('edit-abuse-id').value = s.id;
+                get('abuse-title-input').value = s.title;
+                get('abuse-image-input').value = s.image_url || '';
+                get('abuse-link-input').value = s.link_url || '';
+
+                if (s.end_time) {
+                    const date = new Date(s.end_time);
+                    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                    get('abuse-time-input').value = date.toISOString().slice(0, 16);
+                } else {
+                    get('abuse-time-input').value = '';
+                }
+
+                get('abuse-form-title').textContent = '✏️ სლოტის რედაქტირება';
+                get('publish-abuse-btn').textContent = '💾 შენახვა';
+                get('cancel-abuse-edit-btn').classList.remove('hidden');
+
+                get('abuse-form-title').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        };
+
+        window.deleteAbuseItem = async (id) => {
+            if (!confirm('ნამდვილად გსურთ წაშლა?')) return;
+            try {
+                await sql`DELETE FROM admin_abuse WHERE id = ${id}`;
+                log('🗑️ წაიშალა!', 'var(--danger)');
+                loadAdminAbuse();
+            } catch (e) { console.error(e); }
+        };
+
+        window.resetAbuseForm = () => {
+            get('edit-abuse-id').value = '';
+            get('abuse-title-input').value = '';
+            get('abuse-image-input').value = '';
+            get('abuse-time-input').value = '';
+            get('abuse-link-input').value = '';
+
+            get('abuse-form-title').textContent = '💠 ADMIN ABUSE მართვა';
+            get('publish-abuse-btn').textContent = '🚀 გამოქვეყნება';
+            get('cancel-abuse-edit-btn').classList.add('hidden');
         };
 
         // Initialize news list if tab is active
@@ -2752,13 +2796,7 @@
                 await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
 
                 // 5. Admin Abuse Table
-                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id INTEGER PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT)`;
-                const abuseCount = await sql`SELECT COUNT(*) as count FROM admin_abuse`;
-                if (abuseCount[0].count == 0) {
-                    for (let i = 1; i <= 5; i++) {
-                        await sql`INSERT INTO admin_abuse (id, title, image_url, end_time, link_url) VALUES (${i}, 'ADMIN ABUSE #${i}', '', NOW() + INTERVAL '1 day', 'https://tilo.life')`;
-                    }
-                }
+                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
 
                 log('🎉 SETUP დასრულებულია!', 'green');
                 loadPlayers();

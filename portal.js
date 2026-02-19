@@ -98,7 +98,7 @@ async function loadAdminAbuseSidebar() {
     if (!sidebar) return;
 
     try {
-        const slots = await sql`SELECT * FROM admin_abuse ORDER BY id ASC`;
+        const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 5`;
         sidebar.innerHTML = '';
 
         slots.forEach(s => {
