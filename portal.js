@@ -886,6 +886,7 @@ async function fetchChat() {
         const msgs = await sql`
             SELECT DISTINCT ON (cm.id) cm.*
             FROM chat_messages cm
+            LEFT JOIN users u ON cm.nickname = u.nickname
             WHERE cm.created_at > NOW() - INTERVAL '30 seconds'
               AND cm.nickname != 'SYSTEM_LOG'
             ORDER BY cm.id, cm.created_at ASC
