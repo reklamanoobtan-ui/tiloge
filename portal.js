@@ -118,16 +118,13 @@ async function loadAdminAbuseSidebar() {
             const timerId = `timer-${s.id}`;
 
             el.innerHTML = `
-                <div style="display: flex; gap: 12px; width: 100%;">
+                <div onclick="location.href='top.html?id=${s.id}'" style="cursor: pointer; display: flex; gap: 12px; width: 100%; transition: 0.2s;">
                     <img src="${img}" style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
                     <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: hidden;">
                         <div style="font-weight: 800; font-size: 0.95rem; color: var(--news-text); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.title}</div>
                         <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: var(--news-primary); font-size: 1.1rem; letter-spacing: 1px;">00:00:00</div>
                     </div>
                 </div>
-                <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width: 100%; padding: 10px; font-size: 0.85rem; border-radius: 12px; background: var(--news-primary); color: white; border: none; cursor: pointer; font-weight: 800; transition: var(--transition);">
-                    🚀 გადასვლა
-                </button>
             `;
             sidebar.appendChild(el);
 

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TILO.LIFE - დეტალები</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@400;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="news.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5131926411609590"
+        crossorigin="anonymous"></script>
+    <style>
+        .detail-card {
+            background: var(--news-card-bg);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--news-shadow);
+            border: 1px solid var(--news-border);
+            text-align: center;
+            max-width: 800px;
+            margin: 50px auto;
+        }
+
+        .count-down-big {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--news-accent);
+            font-family: 'Outfit', sans-serif;
+            margin: 30px 0;
+            text-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .big-btn {
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .img-large {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--news-shadow);
+        }
+    </style>
+</head>
+
+<body class="news-portal">
+    <header class="news-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-text">TILO<span>.LIFE</span></a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">მთავარი</a>
+                <a href="game.html" class="nav-link">თამაში</a>
+            </nav>
+            <div class="auth-nav">
+                <button onclick="location.href='index.html'" class="nav-link"
+                    style="border: none; background: none; cursor: pointer;">🏠 უკან</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-container" style="display: block;">
+        <div id="detail-container" class="detail-card">
+            <p style="opacity: 0.5;">იტვირთება...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+        const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
+        const sql = neon(DB_URL);
+
+        const get = id => document.getElementById(id);
+        const params = new URLSearchParams(window.location.search);
+        const itemId = params.get('id');
+
+        async function loadItem() {
+            if (!itemId) {
+                location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const res = await sql`SELECT * FROM admin_abuse WHERE id = ${itemId}`;
+                if (res.length === 0) {
+                    get('detail-container').innerHTML = "<h2>ვერ მოიძებნა</h2>";
+                    return;
+                }
+                const item = res[0];
+                const container = get('detail-container');
+
+                container.innerHTML = `
+                    <img src="${item.image_url}" class="img-large" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000'">
+                    <h1 style="font-size: 2.5rem; margin-bottom: 10px;">${item.title}</h1>
+                    <p style="opacity: 0.6;">დასრულებამდე დარჩენილია:</p>
+                    <div id="big-timer" class="count-down-big">00:00:00</div>
+                    <button onclick="window.open('${item.link_url}', '_blank')" class="action-btn big-btn">🚀 გადასვლა</button>
+                `;
+
+                startTimer(item.end_time);
+
+            } catch (e) {
+                console.error(e);
+                get('detail-container').innerHTML = "<h2>შეცდომა</h2>";
+            }
+        }
+
+        function startTimer(endTimeStr) {
+            const update = () => {
+                const el = get('big-timer');
+                if (!el) return;
+
+                const end = new Date(endTimeStr);
+                const now = new Date();
+                const diff = end - now;
+
+                if (diff <= 0) {
+                    el.textContent = "დასრულდა";
+                    el.style.color = "#ff4757";
+                    return;
+                }
+
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+
+                el.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+            update();
+            setInterval(update, 1000);
+        }
+
+        // Dark mode check
+        if (localStorage.getItem('tilo_dark_mode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        loadItem();
+    </script>
+</body>
+
+</html>
