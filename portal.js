@@ -593,6 +593,9 @@ function stripHtml(html) {
 }
 
 function setupBackgroundInteractions() {
+    // Disable on mobile to improve performance and UX
+    if (window.innerWidth < 768) return;
+
     const layer = get('bg-layer');
     const sponge = get('tilo-sponge');
     if (!layer || !sponge) return;

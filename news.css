@@ -628,6 +628,7 @@ body.dark-mode .sidebar-item:hover {
     margin-top: 5px;
     color: var(--news-text);
 }
+
 /* Auth Modal Design Enhancements */
 .modal-content.glass {
     background: var(--news-card-bg) !important;
@@ -737,8 +738,15 @@ body.dark-mode .bg-stain {
 }
 
 @keyframes stainAppear {
-    from { transform: scale(0); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .bg-stain.cleaning {
@@ -758,7 +766,7 @@ body.dark-mode .bg-stain {
     transition: transform 0.1s;
     user-select: none;
     touch-action: none;
-    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
     background-size: cover;
     background-position: center;
 }
@@ -769,11 +777,25 @@ body.dark-mode .bg-stain {
 }
 
 /* Syncing Skins with Game */
-.cloth-skin-default { background-image: url("img/tilo_default.png"); }
-.cloth-skin-fire { background-image: url("img/tilo_fire.png"); }
-.cloth-skin-ice { background-image: url("img/tilo_ice.png"); }
-.cloth-skin-electric { background-image: url("img/tilo_electric.png"); }
-.cloth-skin-rainbow { background-image: url("img/tilo_rainbow.png"); }
+.cloth-skin-default {
+    background-image: url("img/tilo_default.png");
+}
+
+.cloth-skin-fire {
+    background-image: url("img/tilo_fire.png");
+}
+
+.cloth-skin-ice {
+    background-image: url("img/tilo_ice.png");
+}
+
+.cloth-skin-electric {
+    background-image: url("img/tilo_electric.png");
+}
+
+.cloth-skin-rainbow {
+    background-image: url("img/tilo_rainbow.png");
+}
 
 /* Default fallback if images missing */
 #tilo-sponge:not([style*="background-image"]) {
@@ -784,13 +806,15 @@ body.dark-mode .bg-stain {
     justify-content: center;
     font-size: 2rem;
 }
+
 #tilo-sponge:not([style*="background-image"])::after {
     content: "🧽";
 }
 
 /* Stains Layering */
 .bg-stain {
-    z-index: 5; /* Above background, below main content */
+    z-index: 5;
+    /* Above background, below main content */
 }
 
 /* Tilo Sponge Design Overhaul (Game Sync) */
@@ -801,31 +825,39 @@ body.dark-mode .bg-stain {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
 }
 
 #tilo-sponge:active {
     transform: scale(1.1) rotate(2deg);
-    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4));
 }
 
 /* Sync Filters from Game */
 .cloth-skin-fire {
     filter: drop-shadow(0 0 35px #ff4500) grayscale(1) sepia(1) hue-rotate(-45deg) saturate(15) brightness(1.0) contrast(1.1) !important;
 }
+
 .cloth-skin-ice {
     filter: drop-shadow(0 0 35px #00f2fe) grayscale(1) sepia(1) hue-rotate(175deg) saturate(30) brightness(1.2) contrast(1.1) !important;
 }
+
 .cloth-skin-electric {
     filter: drop-shadow(0 0 35px #ffff00) grayscale(1) sepia(1) hue-rotate(5deg) saturate(35) brightness(1.4) contrast(1.2) !important;
 }
+
 .cloth-skin-rainbow {
     animation: skin-rainbow-anim 3s linear infinite !important;
 }
 
 @keyframes skin-rainbow-anim {
-    0% { filter: drop-shadow(0 0 15px red) hue-rotate(0deg); }
-    100% { filter: drop-shadow(0 0 15px red) hue-rotate(360deg); }
+    0% {
+        filter: drop-shadow(0 0 15px red) hue-rotate(0deg);
+    }
+
+    100% {
+        filter: drop-shadow(0 0 15px red) hue-rotate(360deg);
+    }
 }
 
 /* --- Video Notification & Player Styles --- */
@@ -834,13 +866,71 @@ body.dark-mode .bg-stain {
 }
 
 @keyframes glow {
-    from { text-shadow: 0 0 5px cyan, 0 0 10px cyan; }
-    to { text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px #00ffff; }
+    from {
+        text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+    }
+
+    to {
+        text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px #00ffff;
+    }
 }
 
-#video-player-modal .hidden { display: none !important; }
+#video-player-modal .hidden {
+    display: none !important;
+}
 
 
-.chat-msg { font-size: 0.85rem; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 8px; word-break: break-word; }
-body.dark-mode .chat-msg { background: rgba(255,255,255,0.05); }
+.chat-msg {
+    font-size: 0.85rem;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    word-break: break-word;
+}
 
+body.dark-mode .chat-msg {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* --- Mobile Responsiveness (Refined for Phone) --- */
+@media (max-width: 768px) {
+    .portal-container {
+        grid-template-columns: 1fr;
+        padding: 0 15px;
+        gap: 20px;
+    }
+
+    /* Hide Sidebar (YouTube Abuse Slots) to match Game Page mobile style */
+    .sidebar-list,
+    .sidebar-title {
+        display: none !important;
+    }
+
+    /* Hide Tilo Sponge (Requested removal on mobile) */
+    #tilo-sponge {
+        display: none !important;
+    }
+
+    /* Hide Mini Video Player (YouTube style match) */
+    #video-player-modal {
+        display: none !important;
+    }
+
+    /* Single Column News */
+    .news-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Ensure Header looks good */
+    .header-container {
+        padding: 0 15px;
+    }
+
+    .logo-text {
+        font-size: 1.8rem;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+    }
+}
