@@ -903,6 +903,16 @@ function setupChat() {
         let nick = nickname || 'Guest'; // Use 'Guest' if not logged in
 
         try {
+            // Ban Check
+            if (userEmail) {
+                const check = await sql`SELECT banned_until FROM users WHERE email = ${userEmail}`;
+                if (check.length > 0 && check[0].banned_until && new Date(check[0].banned_until) > new Date()) {
+                    const date = new Date(check[0].banned_until).toLocaleString('ka-GE');
+                    alert(`თქვენ დაბლოკილი ხართ ჩატში ${date}-მდე!`);
+                    return;
+                }
+            }
+
             await sql`INSERT INTO chat_messages(nickname, message) VALUES(${nick}, ${text})`;
             chatInput.value = '';
             fetchChat();

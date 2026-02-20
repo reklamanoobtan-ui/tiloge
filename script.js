@@ -1485,10 +1485,20 @@ function setupChat() {
         const text = chatInput.value.trim().substring(0, 50);
         if (!text || !nickname) return;
         try {
+            // Ban Check
+            if (userEmail) {
+                const check = await sql`SELECT banned_until FROM users WHERE email = ${userEmail}`;
+                if (check.length > 0 && check[0].banned_until && new Date(check[0].banned_until) > new Date()) {
+                    const date = new Date(check[0].banned_until).toLocaleString('ka-GE');
+                    alert(`თქვენ დაბლოკილი ხართ ჩატში ${date}-მდე!`);
+                    return;
+                }
+            }
+
             await sql`INSERT INTO chat_messages(nickname, message) VALUES(${nickname}, ${text})`;
             chatInput.value = '';
             fetchChat();
-        } catch (e) { }
+        } catch (e) { console.error(e); }
     }
     if (sendBtn) sendBtn.onclick = sendMsg;
     if (chatInput) chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMsg(); };

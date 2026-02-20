@@ -1425,7 +1425,7 @@
                             <div style="display: flex; gap: 15px;">
                                 <input type="text" id="news-category-input" placeholder="კატეგორია (მაგ: პოლიტიკა)"
                                     style="flex: 1;">
-                                <input type="text" id="news-image-input" placeholder="სურათის URL" style="flex: 1;">
+                                <input type="text" id="news-image-input" placeholder="სურათის/GIF URL" style="flex: 1;">
                                 <input type="text" id="news-video-input" placeholder="ვიდეოს URL (YouTube/Direct)"
                                     style="flex: 1;">
                             </div>
@@ -1590,6 +1590,23 @@
                     <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
                 </div>
             </div>
+
+            <!-- Ban Management -->
+            <div id="ban-management-section"
+                style="margin-bottom: 20px; padding: 15px; border: 1px dashed var(--danger); border-radius: 12px; display: none;">
+                <h4 style="color: var(--danger); margin-bottom: 10px;">🛑 მომხმარებელი დაბლოკილია!</h4>
+                <p id="ban-info" style="font-size: 0.8rem; margin-bottom: 15px; opacity: 0.7;"></p>
+                <button class="btn btn-outline" style="border-color: #00ff00; color: #00ff00; width: 100%;"
+                    onclick="removeBan()">✅ ბანის/ტაიმაუტის მოხსნა</button>
+            </div>
+
+            <!-- Ban Creation -->
+            <div id="ban-create-section" style="margin-bottom: 20px;">
+                <button class="btn btn-danger"
+                    style="width: 100%; background: rgba(255, 0, 0, 0.1); border: 1px solid var(--danger);"
+                    onclick="moderateUser(get('edit-user-email').value, 'ban')">🚫 მომხმარებლის დაბლოკვა (BAN)</button>
+            </div>
+
             <div class="flex-row gap-10">
                 <button class="btn btn-primary" style="flex: 2" onclick="saveUserEdit()">შენახვა</button>
                 <button class="btn btn-outline" style="flex: 1"
@@ -1753,11 +1770,45 @@
         get('ban-user').onclick = async () => {
             const name = get('target-nick').value.trim();
             if (!name) return;
-            if (confirm(`Are you sure you want to BAN ${name}?`)) {
+            if (confirm(`Are you sure you want to BAN (Chat & Game) for ${name}?`)) {
                 try {
-                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0 WHERE nickname = ${name}`;
-                    log(`Banned/Reset ${name}`, 'red');
-                } catch (e) { log('Error updating database', 'red'); }
+                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0, banned_until = '2099-01-01' WHERE nickname = ${name}`;
+                    log(`🚫 Banned & Reset: ${name}`, 'red');
+                    loadPlayers();
+                } catch (e) { log('Error banning user', 'red'); }
+            }
+        };
+
+        window.moderateUser = async (email, type) => {
+            let until = null;
+            let msg = "";
+
+            if (type === 'ban') {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ის სამუდამოდ დაბლოკვა?`)) return;
+                until = new Date('2099-01-01');
+                msg = "🚫 მომხმარებელი დაიბლოკა სამუდამოდ";
+            } else {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ${type} დღიანი ტაიმაუტის დადება?`)) return;
+                until = new Date();
+                until.setDate(until.getDate() + type);
+                msg = `⏳ მომხმარებელს დაედო ${type} დღიანი ტაიმაუტი`;
+            }
+
+            try {
+                await sql`UPDATE users SET banned_until = ${until} WHERE email = ${email}`;
+                log(msg, 'var(--danger)');
+                await loadAdminComments();
+                await loadPlayers();
+
+                // Refresh modal if currently viewing this user
+                const modal = get('edit-user-modal');
+                const editingEmail = get('edit-user-email') ? get('edit-user-email').value : null;
+                if (modal && !modal.classList.contains('hidden') && editingEmail === email) {
+                    editUser(email);
+                }
+            } catch (e) {
+                console.error(e);
+                log('Error moderating user', 'red');
             }
         };
 
@@ -2156,15 +2207,15 @@
                 let players;
 
                 if (sortBy === 'newest') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY id DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY id DESC LIMIT 1000`;
                 } else if (sortBy === 'score') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY score DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY score DESC LIMIT 1000`;
                 } else if (sortBy === 'coins') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY coins DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY coins DESC LIMIT 1000`;
                 } else if (sortBy === 'time') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY survival_time DESC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY survival_time DESC LIMIT 1000`;
                 } else {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
+                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY nickname ASC LIMIT 1000`;
                 }
 
                 allPlayers = players;
@@ -2237,7 +2288,34 @@
             get('edit-user-coins').value = player.coins;
             get('edit-user-total-coins').value = player.total_coins || 0;
 
+            // Ban Logic
+            const banSection = get('ban-management-section');
+            const banInfo = get('ban-info');
+            const banCreate = get('ban-create-section');
+
+            if (player.banned_until && new Date(player.banned_until) > new Date()) {
+                banSection.style.display = 'block';
+                if (banCreate) banCreate.style.display = 'none';
+                const date = new Date(player.banned_until).toLocaleString('ka-GE');
+                banInfo.textContent = `დაბლოკილია ${date}-მდე.`;
+            } else {
+                banSection.style.display = 'none';
+                if (banCreate) banCreate.style.display = 'block';
+            }
+
             modal.classList.remove('hidden');
+        };
+
+        window.removeBan = async () => {
+            const email = get('edit-user-email').value;
+            if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ბანის/ტაიმაუტის მოხსნა?`)) return;
+
+            try {
+                await sql`UPDATE users SET banned_until = NULL WHERE email = ${email}`;
+                log(`✅ ბანი მოიხსნა: ${email}`, 'green');
+                get('edit-user-modal').classList.add('hidden');
+                loadPlayers();
+            } catch (e) { log('Error removing ban', 'red'); }
         };
 
         async function loadOnlinePlayers() {
@@ -2645,27 +2723,6 @@
             } catch (e) { console.error(e); log('Error loading comments', 'red'); }
         };
 
-        window.moderateUser = async (email, type) => {
-            let until = null;
-            let msg = "";
-
-            if (type === 'ban') {
-                if (!confirm(`ნამდვილად გსურთ ${email}-ის სამუდამოდ დაბლოკვა?`)) return;
-                until = new Date('2099-01-01');
-                msg = "🚫 მომხმარებელი დაიბლოკა სამუდამოდ";
-            } else {
-                if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ${type} დღიანი ტაიმაუტის დადება?`)) return;
-                until = new Date();
-                until.setDate(until.getDate() + type);
-                msg = `⏳ მომხმარებელს დაედო ${type} დღიანი ტაიმაუტი`;
-            }
-
-            try {
-                await sql`UPDATE users SET banned_until = ${until} WHERE email = ${email}`;
-                log(msg, 'var(--danger)');
-                alert(msg);
-            } catch (e) { console.error(e); log('Error moderating user', 'red'); }
-        };
 
         window.deleteAdminComment = async (id) => {
             if (!confirm("ნამდვილად გსურთ ამ კომენტარის წაშლა?")) return;
