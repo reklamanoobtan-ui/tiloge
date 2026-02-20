@@ -916,9 +916,15 @@ body.dark-mode .chat-msg {
         display: none !important;
     }
 
+    /* Hide Hero/TILO WORLD banner on mobile */
+    .game-portal-hero {
+        display: none !important;
+    }
+
     /* Single Column News */
     .news-grid {
         grid-template-columns: 1fr;
+        margin-top: 10px !important;
     }
 
     /* Ensure Header looks good */

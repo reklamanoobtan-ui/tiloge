@@ -160,29 +160,27 @@ async function loadAdminAbuseSidebar() {
             setInterval(updateTimer, 1000);
         });
 
-        // --- MOBILE ABUSE LOGIC (2 Column Grid) ---
+        // --- MOBILE ABUSE LOGIC (2 Column Grid, Timer-Focused) ---
         if (window.innerWidth < 768) {
             const mobileContainer = get('mobile-abuse-list');
             if (mobileContainer && slots.length > 0) {
                 mobileContainer.innerHTML = '';
-                mobileContainer.style.display = 'flex';
-                mobileContainer.style.flexDirection = 'column';
-                mobileContainer.style.paddingBottom = '20px';
+                mobileContainer.style.cssText = 'display:flex;flex-direction:column;padding:15px 0;';
 
-                // Add Header
+                // Header
                 const mobHeader = document.createElement('div');
-                mobHeader.style.cssText = 'font-weight:900;color:#ffd700;margin-bottom:10px;font-size:0.9rem;padding-left:5px;';
-                mobHeader.textContent = '🔥 TOP 5 - ADMIN ABUSE';
+                mobHeader.style.cssText = 'font-weight:900;color:var(--news-text,#222);margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;';
+                mobHeader.innerHTML = '🔥 <span>TOP 5 - ADMIN ABUSE</span>';
                 mobileContainer.appendChild(mobHeader);
 
-                // Create 2-column grid
+                // 2-column grid
                 const grid = document.createElement('div');
                 grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
                 mobileContainer.appendChild(grid);
 
                 slots.forEach(s => {
                     const el = document.createElement('div');
-                    el.style.cssText = 'background:rgba(0,0,0,0.6);border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;color:white;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.2);';
+                    el.style.cssText = 'background:var(--news-card-bg, #fff);border-radius:14px;padding:10px;display:flex;align-items:center;gap:10px;color:var(--news-text,#222);border:1px solid var(--news-border, #eee);box-shadow:0 2px 10px rgba(0,0,0,0.08);cursor:pointer;transition:transform 0.2s;';
 
                     el.onclick = (e) => {
                         e.stopPropagation();
@@ -193,10 +191,10 @@ async function loadAdminAbuseSidebar() {
                     const timerId = `mob-timer-${s.id}`;
 
                     el.innerHTML = `
-                        <img src="${img}" style="width:100%;aspect-ratio:16/9;border-radius:12px;object-fit:cover;" referrerpolicy="no-referrer">
-                        <div style="width:100%;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
-                            <div style="font-weight:800;font-size:0.85rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.title}</div>
-                            <div id="${timerId}" style="font-family:monospace;font-weight:900;color:#ffd700;font-size:0.85rem;">00:00:00</div>
+                        <img src="${img}" style="width:45px;height:45px;border-radius:10px;object-fit:cover;flex-shrink:0;" referrerpolicy="no-referrer">
+                        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:2px;">
+                            <div style="font-weight:700;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.8;">${s.title}</div>
+                            <div id="${timerId}" style="font-family:monospace;font-weight:900;color:var(--news-primary,#6c5ce7);font-size:1.1rem;letter-spacing:1px;">00:00:00</div>
                         </div>
                     `;
                     grid.appendChild(el);
@@ -208,11 +206,11 @@ async function loadAdminAbuseSidebar() {
                         const now = new Date();
                         const end = new Date(s.end_time);
                         const diff = end - now;
-                        if (diff <= 0) { timerEl.textContent = "დასრულდა"; timerEl.style.color = '#ff4d4d'; return; }
+                        if (diff <= 0) { timerEl.textContent = "END"; timerEl.style.color = '#ff4d4d'; return; }
                         const h = Math.floor(diff / 3600000);
                         const m = Math.floor((diff % 3600000) / 60000);
-                        const s_val = Math.floor((diff % 60000) / 1000);
-                        timerEl.textContent = `${h}:${m}:${s_val}`;
+                        const sv = Math.floor((diff % 60000) / 1000);
+                        timerEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sv).padStart(2, '0')}`;
                     };
                     updateMobTimer();
                     setInterval(updateMobTimer, 1000);
