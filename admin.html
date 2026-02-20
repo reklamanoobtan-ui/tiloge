@@ -3017,7 +3017,7 @@
                 let addedCount = 0;
 
                 for (const leak of latestLeaks) {
-                    const leakTitle = `🔮 ${leak.description}`;
+                    const leakTitle = `🔮 ახალი ლიკი: ${leak.description}`;
 
                     // Skip if already exists
                     if (existingTitles.has(leakTitle.toLowerCase().trim())) {
@@ -3028,14 +3028,40 @@
                     fandomLog(`🖼️ სურათის URL-ის მიღება: ${leak.filename}...`);
                     const imageUrl = await getImageUrl(leak.filename);
 
+                    // Auto-moderator opinion pool (3-5 words each in Georgian)
+                    const opinions = [
+                        "ეს ძალიან საინტერესოდ გამოიყურება! 🔥",
+                        "მოუთმენლად ველით განახლებას! 🎮",
+                        "ნამდვილად ეპიკური დამატება იქნება! 💥",
+                        "ვერ ვუცდი ამ აფდეითს! 😍",
+                        "ეს უკვე ლეგენდარულია! 🏆",
+                        "რა მაგარი დიზაინია! 🎨",
+                        "თამაში კიდევ უფრო გამაგრდება! 💪",
+                        "ფანებს ეს მოეწონებათ! ❤️",
+                        "ეს ყველაფერს შეცვლის! 🌟",
+                        "წარმოუდგენელი კონტენტი მოდის! 🚀",
+                        "ამას ყველა ელოდებოდა! 👀",
+                        "რა ლამაზია, მომწონს! ✨",
+                        "ახალი ეპოქა იწყება! 🌍",
+                        "დეველოპერებმა იმუშავეს! 👏",
+                        "ეს ცოტა არ იყოს, შოკია! 😱",
+                        "ტოპ განახლება მოემზადეთ! 🎯",
+                        "უკეთესს ვერ მოიფიქრებდი! 💎",
+                        "საოცარი ვიზუალებია! 🎬",
+                        "თამაშმა ახალ დონეზე ავიდა! 📈",
+                        "უნდა ვითამაშოთ აუცილებლად! 🕹️"
+                    ];
+                    const opinion = opinions[Math.floor(Math.random() * opinions.length)];
+
                     const content = `
-                        <p><strong>${leak.description}</strong></p>
-                        <p>ეს leak გამოჩნდა <a href="https://stealabrainrot.fandom.com/wiki/Leaks" target="_blank">Steal a Brainrot Fandom Wiki</a>-ზე.</p>
-                        <p><em>ავტომატურად სინქრონიზებულია 🔮</em></p>
+                        <p><strong>${leak.description}</strong> — ახალი ლიკი გამოჩნდა!</p>
+                        <p>💬 <em>ავტო-მოდერატორის აზრი:</em> <strong>${opinion}</strong></p>
+                        <p>წყარო: <a href="https://stealabrainrot.fandom.com/wiki/Leaks" target="_blank">Steal a Brainrot Fandom Wiki</a></p>
+                        <p style="opacity:0.5;font-size:0.85em;">🔮 ავტომატურად სინქრონიზებულია</p>
                     `;
 
                     // 4. Insert into news
-                    const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${leakTitle}, ${content}, ${imageUrl}, ${''},  ${'Leak 🔮'}) RETURNING id`;
+                    const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${leakTitle}, ${content}, ${imageUrl}, ${''}, ${'Leak 🔮'}) RETURNING id`;
 
                     fandomLog(`✅ დაემატა: "${leak.description}"`, '#4caf50');
                     addedCount++;
