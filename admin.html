@@ -1417,6 +1417,30 @@
                             ავტომატურად გაიგზავნოს ჩატში.</p>
                     </div>
 
+                    <!-- Fandom Wiki Auto-Sync -->
+                    <div class="card" style="border-color: #f9a825; grid-column: span 2;">
+                        <h3 style="color: #f9a825;">🔮 Fandom Wiki Auto-Sync (Leaks)</h3>
+                        <p style="opacity: 0.6; margin-bottom: 15px; font-size: 0.85rem;">
+                            ავტომატურად გადმოაქვს ახალი leak-ები Fandom Wiki-დან და ამატებს სიახლეებში.
+                        </p>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" id="sync-fandom-btn"
+                                style="background: #f9a825; border: none; color: #000; font-weight: 700;">
+                                🔄 Sync Now (ბოლო 3 Leak)
+                            </button>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                <input type="checkbox" id="fandom-auto-sync-toggle">
+                                <span>ავტო-სინქრონიზაცია (10 წთ-ში ერთხელ)</span>
+                            </label>
+                        </div>
+                        <div id="fandom-sync-status"
+                            style="margin-top: 12px; font-size: 0.8rem; min-height: 1.2em; color: #f9a825;"></div>
+                        <div id="fandom-sync-log"
+                            style="margin-top: 10px; max-height: 200px; overflow-y: auto; font-size: 0.75rem; opacity: 0.7;">
+                        </div>
+                    </div>
+
                     <div class="card" style="grid-column: span 2;">
                         <h3 id="news-form-title">🆕 ახალი სიახლის დამატება</h3>
                         <div style="margin-top: 20px; display: grid; gap: 15px;">
@@ -2923,6 +2947,156 @@
                 log('კავშირი წარმატებულია', 'green');
             } catch (e) { log('DB Error', 'red'); alert('შეცდომა: ' + e.message); }
         };
+
+        // =============================================
+        // 🔮 FANDOM WIKI AUTO-SYNC (Leaks)
+        // =============================================
+        const FANDOM_API = 'https://stealabrainrot.fandom.com/api.php';
+        let fandomAutoSyncInterval = null;
+
+        function fandomLog(msg, color = '#f9a825') {
+            const logEl = get('fandom-sync-log');
+            const statusEl = get('fandom-sync-status');
+            if (statusEl) statusEl.innerHTML = `<span style="color:${color}">${msg}</span>`;
+            if (logEl) logEl.innerHTML = `<div style="color:${color};margin-bottom:4px;">[${new Date().toLocaleTimeString()}] ${msg}</div>` + logEl.innerHTML;
+        }
+
+        async function parseFandomLeaks() {
+            // 1. Fetch wikitext
+            const resp = await fetch(`${FANDOM_API}?action=parse&page=Leaks&format=json&prop=wikitext&origin=*`);
+            const data = await resp.json();
+            const wikitext = data.parse.wikitext['*'];
+
+            // 2. Parse gallery entries: File:Name.ext|Description
+            const entries = [];
+            const regex = /File:([^\|]+)\|(.+)/g;
+            let match;
+            while ((match = regex.exec(wikitext)) !== null) {
+                entries.push({
+                    filename: match[1].trim(),
+                    description: match[2].trim().replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link)
+                });
+            }
+            return entries;
+        }
+
+        async function getImageUrl(filename) {
+            try {
+                const resp = await fetch(`${FANDOM_API}?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json&origin=*`);
+                const data = await resp.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if (pages[pageId].imageinfo && pages[pageId].imageinfo.length > 0) {
+                    return pages[pageId].imageinfo[0].url;
+                }
+            } catch (e) {
+                console.error('Image URL fetch error:', e);
+            }
+            return '';
+        }
+
+        async function syncFandomLeaks(count = 3) {
+            try {
+                fandomLog('📡 Fandom Wiki-დან leak-ების წამოღება...');
+
+                // 1. Get all leaks from wiki
+                const allLeaks = await parseFandomLeaks();
+                if (allLeaks.length === 0) {
+                    fandomLog('❌ ვერ მოიძებნა leak-ები', 'red');
+                    return;
+                }
+
+                // 2. Get last N leaks
+                const latestLeaks = allLeaks.slice(-count).reverse();
+                fandomLog(`📋 მოიძებნა ${allLeaks.length} leak, ბოლო ${latestLeaks.length} მოწმდება...`);
+
+                // 3. Check which ones already exist in DB
+                const existing = await sql`SELECT title FROM news WHERE category = 'Leak 🔮' ORDER BY created_at DESC LIMIT 100`;
+                const existingTitles = new Set(existing.map(e => e.title.toLowerCase().trim()));
+
+                let addedCount = 0;
+
+                for (const leak of latestLeaks) {
+                    const leakTitle = `🔮 ${leak.description}`;
+
+                    // Skip if already exists
+                    if (existingTitles.has(leakTitle.toLowerCase().trim())) {
+                        fandomLog(`⏭️ უკვე არსებობს: "${leak.description}"`, '#888');
+                        continue;
+                    }
+
+                    fandomLog(`🖼️ სურათის URL-ის მიღება: ${leak.filename}...`);
+                    const imageUrl = await getImageUrl(leak.filename);
+
+                    const content = `
+                        <p><strong>${leak.description}</strong></p>
+                        <p>ეს leak გამოჩნდა <a href="https://stealabrainrot.fandom.com/wiki/Leaks" target="_blank">Steal a Brainrot Fandom Wiki</a>-ზე.</p>
+                        <p><em>ავტომატურად სინქრონიზებულია 🔮</em></p>
+                    `;
+
+                    // 4. Insert into news
+                    const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${leakTitle}, ${content}, ${imageUrl}, ${''},  ${'Leak 🔮'}) RETURNING id`;
+
+                    fandomLog(`✅ დაემატა: "${leak.description}"`, '#4caf50');
+                    addedCount++;
+
+                    // 5. Send to Discord if webhook is set
+                    const webhookUrl = localStorage.getItem('admin_discord_webhook');
+                    if (webhookUrl) {
+                        try {
+                            await sendDiscordNotification(webhookUrl, leakTitle, content, imageUrl, res[0].id);
+                            fandomLog(`📢 Discord-ზეც გაიგზავნა!`, '#5865F2');
+                        } catch (e) { }
+                    }
+                }
+
+                if (addedCount === 0) {
+                    fandomLog('✨ ახალი leak-ები არ მოიძებნა, ყველა უკვე სინქრონიზებულია!', '#4caf50');
+                } else {
+                    fandomLog(`🎉 ${addedCount} ახალი leak დაემატა სიახლეებში!`, '#4caf50');
+                    loadAdminNews();
+                }
+
+            } catch (e) {
+                console.error('Fandom Sync Error:', e);
+                fandomLog(`❌ შეცდომა: ${e.message}`, 'red');
+            }
+        }
+
+        // Sync button
+        get('sync-fandom-btn').onclick = () => syncFandomLeaks(3);
+
+        // Auto-sync toggle
+        const autoSyncToggle = get('fandom-auto-sync-toggle');
+        if (localStorage.getItem('fandom_auto_sync') === 'true') {
+            autoSyncToggle.checked = true;
+            startFandomAutoSync();
+        }
+
+        autoSyncToggle.onchange = () => {
+            localStorage.setItem('fandom_auto_sync', autoSyncToggle.checked);
+            if (autoSyncToggle.checked) {
+                startFandomAutoSync();
+                fandomLog('🔄 ავტო-სინქრონიზაცია ჩართულია (10 წთ)', '#4caf50');
+            } else {
+                stopFandomAutoSync();
+                fandomLog('⏹️ ავტო-სინქრონიზაცია გამორთულია', '#888');
+            }
+        };
+
+        function startFandomAutoSync() {
+            if (fandomAutoSyncInterval) clearInterval(fandomAutoSyncInterval);
+            // Check every 10 minutes for new leaks (only last 5 to catch any new ones)
+            fandomAutoSyncInterval = setInterval(() => syncFandomLeaks(5), 10 * 60 * 1000);
+            fandomLog('🔄 Auto-sync დაიწყო — 10 წუთში ერთხელ შემოწმდება', '#4caf50');
+        }
+
+        function stopFandomAutoSync() {
+            if (fandomAutoSyncInterval) {
+                clearInterval(fandomAutoSyncInterval);
+                fandomAutoSyncInterval = null;
+            }
+        }
 
     </script>
 </body>
