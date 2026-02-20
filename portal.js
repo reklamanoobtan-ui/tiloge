@@ -160,25 +160,34 @@ async function loadAdminAbuseSidebar() {
             setInterval(updateTimer, 1000);
         });
 
-        // --- MOBILE ABUSE LOGIC (Mirror to Hero Section) ---
+        // --- MOBILE ABUSE LOGIC (Vertical Stack) ---
         if (window.innerWidth < 768) {
             const mobileContainer = get('mobile-abuse-list');
             if (mobileContainer && slots.length > 0) {
                 mobileContainer.style.display = 'flex';
-                mobileContainer.innerHTML = '';
+                mobileContainer.style.flexDirection = 'column'; // Vertical stack
+                mobileContainer.style.gap = '10px';
+                mobileContainer.style.paddingBottom = '20px';
+
+                // Add Header
+                mobileContainer.innerHTML = '<div style="font-weight: 900; color: #ffd700; margin-bottom: 5px; font-size: 0.9rem; padding-left: 5px;">🔥 TOP 5 - რეკლამა</div>';
 
                 slots.forEach(s => {
                     const el = document.createElement('div');
-                    el.style.minWidth = '250px';
-                    el.style.background = 'rgba(0,0,0,0.5)'; // Darker for hero contrast
+                    el.style.width = '100%'; // Full width
+                    el.style.background = 'rgba(0,0,0,0.6)';
                     el.style.borderRadius = '12px';
-                    el.style.padding = '10px';
+                    el.style.padding = '12px';
                     el.style.display = 'flex';
-                    el.style.gap = '10px';
+                    el.style.alignItems = 'center';
+                    el.style.gap = '15px';
                     el.style.color = 'white';
-                    el.style.border = '1px solid rgba(255,255,255,0.2)';
+                    el.style.border = '1px solid rgba(255,255,255,0.1)';
+                    el.style.backdropFilter = 'blur(10px)';
+                    el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+
                     el.onclick = (e) => {
-                        e.stopPropagation(); // Prevent hero click
+                        e.stopPropagation();
                         location.href = `top.html?id=${s.id}`;
                     };
 
@@ -186,15 +195,15 @@ async function loadAdminAbuseSidebar() {
                     const timerId = `mob-timer-${s.id}`;
 
                     el.innerHTML = `
-                        <img src="${img}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
-                        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center;">
-                            <div style="font-weight: 800; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
-                            <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: #ffd700; font-size: 0.9rem;">00:00:00</div>
+                        <img src="${img}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
+                        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                            <div style="font-weight: 800; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
+                            <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: #ffd700; font-size: 1rem; letter-spacing: 0.5px;">00:00:00</div>
                         </div>
+                        <div style="font-size: 1.2rem; opacity: 0.7;">👉</div>
                     `;
                     mobileContainer.appendChild(el);
 
-                    // Re-use timer logic for mobile elements
                     const updateMobTimer = () => {
                         const timerEl = get(timerId);
                         if (!timerEl) return;
@@ -202,7 +211,7 @@ async function loadAdminAbuseSidebar() {
                         const now = new Date();
                         const end = new Date(s.end_time);
                         const diff = end - now;
-                        if (diff <= 0) { timerEl.textContent = "END"; return; }
+                        if (diff <= 0) { timerEl.textContent = "დასრულდა"; timerEl.style.color = '#ff4d4d'; return; }
                         const h = Math.floor(diff / 3600000);
                         const m = Math.floor((diff % 3600000) / 60000);
                         const s_val = Math.floor((diff % 60000) / 1000);
