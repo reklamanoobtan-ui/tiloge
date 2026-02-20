@@ -24,7 +24,7 @@ async function init() {
         if (cb) cb.checked = true;
     }
 
-    setupBackgroundInteractions();
+
 
     // Check for direct news link
     const params = new URLSearchParams(window.location.search);
@@ -287,7 +287,6 @@ async function loadAdminAbuseSidebar() {
 
 async function openNews(id) {
     currentNewsId = id;
-    get('hero-section').classList.add('hidden');
     get('news-grid').classList.add('hidden');
     get('pagination-container').style.display = 'none';
     get('news-detail').classList.remove('hidden');
@@ -342,7 +341,6 @@ function getYouTubeEmbed(url) {
 }
 
 window.showNewsList = () => {
-    get('hero-section').classList.remove('hidden');
     get('news-grid').classList.remove('hidden');
     get('pagination-container').style.display = 'flex';
     get('news-detail').classList.add('hidden');
@@ -715,134 +713,6 @@ function stripHtml(html) {
     return tmp.textContent || tmp.innerText || "";
 }
 
-function setupBackgroundInteractions() {
-    // Disable on mobile to improve performance and UX
-    if (window.innerWidth < 768) return;
-
-    const layer = get('bg-layer');
-    const sponge = get('tilo-sponge');
-    if (!layer || !sponge) return;
-
-    // Skin Sync
-    const savedSkin = localStorage.getItem('tilo_current_skin') || 'default';
-    sponge.classList.add(`cloth-skin-${savedSkin}`);
-
-    // Create watermarks
-    for (let i = 0; i < 4; i++) {
-        const mark = document.createElement('div');
-        mark.className = 'bg-watermark';
-        mark.textContent = 'TILO';
-        mark.style.left = Math.random() * 80 + '%';
-        mark.style.top = Math.random() * 80 + '%';
-        mark.style.fontSize = (Math.random() * 4 + 4) + 'rem';
-        layer.appendChild(mark);
-    }
-
-    // Stain spawning
-    let stainCount = 0;
-    const activeStains = new Set();
-
-    setInterval(() => {
-        if (stainCount >= 5) return;
-
-        const stain = document.createElement('div');
-        stain.className = 'bg-stain';
-        stain.style.left = Math.random() * 90 + '%';
-        stain.style.top = Math.random() * 90 + '%';
-
-        const clean = () => {
-            if (stain.classList.contains('cleaning')) return;
-            stain.classList.add('cleaning');
-            stainCount--;
-            activeStains.delete(stain);
-            setTimeout(() => stain.remove(), 500);
-        };
-
-        stain.onclick = clean;
-        layer.appendChild(stain);
-        activeStains.add(stain);
-        stainCount++;
-    }, 5000);
-
-    // Sponge Dragging Logic
-    let isDragging = false;
-    let currentX, currentY;
-
-    sponge.onmousedown = (e) => {
-        isDragging = true;
-        sponge.classList.add('dragging');
-    };
-
-    window.onmousemove = (e) => {
-        if (!isDragging) return;
-
-        const x = e.clientX - 40;
-        const y = e.clientY - 40;
-        sponge.style.left = x + 'px';
-        sponge.style.top = y + 'px';
-        sponge.style.bottom = 'auto';
-        sponge.style.right = 'auto';
-
-        // Collision Detection with Stains
-        activeStains.forEach(stain => {
-            const sRect = stain.getBoundingClientRect();
-            const spongeRect = sponge.getBoundingClientRect();
-
-            if (!(spongeRect.right < sRect.left ||
-                spongeRect.left > sRect.right ||
-                spongeRect.bottom < sRect.top ||
-                spongeRect.top > sRect.bottom)) {
-
-                // Trigger clean logic if overlap is enough
-                if (!stain.classList.contains('cleaning')) {
-                    stain.classList.add('cleaning');
-                    stainCount--;
-                    activeStains.delete(stain);
-                    setTimeout(() => stain.remove(), 500);
-                }
-            }
-        });
-    };
-
-    window.onmouseup = () => {
-        isDragging = false;
-        sponge.classList.remove('dragging');
-    };
-
-    // Touch Support
-    sponge.ontouchstart = (e) => {
-        isDragging = true;
-        sponge.classList.add('dragging');
-    };
-    window.ontouchmove = (e) => {
-        if (!isDragging) return;
-        const touch = e.touches[0];
-        const x = touch.clientX - 40;
-        const y = touch.clientY - 40;
-        sponge.style.left = x + 'px';
-        sponge.style.top = y + 'px';
-        sponge.style.bottom = 'auto';
-        sponge.style.right = 'auto';
-
-        activeStains.forEach(stain => {
-            const sRect = stain.getBoundingClientRect();
-            const spongeRect = sponge.getBoundingClientRect();
-            if (!(spongeRect.right < sRect.left || spongeRect.left > sRect.right ||
-                spongeRect.bottom < sRect.top || spongeRect.top > sRect.bottom)) {
-                if (!stain.classList.contains('cleaning')) {
-                    stain.classList.add('cleaning');
-                    stainCount--;
-                    activeStains.delete(stain);
-                    setTimeout(() => stain.remove(), 500);
-                }
-            }
-        });
-    };
-    window.ontouchend = () => {
-        isDragging = false;
-        sponge.classList.remove('dragging');
-    };
-}
 
 // --- VIDEO NOTIFICATION SYSTEM (Port from game.js) ---
 let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
