@@ -16,8 +16,9 @@ async function init() {
     loadNews();
     setupEventListeners();
 
-    // Dark mode init
-    if (localStorage.getItem('tilo_dark_mode') === 'true') {
+    // Dark mode init — default ON, user can turn off
+    const darkPref = localStorage.getItem('tilo_dark_mode');
+    if (darkPref !== 'false') {
         document.body.classList.add('dark-mode');
         const cb = get('dark-mode-checkbox');
         if (cb) cb.checked = true;
