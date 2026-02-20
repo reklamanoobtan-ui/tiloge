@@ -2515,12 +2515,31 @@
                             <div style="font-size: 0.75rem; opacity: 0.5; margin-top: 4px;">📅 ${new Date(item.created_at).toLocaleDateString()} | 🏷️ ${item.category}</div>
                         </div>
                         <div style="display: flex; gap: 8px; margin-left: 15px;">
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: #5865F2; color: #5865F2;" onclick="shareNewsToDiscord(${item.id})" title="Discord-ზე გაზიარება">📢</button>
                             <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="editAdminNews(${item.id})">✏️</button>
                             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAdminNews(${item.id})">🗑️</button>
                         </div>
                     </div>
                 `).join('');
             } catch (e) { console.error(e); }
+        };
+
+        window.shareNewsToDiscord = async (id) => {
+            const webhookUrl = localStorage.getItem('admin_discord_webhook');
+            if (!webhookUrl) return alert("გთხოვთ ჯერ მიუთითოთ Discord Webhook URL 'ახალი სიახლის' ტაბში!");
+
+            if (!confirm("გსურთ ამ სიახლის Discord-ზე გაზიარება?")) return;
+
+            try {
+                const res = await sql`SELECT * FROM news WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const item = res[0];
+                await sendDiscordNotification(webhookUrl, item.title, item.content, item.image_url, item.id);
+                alert("✅ წარმატებით გაიგზავნა Discord-ზე!");
+            } catch (e) {
+                console.error(e);
+                alert("შეცდომა გაგზავნისას!");
+            }
         };
 
         window.editAdminNews = async (id) => {
