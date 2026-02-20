@@ -3089,7 +3089,7 @@
             }
         }
 
-        // Sync button
+        // Sync button — manual: last 3
         get('sync-fandom-btn').onclick = () => syncFandomLeaks(3);
 
         // Auto-sync toggle
@@ -3112,9 +3112,9 @@
 
         function startFandomAutoSync() {
             if (fandomAutoSyncInterval) clearInterval(fandomAutoSyncInterval);
-            // Check every 10 minutes for new leaks (only last 5 to catch any new ones)
-            fandomAutoSyncInterval = setInterval(() => syncFandomLeaks(5), 10 * 60 * 1000);
-            fandomLog('🔄 Auto-sync დაიწყო — 10 წუთში ერთხელ შემოწმდება', '#4caf50');
+            // Auto mode: only check the newest 1 leak every 10 minutes
+            fandomAutoSyncInterval = setInterval(() => syncFandomLeaks(1), 10 * 60 * 1000);
+            fandomLog('🔄 Auto-sync დაიწყო — 10 წუთში ერთხელ, მხოლოდ ბოლო 1 ლიკი', '#4caf50');
         }
 
         function stopFandomAutoSync() {
