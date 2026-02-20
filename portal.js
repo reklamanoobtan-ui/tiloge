@@ -159,6 +159,61 @@ async function loadAdminAbuseSidebar() {
             updateTimer();
             setInterval(updateTimer, 1000);
         });
+
+        // --- MOBILE ABUSE LOGIC (Mirror to Hero Section) ---
+        if (window.innerWidth < 768) {
+            const mobileContainer = get('mobile-abuse-list');
+            if (mobileContainer && slots.length > 0) {
+                mobileContainer.style.display = 'flex';
+                mobileContainer.innerHTML = '';
+
+                slots.forEach(s => {
+                    const el = document.createElement('div');
+                    el.style.minWidth = '250px';
+                    el.style.background = 'rgba(0,0,0,0.5)'; // Darker for hero contrast
+                    el.style.borderRadius = '12px';
+                    el.style.padding = '10px';
+                    el.style.display = 'flex';
+                    el.style.gap = '10px';
+                    el.style.color = 'white';
+                    el.style.border = '1px solid rgba(255,255,255,0.2)';
+                    el.onclick = (e) => {
+                        e.stopPropagation(); // Prevent hero click
+                        location.href = `top.html?id=${s.id}`;
+                    };
+
+                    const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
+                    const timerId = `mob-timer-${s.id}`;
+
+                    el.innerHTML = `
+                        <img src="${img}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
+                        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-weight: 800; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
+                            <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: #ffd700; font-size: 0.9rem;">00:00:00</div>
+                        </div>
+                    `;
+                    mobileContainer.appendChild(el);
+
+                    // Re-use timer logic for mobile elements
+                    const updateMobTimer = () => {
+                        const timerEl = get(timerId);
+                        if (!timerEl) return;
+                        if (!s.end_time) { timerEl.textContent = "⏱️"; return; }
+                        const now = new Date();
+                        const end = new Date(s.end_time);
+                        const diff = end - now;
+                        if (diff <= 0) { timerEl.textContent = "END"; return; }
+                        const h = Math.floor(diff / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s_val = Math.floor((diff % 60000) / 1000);
+                        timerEl.textContent = `${h}:${m}:${s_val}`;
+                    };
+                    updateMobTimer();
+                    setInterval(updateMobTimer, 1000);
+                });
+            }
+        }
+
     } catch (e) {
         console.error("Sidebar Abuse Load Error:", e);
     }
