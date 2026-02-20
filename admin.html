@@ -2206,16 +2206,33 @@
                 const sortBy = get('sort-players').value;
                 let players;
 
-                if (sortBy === 'newest') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY id DESC LIMIT 1000`;
-                } else if (sortBy === 'score') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY score DESC LIMIT 1000`;
-                } else if (sortBy === 'coins') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY coins DESC LIMIT 1000`;
-                } else if (sortBy === 'time') {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY survival_time DESC LIMIT 1000`;
-                } else {
-                    players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY nickname ASC LIMIT 1000`;
+                // Try fetching with banned_until
+                try {
+                    if (sortBy === 'newest') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY id DESC LIMIT 1000`;
+                    } else if (sortBy === 'score') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY score DESC LIMIT 1000`;
+                    } else if (sortBy === 'coins') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY coins DESC LIMIT 1000`;
+                    } else if (sortBy === 'time') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY survival_time DESC LIMIT 1000`;
+                    } else {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY nickname ASC LIMIT 1000`;
+                    }
+                } catch (e) {
+                    if (e.message.includes('column "banned_until" does not exist')) {
+                        console.warn("Schema mismatch, fallback to old query");
+                        alert("⚠️ ბაზაში აკლია სვეტი 'banned_until'. გთხოვთ გაუშვათ 'DATABASE SETUP' სკრიპტი 'Critical Actions' ტაბში!");
+
+                        // Fallback query without banned_until
+                        if (sortBy === 'newest') {
+                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY id DESC LIMIT 1000`;
+                        } else {
+                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
+                        }
+                    } else {
+                        throw e;
+                    }
                 }
 
                 allPlayers = players;
@@ -2873,6 +2890,7 @@
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
                 try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_until TIMESTAMPTZ`; } catch (e) { }
 
                 // 2. Achievements (Match History) table
                 await sql`CREATE TABLE IF NOT EXISTS game_results (id SERIAL PRIMARY KEY, user_email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE, score INTEGER NOT NULL, duration_seconds INTEGER NOT NULL, coins_earned INTEGER NOT NULL, played_at TIMESTAMP DEFAULT NOW())`;
