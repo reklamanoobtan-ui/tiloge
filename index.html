@@ -125,8 +125,22 @@
                 <!-- Admin Abuse items injected here -->
             </div>
 
+            <!-- Game Banner -->
+            <a href="game.html"
+                style="display:block; margin-top:20px; padding:18px; background:linear-gradient(135deg, #0f0c29, #302b63, #24243e); border:1px solid rgba(255,255,255,0.15); border-radius:16px; text-decoration:none; text-align:center; transition:all 0.3s; cursor:pointer; position:relative; overflow:hidden;"
+                onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 30px rgba(100,100,255,0.3)'"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                <div style="font-size:2rem; margin-bottom:6px;">🧼</div>
+                <div style="color:#fff; font-weight:900; font-size:1rem;">TILO WORLD</div>
+                <div style="color:rgba(255,255,255,0.6); font-size:0.75rem; margin-top:4px;">ითამაშე და მოიგე პრიზები!
+                </div>
+                <div
+                    style="margin-top:10px; background:linear-gradient(135deg, #00c6ff, #0072ff); color:#fff; padding:8px 20px; border-radius:50px; display:inline-block; font-weight:800; font-size:0.8rem;">
+                    თამაშის დაწყება 🎮</div>
+            </a>
+
             <!-- Global Chat Sidebar -->
-            <div class="sidebar-title" style="margin-top: 30px; background: linear-gradient(135deg, #00c6ff, #0072ff);">
+            <div class="sidebar-title" style="margin-top: 20px; background: linear-gradient(135deg, #00c6ff, #0072ff);">
                 💬 გლობალური ჩატი</div>
             <div class="sidebar-list" style="padding: 15px; height: 400px; display: flex; flex-direction: column;">
                 <div id="chat-messages"
@@ -143,8 +157,8 @@
         </aside>
     </div>
 
-    <!-- Floating Game Button -->
-    <a href="game.html" class="floating-game-btn">🧼</a>
+    <!-- Floating Game Button (Mobile Only) -->
+    <a href="game.html" class="floating-game-btn" style="display:none;">🧼</a>
 
     <!-- Auth Modal -->
     <div id="auth-modal" class="modal hidden">

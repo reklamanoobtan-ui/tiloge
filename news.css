@@ -939,4 +939,9 @@ body.dark-mode .chat-msg {
     .nav-link {
         font-size: 0.85rem;
     }
+
+    /* Show floating game button on mobile */
+    .floating-game-btn {
+        display: flex !important;
+    }
 }
