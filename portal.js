@@ -160,31 +160,29 @@ async function loadAdminAbuseSidebar() {
             setInterval(updateTimer, 1000);
         });
 
-        // --- MOBILE ABUSE LOGIC (Vertical Stack) ---
+        // --- MOBILE ABUSE LOGIC (2 Column Grid) ---
         if (window.innerWidth < 768) {
             const mobileContainer = get('mobile-abuse-list');
             if (mobileContainer && slots.length > 0) {
+                mobileContainer.innerHTML = '';
                 mobileContainer.style.display = 'flex';
-                mobileContainer.style.flexDirection = 'column'; // Vertical stack
-                mobileContainer.style.gap = '10px';
+                mobileContainer.style.flexDirection = 'column';
                 mobileContainer.style.paddingBottom = '20px';
 
                 // Add Header
-                mobileContainer.innerHTML = '<div style="font-weight: 900; color: #ffd700; margin-bottom: 5px; font-size: 0.9rem; padding-left: 5px;">🔥 TOP 5 - რეკლამა</div>';
+                const mobHeader = document.createElement('div');
+                mobHeader.style.cssText = 'font-weight:900;color:#ffd700;margin-bottom:10px;font-size:0.9rem;padding-left:5px;';
+                mobHeader.textContent = '🔥 TOP 5 - ADMIN ABUSE';
+                mobileContainer.appendChild(mobHeader);
+
+                // Create 2-column grid
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+                mobileContainer.appendChild(grid);
 
                 slots.forEach(s => {
                     const el = document.createElement('div');
-                    el.style.width = '100%'; // Full width
-                    el.style.background = 'rgba(0,0,0,0.6)';
-                    el.style.borderRadius = '12px';
-                    el.style.padding = '12px';
-                    el.style.display = 'flex';
-                    el.style.alignItems = 'center';
-                    el.style.gap = '15px';
-                    el.style.color = 'white';
-                    el.style.border = '1px solid rgba(255,255,255,0.1)';
-                    el.style.backdropFilter = 'blur(10px)';
-                    el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                    el.style.cssText = 'background:rgba(0,0,0,0.6);border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;color:white;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.2);';
 
                     el.onclick = (e) => {
                         e.stopPropagation();
@@ -195,14 +193,13 @@ async function loadAdminAbuseSidebar() {
                     const timerId = `mob-timer-${s.id}`;
 
                     el.innerHTML = `
-                        <img src="${img}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
-                        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
-                            <div style="font-weight: 800; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
-                            <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: #ffd700; font-size: 1rem; letter-spacing: 0.5px;">00:00:00</div>
+                        <img src="${img}" style="width:100%;aspect-ratio:16/9;border-radius:12px;object-fit:cover;" referrerpolicy="no-referrer">
+                        <div style="width:100%;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+                            <div style="font-weight:800;font-size:0.85rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.title}</div>
+                            <div id="${timerId}" style="font-family:monospace;font-weight:900;color:#ffd700;font-size:0.85rem;">00:00:00</div>
                         </div>
-                        <div style="font-size: 1.2rem; opacity: 0.7;">👉</div>
                     `;
-                    mobileContainer.appendChild(el);
+                    grid.appendChild(el);
 
                     const updateMobTimer = () => {
                         const timerEl = get(timerId);
