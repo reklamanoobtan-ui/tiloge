@@ -82,7 +82,7 @@ function renderNewsGrid(news) {
         const img = item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1000';
 
         card.innerHTML = `
-            <img src="${img}" class="news-img" alt="${item.title}">
+            <img src="${img}" class="news-img" alt="${item.title}" referrerpolicy="no-referrer">
             <div class="news-body">
                 <div class="news-meta">
                     <span>${item.category}</span>
@@ -120,7 +120,7 @@ async function loadAdminAbuseSidebar() {
 
             el.innerHTML = `
                 <div onclick="location.href='top.html?id=${s.id}'" style="cursor: pointer; display: flex; gap: 12px; width: 100%; transition: 0.2s;">
-                    <img src="${img}" style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
+                    <img src="${img}" style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
                     <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: hidden;">
                         <div style="font-weight: 800; font-size: 0.95rem; color: var(--news-text); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.title}</div>
                         <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: var(--news-primary); font-size: 1.1rem; letter-spacing: 1px;">00:00:00</div>
@@ -183,7 +183,7 @@ async function openNews(id) {
                 <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen></iframe>
             </div>`;
         } else if (item.image_url) {
-            visualContent = `<img src="${item.image_url}" style="width: 100%; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">`;
+            visualContent = `<img src="${item.image_url}" referrerpolicy="no-referrer" style="width: 100%; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">`;
         }
 
         get('detail-content').innerHTML = `
