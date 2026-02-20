@@ -49,6 +49,10 @@ function updateAuthUI() {
     }
 }
 
+const ITEMS_PER_PAGE = 4;
+let currentPage = 1;
+let allNewsCache = [];
+
 async function loadNews() {
     try {
         let news;
@@ -57,24 +61,32 @@ async function loadNews() {
         } else {
             news = await sql`SELECT * FROM news ORDER BY created_at DESC`;
         }
-        renderNewsGrid(news);
+        allNewsCache = news;
+        currentPage = 1;
+        renderNewsPage();
         loadAdminAbuseSidebar();
     } catch (e) {
         console.error("News Load Error:", e);
     }
 }
 
-function renderNewsGrid(news) {
+function renderNewsPage() {
     const grid = get('news-grid');
     if (!grid) return;
     grid.innerHTML = '';
 
-    if (news.length === 0) {
+    if (allNewsCache.length === 0) {
         grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">სიახლეები ჯერ არ არის.</p>';
+        renderPagination(0);
         return;
     }
 
-    news.forEach(item => {
+    const totalPages = Math.ceil(allNewsCache.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pageItems = allNewsCache.slice(start, start + ITEMS_PER_PAGE);
+
+    pageItems.forEach(item => {
         const card = document.createElement('div');
         card.className = 'news-card';
         card.onclick = () => openNews(item.id);
@@ -95,6 +107,55 @@ function renderNewsGrid(news) {
         `;
         grid.appendChild(card);
     });
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const container = get('pagination-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const btnStyle = (active) => `
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--news-border);
+        background: ${active ? 'var(--news-primary)' : 'var(--news-card-bg)'};
+        color: ${active ? '#fff' : 'var(--news-text)'};
+        cursor: pointer;
+        font-weight: ${active ? '800' : '600'};
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    `;
+
+    // Prev button
+    if (currentPage > 1) {
+        const prev = document.createElement('button');
+        prev.textContent = '← წინა';
+        prev.style.cssText = btnStyle(false);
+        prev.onclick = () => { currentPage--; renderNewsPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        container.appendChild(prev);
+    }
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.style.cssText = btnStyle(i === currentPage);
+        btn.onclick = () => { currentPage = i; renderNewsPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        container.appendChild(btn);
+    }
+
+    // Next button
+    if (currentPage < totalPages) {
+        const next = document.createElement('button');
+        next.textContent = 'შემდეგი →';
+        next.style.cssText = btnStyle(false);
+        next.onclick = () => { currentPage++; renderNewsPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        container.appendChild(next);
+    }
 }
 
 async function loadAdminAbuseSidebar() {
@@ -228,6 +289,7 @@ async function openNews(id) {
     currentNewsId = id;
     get('hero-section').classList.add('hidden');
     get('news-grid').classList.add('hidden');
+    get('pagination-container').style.display = 'none';
     get('news-detail').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -282,6 +344,7 @@ function getYouTubeEmbed(url) {
 window.showNewsList = () => {
     get('hero-section').classList.remove('hidden');
     get('news-grid').classList.remove('hidden');
+    get('pagination-container').style.display = 'flex';
     get('news-detail').classList.add('hidden');
     currentNewsId = null;
 };
