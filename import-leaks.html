@@ -1,0 +1,173 @@
+<!--
+  🔮 ერთჯერადი Leak-ების იმპორტი
+  გახსენი ეს ფაილი ბრაუზერში → ღილაკზე დააჭირე → 15 leak შეივსება ბაზაში
+  სხვადასხვა თარიღებით (ახალი ზემოთ)
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Leak Importer</title>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: monospace;
+            padding: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: #f9a825;
+            color: #000;
+            border: none;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #log {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔮 15 Leak-ის იმპორტი</h1>
+    <p>ეს სკრიპტი ჩასვამს 15 leak-ს ბაზაში სხვადასხვა თარიღებით.</p>
+    <button onclick="importLeaks()">🚀 იმპორტის დაწყება</button>
+    <div id="log"></div>
+
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+
+        const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
+        const sql = neon(DB_URL);
+
+        const FANDOM_API = 'https://stealabrainrot.fandom.com/api.php';
+
+        const logEl = document.getElementById('log');
+        function log(msg) {
+            logEl.textContent += msg + '\n';
+        }
+
+        async function getImageUrl(filename) {
+            try {
+                const resp = await fetch(`${FANDOM_API}?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json&origin=*`);
+                const data = await resp.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if (pages[pageId].imageinfo && pages[pageId].imageinfo.length > 0) {
+                    return pages[pageId].imageinfo[0].url;
+                }
+            } catch (e) { }
+            return '';
+        }
+
+        const opinions = [
+            "ეს ძალიან საინტერესოდ გამოიყურება! 🔥",
+            "მოუთმენლად ველით განახლებას! 🎮",
+            "ნამდვილად ეპიკური დამატება იქნება! 💥",
+            "ვერ ვუცდი ამ აფდეითს! 😍",
+            "ეს უკვე ლეგენდარულია! 🏆",
+            "რა მაგარი დიზაინია! 🎨",
+            "თამაში კიდევ უფრო გამაგრდება! 💪",
+            "ფანებს ეს მოეწონებათ! ❤️",
+            "ეს ყველაფერს შეცვლის! 🌟",
+            "წარმოუდგენელი კონტენტი მოდის! 🚀",
+            "ამას ყველა ელოდებოდა! 👀",
+            "რა ლამაზია, მომწონს! ✨",
+            "ახალი ეპოქა იწყება! 🌍",
+            "დეველოპერებმა იმუშავეს! 👏",
+            "ტოპ განახლება მოემზადეთ! 🎯"
+        ];
+
+        window.importLeaks = async function () {
+            try {
+                log('📡 Fandom Wiki-დან leak-ების წამოღება...');
+
+                // 1. Fetch wikitext
+                const resp = await fetch(`${FANDOM_API}?action=parse&page=Leaks&format=json&prop=wikitext&origin=*`);
+                const data = await resp.json();
+                const wikitext = data.parse.wikitext['*'];
+
+                // 2. Parse all leaks
+                const entries = [];
+                const regex = /File:([^\|]+)\|(.+)/g;
+                let match;
+                while ((match = regex.exec(wikitext)) !== null) {
+                    entries.push({
+                        filename: match[1].trim(),
+                        description: match[2].trim().replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link)
+                    });
+                }
+
+                log(`📋 სულ ${entries.length} leak მოიძებნა`);
+
+                // 3. Take last 15
+                const last15 = entries.slice(-15);
+
+                // 4. Check existing
+                const existing = await sql`SELECT title FROM news WHERE category = 'Leak 🔮'`;
+                const existingSet = new Set(existing.map(e => e.title.toLowerCase().trim()));
+
+                // 5. Create dates — spread over last 15 days, oldest first
+                // last15[0] = oldest → 15 days ago
+                // last15[14] = newest → today
+                const now = new Date();
+
+                let addedCount = 0;
+
+                for (let i = 0; i < last15.length; i++) {
+                    const leak = last15[i];
+                    const title = `🔮 ახალი ლიკი: ${leak.description}`;
+
+                    if (existingSet.has(title.toLowerCase().trim())) {
+                        log(`⏭️ უკვე არსებობს: ${leak.description}`);
+                        continue;
+                    }
+
+                    log(`🖼️ [${i + 1}/15] სურათის მიღება: ${leak.filename}...`);
+                    const imageUrl = await getImageUrl(leak.filename);
+
+                    const opinion = opinions[i % opinions.length];
+
+                    const content = `
+                        <p><strong>${leak.description}</strong> — ახალი ლიკი გამოჩნდა!</p>
+                        <p>💬 <em>ავტო-მოდერატორის აზრი:</em> <strong>${opinion}</strong></p>
+                        <p>წყარო: <a href="https://stealabrainrot.fandom.com/wiki/Leaks" target="_blank">Steal a Brainrot Fandom Wiki</a></p>
+                        <p style="opacity:0.5;font-size:0.85em;">🔮 ავტომატურად სინქრონიზებულია</p>
+                    `;
+
+                    // Date: oldest leak = 15 days ago, newest = now
+                    // Spread evenly: index 0 = -15 days, index 14 = 0 days
+                    const daysAgo = (last15.length - 1 - i);
+                    const hoursOffset = Math.floor(Math.random() * 12); // random hour within the day
+                    const leakDate = new Date(now);
+                    leakDate.setDate(leakDate.getDate() - daysAgo);
+                    leakDate.setHours(8 + hoursOffset, Math.floor(Math.random() * 60), 0);
+                    const dateStr = leakDate.toISOString();
+
+                    await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${title}, ${content}, ${imageUrl}, ${''}, ${'Leak 🔮'}, ${dateStr})`;
+
+                    log(`✅ [${i + 1}/15] დაემატა: "${leak.description}" — ${leakDate.toLocaleDateString()}`);
+                    addedCount++;
+                }
+
+                log('');
+                log(`🎉 დასრულდა! ${addedCount} leak დაემატა ბაზაში.`);
+                log('ახლა შეგიძლია ეს ფაილი წაშალო და საიტზე შეამოწმო!');
+
+            } catch (e) {
+                log(`❌ შეცდომა: ${e.message}`);
+                console.error(e);
+            }
+        };
+    </script>
+</body>
+
+</html>

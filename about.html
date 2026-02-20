@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ჩვენ შესახებ — TILO.LIFE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="news.css">
+    <style>
+        .about-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+            color: var(--news-text);
+            line-height: 1.8;
+        }
+
+        .about-container h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .about-container h2 {
+            font-size: 1.3rem;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            color: var(--news-primary);
+        }
+
+        .about-container p {
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .about-container a {
+            color: var(--news-primary);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: var(--news-primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .contact-box {
+            background: var(--news-card-bg);
+            border: 1px solid var(--news-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .contact-box p {
+            margin: 8px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: var(--news-card-bg);
+            border: 1px solid var(--news-border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .feature-card .emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .feature-card p {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body class="news-portal dark-mode">
+    <div class="about-container">
+        <a href="index.html" class="back-link">← მთავარ გვერდზე დაბრუნება</a>
+        <h1>🌐 TILO.LIFE-ის შესახებ</h1>
+
+        <p>TILO.LIFE არის ქართული გეიმინგ და სიახლეების პორტალი, რომელიც აერთიანებს თამაშის სიყვარულს, საზოგადოებას და
+            უახლეს ინფორმაციას ერთ სივრცეში.</p>
+
+        <h2>🎯 ჩვენი მისია</h2>
+        <p>შევქმნათ საუკეთესო ქართულენოვანი გეიმინგ პლატფორმა, სადაც მოთამაშეები იპოვიან უახლეს სიახლეებს, ითამაშებენ
+            მინი-თამაშებს და გაერთიანდებიან საზოგადოებაში.</p>
+
+        <h2>✨ რას გთავაზობთ</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="emoji">📰</div>
+                <h3>სიახლეები</h3>
+                <p>უახლესი ამბები და Leak-ები თამაშის სამყაროდან</p>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">🎮</div>
+                <h3>TILO WORLD</h3>
+                <p>ინტერაქტიული მინი-თამაში ქოინების დაგროვებით</p>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">⚔️</div>
+                <h3>დუელები</h3>
+                <p>შეჯიბრი მეგობრებთან რეალურ დროში</p>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">💬</div>
+                <h3>ჩატი</h3>
+                <p>ლაივ ჩატი საზოგადოებასთან კომუნიკაციისთვის</p>
+            </div>
+        </div>
+
+        <h2>📬 კონტაქტი</h2>
+        <div class="contact-box">
+            <p>📧 <strong>ელ-ფოსტა:</strong> contact@tilo.life</p>
+            <p>🎮 <strong>Discord:</strong> <a href="https://discord.gg/" target="_blank">TILO Community Server</a></p>
+            <p>🌐 <strong>საიტი:</strong> <a href="https://tilo.life">tilo.life</a></p>
+        </div>
+
+        <h2>⚖️ სამართლებრივი ინფორმაცია</h2>
+        <p>📄 <a href="privacy.html">კონფიდენციალურობის პოლიტიკა</a></p>
+        <p>ეს საიტი იყენებს Google AdSense-ს სარეკლამო მომსახურებისთვის. ყველა სავაჭრო ნიშანი და ინტელექტუალური
+            საკუთრება ეკუთვნის მათ შესაბამის მფლობელებს.</p>
+    </div>
+</body>
+
+</html>
