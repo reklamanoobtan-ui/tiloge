@@ -211,7 +211,7 @@
     <footer class="news-footer">
         <div class="footer-container">
             <h2 class="logo-text">TILO<span>.LIFE</span></h2>
-            <p style="opacity: 0.6; margin-top: 10px;">ყველა უფლება დაცულია &copy; 2024</p>
+            <p style="opacity: 0.6; margin-top: 10px;">ყველა უფლება დაცულია &copy; 2026</p>
 
             <div class="footer-counters">
                 <!-- TOP.GE ASYNC COUNTER CODE -->
@@ -225,6 +225,25 @@
                 <script async src="//waust.at/d.js"></script>
                 <!-- / END OF WAUST.AT COUNTER CODE -->
             </div>
+
+            <div
+                style="margin-top:20px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size: 0.85rem;">
+                <a href="privacy.html" style="color:var(--news-primary); text-decoration:none;">🔒 კონფიდენციალურობა</a>
+                <a href="about.html" style="color:var(--news-primary); text-decoration:none;">🌐 ჩვენ შესახებ</a>
+                <a href="mailto:contact@tilo.life" style="color:var(--news-primary); text-decoration:none;">📧
+                    კონტაქტი</a>
+            </div>
+
+            <!-- Fix to ensure counter links open in new tab -->
+            <script>
+                setInterval(() => {
+                    document.querySelectorAll('.footer-counters a').forEach(a => {
+                        if (a.getAttribute('target') !== '_blank') {
+                            a.setAttribute('target', '_blank');
+                        }
+                    });
+                }, 3000);
+            </script>
         </div>
     </footer>
 
@@ -297,16 +316,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer
-        style="text-align:center; padding:30px 20px; margin-top:40px; border-top:1px solid var(--news-border); font-size:0.8rem; opacity:0.6; color:var(--news-text);">
-        <p>© 2026 TILO.LIFE — ყველა უფლება დაცულია</p>
-        <div style="margin-top:8px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
-            <a href="privacy.html" style="color:var(--news-primary); text-decoration:none;">🔒 კონფიდენციალურობა</a>
-            <a href="about.html" style="color:var(--news-primary); text-decoration:none;">🌐 ჩვენ შესახებ</a>
-            <a href="mailto:contact@tilo.life" style="color:var(--news-primary); text-decoration:none;">📧 კონტაქტი</a>
-        </div>
-    </footer>
+
 
     <script type="module" src="portal.js"></script>
 </body>
