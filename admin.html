@@ -2979,18 +2979,22 @@
                 const entries = [];
 
                 if (source.type === 'leaks') {
-                    // Match [[File:Name|...|Description]] OR File:Name|Description
                     const regex = /File:([^\|\]\n]+)\|([^\]\n]+)/g;
                     let match;
                     while ((match = regex.exec(wikitext)) !== null) {
                         const filename = match[1].split('|')[0].trim();
                         let desc = match[2].trim();
-                        // Clean up description (remove nested links)
-                        desc = desc.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link);
-                        // Remove common wiki formatting
-                        desc = desc.replace(/thumb|center|px|\|/g, '').trim();
 
-                        entries.push({ filename, description: desc });
+                        let postDate = new Date();
+                        const dateMatch = desc.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.? (\d+)/i);
+                        if (dateMatch) {
+                            const months = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+                            postDate = new Date(new Date().getFullYear(), months[dateMatch[1].toLowerCase().substring(0, 3)], parseInt(dateMatch[2]), 12, 0, 0);
+                        }
+
+                        desc = desc.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link);
+                        desc = desc.replace(/thumb|center|px|\|/g, '').trim();
+                        entries.push({ filename, description: desc, date: postDate });
                     }
                 } else if (source.type === 'updates') {
                     const rows = wikitext.split('|-');
@@ -3003,11 +3007,20 @@
 
                             const titleMatch = nameCell.match(/'''(.+?)'''/);
                             const title = titleMatch ? titleMatch[1] : nameCell.split('\n')[0].replace(/\[\[.+?\]\]/g, '').trim();
-                            const fileMatch = nameCell.match(/File:([^\|\]\n ]+)/);
+                            const fileMatch = nameCell.match(/File:([^\|\]\n]+)/);
+
+                            let postDate = new Date();
+                            const dateMatch = nameCell.match(/(\d{1,2})\/(\d{1,2})\/(''')?(\d{2,4})/);
+                            if (dateMatch) {
+                                let y = parseInt(dateMatch[4]);
+                                if (y < 100) y += 2000;
+                                postDate = new Date(y, parseInt(dateMatch[1]) - 1, parseInt(dateMatch[2]), 12, 0, 0);
+                            }
 
                             entries.push({
-                                filename: fileMatch ? fileMatch[1].trim() : '',
-                                description: `${title}: ${descCell.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link).trim()}`
+                                filename: fileMatch ? fileMatch[1].split('|')[0].trim() : '',
+                                description: `${title}: ${descCell.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link).trim()}`,
+                                date: postDate
                             });
                         }
                     }
@@ -3074,7 +3087,7 @@
                             <p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური სინქრონიზაცია</p>
                         `;
 
-                        const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}) RETURNING id`;
+                        const res = await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${entry.date || new Date()}) RETURNING id`;
 
                         const webhookUrl = localStorage.getItem('admin_discord_webhook');
                         if (webhookUrl) {
