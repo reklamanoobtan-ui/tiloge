@@ -1402,7 +1402,11 @@
                             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                                 <button class="btn btn-primary" id="sync-fandom-btn"
                                     style="background: #f9a825; border: none; color: #000; font-weight: 700;">
-                                    🔄 Sync All Now (ბოლო 3-3)
+                                    🔄 Sync All Now (ბოლო 3)
+                                </button>
+                                <button class="btn btn-outline" id="deep-sync-fandom-btn"
+                                    style="border-color: #f9a825; color: #f9a825; font-weight: 700;">
+                                    📅 Deep Sync (ბოლო 50)
                                 </button>
                                 <label
                                     style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
@@ -2946,13 +2950,22 @@
                         latest = allEntries.slice(0, count);
                     }
 
-                    const existing = await sql`SELECT title FROM news WHERE category = ${source.category} ORDER BY created_at DESC LIMIT 50`;
-                    const existingTitles = new Set(existing.map(e => e.title.toLowerCase().trim()));
+                    // Get existing titles AND their IDs to allow updating dates
+                    const existing = await sql`SELECT id, title, created_at FROM news WHERE category = ${source.category} ORDER BY created_at DESC LIMIT 100`;
+                    const existingMap = new Map();
+                    existing.forEach(e => existingMap.set(e.title.toLowerCase().trim(), e));
 
                     for (const entry of latest) {
                         const fullTitle = `${source.prefix} ${entry.description}`;
-                        if (existingTitles.has(fullTitle.toLowerCase().trim())) {
-                            // fandomLog(`⏭️ არსებობს: ${source.id}`, '#888');
+                        const key = fullTitle.toLowerCase().trim();
+
+                        if (existingMap.get(key)) {
+                            // Smart Update: If entry exists but has a different date, update it to fix ordering
+                            const dbItem = existingMap.get(key);
+                            if (entry.date && new Date(dbItem.created_at).toDateString() !== new Date(entry.date).toDateString()) {
+                                await sql`UPDATE news SET created_at = ${entry.date} WHERE id = ${dbItem.id}`;
+                                fandomLog(`🔄 თარიღი გასწორდა: ${entry.description.slice(0, 20)}...`, '#3498db');
+                            }
                             continue;
                         }
 
@@ -2969,7 +2982,7 @@
                             <p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური სინქრონიზაცია</p>
                         `;
 
-                        const res = await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${entry.date || new Date()}) RETURNING id`;
+                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${entry.date || new Date()}) RETURNING id`;
                         totalAdded++;
                         fandomLog(`✅ დაემატა (${source.id}): ${entry.description.slice(0, 30)}...`, '#4caf50');
                     }
@@ -2987,8 +3000,9 @@
             }
         }
 
-        // Sync button — manual: last 3
+        // Sync buttons
         get('sync-fandom-btn').onclick = () => syncFandomAll(3);
+        get('deep-sync-fandom-btn').onclick = () => syncFandomAll(50);
 
         // Auto-sync toggle
         const autoSyncToggle = get('fandom-auto-sync-toggle');
