@@ -3031,10 +3031,14 @@
                         const itemDate = new Date(entry.date || new Date());
                         itemDate.setSeconds(itemDate.getSeconds() - (offset++));
 
+                        // Ensure date is valid and capped at NOW()
+                        let finalDate = itemDate;
+                        if (finalDate > new Date()) finalDate = new Date();
+
                         if (existingMap.get(key)) {
                             const dbItem = existingMap.get(key);
-                            if (entry.date && new Date(dbItem.created_at).toDateString() !== new Date(itemDate).toDateString()) {
-                                await sql`UPDATE news SET created_at = ${itemDate} WHERE id = ${dbItem.id}`;
+                            if (new Date(dbItem.created_at).getTime() !== finalDate.getTime()) {
+                                await sql`UPDATE news SET created_at = ${finalDate} WHERE id = ${dbItem.id}`;
                                 fandomLog(`🔄 თარიღი გასწორდა: ${entry.description.slice(0, 20)}...`, '#3498db');
                             }
                             continue;
@@ -3053,7 +3057,7 @@
                             <p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური სინქრონიზაცია</p>
                         `;
 
-                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${itemDate}) RETURNING id`;
+                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${finalDate}) RETURNING id`;
                         totalAdded++;
                         fandomLog(`✅ დაემატა (${source.id}): ${entry.description.slice(0, 30)}...`, '#4caf50');
                     }

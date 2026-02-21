@@ -49,7 +49,7 @@ function updateAuthUI() {
     }
 }
 
-const ITEMS_PER_PAGE = 4;
+let ITEMS_PER_PAGE = 10;
 let currentPage = 1;
 let allNewsCache = [];
 
@@ -57,8 +57,10 @@ async function loadNews() {
     try {
         let news;
         if (currentCategory && currentCategory !== 'მთავარი') {
+            ITEMS_PER_PAGE = 14;
             news = await sql`SELECT * FROM news WHERE category = ${currentCategory} ORDER BY created_at DESC, id DESC`;
         } else {
+            ITEMS_PER_PAGE = 10;
             news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC`;
         }
         allNewsCache = news;
