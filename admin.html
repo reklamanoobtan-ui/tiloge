@@ -1455,14 +1455,32 @@
                     </div>
 
                     <div class="card" style="grid-column: span 3;">
-                        <h3>📋 არსებული სიახლეები</h3>
-                        <div style="margin-top: 20px;">
-                            <button class="btn btn-outline" onclick="loadAdminNews()"
-                                style="margin-bottom: 15px; font-size: 0.8rem;">🔄 განახლება</button>
-                            <div id="admin-news-list"
-                                style="display: grid; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
-                                <!-- News items will load here -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>📋 არსებული სიახლეები</h3>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <select id="admin-news-filter" class="btn btn-outline"
+                                    style="background: rgba(0,0,0,0.3); padding: 5px 10px;" onchange="loadAdminNews()">
+                                    <option value="ყველა">📂 ყველა კატეგორია</option>
+                                    <option value="სთილი">სთილი</option>
+                                    <option value="ცუნამი">ცუნამი</option>
+                                    <option value="99 ღამე">99 ღამე</option>
+                                </select>
+                                <button class="btn btn-danger" id="bulk-delete-news-btn"
+                                    style="display: none; padding: 6px 12px; font-size: 0.8rem;"
+                                    onclick="bulkDeleteNews()">🗑️ მონიშნულების წაშლა</button>
+                                <button class="btn btn-outline" onclick="loadAdminNews()"
+                                    style="padding: 6px 12px; font-size: 0.8rem;">🔄 განახლება</button>
                             </div>
+                        </div>
+                        <div
+                            style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; opacity: 0.7;">
+                            <input type="checkbox" id="select-all-news" onclick="toggleSelectAllNews(this)">
+                            <label for="select-all-news">ყველას მონიშვნა</label>
+                        </div>
+                        <div id="admin-news-list"
+                            style="display: grid; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
+                            <!-- News items will load here -->
                         </div>
                     </div>
                 </div>
@@ -2498,22 +2516,66 @@
 
         window.loadAdminNews = async () => {
             try {
-                const news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC LIMIT 100`;
+                const categoryFilter = get('admin-news-filter').value;
+                let news;
+                if (categoryFilter === 'ყველა') {
+                    news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC LIMIT 200`;
+                } else {
+                    news = await sql`SELECT * FROM news WHERE category = ${categoryFilter} ORDER BY created_at DESC, id DESC LIMIT 200`;
+                }
+
                 const container = get('admin-news-list');
                 container.innerHTML = news.map(item => `
-                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
-                        <div style="flex: 1; overflow: hidden;">
-                            <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
-                            <div style="font-size: 0.75rem; opacity: 0.5; margin-top: 4px;">📅 ${new Date(item.created_at).toLocaleDateString()} | 🏷️ ${item.category}</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 15px; flex: 1; overflow: hidden;">
+                            <input type="checkbox" class="news-checkbox" value="${item.id}" onchange="updateBulkDeleteBtn()">
+                            <div style="overflow: hidden;">
+                                <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 2px;">📅 ${new Date(item.created_at).toLocaleDateString()} | 🏷️ ${item.category}</div>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-left: 15px;">
-
-                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="editAdminNews(${item.id})">✏️</button>
-                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAdminNews(${item.id})">🗑️</button>
+                        <div style="display: flex; gap: 6px; margin-left: 10px;">
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" onclick="editAdminNews(${item.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="deleteAdminNews(${item.id})">🗑️</button>
                         </div>
                     </div>
                 `).join('');
+
+                updateBulkDeleteBtn();
+                get('select-all-news').checked = false;
             } catch (e) { console.error(e); }
+        };
+
+        window.toggleSelectAllNews = (el) => {
+            const checkboxes = document.querySelectorAll('.news-checkbox');
+            checkboxes.forEach(cb => cb.checked = el.checked);
+            updateBulkDeleteBtn();
+        };
+
+        window.updateBulkDeleteBtn = () => {
+            const selected = document.querySelectorAll('.news-checkbox:checked').length;
+            const btn = get('bulk-delete-news-btn');
+            if (selected > 0) {
+                btn.style.display = 'block';
+                btn.textContent = `🗑️ მონიშნულების წაშლა (${selected})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        };
+
+        window.bulkDeleteNews = async () => {
+            const selected = Array.from(document.querySelectorAll('.news-checkbox:checked')).map(cb => parseInt(cb.value));
+            if (selected.length === 0) return;
+            if (!confirm(`ნამდვილად გსურთ ${selected.length} სიახლის წაშლა?`)) return;
+
+            try {
+                await sql`DELETE FROM news WHERE id IN ${selected}`;
+                log(`🗑️ ${selected.length} სიახლე წაიშალა`, 'var(--danger)');
+                loadAdminNews();
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა მასობრივი წაშლისას', 'red');
+            }
         };
 
 
