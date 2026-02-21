@@ -2569,7 +2569,7 @@
             if (!confirm(`ნამდვილად გსურთ ${selected.length} სიახლის წაშლა?`)) return;
 
             try {
-                await sql`DELETE FROM news WHERE id IN ${selected}`;
+                await sql`DELETE FROM news WHERE id = ANY(${selected})`;
                 log(`🗑️ ${selected.length} სიახლე წაიშალა`, 'var(--danger)');
                 loadAdminNews();
             } catch (e) {
