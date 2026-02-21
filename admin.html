@@ -1408,6 +1408,10 @@
                                     style="border-color: #f9a825; color: #f9a825; font-weight: 700;">
                                     📅 Deep Sync (ბოლო 50)
                                 </button>
+                                <button class="btn btn-primary" id="fix-sort-btn"
+                                    style="background: #2e7d32; border: none; font-weight: 700;">
+                                    🔧 სორტირების გასწორება
+                                </button>
                                 <label
                                     style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
                                     <input type="checkbox" id="fandom-auto-sync-toggle">
@@ -2494,7 +2498,7 @@
 
         window.loadAdminNews = async () => {
             try {
-                const news = await sql`SELECT * FROM news ORDER BY created_at DESC LIMIT 50`;
+                const news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC LIMIT 100`;
                 const container = get('admin-news-list');
                 container.innerHTML = news.map(item => `
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
@@ -2955,15 +2959,20 @@
                     const existingMap = new Map();
                     existing.forEach(e => existingMap.set(e.title.toLowerCase().trim(), e));
 
+                    // Use a sequential offset to ensure that even items on the same day have a stable order
+                    let offset = 0;
                     for (const entry of latest) {
                         const fullTitle = `${source.prefix} ${entry.description}`;
                         const key = fullTitle.toLowerCase().trim();
 
+                        // Add seconds to entry.date to ensure sequential order for same-day items
+                        const itemDate = new Date(entry.date || new Date());
+                        itemDate.setSeconds(itemDate.getSeconds() - (offset++));
+
                         if (existingMap.get(key)) {
-                            // Smart Update: If entry exists but has a different date, update it to fix ordering
                             const dbItem = existingMap.get(key);
-                            if (entry.date && new Date(dbItem.created_at).toDateString() !== new Date(entry.date).toDateString()) {
-                                await sql`UPDATE news SET created_at = ${entry.date} WHERE id = ${dbItem.id}`;
+                            if (entry.date && new Date(dbItem.created_at).toDateString() !== new Date(itemDate).toDateString()) {
+                                await sql`UPDATE news SET created_at = ${itemDate} WHERE id = ${dbItem.id}`;
                                 fandomLog(`🔄 თარიღი გასწორდა: ${entry.description.slice(0, 20)}...`, '#3498db');
                             }
                             continue;
@@ -2982,7 +2991,7 @@
                             <p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური სინქრონიზაცია</p>
                         `;
 
-                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${entry.date || new Date()}) RETURNING id`;
+                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${itemDate}) RETURNING id`;
                         totalAdded++;
                         fandomLog(`✅ დაემატა (${source.id}): ${entry.description.slice(0, 30)}...`, '#4caf50');
                     }
@@ -3003,6 +3012,7 @@
         // Sync buttons
         get('sync-fandom-btn').onclick = () => syncFandomAll(3);
         get('deep-sync-fandom-btn').onclick = () => syncFandomAll(50);
+        get('fix-sort-btn').onclick = () => syncFandomAll(100);
 
         // Auto-sync toggle
         const autoSyncToggle = get('fandom-auto-sync-toggle');

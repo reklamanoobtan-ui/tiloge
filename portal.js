@@ -57,9 +57,9 @@ async function loadNews() {
     try {
         let news;
         if (currentCategory && currentCategory !== 'მთავარი') {
-            news = await sql`SELECT * FROM news WHERE category = ${currentCategory} ORDER BY created_at DESC`;
+            news = await sql`SELECT * FROM news WHERE category = ${currentCategory} ORDER BY created_at DESC, id DESC`;
         } else {
-            news = await sql`SELECT * FROM news ORDER BY created_at DESC`;
+            news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC`;
         }
         allNewsCache = news;
         currentPage = 1;
