@@ -1421,7 +1421,6 @@
                             <div style="font-size: 0.75rem; opacity: 0.7; display: flex; gap: 10px; flex-wrap: wrap;">
                                 <span>• Steal a Brainrot (Leaks)</span>
                                 <span>• Escape Tsunami (Leaks)</span>
-                                <span>• 99 Nights (Update Log)</span>
                             </div>
                         </div>
                         <div id="fandom-sync-status"
@@ -1464,7 +1463,6 @@
                                     <option value="ყველა">📂 ყველა კატეგორია</option>
                                     <option value="სთილი">სთილი</option>
                                     <option value="ცუნამი">ცუნამი</option>
-                                    <option value="99 ღამე">99 ღამე</option>
                                 </select>
                                 <button class="btn btn-danger" id="bulk-delete-news-btn"
                                     style="display: none; padding: 6px 12px; font-size: 0.8rem;"
@@ -2890,8 +2888,7 @@
         // 🔮 FANDOM WIKI AUTO-SYNC (Multi-Source)
         const FANDOM_SOURCES = [
             { id: 'brainrot', api: 'https://stealabrainrot.fandom.com/api.php', url: 'https://stealabrainrot.fandom.com', page: 'Leaks', type: 'leaks', category: 'სთილი', prefix: '🔮 Brainrot ლიკი:' },
-            { id: 'tsunami', api: 'https://escape-tsunami-for-brainrots.fandom.com/api.php', url: 'https://escape-tsunami-for-brainrots.fandom.com', page: 'Leaks', type: 'leaks', category: 'ცუნამი', prefix: '🌊 Tsunami ლიკი:' },
-            { id: 'nights', api: 'https://99-nights-in-the-forest.fandom.com/api.php', url: 'https://99-nights-in-the-forest.fandom.com', page: 'Update_Log', type: 'updates', category: '99 ღამე', prefix: '🛠️ 99 Nights განახლება:' }
+            { id: 'tsunami', api: 'https://escape-tsunami-for-brainrots.fandom.com/api.php', url: 'https://escape-tsunami-for-brainrots.fandom.com', page: 'Leaks', type: 'leaks', category: 'ცუნამი', prefix: '🌊 Tsunami ლიკი:' }
         ];
         let fandomAutoSyncInterval = null;
 
