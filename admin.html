@@ -2629,18 +2629,44 @@
             // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
             window.loadAdminAbuse = async () => {
                 try {
-                    // Auto-fix schema check: Ensure 'id' is SERIAL
+                    // 1. Ensure table exists (Essential if setup was skipped)
+                    await sql`CREATE TABLE IF NOT EXISTS admin_abuse (
+                        id SERIAL PRIMARY KEY, 
+                        title TEXT, 
+                        image_url TEXT, 
+                        end_time TIMESTAMPTZ, 
+                        link_url TEXT, 
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )`;
+
+                    // 2. Ensure all columns exist (Legacy updates)
+                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
+
+                    // 3. Check for SERIAL id (Fix if it was created with plain INTEGER)
                     const schemaCheck = await sql`
-                    SELECT column_default 
-                    FROM information_schema.columns 
-                    WHERE table_name = 'admin_abuse' AND column_name = 'id'
-                `;
+                        SELECT column_default 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'admin_abuse' AND column_name = 'id'
+                    `;
 
                     if (schemaCheck.length > 0 && schemaCheck[0].column_default === null) {
-                        log('Fixing Admin Abuse Schema...', 'var(--accent)');
-                        await sql`DROP TABLE IF EXISTS admin_abuse`;
-                        await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
-                        log('✅ Schema Fixed!', 'green');
+                        log('Upgrading Admin Abuse Schema (Non-destructive)...', 'var(--accent)');
+                        // Instead of dropping, we alter. If it's too complex to alter, we warn.
+                        // But serial conversion is easier with a fresh table if data is sacrificeable.
+                        // However, let's try to keep it safe.
+                        try {
+                            await sql`CREATE SEQUENCE IF NOT EXISTS admin_abuse_id_seq`;
+                            await sql`ALTER TABLE admin_abuse ALTER COLUMN id SET DEFAULT nextval('admin_abuse_id_seq')`;
+                            await sql`SELECT setval('admin_abuse_id_seq', (SELECT MAX(id) FROM admin_abuse))`;
+                        } catch (se) {
+                            console.warn("Could not auto-upgrade sequence, fallback to recreate if empty");
+                            const count = await sql`SELECT count(*) FROM admin_abuse`;
+                            if (count[0].count === '0') {
+                                await sql`DROP TABLE IF EXISTS admin_abuse`;
+                                await sql`CREATE TABLE admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
+                            }
+                        }
                     }
 
                     const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
@@ -2881,9 +2907,10 @@
                     await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
                     await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
 
-                    // 5. Admin Abuse Table (Force Recreate for Schema Update)
-                    try { await sql`DROP TABLE IF EXISTS admin_abuse`; } catch (e) { }
+                    // 5. Admin Abuse Table (Non-destructive update)
                     await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
+                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
 
                     log('🎉 SETUP დასრულებულია!', 'green');
                     loadPlayers();
