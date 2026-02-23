@@ -2701,10 +2701,13 @@
             const id = get('edit-abuse-id').value;
             const title = get('abuse-title-input').value.trim();
             const img = get('abuse-image-input').value.trim();
-            const time = get('abuse-time-input').value;
+            const timeVal = get('abuse-time-input').value;
             const link = get('abuse-link-input').value.trim();
 
             if (!title) return alert('სათაური აუცილებელია!');
+
+            // Convert local time string to a proper Date object so the DB client handles UTC conversion
+            const time = timeVal ? new Date(timeVal) : null;
 
             try {
                 log(id ? 'ანახლებს...' : 'აქვეყნებს...', 'var(--primary)');
@@ -2717,7 +2720,7 @@
                     }
                     log('✅ წარმატებით განახლდა!', 'var(--accent)');
                 } else {
-                    await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) VALUES (${title}, ${img}, ${time || null}, ${link})`;
+                    await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) VALUES (${title}, ${img}, ${time}, ${link})`;
                     log('✅ წარმატებით გამოქვეყნდა!', 'var(--accent)');
                 }
 
