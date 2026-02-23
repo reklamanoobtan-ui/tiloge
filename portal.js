@@ -165,7 +165,14 @@ async function loadAdminAbuseSidebar() {
     if (!sidebar) return;
 
     try {
-        const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 5`;
+        const slots = await sql`
+            SELECT * FROM admin_abuse 
+            ORDER BY 
+                CASE WHEN end_time > NOW() THEN 0 ELSE 1 END, 
+                end_time ASC, 
+                created_at DESC 
+            LIMIT 5
+        `;
         sidebar.innerHTML = '';
 
         slots.forEach(s => {

@@ -2670,7 +2670,14 @@
                     }
                 }
 
-                const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
+                const slots = await sql`
+                    SELECT * FROM admin_abuse 
+                    ORDER BY 
+                        CASE WHEN end_time > NOW() THEN 0 ELSE 1 END, 
+                        end_time ASC, 
+                        created_at DESC 
+                    LIMIT 20
+                `;
                 const container = get('admin-abuse-list');
                 if (!container) return;
 
