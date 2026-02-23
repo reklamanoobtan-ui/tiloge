@@ -171,7 +171,7 @@ async function loadAdminAbuseSidebar() {
                 CASE WHEN end_time > NOW() THEN 0 ELSE 1 END, 
                 end_time ASC, 
                 created_at DESC 
-            LIMIT 5
+            LIMIT 3
         `;
         sidebar.innerHTML = '';
 
@@ -201,7 +201,8 @@ async function loadAdminAbuseSidebar() {
             sidebar.appendChild(el);
 
             // Timer interval
-            const updateTimer = () => {
+            let deleteTriggered = false;
+            const updateTimer = async () => {
                 const timerEl = get(timerId);
                 if (!timerEl) return;
 
@@ -217,6 +218,17 @@ async function loadAdminAbuseSidebar() {
                 if (diff <= 0) {
                     timerEl.textContent = "დასრულდა";
                     timerEl.style.color = "#ff4757";
+
+                    // Auto-delete after 1 minute
+                    if (!deleteTriggered) {
+                        deleteTriggered = true;
+                        setTimeout(async () => {
+                            try {
+                                await sql`DELETE FROM admin_abuse WHERE id = ${s.id}`;
+                                loadAdminAbuseSidebar();
+                            } catch (err) { console.error("Auto-delete error:", err); }
+                        }, 60000);
+                    }
                     return;
                 }
 
@@ -234,6 +246,15 @@ async function loadAdminAbuseSidebar() {
             updateTimer();
             setInterval(updateTimer, 1000);
         });
+
+        // Add "See All" button
+        if (slots.length > 0) {
+            const allBtn = document.createElement('a');
+            allBtn.href = 'all-abuse.html';
+            allBtn.style.cssText = 'display:block; text-align:center; padding:12px; margin-top:10px; background:rgba(0,102,204,0.1); border:1px dashed var(--news-primary); border-radius:12px; color:var(--news-primary); text-decoration:none; font-weight:800; font-size:0.85rem; transition:0.3s;';
+            allBtn.textContent = 'ნახეთ სრულად 📂';
+            sidebar.appendChild(allBtn);
+        }
 
         // --- MOBILE ABUSE LOGIC (2 Column Grid, Timer-Focused) ---
         if (window.innerWidth < 768) {
