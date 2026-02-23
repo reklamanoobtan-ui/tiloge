@@ -1496,815 +1496,816 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- COMMENTS TAB -->
-                <div id="tab-comments" class="tab-content">
-                    <div class="header-bar">
-                        <h2>💬 კომენტარების მართვა</h2>
-                        <button class="btn btn-outline" onclick="loadAdminComments()">🔄 განახლება</button>
-                    </div>
-
-                    <div class="dashboard-grid" style="display: block;">
-                        <div class="card">
-                            <h3>ყველა კომენტარი</h3>
-                            <div id="admin-comments-list" style="margin-top: 20px; display: grid; gap: 15px;">
-                                <!-- Comments will load here -->
-                            </div>
-                        </div>
-                    </div>
+            <!-- COMMENTS TAB -->
+            <div id="tab-comments" class="tab-content">
+                <div class="header-bar">
+                    <h2>💬 კომენტარების მართვა</h2>
+                    <button class="btn btn-outline" onclick="loadAdminComments()">🔄 განახლება</button>
                 </div>
 
-                <!-- CRITICAL TAB -->
-                <div id="tab-critical" class="tab-content">
-                    <div class="header-bar">
-                        <h2 style="color: var(--danger);">⚠️ კრიტიკული მოქმედებები</h2>
-                    </div>
-                    <div class="dashboard-grid">
-                        <div class="card" style="border-color: var(--accent);">
-                            <h3 style="color: var(--accent);">🚀 DATABASE SETUP</h3>
-                            <p style="opacity: 0.6; margin-bottom: 20px;">ახალი Database-ის გამართვა და ცხრილების შექმნა
-                                ერთ
-                                კლიკში.</p>
-                            <button class="btn btn-gold full-width" id="run-setup-btn">RUN SETUP SCRIPT</button>
+                <div class="dashboard-grid" style="display: block;">
+                    <div class="card">
+                        <h3>ყველა კომენტარი</h3>
+                        <div id="admin-comments-list" style="margin-top: 20px; display: grid; gap: 15px;">
+                            <!-- Comments will load here -->
                         </div>
-                        <div class="card" style="border-color: var(--danger);">
-                            <h3 style="color: var(--danger);">🔥 SITE RESTART</h3>
-                            <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის გვერდის გადატვირთვა და
-                                სესიების
-                                გაწყვეტა.</p>
-                            <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
-                        </div>
-                        <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
-                            <h3 style="color: var(--danger);">🧹 WIPE DATA</h3>
-                            <p style="opacity: 0.6; margin-bottom: 20px;">პროგრესის ან მთლიანი ბაზის გასუფთავება.</p>
-                            <button class="btn btn-gold full-width" id="reset-scores-only-btn"
-                                style="margin-bottom: 10px;">🏆 მხოლოდ ქულების დარესტარტება</button>
-                            <button class="btn btn-danger full-width" id="wipe-progress-btn"
-                                style="margin-bottom: 10px;">RESET
-                                PROGRESS (Keep Accounts)</button>
-                            <button class="btn btn-danger full-width" id="full-wipe-btn"
-                                style="margin-bottom: 10px; background: #ff0000; border: 2px solid white;">🔥 FULL RESET
-                                (Delete All
-                                Accounts)</button>
-                            <button class="btn btn-outline full-width" id="drop-vip-col-btn"
-                                style="border-color: #ffd700; color: #ffd700;">🗑️ DROP LEGACY VIP COLUMN</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ADMIN ABUSE TAB -->
-                <div id="tab-abuse" class="tab-content">
-                    <div class="header-bar">
-                        <h2 id="abuse-form-title">💠 ADMIN ABUSE მართვა</h2>
-                    </div>
-
-                    <div class="dashboard-grid">
-                        <div class="card" style="border-color: var(--news-primary);">
-                            <input type="hidden" id="edit-abuse-id">
-                            <label>სლოტის სათაური</label>
-                            <input type="text" id="abuse-title-input" placeholder="შეიყვანეთ სათაური...">
-
-                            <label>სურათის ლინკი</label>
-                            <input type="text" id="abuse-image-input" placeholder="https://...">
-
-                            <label>დასრულების დრო (Countdown)</label>
-                            <input type="datetime-local" id="abuse-time-input">
-
-                            <label>გადასასვლელი ლინკი</label>
-                            <input type="text" id="abuse-link-input" placeholder="https://...">
-
-                            <div class="flex-row mt-10" style="gap: 10px;">
-                                <button class="btn btn-primary" id="publish-abuse-btn" onclick="publishAbuseItem()"
-                                    style="flex:2;">🚀 გამოქვეყნება</button>
-                                <button class="btn btn-outline hidden" id="cancel-abuse-edit-btn"
-                                    onclick="resetAbuseForm()" style="flex:1;">გაუქმება</button>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3>📋 არსებული სლოტები (ბოლო 10)</h3>
-                            <div id="admin-abuse-list"
-                                style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-                                <!-- Items list -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CONSOLE TAB -->
-                <div id="tab-console" class="tab-content">
-                    <div class="header-bar">
-                        <h2>💻 სისტემური კონსოლი</h2>
-                        <button class="btn btn-danger" onclick="clearConsole()">🗑️ გასუფთავება</button>
-                    </div>
-                    <div id="console-output"
-                        style="background: #1e1e1e; color: #d4d4d4; padding: 15px; height: 500px; overflow-y: scroll; font-family: 'Courier New', monospace; border-radius: 10px; border: 1px solid #333; font-size: 0.9rem;">
-                        <div style="color: #6a9955;">[INFO] სისტემა მზადაა...</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Status Messages -->
-        <div id="status-msg"></div>
-
-        <!-- Edit User Modal -->
-        <div id="edit-user-modal" class="modal-overlay hidden">
-            <div class="modal">
-                <h2 style="margin-bottom: 20px;">✏️ მომხმარებლის რედაქტირება</h2>
-                <div class="mini-card" style="margin-bottom: 10px;">
-                    <span class="mini-label">ნიკნეიმი</span>
-                    <input type="text" id="edit-user-nick" class="search-input" style="width: 100%;">
+            <!-- CRITICAL TAB -->
+            <div id="tab-critical" class="tab-content">
+                <div class="header-bar">
+                    <h2 style="color: var(--danger);">⚠️ კრიტიკული მოქმედებები</h2>
                 </div>
-                <div class="mini-card" style="margin-bottom: 10px;">
-                    <span class="mini-label">იმეილი (არ იცვლება)</span>
-                    <input type="text" id="edit-user-email" class="search-input" style="width: 100%; opacity: 0.5;"
-                        readonly>
-                </div>
-                <div class="dashboard-grid" style="margin-bottom: 15px;">
-                    <div class="mini-card">
-                        <span class="mini-label">⭐ ქულა</span>
-                        <input type="number" id="edit-user-score" class="search-input" style="width: 100%;">
+                <div class="dashboard-grid">
+                    <div class="card" style="border-color: var(--accent);">
+                        <h3 style="color: var(--accent);">🚀 DATABASE SETUP</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ახალი Database-ის გამართვა და ცხრილების შექმნა
+                            ერთ
+                            კლიკში.</p>
+                        <button class="btn btn-gold full-width" id="run-setup-btn">RUN SETUP SCRIPT</button>
                     </div>
-                    <div class="mini-card">
-                        <span class="mini-label">🪙 ბალანსი</span>
-                        <input type="number" id="edit-user-coins" class="search-input" style="width: 100%;">
+                    <div class="card" style="border-color: var(--danger);">
+                        <h3 style="color: var(--danger);">🔥 SITE RESTART</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">ყველა მოთამაშის გვერდის გადატვირთვა და
+                            სესიების
+                            გაწყვეტა.</p>
+                        <button class="btn btn-danger full-width" id="restart-site">RESTART NOW</button>
                     </div>
-                    <div class="mini-card">
-                        <span class="mini-label">💰 სულ ქოინები</span>
-                        <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
+                    <div class="card" style="border-color: var(--danger); background: rgba(255, 77, 77, 0.05);">
+                        <h3 style="color: var(--danger);">🧹 WIPE DATA</h3>
+                        <p style="opacity: 0.6; margin-bottom: 20px;">პროგრესის ან მთლიანი ბაზის გასუფთავება.</p>
+                        <button class="btn btn-gold full-width" id="reset-scores-only-btn"
+                            style="margin-bottom: 10px;">🏆 მხოლოდ ქულების დარესტარტება</button>
+                        <button class="btn btn-danger full-width" id="wipe-progress-btn"
+                            style="margin-bottom: 10px;">RESET
+                            PROGRESS (Keep Accounts)</button>
+                        <button class="btn btn-danger full-width" id="full-wipe-btn"
+                            style="margin-bottom: 10px; background: #ff0000; border: 2px solid white;">🔥 FULL RESET
+                            (Delete All
+                            Accounts)</button>
+                        <button class="btn btn-outline full-width" id="drop-vip-col-btn"
+                            style="border-color: #ffd700; color: #ffd700;">🗑️ DROP LEGACY VIP COLUMN</button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Ban Management -->
-                <div id="ban-management-section"
-                    style="margin-bottom: 20px; padding: 15px; border: 1px dashed var(--danger); border-radius: 12px; display: none;">
-                    <h4 style="color: var(--danger); margin-bottom: 10px;">🛑 მომხმარებელი დაბლოკილია!</h4>
-                    <p id="ban-info" style="font-size: 0.8rem; margin-bottom: 15px; opacity: 0.7;"></p>
-                    <button class="btn btn-outline" style="border-color: #00ff00; color: #00ff00; width: 100%;"
-                        onclick="removeBan()">✅ ბანის/ტაიმაუტის მოხსნა</button>
+            <!-- ADMIN ABUSE TAB -->
+            <div id="tab-abuse" class="tab-content">
+                <div class="header-bar">
+                    <h2 id="abuse-form-title">💠 ADMIN ABUSE მართვა</h2>
                 </div>
 
-                <!-- Ban Creation -->
-                <div id="ban-create-section" style="margin-bottom: 20px;">
-                    <button class="btn btn-danger"
-                        style="width: 100%; background: rgba(255, 0, 0, 0.1); border: 1px solid var(--danger);"
-                        onclick="moderateUser(get('edit-user-email').value, 'ban')">🚫 მომხმარებლის დაბლოკვა
-                        (BAN)</button>
-                </div>
+                <div class="dashboard-grid">
+                    <div class="card" style="border-color: var(--news-primary);">
+                        <input type="hidden" id="edit-abuse-id">
+                        <label>სლოტის სათაური</label>
+                        <input type="text" id="abuse-title-input" placeholder="შეიყვანეთ სათაური...">
 
-                <div class="flex-row gap-10">
-                    <button class="btn btn-primary" style="flex: 2" onclick="saveUserEdit()">შენახვა</button>
-                    <button class="btn btn-outline" style="flex: 1"
-                        onclick="get('edit-user-modal').classList.add('hidden')">გაუქმება</button>
+                        <label>სურათის ლინკი</label>
+                        <input type="text" id="abuse-image-input" placeholder="https://...">
+
+                        <label>დასრულების დრო (Countdown)</label>
+                        <input type="datetime-local" id="abuse-time-input">
+
+                        <label>გადასასვლელი ლინკი</label>
+                        <input type="text" id="abuse-link-input" placeholder="https://...">
+
+                        <div class="flex-row mt-10" style="gap: 10px;">
+                            <button class="btn btn-primary" id="publish-abuse-btn" onclick="publishAbuseItem()"
+                                style="flex:2;">🚀 გამოქვეყნება</button>
+                            <button class="btn btn-outline hidden" id="cancel-abuse-edit-btn" onclick="resetAbuseForm()"
+                                style="flex:1;">გაუქმება</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📋 არსებული სლოტები (ბოლო 10)</h3>
+                        <div id="admin-abuse-list"
+                            style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <!-- Items list -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONSOLE TAB -->
+            <div id="tab-console" class="tab-content">
+                <div class="header-bar">
+                    <h2>💻 სისტემური კონსოლი</h2>
+                    <button class="btn btn-danger" onclick="clearConsole()">🗑️ გასუფთავება</button>
+                </div>
+                <div id="console-output"
+                    style="background: #1e1e1e; color: #d4d4d4; padding: 15px; height: 500px; overflow-y: scroll; font-family: 'Courier New', monospace; border-radius: 10px; border: 1px solid #333; font-size: 0.9rem;">
+                    <div style="color: #6a9955;">[INFO] სისტემა მზადაა...</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script type="module">
-            import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
-            const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
+    <!-- Status Messages -->
+    <div id="status-msg"></div>
 
-            const get = (id) => document.getElementById(id);
-            const status = get('status-msg');
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="margin-bottom: 20px;">✏️ მომხმარებლის რედაქტირება</h2>
+            <div class="mini-card" style="margin-bottom: 10px;">
+                <span class="mini-label">ნიკნეიმი</span>
+                <input type="text" id="edit-user-nick" class="search-input" style="width: 100%;">
+            </div>
+            <div class="mini-card" style="margin-bottom: 10px;">
+                <span class="mini-label">იმეილი (არ იცვლება)</span>
+                <input type="text" id="edit-user-email" class="search-input" style="width: 100%; opacity: 0.5;"
+                    readonly>
+            </div>
+            <div class="dashboard-grid" style="margin-bottom: 15px;">
+                <div class="mini-card">
+                    <span class="mini-label">⭐ ქულა</span>
+                    <input type="number" id="edit-user-score" class="search-input" style="width: 100%;">
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">🪙 ბალანსი</span>
+                    <input type="number" id="edit-user-coins" class="search-input" style="width: 100%;">
+                </div>
+                <div class="mini-card">
+                    <span class="mini-label">💰 სულ ქოინები</span>
+                    <input type="number" id="edit-user-total-coins" class="search-input" style="width: 100%;">
+                </div>
+            </div>
 
-            function log(msg, color = 'var(--primary)') {
-                status.textContent = msg;
-                status.style.display = 'block';
-                status.style.borderLeft = `5px solid ${color}`;
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 4000);
-            }
+            <!-- Ban Management -->
+            <div id="ban-management-section"
+                style="margin-bottom: 20px; padding: 15px; border: 1px dashed var(--danger); border-radius: 12px; display: none;">
+                <h4 style="color: var(--danger); margin-bottom: 10px;">🛑 მომხმარებელი დაბლოკილია!</h4>
+                <p id="ban-info" style="font-size: 0.8rem; margin-bottom: 15px; opacity: 0.7;"></p>
+                <button class="btn btn-outline" style="border-color: #00ff00; color: #00ff00; width: 100%;"
+                    onclick="removeBan()">✅ ბანის/ტაიმაუტის მოხსნა</button>
+            </div>
 
-            // --- Tabs Logic ---
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.onclick = () => {
-                    const target = item.dataset.tab;
+            <!-- Ban Creation -->
+            <div id="ban-create-section" style="margin-bottom: 20px;">
+                <button class="btn btn-danger"
+                    style="width: 100%; background: rgba(255, 0, 0, 0.1); border: 1px solid var(--danger);"
+                    onclick="moderateUser(get('edit-user-email').value, 'ban')">🚫 მომხმარებლის დაბლოკვა
+                    (BAN)</button>
+            </div>
 
-                    // Update nav
-                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
+            <div class="flex-row gap-10">
+                <button class="btn btn-primary" style="flex: 2" onclick="saveUserEdit()">შენახვა</button>
+                <button class="btn btn-outline" style="flex: 1"
+                    onclick="get('edit-user-modal').classList.add('hidden')">გაუქმება</button>
+            </div>
+        </div>
+    </div>
 
-                    // Update content
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    get(`tab-${target}`).classList.add('active');
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+        const sql = neon("postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require");
 
-                    // Auto-load if entering tab
-                    if (target === 'players') loadPlayers();
-                    if (target === 'online') loadOnlinePlayers();
-                    if (target === 'comments') loadAdminComments();
-                    if (target === 'abuse') loadAdminAbuse();
-                };
-            });
+        const get = (id) => document.getElementById(id);
+        const status = get('status-msg');
 
-            // Console Logic
-            async function updateConsole() {
-                try {
-                    const logs = await sql`SELECT * FROM chat_messages WHERE nickname = 'SYSTEM_LOG' ORDER BY created_at DESC LIMIT 50`;
-                    const output = get('console-output');
-                    if (!output) return;
-                    output.innerHTML = '';
-                    logs.forEach(log => {
-                        const parts = log.message.split('|');
-                        let level = 'INFO';
-                        let msg = log.message;
-                        if (parts.length > 1) { level = parts[0]; msg = parts.slice(1).join('|'); }
+        function log(msg, color = 'var(--primary)') {
+            status.textContent = msg;
+            status.style.display = 'block';
+            status.style.borderLeft = `5px solid ${color}`;
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 4000);
+        }
 
-                        let color = '#d4d4d4';
-                        if (level === 'ERROR') color = '#f44336';
-                        if (level === 'WARN') color = '#ff9800';
-                        if (level === 'SUCCESS') color = '#4caf50';
+        // --- Tabs Logic ---
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.onclick = () => {
+                const target = item.dataset.tab;
 
-                        const time = new Date(log.created_at).toLocaleTimeString();
-                        const line = document.createElement('div');
-                        line.style.borderBottom = '1px solid #333';
-                        line.style.padding = '4px 0';
-                        line.innerHTML = `<span style="color: #666;">[${time}]</span> <span style="font-weight:bold; color:${color}">[${level}]</span> ${msg}`;
-                        output.appendChild(line);
-                    });
-                } catch (e) { }
-            }
+                // Update nav
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
 
-            window.clearConsole = async () => {
-                if (confirm('წავშალოთ ლოგები?')) {
-                    try { await sql`DELETE FROM chat_messages WHERE nickname = 'SYSTEM_LOG'`; updateConsole(); } catch (e) { }
-                }
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                get(`tab-${target}`).classList.add('active');
+
+                // Auto-load if entering tab
+                if (target === 'players') loadPlayers();
+                if (target === 'online') loadOnlinePlayers();
+                if (target === 'comments') loadAdminComments();
+                if (target === 'abuse') loadAdminAbuse();
             };
-            setInterval(() => { if (get('tab-console')?.classList.contains('active')) updateConsole(); }, 3000);
+        });
 
-            // Auth Logic
-            const adminPass = "unoobi123!123!";
+        // Console Logic
+        async function updateConsole() {
+            try {
+                const logs = await sql`SELECT * FROM chat_messages WHERE nickname = 'SYSTEM_LOG' ORDER BY created_at DESC LIMIT 50`;
+                const output = get('console-output');
+                if (!output) return;
+                output.innerHTML = '';
+                logs.forEach(log => {
+                    const parts = log.message.split('|');
+                    let level = 'INFO';
+                    let msg = log.message;
+                    if (parts.length > 1) { level = parts[0]; msg = parts.slice(1).join('|'); }
 
-            // Auto-login check
-            window.addEventListener('DOMContentLoaded', () => {
-                const savedPass = localStorage.getItem('tilo_admin_auth');
-                const authTime = parseInt(localStorage.getItem('tilo_admin_auth_time') || '0');
-                const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+                    let color = '#d4d4d4';
+                    if (level === 'ERROR') color = '#f44336';
+                    if (level === 'WARN') color = '#ff9800';
+                    if (level === 'SUCCESS') color = '#4caf50';
 
-                if (savedPass === adminPass && (Date.now() - authTime) < thirtyDays) {
+                    const time = new Date(log.created_at).toLocaleTimeString();
+                    const line = document.createElement('div');
+                    line.style.borderBottom = '1px solid #333';
+                    line.style.padding = '4px 0';
+                    line.innerHTML = `<span style="color: #666;">[${time}]</span> <span style="font-weight:bold; color:${color}">[${level}]</span> ${msg}`;
+                    output.appendChild(line);
+                });
+            } catch (e) { }
+        }
+
+        window.clearConsole = async () => {
+            if (confirm('წავშალოთ ლოგები?')) {
+                try { await sql`DELETE FROM chat_messages WHERE nickname = 'SYSTEM_LOG'`; updateConsole(); } catch (e) { }
+            }
+        };
+        setInterval(() => { if (get('tab-console')?.classList.contains('active')) updateConsole(); }, 3000);
+
+        // Auth Logic
+        const adminPass = "unoobi123!123!";
+
+        // Auto-login check
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedPass = localStorage.getItem('tilo_admin_auth');
+            const authTime = parseInt(localStorage.getItem('tilo_admin_auth_time') || '0');
+            const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+            if (savedPass === adminPass && (Date.now() - authTime) < thirtyDays) {
+                enterAdmin();
+            }
+        });
+
+        function enterAdmin() {
+            get('login-section').style.display = 'none';
+            get('admin-controls').style.display = 'flex';
+            log('მოგესალმებით, ადმინ!', 'var(--primary)');
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            loadPlayers();
+        }
+
+        const loginBtn = get('login-btn');
+        if (loginBtn) {
+            loginBtn.onclick = async () => {
+                const passInput = get('admin-pass');
+                const pass = passInput ? passInput.value.trim() : '';
+                const loginStatus = get('login-status');
+
+                if (!pass) return;
+                if (loginStatus) loginStatus.textContent = "ამოწმებს...";
+
+                if (pass === adminPass) {
+                    localStorage.setItem('tilo_admin_auth', pass);
+                    localStorage.setItem('tilo_admin_auth_time', Date.now().toString());
                     enterAdmin();
-                }
-            });
-
-            function enterAdmin() {
-                get('login-section').style.display = 'none';
-                get('admin-controls').style.display = 'flex';
-                log('მოგესალმებით, ადმინ!', 'var(--primary)');
-                if (typeof updateDashboardStats === 'function') updateDashboardStats();
-                loadPlayers();
-            }
-
-            const loginBtn = get('login-btn');
-            if (loginBtn) {
-                loginBtn.onclick = async () => {
-                    const passInput = get('admin-pass');
-                    const pass = passInput ? passInput.value.trim() : '';
-                    const loginStatus = get('login-status');
-
-                    if (!pass) return;
-                    if (loginStatus) loginStatus.textContent = "ამოწმებს...";
-
-                    if (pass === adminPass) {
-                        localStorage.setItem('tilo_admin_auth', pass);
-                        localStorage.setItem('tilo_admin_auth_time', Date.now().toString());
-                        enterAdmin();
-                    } else {
-                        if (loginStatus) {
-                            loginStatus.textContent = "პაროლი არასწორია!";
-                            loginStatus.style.color = "var(--danger)";
-                        }
-                    }
-                };
-            }
-
-            get('admin-logout-btn').onclick = () => {
-                localStorage.removeItem('tilo_admin_auth');
-                localStorage.removeItem('tilo_admin_auth_time');
-                location.reload();
-            };
-
-            get('give-coins').onclick = async () => {
-                const name = get('target-nick').value.trim();
-                const amount = parseInt(get('coin-amount').value) || 0;
-                if (!name || amount <= 0) return alert('მიუთითეთ ნიკნეიმი და რაოდენობა!');
-                try {
-                    await sql`UPDATE users SET coins = coins + ${amount}, total_coins = total_coins + ${amount} WHERE nickname = ${name}`;
-                    log(`წარმატებით გაიგზავნა ${amount} ქოინი მოთამაშესთან: ${name}`, 'gold');
-                    get('coin-amount').value = '';
-                } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
-            };
-
-            get('change-nick-btn').onclick = async () => {
-                const oldName = get('target-nick').value.trim();
-                const newName = get('new-nick-val').value.trim();
-                if (!oldName || !newName) return alert('მიუთითეთ ძველი და ახალი ნიკნეიმი!');
-                try {
-                    // Check if new name exists
-                    const check = await sql`SELECT id FROM users WHERE nickname = ${newName}`;
-                    if (check.length > 0) return alert('ეს ნიკნეიმი უკვე დაკავებულია!');
-
-                    await sql`UPDATE users SET nickname = ${newName} WHERE nickname = ${oldName}`;
-                    log(`სახელი შეიცვალა: ${oldName} -> ${newName}`, 'var(--primary)');
-                    get('target-nick').value = newName;
-                    get('new-nick-val').value = '';
-                } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
-            };
-
-
-
-            get('ban-user').onclick = async () => {
-                const name = get('target-nick').value.trim();
-                if (!name) return;
-                if (confirm(`Are you sure you want to BAN (Chat & Game) for ${name}?`)) {
-                    try {
-                        await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0, banned_until = '2099-01-01' WHERE nickname = ${name}`;
-                        log(`🚫 Banned & Reset: ${name}`, 'red');
-                        loadPlayers();
-                    } catch (e) { log('Error banning user', 'red'); }
-                }
-            };
-
-            window.moderateUser = async (email, type) => {
-                let until = null;
-                let msg = "";
-
-                if (type === 'ban') {
-                    if (!confirm(`ნამდვილად გსურთ ${email}-ის სამუდამოდ დაბლოკვა?`)) return;
-                    until = new Date('2099-01-01');
-                    msg = "🚫 მომხმარებელი დაიბლოკა სამუდამოდ";
                 } else {
-                    if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ${type} დღიანი ტაიმაუტის დადება?`)) return;
-                    until = new Date();
-                    until.setDate(until.getDate() + type);
-                    msg = `⏳ მომხმარებელს დაედო ${type} დღიანი ტაიმაუტი`;
-                }
-
-                try {
-                    await sql`UPDATE users SET banned_until = ${until} WHERE email = ${email}`;
-                    log(msg, 'var(--danger)');
-                    await loadAdminComments();
-                    await loadPlayers();
-
-                    // Refresh modal if currently viewing this user
-                    const modal = get('edit-user-modal');
-                    const editingEmail = get('edit-user-email') ? get('edit-user-email').value : null;
-                    if (modal && !modal.classList.contains('hidden') && editingEmail === email) {
-                        editUser(email);
+                    if (loginStatus) {
+                        loginStatus.textContent = "პაროლი არასწორია!";
+                        loginStatus.style.color = "var(--danger)";
                     }
-                } catch (e) {
-                    console.error(e);
-                    log('Error moderating user', 'red');
                 }
             };
+        }
 
-            get('reset-lb').onclick = async () => {
-                if (confirm("RESET ENTIRE LEADERBOARD?")) {
-                    try {
-                        await sql`UPDATE users SET score = 0, survival_time = 0`;
-                        log("Leaderboard Reset!", 'red');
-                    } catch (e) { log('Error', 'red'); }
-                }
-            };
+        get('admin-logout-btn').onclick = () => {
+            localStorage.removeItem('tilo_admin_auth');
+            localStorage.removeItem('tilo_admin_auth_time');
+            location.reload();
+        };
 
-            get('send-broadcast').onclick = async () => {
-                const msg = get('broadcast-msg').value.trim();
-                if (!msg) return;
+        get('give-coins').onclick = async () => {
+            const name = get('target-nick').value.trim();
+            const amount = parseInt(get('coin-amount').value) || 0;
+            if (!name || amount <= 0) return alert('მიუთითეთ ნიკნეიმი და რაოდენობა!');
+            try {
+                await sql`UPDATE users SET coins = coins + ${amount}, total_coins = total_coins + ${amount} WHERE nickname = ${name}`;
+                log(`წარმატებით გაიგზავნა ${amount} ქოინი მოთამაშესთან: ${name}`, 'gold');
+                get('coin-amount').value = '';
+            } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
+        };
+
+        get('change-nick-btn').onclick = async () => {
+            const oldName = get('target-nick').value.trim();
+            const newName = get('new-nick-val').value.trim();
+            if (!oldName || !newName) return alert('მიუთითეთ ძველი და ახალი ნიკნეიმი!');
+            try {
+                // Check if new name exists
+                const check = await sql`SELECT id FROM users WHERE nickname = ${newName}`;
+                if (check.length > 0) return alert('ეს ნიკნეიმი უკვე დაკავებულია!');
+
+                await sql`UPDATE users SET nickname = ${newName} WHERE nickname = ${oldName}`;
+                log(`სახელი შეიცვალა: ${oldName} -> ${newName}`, 'var(--primary)');
+                get('target-nick').value = newName;
+                get('new-nick-val').value = '';
+            } catch (e) { log('შეცდომა ბაზასთან', 'red'); }
+        };
+
+
+
+        get('ban-user').onclick = async () => {
+            const name = get('target-nick').value.trim();
+            if (!name) return;
+            if (confirm(`Are you sure you want to BAN (Chat & Game) for ${name}?`)) {
                 try {
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
-                    log(`Broadcasted: ${msg}`);
-                    get('broadcast-msg').value = '';
+                    await sql`UPDATE users SET score = 0, survival_time = 0, coins = 0, best_score = 0, banned_until = '2099-01-01' WHERE nickname = ${name}`;
+                    log(`🚫 Banned & Reset: ${name}`, 'red');
+                    loadPlayers();
+                } catch (e) { log('Error banning user', 'red'); }
+            }
+        };
+
+        window.moderateUser = async (email, type) => {
+            let until = null;
+            let msg = "";
+
+            if (type === 'ban') {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ის სამუდამოდ დაბლოკვა?`)) return;
+                until = new Date('2099-01-01');
+                msg = "🚫 მომხმარებელი დაიბლოკა სამუდამოდ";
+            } else {
+                if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ${type} დღიანი ტაიმაუტის დადება?`)) return;
+                until = new Date();
+                until.setDate(until.getDate() + type);
+                msg = `⏳ მომხმარებელს დაედო ${type} დღიანი ტაიმაუტი`;
+            }
+
+            try {
+                await sql`UPDATE users SET banned_until = ${until} WHERE email = ${email}`;
+                log(msg, 'var(--danger)');
+                await loadAdminComments();
+                await loadPlayers();
+
+                // Refresh modal if currently viewing this user
+                const modal = get('edit-user-modal');
+                const editingEmail = get('edit-user-email') ? get('edit-user-email').value : null;
+                if (modal && !modal.classList.contains('hidden') && editingEmail === email) {
+                    editUser(email);
+                }
+            } catch (e) {
+                console.error(e);
+                log('Error moderating user', 'red');
+            }
+        };
+
+        get('reset-lb').onclick = async () => {
+            if (confirm("RESET ENTIRE LEADERBOARD?")) {
+                try {
+                    await sql`UPDATE users SET score = 0, survival_time = 0`;
+                    log("Leaderboard Reset!", 'red');
                 } catch (e) { log('Error', 'red'); }
-            };
+            }
+        };
 
-            get('send-massive').onclick = async () => {
-                const msg = get('massive-msg').value.trim();
-                const dur = parseInt(get('massive-dur').value) || 10;
-                if (!msg) return alert("შეიყვანეთ ტექსტი");
-                try {
-                    // Encode duration in value: "message:::duration"
-                    const eventValue = `${msg}:::${dur}`;
+        get('send-broadcast').onclick = async () => {
+            const msg = get('broadcast-msg').value.trim();
+            if (!msg) return;
+            try {
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+                log(`Broadcasted: ${msg}`);
+                get('broadcast-msg').value = '';
+            } catch (e) { log('Error', 'red'); }
+        };
 
-                    await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
+        get('send-massive').onclick = async () => {
+            const msg = get('massive-msg').value.trim();
+            const dur = parseInt(get('massive-dur').value) || 10;
+            if (!msg) return alert("შეიყვანეთ ტექსტი");
+            try {
+                // Encode duration in value: "message:::duration"
+                const eventValue = `${msg}:::${dur}`;
+
+                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
                          VALUES ('massive_announcement', ${eventValue}, NOW() + CAST(${dur} || ' seconds' AS INTERVAL))
                          ON CONFLICT (event_type) DO UPDATE SET event_value = EXCLUDED.event_value, expires_at = EXCLUDED.expires_at`;
 
-                    log(`MASSIVE SENT: ${msg} (${dur}s)`);
-                    get('massive-msg').value = '';
-                } catch (e) {
-                    console.error(e);
-                    log('Error sending massive alert', 'red');
-                }
-            };
+                log(`MASSIVE SENT: ${msg} (${dur}s)`);
+                get('massive-msg').value = '';
+            } catch (e) {
+                console.error(e);
+                log('Error sending massive alert', 'red');
+            }
+        };
 
 
-            const triggerEvent = async (type, val, duration) => {
-                try {
-                    const expireDate = new Date(Date.now() + duration * 60000);
-                    await sql`DELETE FROM global_events WHERE event_type = ${type}`;
-                    await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
+        const triggerEvent = async (type, val, duration) => {
+            try {
+                const expireDate = new Date(Date.now() + duration * 60000);
+                await sql`DELETE FROM global_events WHERE event_type = ${type}`;
+                await sql`INSERT INTO global_events (event_type, event_value, expires_at) 
                           VALUES (${type}, ${val.toString()}, ${expireDate.toISOString()})`;
 
-                    let msg = `Global Event Active!`;
-                    if (type === 'multiplier') msg = `🌍 გლობალური ${val}X ქულების ბუსტი!`;
-                    else if (type === 'crisis_time') msg = `⚠️ კრიზისის დრო: ${val} წამი`;
-                    else if (type === 'spawn_interval') msg = `⚡ გაჩენის სიჩქარე: ${val}ms`;
-                    else if (type === 'boss_limit') msg = `☠️ ბოსების ლიმიტი: ${val}`;
-                    else if (type === 'stain_limit') msg = `🧹 ლაქების ლიმიტი: ${val}`;
-                    else if (type === 'rainbow') msg = `🌈 RAINBOW რეჟიმი ჩაირთო!`;
-                    else if (type === 'player_strength') msg = `💪 მოთამაშის ძალა: ${val}X`;
-                    else if (type === 'player_radius') msg = `📏 მოთამაშის რადიუსი: ${val}X`;
-                    else if (type === 'coin_mult') msg = `💰 ქოინების მამრავლი: ${val}X`;
-                    else if (type === 'boss_hp') msg = `☠️ ბოსის HP: ${val}`;
-                    else if (type === 'freeze_enemies') msg = `❄️ მტრები გაიყინნენ!`;
-                    else if (type === 'god_mode') msg = `🛡️ უკვდავების რეჟიმი!`;
-                    else if (type === 'soap_thresh') msg = `🧼 საპნის სიხშირე: ყოველ ${val} ქულაზე`;
-                    else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
-                    else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
-                    else if (type === 'video_config') msg = `📺 YouTube Notifier განახლდა!`;
-                    else if (type === 'boss_spawn_rate') msg = `⏱️ ბოსების გაჩენის დრო: ყოველ ${val} წამში`;
-                    else if (type === 'upgrade_power') msg = `⚡ გაძლიერებების ძალა: ${val}X`;
-                    else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
-                    else if (type === 'regular_boss_config') msg = `⭕ ჩვეულებრივი ბოსი განახლდა!`;
-                    else if (type === 'triangle_boss_config') msg = `🔺 სამკუთხედი ბოსი განახლდა!`;
-                    else if (type === 'reg_boss_img') msg = `🖼️ ჩვეულებრივი ბოსის ფოტო შეიცვალა`;
-                    else if (type === 'reg_boss_scale') msg = `📐 ჩვეულებრივი ბოსის მასშტაბი: ${val}`;
-                    else if (type === 'reg_boss_opacity') msg = `👁️ ჩვეულებრივი ბოსის სიმკრთალე: ${val}`;
-                    else if (type === 'reg_boss_hp') msg = `❤️ ჩვეულებრივი ბოსის HP: ${val}`;
-                    else if (type === 'reg_boss_spawn') msg = `⏱️ ჩვეულებრივი ბოსის სპაუნი: ${val}წმ`;
-                    else if (type === 'reg_boss_threshold') msg = `📈 ჩვეულებრივი ბოსის ქულა: ${val}`;
-                    else if (type === 'tri_boss_img') msg = `🖼️ Elite ბოსის ფოტო შეიცვალა`;
-                    else if (type === 'tri_boss_scale') msg = `📐 Elite ბოსის მასშტაბი: ${val}`;
-                    else if (type === 'tri_boss_opacity') msg = `👁️ Elite ბოსის სიმკრთალე: ${val}`;
-                    else if (type === 'tri_boss_hp') msg = `❤️ Elite ბოსის HP: ${val}`;
-                    else if (type === 'tri_boss_spawn') msg = `⏱️ Elite ბოსის სპაუნი: ${val}წმ`;
-                    else if (type === 'tri_boss_threshold') msg = `📈 Elite ბოსის ქულა: ${val}`;
-                    else if (type === 'spawn_now') msg = `🚀 მყისიერი ბოსის გაჩენა: ${val.toUpperCase()}!`;
+                let msg = `Global Event Active!`;
+                if (type === 'multiplier') msg = `🌍 გლობალური ${val}X ქულების ბუსტი!`;
+                else if (type === 'crisis_time') msg = `⚠️ კრიზისის დრო: ${val} წამი`;
+                else if (type === 'spawn_interval') msg = `⚡ გაჩენის სიჩქარე: ${val}ms`;
+                else if (type === 'boss_limit') msg = `☠️ ბოსების ლიმიტი: ${val}`;
+                else if (type === 'stain_limit') msg = `🧹 ლაქების ლიმიტი: ${val}`;
+                else if (type === 'rainbow') msg = `🌈 RAINBOW რეჟიმი ჩაირთო!`;
+                else if (type === 'player_strength') msg = `💪 მოთამაშის ძალა: ${val}X`;
+                else if (type === 'player_radius') msg = `📏 მოთამაშის რადიუსი: ${val}X`;
+                else if (type === 'coin_mult') msg = `💰 ქოინების მამრავლი: ${val}X`;
+                else if (type === 'boss_hp') msg = `☠️ ბოსის HP: ${val}`;
+                else if (type === 'freeze_enemies') msg = `❄️ მტრები გაიყინნენ!`;
+                else if (type === 'god_mode') msg = `🛡️ უკვდავების რეჟიმი!`;
+                else if (type === 'soap_thresh') msg = `🧼 საპნის სიხშირე: ყოველ ${val} ქულაზე`;
+                else if (type === 'minigame_thresh') msg = `🎮 მინი-თამაში: ყოველ ${val} ქულაზე`;
+                else if (type === 'soap_cutscene') msg = `🧼 საპნის დრო: ${val}ms`;
+                else if (type === 'video_config') msg = `📺 YouTube Notifier განახლდა!`;
+                else if (type === 'boss_spawn_rate') msg = `⏱️ ბოსების გაჩენის დრო: ყოველ ${val} წამში`;
+                else if (type === 'upgrade_power') msg = `⚡ გაძლიერებების ძალა: ${val}X`;
+                else if (type === 'pink_power') msg = `🌸 Pink გაძლიერების ძალა: ${val}X`;
+                else if (type === 'regular_boss_config') msg = `⭕ ჩვეულებრივი ბოსი განახლდა!`;
+                else if (type === 'triangle_boss_config') msg = `🔺 სამკუთხედი ბოსი განახლდა!`;
+                else if (type === 'reg_boss_img') msg = `🖼️ ჩვეულებრივი ბოსის ფოტო შეიცვალა`;
+                else if (type === 'reg_boss_scale') msg = `📐 ჩვეულებრივი ბოსის მასშტაბი: ${val}`;
+                else if (type === 'reg_boss_opacity') msg = `👁️ ჩვეულებრივი ბოსის სიმკრთალე: ${val}`;
+                else if (type === 'reg_boss_hp') msg = `❤️ ჩვეულებრივი ბოსის HP: ${val}`;
+                else if (type === 'reg_boss_spawn') msg = `⏱️ ჩვეულებრივი ბოსის სპაუნი: ${val}წმ`;
+                else if (type === 'reg_boss_threshold') msg = `📈 ჩვეულებრივი ბოსის ქულა: ${val}`;
+                else if (type === 'tri_boss_img') msg = `🖼️ Elite ბოსის ფოტო შეიცვალა`;
+                else if (type === 'tri_boss_scale') msg = `📐 Elite ბოსის მასშტაბი: ${val}`;
+                else if (type === 'tri_boss_opacity') msg = `👁️ Elite ბოსის სიმკრთალე: ${val}`;
+                else if (type === 'tri_boss_hp') msg = `❤️ Elite ბოსის HP: ${val}`;
+                else if (type === 'tri_boss_spawn') msg = `⏱️ Elite ბოსის სპაუნი: ${val}წმ`;
+                else if (type === 'tri_boss_threshold') msg = `📈 Elite ბოსის ქულა: ${val}`;
+                else if (type === 'spawn_now') msg = `🚀 მყისიერი ბოსის გაჩენა: ${val.toUpperCase()}!`;
 
-                    msg += ` (${duration} წთ) ✨`;
+                msg += ` (${duration} წთ) ✨`;
 
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('SYSTEM_LOG', ${'INFO|Event: ' + type + ' = ' + val})`;
-                    log(`გააქტიურდა: ${type} (${val}) - ${duration} წთ`);
-                    updateBonusTimer();
-                } catch (e) { console.error(e); log('Error triggering event', 'red'); }
-            };
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', ${msg})`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('SYSTEM_LOG', ${'INFO|Event: ' + type + ' = ' + val})`;
+                log(`გააქტიურდა: ${type} (${val}) - ${duration} წთ`);
+                updateBonusTimer();
+            } catch (e) { console.error(e); log('Error triggering event', 'red'); }
+        };
 
-            const updateDashboardStatus = async () => {
-                try {
-                    const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
-                    document.querySelectorAll('.cur-val').forEach(el => el.textContent = '');
+        const updateDashboardStatus = async () => {
+            try {
+                const events = await sql`SELECT * FROM global_events WHERE expires_at > NOW()`;
+                document.querySelectorAll('.cur-val').forEach(el => el.textContent = '');
 
-                    events.forEach(ev => {
-                        if (ev.event_type === 'player_strength') get('cur-strength').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'player_radius') get('cur-radius').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'coin_mult') get('cur-coin').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'multiplier') get('cur-score').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'boss_hp') get('cur-bosshp').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'boss_limit') get('cur-bosslimit').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'stain_limit') get('cur-stainlimit').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'spawn_interval') get('cur-spawn').textContent = `(${ev.event_value}ms)`;
-                        if (ev.event_type === 'crisis_time') get('cur-crisis').textContent = `(${ev.event_value}s)`;
-                        if (ev.event_type === 'soap_thresh') get('cur-soap').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'minigame_thresh') get('cur-minigame').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'soap_cutscene') get('cur-cutscene').textContent = `(${ev.event_value}ms)`;
-                        if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
-                        if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
-                        if (ev.event_type === 'video_config') {
-                            try {
-                                const cfg = JSON.parse(ev.event_value);
-                                cfg.forEach((item, idx) => {
-                                    if (idx < 5) {
-                                        const id = get(`ch-id-${idx + 1}`);
-                                        const wt = get(`ch-wt-${idx + 1}`);
-                                        if (id && !id.value) id.value = item.id;
-                                        if (wt && wt.value == "0") wt.value = item.weight;
-                                    }
-                                });
-                            } catch (e) { }
-                        }
-                        if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
-                        if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
-                        if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
-                        if (ev.event_type === 'forced_video') get('cur-forced-video').textContent = `(ACTIVE)`;
-                        if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
-                        if (ev.event_type === 'upgrade_power') get('cur-upgpow').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'pink_power') get('cur-pinkpow').textContent = `(${ev.event_value}X)`;
-                        if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
-                        if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
-
-                        // Individual Boss Stats
-                        if (ev.event_type === 'reg_boss_hp') get('cur-reg-hp')?.textContent ? get('cur-reg-hp').textContent = `(${ev.event_value})` : null;
-                        if (ev.event_type === 'reg_boss_spawn') get('cur-reg-spawn')?.textContent ? get('cur-reg-spawn').textContent = `(${ev.event_value}s)` : null;
-                        if (ev.event_type === 'reg_boss_threshold') get('cur-reg-thresh')?.textContent ? get('cur-reg-thresh').textContent = `(${ev.event_value})` : null;
-
-                        if (ev.event_type === 'tri_boss_hp') get('cur-tri-hp')?.textContent ? get('cur-tri-hp').textContent = `(${ev.event_value})` : null;
-                        if (ev.event_type === 'tri_boss_spawn') get('cur-tri-spawn')?.textContent ? get('cur-tri-spawn').textContent = `(${ev.event_value}s)` : null;
-                        if (ev.event_type === 'tri_boss_threshold') get('cur-tri-thresh')?.textContent ? get('cur-tri-thresh').textContent = `(${ev.event_value})` : null;
-                    });
-                } catch (e) { }
-            };
-            setInterval(updateDashboardStatus, 5000);
-            updateDashboardStatus();
-
-            window.quickTrigger = (type, inputId, customDur = null) => {
-                const val = inputId === '1' ? '1' : (get(inputId)?.value || inputId);
-                const dur = customDur || parseInt(get('global-duration').value) || 10;
-                triggerEvent(type, val, dur);
-            };
-
-            window.stopEvent = async (type) => {
-                if (!confirm(`ნამდვილად გსურთ ${type}-ის გაუქმება?`)) return;
-                try {
-                    await sql`DELETE FROM global_events WHERE event_type = ${type}`;
-
-                    // Reset inputs to defaults
-                    const defaults = {
-                        'reg_boss_hp': { id: 'reg-boss-hp', val: '10000' },
-                        'reg_boss_spawn': { id: 'reg-boss-spawn', val: '60' },
-                        'reg_boss_threshold': { id: 'reg-boss-threshold', val: '500' },
-                        'reg_boss_scale': { id: 'reg-boss-scale', val: '1.0' },
-                        'reg_boss_opacity': { id: 'reg-boss-opacity', val: '10' },
-                        'reg_boss_img': { id: 'reg-boss-img', val: '' },
-
-                        'tri_boss_hp': { id: 'tri-boss-hp', val: '30000' },
-                        'tri_boss_spawn': { id: 'tri-boss-spawn', val: '120' },
-                        'tri_boss_threshold': { id: 'tri-boss-threshold', val: '1000' },
-                        'tri_boss_scale': { id: 'tri-boss-scale', val: '1.0' },
-                        'tri_boss_opacity': { id: 'tri-boss-opacity', val: '10' },
-                        'tri_boss_img': { id: 'tri-boss-img', val: '' },
-
-                        'boss_hp': { id: 'val-bosshp', val: '10000' },
-                        'spawn_interval': { id: 'val-spawn', val: '500' },
-                        'boss_limit': { id: 'val-bosslimit', val: '20' },
-                        'stain_limit': { id: 'val-stainlimit', val: '50' },
-
-                        'upgrade_power': { id: 'val-upgpow', val: '1.3' },
-                        'pink_power': { id: 'val-pinkpow', val: '1.5' },
-                        'multiplier': { id: 'val-multiplier', val: '2' },
-                        'crisis_time': { id: 'val-crisis', val: '30' }
-                    };
-
-                    if (defaults[type]) {
-                        const el = get(defaults[type].id);
-                        if (el) el.value = defaults[type].val;
+                events.forEach(ev => {
+                    if (ev.event_type === 'player_strength') get('cur-strength').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'player_radius') get('cur-radius').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'coin_mult') get('cur-coin').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'multiplier') get('cur-score').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'boss_hp') get('cur-bosshp').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'boss_limit') get('cur-bosslimit').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'stain_limit') get('cur-stainlimit').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'spawn_interval') get('cur-spawn').textContent = `(${ev.event_value}ms)`;
+                    if (ev.event_type === 'crisis_time') get('cur-crisis').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'soap_thresh') get('cur-soap').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'minigame_thresh') get('cur-minigame').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'soap_cutscene') get('cur-cutscene').textContent = `(${ev.event_value}ms)`;
+                    if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
+                    if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                    if (ev.event_type === 'video_config') {
+                        try {
+                            const cfg = JSON.parse(ev.event_value);
+                            cfg.forEach((item, idx) => {
+                                if (idx < 5) {
+                                    const id = get(`ch-id-${idx + 1}`);
+                                    const wt = get(`ch-wt-${idx + 1}`);
+                                    if (id && !id.value) id.value = item.id;
+                                    if (wt && wt.value == "0") wt.value = item.weight;
+                                }
+                            });
+                        } catch (e) { }
                     }
+                    if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
+                    if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
+                    if (ev.event_type === 'forced_video') get('cur-forced-video').textContent = `(ACTIVE)`;
+                    if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'upgrade_power') get('cur-upgpow').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'pink_power') get('cur-pinkpow').textContent = `(${ev.event_value}X)`;
+                    if (ev.event_type === 'freeze_enemies') get('cur-freeze').textContent = `(ON)`;
+                    if (ev.event_type === 'god_mode') get('cur-god').textContent = `(ON)`;
 
-                    log(`🛑 ${type} გაუქმდა და აღდგა საწყისი მნიშვნელობა`, 'orange');
-                    updateBonusTimer();
-                    updateDashboardStatus();
-                } catch (e) { log('Error', 'red'); }
-            };
+                    // Individual Boss Stats
+                    if (ev.event_type === 'reg_boss_hp') get('cur-reg-hp')?.textContent ? get('cur-reg-hp').textContent = `(${ev.event_value})` : null;
+                    if (ev.event_type === 'reg_boss_spawn') get('cur-reg-spawn')?.textContent ? get('cur-reg-spawn').textContent = `(${ev.event_value}s)` : null;
+                    if (ev.event_type === 'reg_boss_threshold') get('cur-reg-thresh')?.textContent ? get('cur-reg-thresh').textContent = `(${ev.event_value})` : null;
 
-            window.saveVideoConfig = async () => {
-                let config = [];
-                for (let i = 1; i <= 5; i++) {
-                    let id = get(`ch-id-${i}`).value.trim();
-                    let wt = parseInt(get(`ch-wt-${i}`).value) || 0;
-                    if (id) config.push({ id, weight: wt });
+                    if (ev.event_type === 'tri_boss_hp') get('cur-tri-hp')?.textContent ? get('cur-tri-hp').textContent = `(${ev.event_value})` : null;
+                    if (ev.event_type === 'tri_boss_spawn') get('cur-tri-spawn')?.textContent ? get('cur-tri-spawn').textContent = `(${ev.event_value}s)` : null;
+                    if (ev.event_type === 'tri_boss_threshold') get('cur-tri-thresh')?.textContent ? get('cur-tri-thresh').textContent = `(${ev.event_value})` : null;
+                });
+            } catch (e) { }
+        };
+        setInterval(updateDashboardStatus, 5000);
+        updateDashboardStatus();
+
+        window.quickTrigger = (type, inputId, customDur = null) => {
+            const val = inputId === '1' ? '1' : (get(inputId)?.value || inputId);
+            const dur = customDur || parseInt(get('global-duration').value) || 10;
+            triggerEvent(type, val, dur);
+        };
+
+        window.stopEvent = async (type) => {
+            if (!confirm(`ნამდვილად გსურთ ${type}-ის გაუქმება?`)) return;
+            try {
+                await sql`DELETE FROM global_events WHERE event_type = ${type}`;
+
+                // Reset inputs to defaults
+                const defaults = {
+                    'reg_boss_hp': { id: 'reg-boss-hp', val: '10000' },
+                    'reg_boss_spawn': { id: 'reg-boss-spawn', val: '60' },
+                    'reg_boss_threshold': { id: 'reg-boss-threshold', val: '500' },
+                    'reg_boss_scale': { id: 'reg-boss-scale', val: '1.0' },
+                    'reg_boss_opacity': { id: 'reg-boss-opacity', val: '10' },
+                    'reg_boss_img': { id: 'reg-boss-img', val: '' },
+
+                    'tri_boss_hp': { id: 'tri-boss-hp', val: '30000' },
+                    'tri_boss_spawn': { id: 'tri-boss-spawn', val: '120' },
+                    'tri_boss_threshold': { id: 'tri-boss-threshold', val: '1000' },
+                    'tri_boss_scale': { id: 'tri-boss-scale', val: '1.0' },
+                    'tri_boss_opacity': { id: 'tri-boss-opacity', val: '10' },
+                    'tri_boss_img': { id: 'tri-boss-img', val: '' },
+
+                    'boss_hp': { id: 'val-bosshp', val: '10000' },
+                    'spawn_interval': { id: 'val-spawn', val: '500' },
+                    'boss_limit': { id: 'val-bosslimit', val: '20' },
+                    'stain_limit': { id: 'val-stainlimit', val: '50' },
+
+                    'upgrade_power': { id: 'val-upgpow', val: '1.3' },
+                    'pink_power': { id: 'val-pinkpow', val: '1.5' },
+                    'multiplier': { id: 'val-multiplier', val: '2' },
+                    'crisis_time': { id: 'val-crisis', val: '30' }
+                };
+
+                if (defaults[type]) {
+                    const el = get(defaults[type].id);
+                    if (el) el.value = defaults[type].val;
                 }
-                if (config.length === 0) { alert('მიუთითეთ მინიმუმ 1 არხი'); return; }
-                const val = JSON.stringify(config);
-                const dur = parseInt(get('global-duration').value) || 120;
-                triggerEvent('video_config', val, dur);
-            };
 
-            window.saveBossConfig = async () => {
-                const img = get('boss-img-url').value.trim();
-                const scale = get('boss-scale').value || "1.0";
-                const dur = parseInt(get('global-duration').value) || 60;
-                const config = { img, scale, opacity: get('boss-opacity').value || "10", triangleHP: get('triangle-boss-hp').value || "30000" };
-                triggerEvent('boss_config', JSON.stringify(config), dur);
-            };
+                log(`🛑 ${type} გაუქმდა და აღდგა საწყისი მნიშვნელობა`, 'orange');
+                updateBonusTimer();
+                updateDashboardStatus();
+            } catch (e) { log('Error', 'red'); }
+        };
 
-            // Regular Boss Functions
-            window.saveRegularBoss = async () => {
-                const img = get('regular-boss-img').value.trim();
-                const scale = get('regular-boss-scale').value || "1.0";
-                const opacity = get('regular-boss-opacity').value || "10";
-                const hp = get('regular-boss-hp').value || "10000";
-                const spawn = get('regular-boss-spawn').value || "60";
-                const threshold = get('regular-boss-threshold').value || "500";
-                const dur = parseInt(get('global-duration').value) || 60;
-                const config = { img, scale, opacity, hp, spawn, threshold };
-                await triggerEvent('regular_boss_config', JSON.stringify(config), dur);
-                get('regular-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
-                log('✅ ჩვეულებრივი ბოსი განახლდა', 'green');
-            };
+        window.saveVideoConfig = async () => {
+            let config = [];
+            for (let i = 1; i <= 5; i++) {
+                let id = get(`ch-id-${i}`).value.trim();
+                let wt = parseInt(get(`ch-wt-${i}`).value) || 0;
+                if (id) config.push({ id, weight: wt });
+            }
+            if (config.length === 0) { alert('მიუთითეთ მინიმუმ 1 არხი'); return; }
+            const val = JSON.stringify(config);
+            const dur = parseInt(get('global-duration').value) || 120;
+            triggerEvent('video_config', val, dur);
+        };
 
-            window.resetRegularBoss = async () => {
-                if (!confirm('ნამდვილად გსურთ ჩვეულებრივი ბოსის ყველა პარამეტრის განულება?')) return;
-                try {
-                    const types = ['reg_boss_img', 'reg_boss_scale', 'reg_boss_opacity', 'reg_boss_hp', 'reg_boss_spawn', 'reg_boss_threshold'];
-                    for (const t of types) {
-                        await sql`DELETE FROM global_events WHERE event_type = ${t}`;
-                    }
+        window.saveBossConfig = async () => {
+            const img = get('boss-img-url').value.trim();
+            const scale = get('boss-scale').value || "1.0";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale, opacity: get('boss-opacity').value || "10", triangleHP: get('triangle-boss-hp').value || "30000" };
+            triggerEvent('boss_config', JSON.stringify(config), dur);
+        };
 
-                    get('reg-boss-img').value = '';
-                    get('reg-boss-scale').value = '1.0';
-                    get('reg-boss-opacity').value = '10';
-                    get('reg-boss-hp').value = '10000';
-                    get('reg-boss-spawn').value = '60';
-                    get('reg-boss-threshold').value = '500';
+        // Regular Boss Functions
+        window.saveRegularBoss = async () => {
+            const img = get('regular-boss-img').value.trim();
+            const scale = get('regular-boss-scale').value || "1.0";
+            const opacity = get('regular-boss-opacity').value || "10";
+            const hp = get('regular-boss-hp').value || "10000";
+            const spawn = get('regular-boss-spawn').value || "60";
+            const threshold = get('regular-boss-threshold').value || "500";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale, opacity, hp, spawn, threshold };
+            await triggerEvent('regular_boss_config', JSON.stringify(config), dur);
+            get('regular-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
+            log('✅ ჩვეულებრივი ბოსი განახლდა', 'green');
+        };
 
-                    log('🔄 ჩვეულებრივი ბოსის პარამეტრები განულდა', 'orange');
-                    updateDashboardStatus();
-                } catch (e) { log('Error resetting boss', 'red'); }
-            };
+        window.resetRegularBoss = async () => {
+            if (!confirm('ნამდვილად გსურთ ჩვეულებრივი ბოსის ყველა პარამეტრის განულება?')) return;
+            try {
+                const types = ['reg_boss_img', 'reg_boss_scale', 'reg_boss_opacity', 'reg_boss_hp', 'reg_boss_spawn', 'reg_boss_threshold'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
 
-            // Triangle Boss Functions
-            window.saveTriangleBoss = async () => {
-                const img = get('triangle-boss-img').value.trim();
-                const scale = get('triangle-boss-scale').value || "1.0";
-                const opacity = get('triangle-boss-opacity').value || "10";
-                const hp = get('triangle-boss-hp-input').value || "30000";
-                const spawn = get('triangle-boss-spawn').value || "120";
-                const threshold = get('triangle-boss-threshold').value || "1000";
-                const dur = parseInt(get('global-duration').value) || 60;
-                const config = { img, scale, opacity, hp, spawn, threshold };
-                await triggerEvent('triangle_boss_config', JSON.stringify(config), dur);
-                get('triangle-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
-                log('✅ სამკუთხედი ბოსი განახლდა', 'cyan');
-            };
+                get('reg-boss-img').value = '';
+                get('reg-boss-scale').value = '1.0';
+                get('reg-boss-opacity').value = '10';
+                get('reg-boss-hp').value = '10000';
+                get('reg-boss-spawn').value = '60';
+                get('reg-boss-threshold').value = '500';
 
-            window.resetTriangleBoss = async () => {
-                if (!confirm('ნამდვილად გსურთ სამკუთხედი ბოსის ყველა პარამეტრის განულება?')) return;
-                try {
-                    const types = ['tri_boss_img', 'tri_boss_scale', 'tri_boss_opacity', 'tri_boss_hp', 'tri_boss_spawn', 'tri_boss_threshold'];
-                    for (const t of types) {
-                        await sql`DELETE FROM global_events WHERE event_type = ${t}`;
-                    }
+                log('🔄 ჩვეულებრივი ბოსის პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting boss', 'red'); }
+        };
 
-                    get('tri-boss-img').value = '';
-                    get('tri-boss-scale').value = '1.0';
-                    get('tri-boss-opacity').value = '10';
-                    get('tri-boss-hp').value = '30000';
-                    get('tri-boss-spawn').value = '120';
-                    get('tri-boss-threshold').value = '1000';
+        // Triangle Boss Functions
+        window.saveTriangleBoss = async () => {
+            const img = get('triangle-boss-img').value.trim();
+            const scale = get('triangle-boss-scale').value || "1.0";
+            const opacity = get('triangle-boss-opacity').value || "10";
+            const hp = get('triangle-boss-hp-input').value || "30000";
+            const spawn = get('triangle-boss-spawn').value || "120";
+            const threshold = get('triangle-boss-threshold').value || "1000";
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { img, scale, opacity, hp, spawn, threshold };
+            await triggerEvent('triangle_boss_config', JSON.stringify(config), dur);
+            get('triangle-boss-status').textContent = `Active (HP: ${hp}, Spawn: ${spawn}s, Threshold: ${threshold})`;
+            log('✅ სამკუთხედი ბოსი განახლდა', 'cyan');
+        };
 
-                    log('🔄 სამკუთხედი ბოსის პარამეტრები განულდა', 'orange');
-                    updateDashboardStatus();
-                } catch (e) { log('Error resetting boss', 'red'); }
-            };
+        window.resetTriangleBoss = async () => {
+            if (!confirm('ნამდვილად გსურთ სამკუთხედი ბოსის ყველა პარამეტრის განულება?')) return;
+            try {
+                const types = ['tri_boss_img', 'tri_boss_scale', 'tri_boss_opacity', 'tri_boss_hp', 'tri_boss_spawn', 'tri_boss_threshold'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
 
-            window.resetGlobalEnemies = async () => {
-                if (!confirm('ნამდვილად გსურთ გლობალური პარამეტრების განულება?')) return;
-                try {
-                    const types = ['boss_hp', 'spawn_interval', 'boss_limit', 'stain_limit'];
-                    for (const t of types) {
-                        await sql`DELETE FROM global_events WHERE event_type = ${t}`;
-                    }
+                get('tri-boss-img').value = '';
+                get('tri-boss-scale').value = '1.0';
+                get('tri-boss-opacity').value = '10';
+                get('tri-boss-hp').value = '30000';
+                get('tri-boss-spawn').value = '120';
+                get('tri-boss-threshold').value = '1000';
 
-                    get('val-bosshp').value = '10000';
-                    get('val-spawn').value = '500';
-                    get('val-bosslimit').value = '20';
-                    get('val-stainlimit').value = '200';
+                log('🔄 სამკუთხედი ბოსის პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting boss', 'red'); }
+        };
 
-                    log('🔄 გლობალური პარამეტრები განულდა', 'orange');
-                    updateDashboardStatus();
-                } catch (e) { log('Error resetting global settings', 'red'); }
-            };
+        window.resetGlobalEnemies = async () => {
+            if (!confirm('ნამდვილად გსურთ გლობალური პარამეტრების განულება?')) return;
+            try {
+                const types = ['boss_hp', 'spawn_interval', 'boss_limit', 'stain_limit'];
+                for (const t of types) {
+                    await sql`DELETE FROM global_events WHERE event_type = ${t}`;
+                }
 
-            window.spawnBossNow = async (type) => {
-                // Type is 'regular' or 'triangle'
-                // Trigger a very short event that clients will pick up
-                await triggerEvent('spawn_now', type, 1); // Only active for 1 minute
-                log(`🚀 მყისიერი სპაუნი: ${type.toUpperCase()}`, 'yellow');
-            };
+                get('val-bosshp').value = '10000';
+                get('val-spawn').value = '500';
+                get('val-bosslimit').value = '20';
+                get('val-stainlimit').value = '200';
 
-            window.saveForcedVideo = async () => {
-                const url = get('val-forced-video').value.trim();
-                if (!url) return alert("შეიყვანეთ ლინკი");
+                log('🔄 გლობალური პარამეტრები განულდა', 'orange');
+                updateDashboardStatus();
+            } catch (e) { log('Error resetting global settings', 'red'); }
+        };
 
-                let videoId = '';
-                try {
-                    if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                    else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
-                    else videoId = url; // assume raw ID
-                } catch (e) { return alert("არასწორი ლინკი"); }
+        window.spawnBossNow = async (type) => {
+            // Type is 'regular' or 'triangle'
+            // Trigger a very short event that clients will pick up
+            await triggerEvent('spawn_now', type, 1); // Only active for 1 minute
+            log(`🚀 მყისიერი სპაუნი: ${type.toUpperCase()}`, 'yellow');
+        };
 
-                if (!videoId) return alert("ID ვერ მოიძებნა");
+        window.saveForcedVideo = async () => {
+            const url = get('val-forced-video').value.trim();
+            if (!url) return alert("შეიყვანეთ ლინკი");
 
-                const dur = parseInt(get('global-duration').value) || 60;
-                const config = { id: videoId, link: url };
-                triggerEvent('forced_video', JSON.stringify(config), dur);
-            };
+            let videoId = '';
+            try {
+                if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+                else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+                else videoId = url; // assume raw ID
+            } catch (e) { return alert("არასწორი ლინკი"); }
 
-            get('stop-events').onclick = async () => {
-                if (!confirm('ნამდვილად გსურთ ყველა ივენთის გაუქმება?')) return;
+            if (!videoId) return alert("ID ვერ მოიძებნა");
+
+            const dur = parseInt(get('global-duration').value) || 60;
+            const config = { id: videoId, link: url };
+            triggerEvent('forced_video', JSON.stringify(config), dur);
+        };
+
+        get('stop-events').onclick = async () => {
+            if (!confirm('ნამდვილად გსურთ ყველა ივენთის გაუქმება?')) return;
+            try {
+                await sql`DELETE FROM global_events`;
+                log('🛑 ყველა ივენთი გაუქმდა', 'orange');
+                updateBonusTimer();
+            } catch (e) { log('Error', 'red'); }
+        };
+
+        get('restart-site').onclick = async () => {
+            if (confirm("⚠️ ნამდვილად გსურთ მთელი საიტის რესტარტი? ყველა მოთამაშე გადატვირთულ იქნება!")) {
                 try {
                     await sql`DELETE FROM global_events`;
-                    log('🛑 ყველა ივენთი გაუქმდა', 'orange');
-                    updateBonusTimer();
-                } catch (e) { log('Error', 'red'); }
-            };
+                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 საიტი რესტარტდება 5 წამში...')`;
+                    log("Restarting site in 5 seconds...", 'red');
+                    localStorage.setItem('tilo_force_reload', Date.now().toString());
+                    setTimeout(() => { window.location.reload(); }, 5000);
+                } catch (e) { console.error(e); log('Error restarting site', 'red'); }
+            }
+        };
 
-            get('restart-site').onclick = async () => {
-                if (confirm("⚠️ ნამდვილად გსურთ მთელი საიტის რესტარტი? ყველა მოთამაშე გადატვირთულ იქნება!")) {
-                    try {
-                        await sql`DELETE FROM global_events`;
-                        await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 საიტი რესტარტდება 5 წამში...')`;
-                        log("Restarting site in 5 seconds...", 'red');
-                        localStorage.setItem('tilo_force_reload', Date.now().toString());
-                        setTimeout(() => { window.location.reload(); }, 5000);
-                    } catch (e) { console.error(e); log('Error restarting site', 'red'); }
-                }
-            };
+        async function updateBonusTimer() {
+            try {
+                const events = await sql`SELECT event_type, event_value, expires_at FROM global_events WHERE expires_at > NOW() LIMIT 1`;
+                const timerDiv = get('active-bonus-timer');
+                const noMsg = get('no-bonus-msg');
+                const bonusName = get('bonus-name');
+                const timeLeft = get('bonus-time-left');
 
-            async function updateBonusTimer() {
-                try {
-                    const events = await sql`SELECT event_type, event_value, expires_at FROM global_events WHERE expires_at > NOW() LIMIT 1`;
-                    const timerDiv = get('active-bonus-timer');
-                    const noMsg = get('no-bonus-msg');
-                    const bonusName = get('bonus-name');
-                    const timeLeft = get('bonus-time-left');
-
-                    if (events.length > 0) {
-                        const event = events[0];
-                        const remainingMs = new Date(event.expires_at) - new Date();
-                        if (remainingMs > 0) {
-                            const min = Math.floor(remainingMs / 60000);
-                            const sec = Math.floor((remainingMs % 60000) / 1000);
-                            bonusName.textContent = event.event_type === 'multiplier' ? `${event.event_value}X Score Bonus` : 'Rainbow Event';
-                            timeLeft.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
-                            timerDiv.style.display = 'block';
-                            noMsg.style.display = 'none';
-                        } else {
-                            timerDiv.style.display = 'none';
-                            noMsg.style.display = 'block';
-                        }
+                if (events.length > 0) {
+                    const event = events[0];
+                    const remainingMs = new Date(event.expires_at) - new Date();
+                    if (remainingMs > 0) {
+                        const min = Math.floor(remainingMs / 60000);
+                        const sec = Math.floor((remainingMs % 60000) / 1000);
+                        bonusName.textContent = event.event_type === 'multiplier' ? `${event.event_value}X Score Bonus` : 'Rainbow Event';
+                        timeLeft.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+                        timerDiv.style.display = 'block';
+                        noMsg.style.display = 'none';
                     } else {
                         timerDiv.style.display = 'none';
                         noMsg.style.display = 'block';
                     }
-                } catch (e) { console.error('Timer error:', e); }
-            }
+                } else {
+                    timerDiv.style.display = 'none';
+                    noMsg.style.display = 'block';
+                }
+            } catch (e) { console.error('Timer error:', e); }
+        }
 
-            setInterval(updateBonusTimer, 1000);
+        setInterval(updateBonusTimer, 1000);
 
-            // PLAYERS DB
-            let allPlayers = [];
-            let filteredPlayers = [];
+        // PLAYERS DB
+        let allPlayers = [];
+        let filteredPlayers = [];
 
-            async function loadPlayers() {
+        async function loadPlayers() {
+            try {
+                const sortBy = get('sort-players').value;
+                let players;
+
+                // Try fetching with banned_until
                 try {
-                    const sortBy = get('sort-players').value;
-                    let players;
-
-                    // Try fetching with banned_until
-                    try {
-                        if (sortBy === 'newest') {
-                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY id DESC LIMIT 1000`;
-                        } else if (sortBy === 'score') {
-                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY score DESC LIMIT 1000`;
-                        } else if (sortBy === 'coins') {
-                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY coins DESC LIMIT 1000`;
-                        } else if (sortBy === 'time') {
-                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY survival_time DESC LIMIT 1000`;
-                        } else {
-                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY nickname ASC LIMIT 1000`;
-                        }
-                    } catch (e) {
-                        if (e.message.includes('column "banned_until" does not exist')) {
-                            console.warn("Schema mismatch, fallback to old query");
-                            alert("⚠️ ბაზაში აკლია სვეტი 'banned_until'. გთხოვთ გაუშვათ 'DATABASE SETUP' სკრიპტი 'Critical Actions' ტაბში!");
-
-                            // Fallback query without banned_until
-                            if (sortBy === 'newest') {
-                                players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY id DESC LIMIT 1000`;
-                            } else {
-                                players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
-                            }
-                        } else {
-                            throw e;
-                        }
+                    if (sortBy === 'newest') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY id DESC LIMIT 1000`;
+                    } else if (sortBy === 'score') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY score DESC LIMIT 1000`;
+                    } else if (sortBy === 'coins') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY coins DESC LIMIT 1000`;
+                    } else if (sortBy === 'time') {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY survival_time DESC LIMIT 1000`;
+                    } else {
+                        players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active, banned_until FROM users ORDER BY nickname ASC LIMIT 1000`;
                     }
-
-                    allPlayers = players;
-                    filteredPlayers = players;
-                    displayPlayers(filteredPlayers);
-                    get('total-players').textContent = players.length;
                 } catch (e) {
-                    console.error(e);
-                    log('მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
-                    alert("ჩატვირთვის შეცდომა: " + e.message);
+                    if (e.message.includes('column "banned_until" does not exist')) {
+                        console.warn("Schema mismatch, fallback to old query");
+                        alert("⚠️ ბაზაში აკლია სვეტი 'banned_until'. გთხოვთ გაუშვათ 'DATABASE SETUP' სკრიპტი 'Critical Actions' ტაბში!");
+
+                        // Fallback query without banned_until
+                        if (sortBy === 'newest') {
+                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY id DESC LIMIT 1000`;
+                        } else {
+                            players = await sql`SELECT nickname, email, score, survival_time, coins, total_coins, last_active FROM users ORDER BY nickname ASC LIMIT 1000`;
+                        }
+                    } else {
+                        throw e;
+                    }
                 }
+
+                allPlayers = players;
+                filteredPlayers = players;
+                displayPlayers(filteredPlayers);
+                get('total-players').textContent = players.length;
+            } catch (e) {
+                console.error(e);
+                log('მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
+                alert("ჩატვირთვის შეცდომა: " + e.message);
+            }
+        }
+
+        function displayPlayers(players) {
+            const container = get('players-list');
+            if (players.length === 0) {
+                container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">მოთამაშეები ვერ მოიძებნა</p>';
+                return;
             }
 
-            function displayPlayers(players) {
-                const container = get('players-list');
-                if (players.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">მოთამაშეები ვერ მოიძებნა</p>';
-                    return;
-                }
+            container.innerHTML = players.map(player => {
+                const isGuest = player.email.startsWith('guest_');
+                const timeFormatted = formatTime(player.survival_time);
+                const lastActive = player.last_active ? new Date(player.last_active).toLocaleString('ka-GE') : 'არასდროს';
 
-                container.innerHTML = players.map(player => {
-                    const isGuest = player.email.startsWith('guest_');
-                    const timeFormatted = formatTime(player.survival_time);
-                    const lastActive = player.last_active ? new Date(player.last_active).toLocaleString('ka-GE') : 'არასდროს';
-
-                    return `
+                return `
                     <div class="player-card">
                         <div class="player-details">
                             <div class="player-name">
@@ -2328,75 +2329,75 @@
                         </div>
                     </div>
                 `;
-                }).join('');
+            }).join('');
+        }
+
+        window.deleteUser = async (email) => {
+            if (!confirm(`ნამდვილად გსურთ მომხმარებლის წაშლა: ${email}?`)) return;
+            try {
+                await sql`DELETE FROM users WHERE email = ${email}`;
+                log(`მომხმარებელი წაიშალა: ${email}`, 'red');
+                loadPlayers();
+            } catch (e) { log('შეცდომა წაშლისას', 'red'); }
+        };
+
+        window.editUser = (email) => {
+            const player = allPlayers.find(p => p.email === email);
+            if (!player) return;
+
+            const modal = get('edit-user-modal');
+            get('edit-user-email').value = player.email;
+            get('edit-user-nick').value = player.nickname;
+            get('edit-user-score').value = Math.floor(player.score);
+            get('edit-user-coins').value = player.coins;
+            get('edit-user-total-coins').value = player.total_coins || 0;
+
+            // Ban Logic
+            const banSection = get('ban-management-section');
+            const banInfo = get('ban-info');
+            const banCreate = get('ban-create-section');
+
+            if (player.banned_until && new Date(player.banned_until) > new Date()) {
+                banSection.style.display = 'block';
+                if (banCreate) banCreate.style.display = 'none';
+                const date = new Date(player.banned_until).toLocaleString('ka-GE');
+                banInfo.textContent = `დაბლოკილია ${date}-მდე.`;
+            } else {
+                banSection.style.display = 'none';
+                if (banCreate) banCreate.style.display = 'block';
             }
 
-            window.deleteUser = async (email) => {
-                if (!confirm(`ნამდვილად გსურთ მომხმარებლის წაშლა: ${email}?`)) return;
-                try {
-                    await sql`DELETE FROM users WHERE email = ${email}`;
-                    log(`მომხმარებელი წაიშალა: ${email}`, 'red');
-                    loadPlayers();
-                } catch (e) { log('შეცდომა წაშლისას', 'red'); }
-            };
+            modal.classList.remove('hidden');
+        };
 
-            window.editUser = (email) => {
-                const player = allPlayers.find(p => p.email === email);
-                if (!player) return;
+        window.removeBan = async () => {
+            const email = get('edit-user-email').value;
+            if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ბანის/ტაიმაუტის მოხსნა?`)) return;
 
-                const modal = get('edit-user-modal');
-                get('edit-user-email').value = player.email;
-                get('edit-user-nick').value = player.nickname;
-                get('edit-user-score').value = Math.floor(player.score);
-                get('edit-user-coins').value = player.coins;
-                get('edit-user-total-coins').value = player.total_coins || 0;
+            try {
+                await sql`UPDATE users SET banned_until = NULL WHERE email = ${email}`;
+                log(`✅ ბანი მოიხსნა: ${email}`, 'green');
+                get('edit-user-modal').classList.add('hidden');
+                loadPlayers();
+            } catch (e) { log('Error removing ban', 'red'); }
+        };
 
-                // Ban Logic
-                const banSection = get('ban-management-section');
-                const banInfo = get('ban-info');
-                const banCreate = get('ban-create-section');
-
-                if (player.banned_until && new Date(player.banned_until) > new Date()) {
-                    banSection.style.display = 'block';
-                    if (banCreate) banCreate.style.display = 'none';
-                    const date = new Date(player.banned_until).toLocaleString('ka-GE');
-                    banInfo.textContent = `დაბლოკილია ${date}-მდე.`;
-                } else {
-                    banSection.style.display = 'none';
-                    if (banCreate) banCreate.style.display = 'block';
-                }
-
-                modal.classList.remove('hidden');
-            };
-
-            window.removeBan = async () => {
-                const email = get('edit-user-email').value;
-                if (!confirm(`ნამდვილად გსურთ ${email}-ისთვის ბანის/ტაიმაუტის მოხსნა?`)) return;
-
-                try {
-                    await sql`UPDATE users SET banned_until = NULL WHERE email = ${email}`;
-                    log(`✅ ბანი მოიხსნა: ${email}`, 'green');
-                    get('edit-user-modal').classList.add('hidden');
-                    loadPlayers();
-                } catch (e) { log('Error removing ban', 'red'); }
-            };
-
-            async function loadOnlinePlayers() {
-                try {
-                    // Anyone active in the last 2 minutes is considered online
-                    const online = await sql`SELECT nickname, email, score, coins, survival_time, last_active FROM users 
+        async function loadOnlinePlayers() {
+            try {
+                // Anyone active in the last 2 minutes is considered online
+                const online = await sql`SELECT nickname, email, score, coins, survival_time, last_active FROM users 
                                         WHERE last_active > NOW() - INTERVAL '2 minute' 
                                         ORDER BY last_active DESC`;
 
-                    get('online-count').textContent = online.length;
-                    const container = get('online-list');
+                get('online-count').textContent = online.length;
+                const container = get('online-list');
 
-                    if (online.length === 0) {
-                        container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">ონლაინში არავინ არის</p>';
-                        return;
-                    }
+                if (online.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5; padding: 50px;">ონლაინში არავინ არის</p>';
+                    return;
+                }
 
-                    container.innerHTML = online.map(player => `
+                container.innerHTML = online.map(player => `
                     <div class="player-card">
                         <div class="player-details">
                             <div class="player-name">🟢 ${player.nickname}</div>
@@ -2410,136 +2411,136 @@
                         <div style="margin-top: 10px; font-size: 0.7rem; color: #00ff00;">აქტიურია ახლა</div>
                     </div>
                 `).join('');
-                } catch (e) {
-                    console.error(e);
-                    log('ონლაინ მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
-                }
+            } catch (e) {
+                console.error(e);
+                log('ონლაინ მოთამაშეების ჩატვირთვა ვერ მოხერხდა', 'red');
             }
+        }
 
-            get('refresh-online').onclick = loadOnlinePlayers;
-            setInterval(() => {
-                if (get('tab-online').classList.contains('active')) loadOnlinePlayers();
-            }, 10000);
+        get('refresh-online').onclick = loadOnlinePlayers;
+        setInterval(() => {
+            if (get('tab-online').classList.contains('active')) loadOnlinePlayers();
+        }, 10000);
 
-            window.saveUserEdit = async () => {
-                const email = get('edit-user-email').value;
-                const nick = get('edit-user-nick').value.trim();
-                const score = parseInt(get('edit-user-score').value) || 0;
-                const coins = parseInt(get('edit-user-coins').value) || 0;
-                const totalCoins = parseInt(get('edit-user-total-coins').value) || 0;
-                try {
-                    await sql`UPDATE users SET 
+        window.saveUserEdit = async () => {
+            const email = get('edit-user-email').value;
+            const nick = get('edit-user-nick').value.trim();
+            const score = parseInt(get('edit-user-score').value) || 0;
+            const coins = parseInt(get('edit-user-coins').value) || 0;
+            const totalCoins = parseInt(get('edit-user-total-coins').value) || 0;
+            try {
+                await sql`UPDATE users SET 
                     nickname = ${nick}, 
                     score = ${score}, 
                     coins = ${coins}, 
                     total_coins = ${totalCoins}
                     WHERE email = ${email}`;
 
-                    log(`მონაცემები განახლდა: ${nick}`, 'green');
-                    get('edit-user-modal').classList.add('hidden');
-                    loadPlayers();
-                } catch (e) { log('განახლების შეცდომა', 'red'); }
-            };
+                log(`მონაცემები განახლდა: ${nick}`, 'green');
+                get('edit-user-modal').classList.add('hidden');
+                loadPlayers();
+            } catch (e) { log('განახლების შეცდომა', 'red'); }
+        };
 
-            function formatTime(s) {
-                const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
-                return h > 0 ? `${h}ს ${m}წ` : m > 0 ? `${m}წ ${sc}წ` : `${sc}წ`;
+        function formatTime(s) {
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
+            return h > 0 ? `${h}ს ${m}წ` : m > 0 ? `${m}წ ${sc}წ` : `${sc}წ`;
+        }
+
+        get('search-player').oninput = () => {
+            const q = get('search-player').value.toLowerCase().trim();
+            filteredPlayers = q ? allPlayers.filter(p => p.nickname.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)) : allPlayers;
+            displayPlayers(filteredPlayers);
+        };
+
+        get('refresh-players').onclick = loadPlayers;
+        get('sort-players').onchange = loadPlayers;
+
+
+        // RESET SCORES ONLY Logic
+        get('reset-scores-only-btn').onclick = async () => {
+            const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების (Score & Best Score) განულება?\n\nქოინები, დრო და ექაუნთები (იმეილი/პაროლი) შენარჩუნდება!");
+            if (!confirmed) return;
+
+            log('Resetting competitive scores...', 'var(--yellow)');
+            try {
+                await sql`UPDATE users SET competition_score = 0`;
+                await sql`DELETE FROM shared_scores`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა რეიტინგების გლობალური განულება! დაიწყო ახალი სეზონი! 🏆')`;
+                log('🎉 ყველა მოთამაშის ქულა წარმატებით განულდა!', 'var(--accent)');
+            } catch (e) {
+                console.error(e);
+                log('Error resetting scores', 'red');
+            }
+        };
+
+        // NEWS Logic
+
+
+        get('publish-news-btn').onclick = async () => {
+            const id = get('edit-news-id').value;
+            const title = get('news-title-input').value.trim();
+            const category = get('news-category-input').value.trim() || 'სიახლე';
+            const imageUrl = get('news-image-input').value.trim();
+            const videoUrl = get('news-video-input').value.trim();
+            const content = get('news-content-input').value.trim();
+
+            if (!title || !content) {
+                alert("სათაური და ტექსტი აუცილებელია!");
+                return;
             }
 
-            get('search-player').oninput = () => {
-                const q = get('search-player').value.toLowerCase().trim();
-                filteredPlayers = q ? allPlayers.filter(p => p.nickname.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)) : allPlayers;
-                displayPlayers(filteredPlayers);
-            };
-
-            get('refresh-players').onclick = loadPlayers;
-            get('sort-players').onchange = loadPlayers;
-
-
-            // RESET SCORES ONLY Logic
-            get('reset-scores-only-btn').onclick = async () => {
-                const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების (Score & Best Score) განულება?\n\nქოინები, დრო და ექაუნთები (იმეილი/პაროლი) შენარჩუნდება!");
-                if (!confirmed) return;
-
-                log('Resetting competitive scores...', 'var(--yellow)');
-                try {
-                    await sql`UPDATE users SET competition_score = 0`;
-                    await sql`DELETE FROM shared_scores`;
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა რეიტინგების გლობალური განულება! დაიწყო ახალი სეზონი! 🏆')`;
-                    log('🎉 ყველა მოთამაშის ქულა წარმატებით განულდა!', 'var(--accent)');
-                } catch (e) {
-                    console.error(e);
-                    log('Error resetting scores', 'red');
-                }
-            };
-
-            // NEWS Logic
+            try {
+                let newsId = id;
+                if (id) {
+                    log('სიახლის განახლება...', 'var(--primary)');
+                    await sql`UPDATE news SET title=${title}, content=${content}, image_url=${imageUrl}, video_url=${videoUrl}, category=${category} WHERE id=${id}`;
+                    log('✅ სიახლე წარმატებით განახლდა!', 'var(--accent)');
+                } else {
+                    log('სიახლის გამოქვეყნება...', 'var(--primary)');
+                    const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category}) RETURNING id`;
+                    newsId = res[0].id;
+                    log('✅ სიახლე წარმატებით გამოქვეყნდა!', 'var(--accent)');
 
 
-            get('publish-news-btn').onclick = async () => {
-                const id = get('edit-news-id').value;
-                const title = get('news-title-input').value.trim();
-                const category = get('news-category-input').value.trim() || 'სიახლე';
-                const imageUrl = get('news-image-input').value.trim();
-                const videoUrl = get('news-video-input').value.trim();
-                const content = get('news-content-input').value.trim();
-
-                if (!title || !content) {
-                    alert("სათაური და ტექსტი აუცილებელია!");
-                    return;
                 }
 
-                try {
-                    let newsId = id;
-                    if (id) {
-                        log('სიახლის განახლება...', 'var(--primary)');
-                        await sql`UPDATE news SET title=${title}, content=${content}, image_url=${imageUrl}, video_url=${videoUrl}, category=${category} WHERE id=${id}`;
-                        log('✅ სიახლე წარმატებით განახლდა!', 'var(--accent)');
-                    } else {
-                        log('სიახლის გამოქვეყნება...', 'var(--primary)');
-                        const res = await sql`INSERT INTO news (title, content, image_url, video_url, category) VALUES (${title}, ${content}, ${imageUrl}, ${videoUrl}, ${category}) RETURNING id`;
-                        newsId = res[0].id;
-                        log('✅ სიახლე წარმატებით გამოქვეყნდა!', 'var(--accent)');
-
-
-                    }
-
-                    resetNewsForm();
-                    loadAdminNews();
-                } catch (e) {
-                    console.error(e);
-                    log('შეცდომა ბაზასთან', 'red');
-                }
-            };
-
-
-
-            function resetNewsForm() {
-                get('edit-news-id').value = '';
-                get('news-title-input').value = '';
-                get('news-category-input').value = '';
-                get('news-image-input').value = '';
-                get('news-video-input').value = '';
-                get('news-content-input').value = '';
-                get('news-form-title').textContent = '🆕 ახალი სიახლის დამატება';
-                get('publish-news-btn').textContent = '🚀 გამოქვეყნება';
-                get('cancel-news-edit-btn').classList.add('hidden');
+                resetNewsForm();
+                loadAdminNews();
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა ბაზასთან', 'red');
             }
+        };
 
-            get('cancel-news-edit-btn').onclick = resetNewsForm;
 
-            window.loadAdminNews = async () => {
-                try {
-                    const categoryFilter = get('admin-news-filter').value;
-                    let news;
-                    if (categoryFilter === 'ყველა') {
-                        news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC LIMIT 200`;
-                    } else {
-                        news = await sql`SELECT * FROM news WHERE category = ${categoryFilter} ORDER BY created_at DESC, id DESC LIMIT 200`;
-                    }
 
-                    const container = get('admin-news-list');
-                    container.innerHTML = news.map(item => `
+        function resetNewsForm() {
+            get('edit-news-id').value = '';
+            get('news-title-input').value = '';
+            get('news-category-input').value = '';
+            get('news-image-input').value = '';
+            get('news-video-input').value = '';
+            get('news-content-input').value = '';
+            get('news-form-title').textContent = '🆕 ახალი სიახლის დამატება';
+            get('publish-news-btn').textContent = '🚀 გამოქვეყნება';
+            get('cancel-news-edit-btn').classList.add('hidden');
+        }
+
+        get('cancel-news-edit-btn').onclick = resetNewsForm;
+
+        window.loadAdminNews = async () => {
+            try {
+                const categoryFilter = get('admin-news-filter').value;
+                let news;
+                if (categoryFilter === 'ყველა') {
+                    news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC LIMIT 200`;
+                } else {
+                    news = await sql`SELECT * FROM news WHERE category = ${categoryFilter} ORDER BY created_at DESC, id DESC LIMIT 200`;
+                }
+
+                const container = get('admin-news-list');
+                container.innerHTML = news.map(item => `
                     <div style="background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
                         <div style="display: flex; align-items: center; gap: 15px; flex: 1; overflow: hidden;">
                             <input type="checkbox" class="news-checkbox" value="${item.id}" onchange="updateBulkDeleteBtn()">
@@ -2555,82 +2556,82 @@
                     </div>
                 `).join('');
 
-                    updateBulkDeleteBtn();
-                    get('select-all-news').checked = false;
-                } catch (e) { console.error(e); }
-            };
-
-            window.toggleSelectAllNews = (el) => {
-                const checkboxes = document.querySelectorAll('.news-checkbox');
-                checkboxes.forEach(cb => cb.checked = el.checked);
                 updateBulkDeleteBtn();
-            };
+                get('select-all-news').checked = false;
+            } catch (e) { console.error(e); }
+        };
 
-            window.updateBulkDeleteBtn = () => {
-                const selected = document.querySelectorAll('.news-checkbox:checked').length;
-                const btn = get('bulk-delete-news-btn');
-                if (selected > 0) {
-                    btn.style.display = 'block';
-                    btn.textContent = `🗑️ მონიშნულების წაშლა (${selected})`;
-                } else {
-                    btn.style.display = 'none';
-                }
-            };
+        window.toggleSelectAllNews = (el) => {
+            const checkboxes = document.querySelectorAll('.news-checkbox');
+            checkboxes.forEach(cb => cb.checked = el.checked);
+            updateBulkDeleteBtn();
+        };
 
-            window.bulkDeleteNews = async () => {
-                const selected = Array.from(document.querySelectorAll('.news-checkbox:checked')).map(cb => parseInt(cb.value));
-                if (selected.length === 0) return;
-                if (!confirm(`ნამდვილად გსურთ ${selected.length} სიახლის წაშლა?`)) return;
+        window.updateBulkDeleteBtn = () => {
+            const selected = document.querySelectorAll('.news-checkbox:checked').length;
+            const btn = get('bulk-delete-news-btn');
+            if (selected > 0) {
+                btn.style.display = 'block';
+                btn.textContent = `🗑️ მონიშნულების წაშლა (${selected})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        };
 
-                try {
-                    await sql`DELETE FROM news WHERE id = ANY(${selected})`;
-                    log(`🗑️ ${selected.length} სიახლე წაიშალა`, 'var(--danger)');
-                    loadAdminNews();
-                } catch (e) {
-                    console.error(e);
-                    log('შეცდომა მასობრივი წაშლისას', 'red');
-                }
-            };
+        window.bulkDeleteNews = async () => {
+            const selected = Array.from(document.querySelectorAll('.news-checkbox:checked')).map(cb => parseInt(cb.value));
+            if (selected.length === 0) return;
+            if (!confirm(`ნამდვილად გსურთ ${selected.length} სიახლის წაშლა?`)) return;
+
+            try {
+                await sql`DELETE FROM news WHERE id = ANY(${selected})`;
+                log(`🗑️ ${selected.length} სიახლე წაიშალა`, 'var(--danger)');
+                loadAdminNews();
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა მასობრივი წაშლისას', 'red');
+            }
+        };
 
 
 
-            window.editAdminNews = async (id) => {
-                try {
-                    const res = await sql`SELECT * FROM news WHERE id = ${id}`;
-                    if (res.length === 0) return;
-                    const item = res[0];
+        window.editAdminNews = async (id) => {
+            try {
+                const res = await sql`SELECT * FROM news WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const item = res[0];
 
-                    get('edit-news-id').value = item.id;
-                    get('news-title-input').value = item.title;
-                    get('news-category-input').value = item.category;
-                    get('news-image-input').value = item.image_url || '';
-                    get('news-video-input').value = item.video_url || '';
-                    get('news-content-input').value = item.content;
+                get('edit-news-id').value = item.id;
+                get('news-title-input').value = item.title;
+                get('news-category-input').value = item.category;
+                get('news-image-input').value = item.image_url || '';
+                get('news-video-input').value = item.video_url || '';
+                get('news-content-input').value = item.content;
 
-                    get('news-form-title').textContent = '✏️ სიახლის რედაქტირება';
-                    get('publish-news-btn').textContent = '💾 ცვლილებების შენახვა';
-                    get('cancel-news-edit-btn').classList.remove('hidden');
+                get('news-form-title').textContent = '✏️ სიახლის რედაქტირება';
+                get('publish-news-btn').textContent = '💾 ცვლილებების შენახვა';
+                get('cancel-news-edit-btn').classList.remove('hidden');
 
-                    // Scroll to form
-                    get('news-form-title').scrollIntoView({ behavior: 'smooth' });
-                } catch (e) { console.error(e); }
-            };
+                // Scroll to form
+                get('news-form-title').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        };
 
-            window.deleteAdminNews = async (id) => {
-                if (!confirm("ნამდვილად გსურთ ამ სიახლის წაშლა?")) return;
-                try {
-                    await sql`DELETE FROM news WHERE id = ${id}`;
-                    log('🗑️ სიახლე წაიშალა', 'var(--danger)');
-                    loadAdminNews();
-                } catch (e) { console.error(e); }
-            };
+        window.deleteAdminNews = async (id) => {
+            if (!confirm("ნამდვილად გსურთ ამ სიახლის წაშლა?")) return;
+            try {
+                await sql`DELETE FROM news WHERE id = ${id}`;
+                log('🗑️ სიახლე წაიშალა', 'var(--danger)');
+                loadAdminNews();
+            } catch (e) { console.error(e); }
+        };
 
-            // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
-            // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
-            window.loadAdminAbuse = async () => {
-                try {
-                    // 1. Ensure table exists (Essential if setup was skipped)
-                    await sql`CREATE TABLE IF NOT EXISTS admin_abuse (
+        // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
+        // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
+        window.loadAdminAbuse = async () => {
+            try {
+                // 1. Ensure table exists (Essential if setup was skipped)
+                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (
                         id SERIAL PRIMARY KEY, 
                         title TEXT, 
                         image_url TEXT, 
@@ -2639,46 +2640,46 @@
                         created_at TIMESTAMP DEFAULT NOW()
                     )`;
 
-                    // 2. Ensure all columns exist (Legacy updates)
-                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
-                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
+                // 2. Ensure all columns exist (Legacy updates)
+                try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+                try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
 
-                    // 3. Check for SERIAL id (Fix if it was created with plain INTEGER)
-                    const schemaCheck = await sql`
+                // 3. Check for SERIAL id (Fix if it was created with plain INTEGER)
+                const schemaCheck = await sql`
                         SELECT column_default 
                         FROM information_schema.columns 
                         WHERE table_name = 'admin_abuse' AND column_name = 'id'
                     `;
 
-                    if (schemaCheck.length > 0 && schemaCheck[0].column_default === null) {
-                        log('Upgrading Admin Abuse Schema (Non-destructive)...', 'var(--accent)');
-                        // Instead of dropping, we alter. If it's too complex to alter, we warn.
-                        // But serial conversion is easier with a fresh table if data is sacrificeable.
-                        // However, let's try to keep it safe.
-                        try {
-                            await sql`CREATE SEQUENCE IF NOT EXISTS admin_abuse_id_seq`;
-                            await sql`ALTER TABLE admin_abuse ALTER COLUMN id SET DEFAULT nextval('admin_abuse_id_seq')`;
-                            await sql`SELECT setval('admin_abuse_id_seq', (SELECT MAX(id) FROM admin_abuse))`;
-                        } catch (se) {
-                            console.warn("Could not auto-upgrade sequence, fallback to recreate if empty");
-                            const count = await sql`SELECT count(*) FROM admin_abuse`;
-                            if (count[0].count === '0') {
-                                await sql`DROP TABLE IF EXISTS admin_abuse`;
-                                await sql`CREATE TABLE admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
-                            }
+                if (schemaCheck.length > 0 && schemaCheck[0].column_default === null) {
+                    log('Upgrading Admin Abuse Schema (Non-destructive)...', 'var(--accent)');
+                    // Instead of dropping, we alter. If it's too complex to alter, we warn.
+                    // But serial conversion is easier with a fresh table if data is sacrificeable.
+                    // However, let's try to keep it safe.
+                    try {
+                        await sql`CREATE SEQUENCE IF NOT EXISTS admin_abuse_id_seq`;
+                        await sql`ALTER TABLE admin_abuse ALTER COLUMN id SET DEFAULT nextval('admin_abuse_id_seq')`;
+                        await sql`SELECT setval('admin_abuse_id_seq', (SELECT MAX(id) FROM admin_abuse))`;
+                    } catch (se) {
+                        console.warn("Could not auto-upgrade sequence, fallback to recreate if empty");
+                        const count = await sql`SELECT count(*) FROM admin_abuse`;
+                        if (count[0].count === '0') {
+                            await sql`DROP TABLE IF EXISTS admin_abuse`;
+                            await sql`CREATE TABLE admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
                         }
                     }
+                }
 
-                    const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
-                    const container = get('admin-abuse-list');
-                    if (!container) return;
+                const slots = await sql`SELECT * FROM admin_abuse ORDER BY created_at DESC LIMIT 20`;
+                const container = get('admin-abuse-list');
+                if (!container) return;
 
-                    if (slots.length === 0) {
-                        container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">სლოტები ჯერ არ არის.</p>';
-                        return;
-                    }
+                if (slots.length === 0) {
+                    container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">სლოტები ჯერ არ არის.</p>';
+                    return;
+                }
 
-                    container.innerHTML = slots.map(s => `
+                container.innerHTML = slots.map(s => `
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
                         <div style="flex: 1; overflow: hidden;">
                             <div style="font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</div>
@@ -2690,113 +2691,113 @@
                         </div>
                     </div>
                 `).join('');
-                } catch (e) {
-                    console.error(e);
-                    log('❌ შეცდომა ჩატვირთვისას: ' + e.message, 'red');
-                }
-            };
+            } catch (e) {
+                console.error(e);
+                log('❌ შეცდომა ჩატვირთვისას: ' + e.message, 'red');
+            }
+        };
 
-            window.publishAbuseItem = async () => {
-                const id = get('edit-abuse-id').value;
-                const title = get('abuse-title-input').value.trim();
-                const img = get('abuse-image-input').value.trim();
-                const time = get('abuse-time-input').value;
-                const link = get('abuse-link-input').value.trim();
+        window.publishAbuseItem = async () => {
+            const id = get('edit-abuse-id').value;
+            const title = get('abuse-title-input').value.trim();
+            const img = get('abuse-image-input').value.trim();
+            const time = get('abuse-time-input').value;
+            const link = get('abuse-link-input').value.trim();
 
-                if (!title) return alert('სათაური აუცილებელია!');
+            if (!title) return alert('სათაური აუცილებელია!');
 
-                try {
-                    log(id ? 'ანახლებს...' : 'აქვეყნებს...', 'var(--primary)');
+            try {
+                log(id ? 'ანახლებს...' : 'აქვეყნებს...', 'var(--primary)');
 
-                    if (id) {
-                        if (time) {
-                            await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${time}, link_url=${link} WHERE id=${id}`;
-                        } else {
-                            await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
-                        }
-                        log('✅ წარმატებით განახლდა!', 'var(--accent)');
+                if (id) {
+                    if (time) {
+                        await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, end_time=${time}, link_url=${link} WHERE id=${id}`;
                     } else {
-                        await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) VALUES (${title}, ${img}, ${time || null}, ${link})`;
-                        log('✅ წარმატებით გამოქვეყნდა!', 'var(--accent)');
+                        await sql`UPDATE admin_abuse SET title=${title}, image_url=${img}, link_url=${link} WHERE id=${id}`;
                     }
-
-                    resetAbuseForm();
-                    loadAdminAbuse();
-                } catch (e) {
-                    console.error(e);
-                    log('❌ შეცდომა: ' + e.message, 'red');
+                    log('✅ წარმატებით განახლდა!', 'var(--accent)');
+                } else {
+                    await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) VALUES (${title}, ${img}, ${time || null}, ${link})`;
+                    log('✅ წარმატებით გამოქვეყნდა!', 'var(--accent)');
                 }
-            };
 
-            window.editAbuseItem = async (id) => {
-                try {
-                    const res = await sql`SELECT * FROM admin_abuse WHERE id = ${id}`;
-                    if (res.length === 0) return;
-                    const s = res[0];
+                resetAbuseForm();
+                loadAdminAbuse();
+            } catch (e) {
+                console.error(e);
+                log('❌ შეცდომა: ' + e.message, 'red');
+            }
+        };
 
-                    get('edit-abuse-id').value = s.id;
-                    get('abuse-title-input').value = s.title;
-                    get('abuse-image-input').value = s.image_url || '';
-                    get('abuse-link-input').value = s.link_url || '';
+        window.editAbuseItem = async (id) => {
+            try {
+                const res = await sql`SELECT * FROM admin_abuse WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const s = res[0];
 
-                    if (s.end_time) {
-                        const date = new Date(s.end_time);
-                        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-                        get('abuse-time-input').value = date.toISOString().slice(0, 16);
-                    } else {
-                        get('abuse-time-input').value = '';
-                    }
+                get('edit-abuse-id').value = s.id;
+                get('abuse-title-input').value = s.title;
+                get('abuse-image-input').value = s.image_url || '';
+                get('abuse-link-input').value = s.link_url || '';
 
-                    get('abuse-form-title').textContent = '✏️ სლოტის რედაქტირება';
-                    get('publish-abuse-btn').textContent = '💾 შენახვა';
-                    get('cancel-abuse-edit-btn').classList.remove('hidden');
+                if (s.end_time) {
+                    const date = new Date(s.end_time);
+                    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                    get('abuse-time-input').value = date.toISOString().slice(0, 16);
+                } else {
+                    get('abuse-time-input').value = '';
+                }
 
-                    get('abuse-form-title').scrollIntoView({ behavior: 'smooth' });
-                } catch (e) { console.error(e); }
-            };
+                get('abuse-form-title').textContent = '✏️ სლოტის რედაქტირება';
+                get('publish-abuse-btn').textContent = '💾 შენახვა';
+                get('cancel-abuse-edit-btn').classList.remove('hidden');
 
-            window.deleteAbuseItem = async (id) => {
-                if (!confirm('ნამდვილად გსურთ წაშლა?')) return;
-                try {
-                    await sql`DELETE FROM admin_abuse WHERE id = ${id}`;
-                    log('🗑️ წაიშალა!', 'var(--danger)');
-                    loadAdminAbuse();
-                } catch (e) { console.error(e); }
-            };
+                get('abuse-form-title').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        };
 
-            window.resetAbuseForm = () => {
-                get('edit-abuse-id').value = '';
-                get('abuse-title-input').value = '';
-                get('abuse-image-input').value = '';
-                get('abuse-time-input').value = '';
-                get('abuse-link-input').value = '';
+        window.deleteAbuseItem = async (id) => {
+            if (!confirm('ნამდვილად გსურთ წაშლა?')) return;
+            try {
+                await sql`DELETE FROM admin_abuse WHERE id = ${id}`;
+                log('🗑️ წაიშალა!', 'var(--danger)');
+                loadAdminAbuse();
+            } catch (e) { console.error(e); }
+        };
 
-                get('abuse-form-title').textContent = '💠 ADMIN ABUSE მართვა';
-                get('publish-abuse-btn').textContent = '🚀 გამოქვეყნება';
-                get('cancel-abuse-edit-btn').classList.add('hidden');
-            };
+        window.resetAbuseForm = () => {
+            get('edit-abuse-id').value = '';
+            get('abuse-title-input').value = '';
+            get('abuse-image-input').value = '';
+            get('abuse-time-input').value = '';
+            get('abuse-link-input').value = '';
 
-            // Initialize news list if tab is active
-            document.querySelector('[data-tab="news"]').addEventListener('click', loadAdminNews);
+            get('abuse-form-title').textContent = '💠 ADMIN ABUSE მართვა';
+            get('publish-abuse-btn').textContent = '🚀 გამოქვეყნება';
+            get('cancel-abuse-edit-btn').classList.add('hidden');
+        };
 
-            // COMMENTS Logic
-            window.loadAdminComments = async () => {
-                try {
-                    const comments = await sql`
+        // Initialize news list if tab is active
+        document.querySelector('[data-tab="news"]').addEventListener('click', loadAdminNews);
+
+        // COMMENTS Logic
+        window.loadAdminComments = async () => {
+            try {
+                const comments = await sql`
                     SELECT c.*, n.title as news_title 
                     FROM news_comments c 
                     LEFT JOIN news n ON c.news_id = n.id 
                     ORDER BY c.created_at DESC 
                     LIMIT 200
                 `;
-                    const container = get('admin-comments-list');
+                const container = get('admin-comments-list');
 
-                    if (comments.length === 0) {
-                        container.innerHTML = '<p style="opacity: 0.5; text-align: center; padding: 20px;">კომენტარები არ მოიძებნა.</p>';
-                        return;
-                    }
+                if (comments.length === 0) {
+                    container.innerHTML = '<p style="opacity: 0.5; text-align: center; padding: 20px;">კომენტარები არ მოიძებნა.</p>';
+                    return;
+                }
 
-                    container.innerHTML = comments.map(c => `
+                container.innerHTML = comments.map(c => `
                     <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border); position: relative;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                             <div>
@@ -2817,31 +2818,31 @@
                         </div>
                     </div>
                 `).join('');
-                } catch (e) { console.error(e); log('Error loading comments', 'red'); }
-            };
+            } catch (e) { console.error(e); log('Error loading comments', 'red'); }
+        };
 
 
-            window.deleteAdminComment = async (id) => {
-                if (!confirm("ნამდვილად გსურთ ამ კომენტარის წაშლა?")) return;
-                try {
-                    await sql`DELETE FROM news_comments WHERE id = ${id}`;
-                    log('🗑️ კომენტარი წაიშალა', 'var(--danger)');
-                    loadAdminComments();
-                } catch (e) { console.error(e); log('Error deleting comment', 'red'); }
-            };
+        window.deleteAdminComment = async (id) => {
+            if (!confirm("ნამდვილად გსურთ ამ კომენტარის წაშლა?")) return;
+            try {
+                await sql`DELETE FROM news_comments WHERE id = ${id}`;
+                log('🗑️ კომენტარი წაიშალა', 'var(--danger)');
+                loadAdminComments();
+            } catch (e) { console.error(e); log('Error deleting comment', 'red'); }
+        };
 
 
 
 
-            // DB SETUP
-            // WIPE PROGRESS Logic
-            get('wipe-progress-btn').onclick = async () => {
-                const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების, ქოინების და დროის განულება?\n\nექაუნთები (იმეილი/პაროლი) შენარჩუნდება, მაგრამ პროგრესი წაიშლება!");
-                if (!confirmed) return;
+        // DB SETUP
+        // WIPE PROGRESS Logic
+        get('wipe-progress-btn').onclick = async () => {
+            const confirmed = confirm("⚠️ გაფრთხილება: ნამდვილად გსურთ ყველა მობთამაშის ქულების, ქოინების და დროის განულება?\n\nექაუნთები (იმეილი/პაროლი) შენარჩუნდება, მაგრამ პროგრესი წაიშლება!");
+            if (!confirmed) return;
 
-                log('Wiping progress...', 'var(--danger)');
-                try {
-                    await sql`
+            log('Wiping progress...', 'var(--danger)');
+            try {
+                await sql`
                     UPDATE users 
                     SET score = 0, 
                         coins = 0, 
@@ -2849,504 +2850,504 @@
                         best_score = 0
                 `;
 
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა ქულების გლობალური განულება! ყველაფერი იწყება 0-დან! 🧼')`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔄 ადმინისტრაციამ მოახდინა ქულების გლობალური განულება! ყველაფერი იწყება 0-დან! 🧼')`;
 
-                    const msg = '🎉 ყველა მოთამაშის პროგრესი წარმატებით განულდა!';
-                    log(msg, 'green');
-                    alert(msg);
-                    loadPlayers();
-                } catch (e) {
-                    console.error(e);
-                    log('შეცდომა განულებისას', 'red');
-                    alert('შეცდომა: ' + e.message);
+                const msg = '🎉 ყველა მოთამაშის პროგრესი წარმატებით განულდა!';
+                log(msg, 'green');
+                alert(msg);
+                loadPlayers();
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა განულებისას', 'red');
+                alert('შეცდომა: ' + e.message);
+            }
+        };
+
+        // FULL WIPE Logic
+        get('full-wipe-btn').onclick = async () => {
+            const confirmed = confirm("🔥 ყურადღება: ნამდვილად გსურთ მთლიანი ბაზის წაშლა?\n\nწაიშლება ყველა იმეილი, პაროლი და ექაუნთი! ამის დაბრუნება შეუძლებელია!");
+            if (!confirmed) return;
+
+            log('Deleting ALL data...', 'var(--danger)');
+            try {
+                await sql`DELETE FROM users`;
+                await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔥 ადმინისტრაციამ სრულად გაასუფთავა მომხმარებლების ბაზა!')`;
+                log('💥 ბაზა სრულად წაიშალა!', 'red');
+                loadPlayers();
+            } catch (e) { log('Error: ' + e.message, 'red'); }
+        };
+
+        get('drop-vip-col-btn').onclick = async () => {
+            if (!confirm("⚠️ Remove 'is_vip' column from database? This matches the VIP removal update.")) return;
+            try {
+                await sql`ALTER TABLE users DROP COLUMN IF EXISTS is_vip`;
+                log('✅ VIP column removed from database!', 'green');
+            } catch (e) { log('Error dropping column: ' + e.message, 'red'); }
+        };
+
+        get('run-setup-btn').onclick = async () => {
+            if (!confirm("ნამდვილად გსურთ Database Setup? (ეს არ წაშლის არსებულ მონაცემებს)")) return;
+            log('Setup იწყება...', 'var(--accent)');
+            try {
+                // 1. Users table update
+                await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, total_coins INTEGER DEFAULT 0, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, best_survival_time INTEGER DEFAULT 0, total_survival_time INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }
+                try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_until TIMESTAMPTZ`; } catch (e) { }
+
+                // 2. Achievements (Match History) table
+                await sql`CREATE TABLE IF NOT EXISTS game_results (id SERIAL PRIMARY KEY, user_email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE, score INTEGER NOT NULL, duration_seconds INTEGER NOT NULL, coins_earned INTEGER NOT NULL, played_at TIMESTAMP DEFAULT NOW())`;
+
+                // 3. Indexes & Supporting tables
+                await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+                await sql`CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, nickname VARCHAR(50) NOT NULL, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS global_events (event_type VARCHAR(50) PRIMARY KEY, event_value TEXT, expires_at TIMESTAMP)`;
+
+                // 4. Duel System Tables
+                await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
+
+                // 5. Admin Abuse Table (Non-destructive update)
+                await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
+                try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
+                try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
+
+                log('🎉 SETUP დასრულებულია!', 'green');
+                loadPlayers();
+            } catch (e) { log('Setup Error: ' + e.message, 'red'); }
+        };
+
+        get('test-db-btn').onclick = async () => {
+            log('კავშირის შემოწმება...', 'white');
+            try {
+                const res = await sql`SELECT 1 as test`;
+                const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
+                const tNames = tables.map(t => t.table_name);
+                alert(`✅ კავშირი OK!\nცხრილები: ${tNames.join(', ')}`);
+                log('კავშირი წარმატებულია', 'green');
+            } catch (e) { log('DB Error', 'red'); alert('შეცდომა: ' + e.message); }
+        };
+
+        // 🔮 FANDOM WIKI AUTO-SYNC (Multi-Source)
+        const FANDOM_SOURCES = [
+            { id: 'brainrot', api: 'https://stealabrainrot.fandom.com/api.php', url: 'https://stealabrainrot.fandom.com', page: 'Leaks', type: 'leaks', category: 'სთილი', prefix: '🔮 Brainrot ლიკი:' },
+            { id: 'tsunami', api: 'https://escape-tsunami-for-brainrots.fandom.com/api.php', url: 'https://escape-tsunami-for-brainrots.fandom.com', page: 'Leaks', type: 'leaks', category: 'ცუნამი', prefix: '🌊 Tsunami ლიკი:' }
+        ];
+        let fandomAutoSyncInterval = null;
+
+        async function translateToKa(text) {
+            if (!text || !/[a-zA-Z]/.test(text)) return text;
+            try {
+                // Free Google Translate API for small text
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ka&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data && data[0]) {
+                    return data[0].map(x => x[0]).join('');
                 }
-            };
+                return text;
+            } catch (e) {
+                console.error("Translation Error:", e);
+                return text;
+            }
+        }
 
-            // FULL WIPE Logic
-            get('full-wipe-btn').onclick = async () => {
-                const confirmed = confirm("🔥 ყურადღება: ნამდვილად გსურთ მთლიანი ბაზის წაშლა?\n\nწაიშლება ყველა იმეილი, პაროლი და ექაუნთი! ამის დაბრუნება შეუძლებელია!");
-                if (!confirmed) return;
+        async function translateExistingNews() {
+            try {
+                fandomLog('🔎 ინგლისური სიახლეების ძებნა და თარგმნა...', 'white');
+                const allNews = await sql`SELECT id, title, content FROM news ORDER BY id DESC LIMIT 200`;
+                let count = 0;
+                for (const item of allNews) {
+                    // Simple check if it contains a lot of English characters
+                    if (/[a-zA-Z]{5,}/.test(item.title) || (item.content && /[a-zA-Z]{10,}/.test(item.content))) {
+                        const newTitle = await translateToKa(item.title);
+                        let newContent = item.content;
 
-                log('Deleting ALL data...', 'var(--danger)');
-                try {
-                    await sql`DELETE FROM users`;
-                    await sql`INSERT INTO chat_messages (nickname, message) VALUES ('📢 SYSTEM', '🔥 ადმინისტრაციამ სრულად გაასუფთავა მომხმარებლების ბაზა!')`;
-                    log('💥 ბაზა სრულად წაიშალა!', 'red');
-                    loadPlayers();
-                } catch (e) { log('Error: ' + e.message, 'red'); }
-            };
+                        // If content has English, translate the text part
+                        if (/[a-zA-Z]{10,}/.test(item.content)) {
+                            // Extract text from HTML, translate, and wrap back
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = item.content;
+                            const plainText = tempDiv.innerText || tempDiv.textContent;
+                            const translatedText = await translateToKa(plainText);
+                            newContent = `<p><strong>${translatedText}</strong></p><p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური თარგმანი</p>`;
+                        }
 
-            get('drop-vip-col-btn').onclick = async () => {
-                if (!confirm("⚠️ Remove 'is_vip' column from database? This matches the VIP removal update.")) return;
-                try {
-                    await sql`ALTER TABLE users DROP COLUMN IF EXISTS is_vip`;
-                    log('✅ VIP column removed from database!', 'green');
-                } catch (e) { log('Error dropping column: ' + e.message, 'red'); }
-            };
-
-            get('run-setup-btn').onclick = async () => {
-                if (!confirm("ნამდვილად გსურთ Database Setup? (ეს არ წაშლის არსებულ მონაცემებს)")) return;
-                log('Setup იწყება...', 'var(--accent)');
-                try {
-                    // 1. Users table update
-                    await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, nickname VARCHAR(50) NOT NULL, score INTEGER DEFAULT 0, coins INTEGER DEFAULT 0, total_coins INTEGER DEFAULT 0, survival_time INTEGER DEFAULT 0, best_score INTEGER DEFAULT 0, best_survival_time INTEGER DEFAULT 0, total_survival_time INTEGER DEFAULT 0, last_active TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW())`;
-                    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_coins INTEGER DEFAULT 0`; } catch (e) { }
-                    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS best_survival_time INTEGER DEFAULT 0`; } catch (e) { }
-                    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_survival_time INTEGER DEFAULT 0`; } catch (e) { }
-                    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_until TIMESTAMPTZ`; } catch (e) { }
-
-                    // 2. Achievements (Match History) table
-                    await sql`CREATE TABLE IF NOT EXISTS game_results (id SERIAL PRIMARY KEY, user_email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE, score INTEGER NOT NULL, duration_seconds INTEGER NOT NULL, coins_earned INTEGER NOT NULL, played_at TIMESTAMP DEFAULT NOW())`;
-
-                    // 3. Indexes & Supporting tables
-                    await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
-                    await sql`CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, nickname VARCHAR(50) NOT NULL, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW())`;
-                    await sql`CREATE TABLE IF NOT EXISTS global_events (event_type VARCHAR(50) PRIMARY KEY, event_value TEXT, expires_at TIMESTAMP)`;
-
-                    // 4. Duel System Tables
-                    await sql`CREATE TABLE IF NOT EXISTS duel_invitations (id SERIAL PRIMARY KEY, sender_email VARCHAR(255) NOT NULL, receiver_email VARCHAR(255) NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`;
-                    await sql`CREATE TABLE IF NOT EXISTS duels (id SERIAL PRIMARY KEY, player1_email VARCHAR(255) NOT NULL, player2_email VARCHAR(255) NOT NULL, player1_score INTEGER DEFAULT 0, player2_score INTEGER DEFAULT 0, start_time TIMESTAMP DEFAULT NOW(), end_time TIMESTAMP, winner_email VARCHAR(255), status VARCHAR(20) DEFAULT 'active')`;
-
-                    // 5. Admin Abuse Table (Non-destructive update)
-                    await sql`CREATE TABLE IF NOT EXISTS admin_abuse (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, end_time TIMESTAMPTZ, link_url TEXT, created_at TIMESTAMP DEFAULT NOW())`;
-                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
-                    try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
-
-                    log('🎉 SETUP დასრულებულია!', 'green');
-                    loadPlayers();
-                } catch (e) { log('Setup Error: ' + e.message, 'red'); }
-            };
-
-            get('test-db-btn').onclick = async () => {
-                log('კავშირის შემოწმება...', 'white');
-                try {
-                    const res = await sql`SELECT 1 as test`;
-                    const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
-                    const tNames = tables.map(t => t.table_name);
-                    alert(`✅ კავშირი OK!\nცხრილები: ${tNames.join(', ')}`);
-                    log('კავშირი წარმატებულია', 'green');
-                } catch (e) { log('DB Error', 'red'); alert('შეცდომა: ' + e.message); }
-            };
-
-            // 🔮 FANDOM WIKI AUTO-SYNC (Multi-Source)
-            const FANDOM_SOURCES = [
-                { id: 'brainrot', api: 'https://stealabrainrot.fandom.com/api.php', url: 'https://stealabrainrot.fandom.com', page: 'Leaks', type: 'leaks', category: 'სთილი', prefix: '🔮 Brainrot ლიკი:' },
-                { id: 'tsunami', api: 'https://escape-tsunami-for-brainrots.fandom.com/api.php', url: 'https://escape-tsunami-for-brainrots.fandom.com', page: 'Leaks', type: 'leaks', category: 'ცუნამი', prefix: '🌊 Tsunami ლიკი:' }
-            ];
-            let fandomAutoSyncInterval = null;
-
-            async function translateToKa(text) {
-                if (!text || !/[a-zA-Z]/.test(text)) return text;
-                try {
-                    // Free Google Translate API for small text
-                    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ka&dt=t&q=${encodeURIComponent(text)}`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    if (data && data[0]) {
-                        return data[0].map(x => x[0]).join('');
+                        if (newTitle !== item.title || newContent !== item.content) {
+                            await sql`UPDATE news SET title = ${newTitle}, content = ${newContent} WHERE id = ${item.id}`;
+                            count++;
+                        }
                     }
-                    return text;
-                } catch (e) {
-                    console.error("Translation Error:", e);
-                    return text;
                 }
-            }
+                if (count > 0) {
+                    fandomLog(`✅ ${count} ძველი სიახლე ითარგმნა!`, '#4caf50');
+                    loadAdminNews();
+                } else {
+                    fandomLog('✨ ყველა არსებული სიახლე უკვე ქართულია.', '#4caf50');
+                }
+            } catch (e) { console.error(e); }
+        }
 
-            async function translateExistingNews() {
-                try {
-                    fandomLog('🔎 ინგლისური სიახლეების ძებნა და თარგმნა...', 'white');
-                    const allNews = await sql`SELECT id, title, content FROM news ORDER BY id DESC LIMIT 200`;
-                    let count = 0;
-                    for (const item of allNews) {
-                        // Simple check if it contains a lot of English characters
-                        if (/[a-zA-Z]{5,}/.test(item.title) || (item.content && /[a-zA-Z]{10,}/.test(item.content))) {
-                            const newTitle = await translateToKa(item.title);
-                            let newContent = item.content;
+        function fandomLog(msg, color = '#f9a825') {
+            const logEl = get('fandom-sync-log');
+            const statusEl = get('fandom-sync-status');
+            if (statusEl) statusEl.innerHTML = `<span style="color:${color}">${msg}</span>`;
+            if (logEl) logEl.innerHTML = `<div style="color:${color};margin-bottom:4px;">[${new Date().toLocaleTimeString()}] ${msg}</div>` + logEl.innerHTML;
+        }
 
-                            // If content has English, translate the text part
-                            if (/[a-zA-Z]{10,}/.test(item.content)) {
-                                // Extract text from HTML, translate, and wrap back
-                                const tempDiv = document.createElement('div');
-                                tempDiv.innerHTML = item.content;
-                                const plainText = tempDiv.innerText || tempDiv.textContent;
-                                const translatedText = await translateToKa(plainText);
-                                newContent = `<p><strong>${translatedText}</strong></p><p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური თარგმანი</p>`;
+        async function parseFandomSource(source) {
+            try {
+                const resp = await fetch(`${source.api}?action=parse&page=${source.page}&format=json&prop=wikitext&origin=*`);
+                const data = await resp.json();
+                if (!data.parse) return [];
+                const wikitext = data.parse.wikitext['*'];
+                const entries = [];
+
+                if (source.type === 'leaks') {
+                    const lines = wikitext.split('\n');
+                    let currentMonth = new Date().getMonth();
+                    let currentYear = new Date().getFullYear();
+                    const monthsMap = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+
+                    for (const line of lines) {
+                        const headerMatch = line.match(/==+\s*([a-z]+)\s+(\d{4})\s*==+/i);
+                        if (headerMatch) {
+                            const m = headerMatch[1].toLowerCase().substring(0, 3);
+                            if (monthsMap[m] !== undefined) {
+                                currentMonth = monthsMap[m];
+                                currentYear = parseInt(headerMatch[2]);
                             }
-
-                            if (newTitle !== item.title || newContent !== item.content) {
-                                await sql`UPDATE news SET title = ${newTitle}, content = ${newContent} WHERE id = ${item.id}`;
-                                count++;
-                            }
+                            continue;
                         }
-                    }
-                    if (count > 0) {
-                        fandomLog(`✅ ${count} ძველი სიახლე ითარგმნა!`, '#4caf50');
-                        loadAdminNews();
-                    } else {
-                        fandomLog('✨ ყველა არსებული სიახლე უკვე ქართულია.', '#4caf50');
-                    }
-                } catch (e) { console.error(e); }
-            }
 
-            function fandomLog(msg, color = '#f9a825') {
-                const logEl = get('fandom-sync-log');
-                const statusEl = get('fandom-sync-status');
-                if (statusEl) statusEl.innerHTML = `<span style="color:${color}">${msg}</span>`;
-                if (logEl) logEl.innerHTML = `<div style="color:${color};margin-bottom:4px;">[${new Date().toLocaleTimeString()}] ${msg}</div>` + logEl.innerHTML;
-            }
-
-            async function parseFandomSource(source) {
-                try {
-                    const resp = await fetch(`${source.api}?action=parse&page=${source.page}&format=json&prop=wikitext&origin=*`);
-                    const data = await resp.json();
-                    if (!data.parse) return [];
-                    const wikitext = data.parse.wikitext['*'];
-                    const entries = [];
-
-                    if (source.type === 'leaks') {
-                        const lines = wikitext.split('\n');
-                        let currentMonth = new Date().getMonth();
-                        let currentYear = new Date().getFullYear();
-                        const monthsMap = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
-
-                        for (const line of lines) {
-                            const headerMatch = line.match(/==+\s*([a-z]+)\s+(\d{4})\s*==+/i);
-                            if (headerMatch) {
-                                const m = headerMatch[1].toLowerCase().substring(0, 3);
-                                if (monthsMap[m] !== undefined) {
-                                    currentMonth = monthsMap[m];
-                                    currentYear = parseInt(headerMatch[2]);
-                                }
-                                continue;
-                            }
-
-                            const fileRegex = /File:([^\|\]\n]+)\|([^\]\n]+)/g;
-                            let match;
-                            while ((match = fileRegex.exec(line)) !== null) {
-                                const filename = match[1].split('|')[0].trim();
-                                let descRaw = match[2].trim();
-
-                                // Clean description from wiki garbage (thumb, center, alt=, [[, ]])
-                                let desc = descRaw.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link);
-                                desc = desc.split('|').filter(p => !p.includes('=') && !/^(thumb|center|left|right|\d+px)$/i.test(p.trim())).pop() || '';
-                                desc = desc.replace(/\]\]/g, '').trim();
-
-                                let postDate = new Date(currentYear, currentMonth, 15, 12, 0, 0);
-                                const dateMatch = descRaw.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.? (\d+)/i);
-                                if (dateMatch) {
-                                    const m = monthsMap[dateMatch[1].toLowerCase().substring(0, 3)];
-                                    postDate = new Date(currentYear, m, parseInt(dateMatch[2]), 12, 0, 0);
-                                }
-                                entries.push({ filename, description: desc, date: postDate });
-                            }
-                        }
-                    } else if (source.type === 'updates') {
-                        const rows = wikitext.split('|-');
-                        for (let i = 1; i < rows.length; i++) {
-                            const row = rows[i].trim();
-                            const cells = row.split(/^\|/m).filter(c => c.trim() !== '');
-                            if (cells.length >= 2) {
-                                const nameCell = cells[0].trim();
-                                const descCell = cells[cells.length - 1].trim();
-
-                                const titleMatch = nameCell.match(/'''(.+?)'''/);
-                                const title = titleMatch ? titleMatch[1] : nameCell.split('\n')[0].replace(/\[\[.+?\]\]/g, '').trim();
-                                const fileMatch = nameCell.match(/File:([^\|\]\n]+)/);
-
-                                let postDate = new Date();
-                                // Improved Date regex to handle wiki formatting like 2/14/'''''26'''''
-                                const dateMatch = nameCell.match(/(\d{1,2})\/(\d{1,2})\/[^\d]*(\d{2,4})/);
-                                if (dateMatch) {
-                                    let y = parseInt(dateMatch[3]);
-                                    if (y < 100) y += 2000;
-                                    postDate = new Date(y, parseInt(dateMatch[1]) - 1, parseInt(dateMatch[2]), 12, 0, 0);
-                                }
-
-                                entries.push({
-                                    filename: fileMatch ? fileMatch[1].split('|')[0].trim() : '',
-                                    description: `${title}: ${descCell.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link).trim()}`,
-                                    date: postDate
-                                });
-                            }
-                        }
-                    }
-                    return entries;
-                } catch (e) { console.error(e); return []; }
-            }
-
-            async function getImageUrl(api, filename) {
-                if (!filename) return '';
-                try {
-                    const resp = await fetch(`${api}?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json&origin=*`);
-                    const data = await resp.json();
-                    const pages = data.query.pages;
-                    const pageId = Object.keys(pages)[0];
-                    if (pages[pageId].imageinfo && pages[pageId].imageinfo.length > 0) {
-                        return pages[pageId].imageinfo[0].url;
-                    }
-                } catch (e) { console.error('Image Error:', e); }
-                return '';
-            }
-
-            window.scrapeFandomUrl = async () => {
-                const url = get('scrape-url-input').value.trim();
-                const statusEl = get('scrape-status');
-                if (!url) return;
-
-                try {
-                    statusEl.textContent = "🔍 ვამოწმებ ლინკს...";
-                    const urlObj = new URL(url);
-                    const apiBase = `https://${urlObj.hostname}/api.php`;
-                    const pageName = urlObj.pathname.split('/wiki/')[1];
-
-                    if (!pageName) throw new Error("არასწორი ლინკი (გვერდის სახელი ვერ მოიძებნა)");
-
-                    statusEl.textContent = `📡 ვიწერ გვერდს: ${decodeURIComponent(pageName)}...`;
-
-                    const resp = await fetch(`${apiBase}?action=parse&page=${pageName}&format=json&prop=wikitext|text&origin=*`);
-                    const data = await resp.json();
-
-                    if (!data.parse) throw new Error("გვერდი ვერ მოიძებნა");
-
-                    const wikitext = data.parse.wikitext['*'];
-                    const title = data.parse.title;
-
-                    statusEl.textContent = "⚙️ ვამუშავებ კონტენტს...";
-
-                    let finalHtml = "";
-                    let imageUrl = "";
-
-                    // Check if it's a Traits style page (has TraitsTable)
-                    if (wikitext.includes('{{TraitsTable')) {
-                        const tables = [];
-                        const tableRegex = /{{TraitsTable\s*\|\s*TableName\s*=\s*(.*?)\s*\|\s*rows\s*=\s*(.*?)}}/gs;
+                        const fileRegex = /File:([^\|\]\n]+)\|([^\]\n]+)/g;
                         let match;
-                        while ((match = tableRegex.exec(wikitext)) !== null) {
-                            const tableName = match[1].replace(/{{.*?}}/g, '').replace(/\[\[|\]\]/g, '').trim();
-                            const rowsText = match[2];
-                            const rowRegex = /{{TraitsRow\s*\|(.*?)\s*}}/gs;
-                            const rows = [];
-                            let rowMatch;
-                            while ((rowMatch = rowRegex.exec(rowsText)) !== null) {
-                                const params = {};
-                                const paramText = rowMatch[1];
-                                const paramPairs = paramText.split('|');
-                                paramPairs.forEach(pair => {
-                                    const parts = pair.split('=');
-                                    if (parts.length >= 2) {
-                                        const key = parts[0].trim();
-                                        const val = parts.slice(1).join('=').trim();
-                                        params[key] = val;
-                                    }
-                                });
-                                rows.push(params);
+                        while ((match = fileRegex.exec(line)) !== null) {
+                            const filename = match[1].split('|')[0].trim();
+                            let descRaw = match[2].trim();
+
+                            // Clean description from wiki garbage (thumb, center, alt=, [[, ]])
+                            let desc = descRaw.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link);
+                            desc = desc.split('|').filter(p => !p.includes('=') && !/^(thumb|center|left|right|\d+px)$/i.test(p.trim())).pop() || '';
+                            desc = desc.replace(/\]\]/g, '').trim();
+
+                            let postDate = new Date(currentYear, currentMonth, 15, 12, 0, 0);
+                            const dateMatch = descRaw.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.? (\d+)/i);
+                            if (dateMatch) {
+                                const m = monthsMap[dateMatch[1].toLowerCase().substring(0, 3)];
+                                postDate = new Date(currentYear, m, parseInt(dateMatch[2]), 12, 0, 0);
                             }
-                            tables.push({ tableName, rows });
+                            entries.push({ filename, description: desc, date: postDate });
                         }
+                    }
+                } else if (source.type === 'updates') {
+                    const rows = wikitext.split('|-');
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i].trim();
+                        const cells = row.split(/^\|/m).filter(c => c.trim() !== '');
+                        if (cells.length >= 2) {
+                            const nameCell = cells[0].trim();
+                            const descCell = cells[cells.length - 1].trim();
 
-                        // Build HTML from tables
-                        let intro = wikitext.split('==')[0]
-                            .replace(/{{.*?}}/g, '')
-                            .replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, disp) => disp || link)
-                            .replace(/'''/g, '<b>').replace(/'''/g, '</b>')
-                            .replace(/\n\n/g, '</p><p>')
-                            .trim();
+                            const titleMatch = nameCell.match(/'''(.+?)'''/);
+                            const title = titleMatch ? titleMatch[1] : nameCell.split('\n')[0].replace(/\[\[.+?\]\]/g, '').trim();
+                            const fileMatch = nameCell.match(/File:([^\|\]\n]+)/);
 
-                        finalHtml = `<p>${intro}</p>`;
+                            let postDate = new Date();
+                            // Improved Date regex to handle wiki formatting like 2/14/'''''26'''''
+                            const dateMatch = nameCell.match(/(\d{1,2})\/(\d{1,2})\/[^\d]*(\d{2,4})/);
+                            if (dateMatch) {
+                                let y = parseInt(dateMatch[3]);
+                                if (y < 100) y += 2000;
+                                postDate = new Date(y, parseInt(dateMatch[1]) - 1, parseInt(dateMatch[2]), 12, 0, 0);
+                            }
 
-                        for (const table of tables) {
-                            finalHtml += `<h3 style="margin-top:30px; color:#4facfe; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">${table.tableName}</h3>`;
-                            finalHtml += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:0.85rem;">`;
-                            finalHtml += `<tr style="background:rgba(255,255,255,0.05); text-align:left;">
+                            entries.push({
+                                filename: fileMatch ? fileMatch[1].split('|')[0].trim() : '',
+                                description: `${title}: ${descCell.replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, display) => display || link).trim()}`,
+                                date: postDate
+                            });
+                        }
+                    }
+                }
+                return entries;
+            } catch (e) { console.error(e); return []; }
+        }
+
+        async function getImageUrl(api, filename) {
+            if (!filename) return '';
+            try {
+                const resp = await fetch(`${api}?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json&origin=*`);
+                const data = await resp.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if (pages[pageId].imageinfo && pages[pageId].imageinfo.length > 0) {
+                    return pages[pageId].imageinfo[0].url;
+                }
+            } catch (e) { console.error('Image Error:', e); }
+            return '';
+        }
+
+        window.scrapeFandomUrl = async () => {
+            const url = get('scrape-url-input').value.trim();
+            const statusEl = get('scrape-status');
+            if (!url) return;
+
+            try {
+                statusEl.textContent = "🔍 ვამოწმებ ლინკს...";
+                const urlObj = new URL(url);
+                const apiBase = `https://${urlObj.hostname}/api.php`;
+                const pageName = urlObj.pathname.split('/wiki/')[1];
+
+                if (!pageName) throw new Error("არასწორი ლინკი (გვერდის სახელი ვერ მოიძებნა)");
+
+                statusEl.textContent = `📡 ვიწერ გვერდს: ${decodeURIComponent(pageName)}...`;
+
+                const resp = await fetch(`${apiBase}?action=parse&page=${pageName}&format=json&prop=wikitext|text&origin=*`);
+                const data = await resp.json();
+
+                if (!data.parse) throw new Error("გვერდი ვერ მოიძებნა");
+
+                const wikitext = data.parse.wikitext['*'];
+                const title = data.parse.title;
+
+                statusEl.textContent = "⚙️ ვამუშავებ კონტენტს...";
+
+                let finalHtml = "";
+                let imageUrl = "";
+
+                // Check if it's a Traits style page (has TraitsTable)
+                if (wikitext.includes('{{TraitsTable')) {
+                    const tables = [];
+                    const tableRegex = /{{TraitsTable\s*\|\s*TableName\s*=\s*(.*?)\s*\|\s*rows\s*=\s*(.*?)}}/gs;
+                    let match;
+                    while ((match = tableRegex.exec(wikitext)) !== null) {
+                        const tableName = match[1].replace(/{{.*?}}/g, '').replace(/\[\[|\]\]/g, '').trim();
+                        const rowsText = match[2];
+                        const rowRegex = /{{TraitsRow\s*\|(.*?)\s*}}/gs;
+                        const rows = [];
+                        let rowMatch;
+                        while ((rowMatch = rowRegex.exec(rowsText)) !== null) {
+                            const params = {};
+                            const paramText = rowMatch[1];
+                            const paramPairs = paramText.split('|');
+                            paramPairs.forEach(pair => {
+                                const parts = pair.split('=');
+                                if (parts.length >= 2) {
+                                    const key = parts[0].trim();
+                                    const val = parts.slice(1).join('=').trim();
+                                    params[key] = val;
+                                }
+                            });
+                            rows.push(params);
+                        }
+                        tables.push({ tableName, rows });
+                    }
+
+                    // Build HTML from tables
+                    let intro = wikitext.split('==')[0]
+                        .replace(/{{.*?}}/g, '')
+                        .replace(/\[\[([^\|\]]+)\|?([^\]]*)\]\]/g, (_, link, disp) => disp || link)
+                        .replace(/'''/g, '<b>').replace(/'''/g, '</b>')
+                        .replace(/\n\n/g, '</p><p>')
+                        .trim();
+
+                    finalHtml = `<p>${intro}</p>`;
+
+                    for (const table of tables) {
+                        finalHtml += `<h3 style="margin-top:30px; color:#4facfe; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">${table.tableName}</h3>`;
+                        finalHtml += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:0.85rem;">`;
+                        finalHtml += `<tr style="background:rgba(255,255,255,0.05); text-align:left;">
                             <th style="padding:10px; border:1px solid rgba(255,255,255,0.1);">Trait</th>
                             <th style="padding:10px; border:1px solid rgba(255,255,255,0.1);">Mult</th>
                             <th style="padding:10px; border:1px solid rgba(255,255,255,0.1);">Obtain/Spawn</th>
                             <th style="padding:10px; border:1px solid rgba(255,255,255,0.1);">Effect/Visuals</th>
                         </tr>`;
 
-                            for (const row of table.rows) {
-                                const name = (row.name || '').replace(/\[\[|\]\]/g, '');
-                                const mult = row.multiplier || '';
-                                const spawn = row.spawn || row.obtain || '';
-                                const visuals = (row.visuals || row.environment || '').replace(/\[\[|\]\]/g, '');
+                        for (const row of table.rows) {
+                            const name = (row.name || '').replace(/\[\[|\]\]/g, '');
+                            const mult = row.multiplier || '';
+                            const spawn = row.spawn || row.obtain || '';
+                            const visuals = (row.visuals || row.environment || '').replace(/\[\[|\]\]/g, '');
 
-                                if (!imageUrl && row.image) {
-                                    imageUrl = await getImageUrl(apiBase, row.image);
-                                }
+                            if (!imageUrl && row.image) {
+                                imageUrl = await getImageUrl(apiBase, row.image);
+                            }
 
-                                finalHtml += `<tr>
+                            finalHtml += `<tr>
                                 <td style="padding:10px; border:1px solid rgba(255,255,255,0.05);"><b>${name}</b></td>
                                 <td style="padding:10px; border:1px solid rgba(255,255,255,0.05); color:#ffd700;">${mult}</td>
                                 <td style="padding:10px; border:1px solid rgba(255,255,255,0.05); opacity:0.8;">${spawn}</td>
                                 <td style="padding:10px; border:1px solid rgba(255,255,255,0.05); opacity:0.7; font-size:0.8rem;">${visuals}</td>
                             </tr>`;
-                            }
-                            finalHtml += `</table></div>`;
                         }
-                    } else {
-                        // Generic scraper
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = data.parse.text['*'];
+                        finalHtml += `</table></div>`;
+                    }
+                } else {
+                    // Generic scraper
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.parse.text['*'];
 
-                        // Clean up Fandom garbage
-                        tempDiv.querySelectorAll('.navbox, .asbox, .mw-editsection, .toc, .printfooter, .magnify, .ext-image-tooltip').forEach(el => el.remove());
+                    // Clean up Fandom garbage
+                    tempDiv.querySelectorAll('.navbox, .asbox, .mw-editsection, .toc, .printfooter, .magnify, .ext-image-tooltip').forEach(el => el.remove());
 
-                        // Fix links and images
-                        tempDiv.querySelectorAll('a').forEach(a => {
-                            if (a.getAttribute('href')?.startsWith('/wiki/')) {
-                                a.href = urlObj.origin + a.getAttribute('href');
-                                a.target = "_blank";
-                            }
-                        });
+                    // Fix links and images
+                    tempDiv.querySelectorAll('a').forEach(a => {
+                        if (a.getAttribute('href')?.startsWith('/wiki/')) {
+                            a.href = urlObj.origin + a.getAttribute('href');
+                            a.target = "_blank";
+                        }
+                    });
 
-                        finalHtml = tempDiv.innerHTML;
+                    finalHtml = tempDiv.innerHTML;
 
-                        // Try to find a main image
-                        const firstImg = tempDiv.querySelector('img');
-                        if (firstImg) imageUrl = firstImg.src;
+                    // Try to find a main image
+                    const firstImg = tempDiv.querySelector('img');
+                    if (firstImg) imageUrl = firstImg.src;
+                }
+
+                // Translate title and content
+                const translatedTitle = await translateToKa(title);
+                const translatedContent = await translateToKa(finalHtml);
+
+                // Populate form
+                get('news-title-input').value = translatedTitle;
+                get('news-content-input').value = translatedContent;
+                if (imageUrl) get('news-image-input').value = imageUrl;
+                get('news-category-input').value = 'ვიკი';
+
+                statusEl.textContent = "✅ წარმატებით წამოვიდა! შეამოწმეთ ფორმა ქვემოთ.";
+                get('news-form-title').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (e) {
+                console.error(e);
+                statusEl.textContent = `❌ შეცდომა: ${e.message}`;
+            }
+        };
+
+        async function syncFandomAll(count = 3) {
+            try {
+                fandomLog('📡 Fandom Wiki-ებიდან მონაცემების წამოღება...');
+                let totalAdded = 0;
+
+                for (const source of FANDOM_SOURCES) {
+                    fandomLog(`🔍 მოწმდება ${source.id}...`);
+                    const allEntries = await parseFandomSource(source);
+                    if (allEntries.length === 0) {
+                        fandomLog(`⚠️ ${source.id}-ზე მონაცემები ვერ მოიძებნა`, 'orange');
+                        continue;
                     }
 
-                    // Translate title and content
-                    const translatedTitle = await translateToKa(title);
-                    const translatedContent = await translateToKa(finalHtml);
+                    // For Leaks, newest are at the bottom. For Update Log, newest are at the top.
+                    let latest;
+                    if (source.type === 'leaks') {
+                        latest = allEntries.slice(-count).reverse();
+                    } else {
+                        latest = allEntries.slice(0, count);
+                    }
 
-                    // Populate form
-                    get('news-title-input').value = translatedTitle;
-                    get('news-content-input').value = translatedContent;
-                    if (imageUrl) get('news-image-input').value = imageUrl;
-                    get('news-category-input').value = 'ვიკი';
+                    // Get existing titles AND their IDs to allow updating dates
+                    const existing = await sql`SELECT id, title, created_at FROM news WHERE category = ${source.category} ORDER BY created_at DESC LIMIT 100`;
+                    const existingMap = new Map();
+                    existing.forEach(e => existingMap.set(e.title.toLowerCase().trim(), e));
 
-                    statusEl.textContent = "✅ წარმატებით წამოვიდა! შეამოწმეთ ფორმა ქვემოთ.";
-                    get('news-form-title').scrollIntoView({ behavior: 'smooth' });
+                    // Use a sequential offset to ensure that even items on the same day have a stable order
+                    let offset = 0;
+                    for (const entry of latest) {
+                        const translatedDesc = await translateToKa(entry.description);
+                        const fullTitle = `${source.prefix} ${translatedDesc}`;
+                        const key = fullTitle.toLowerCase().trim();
 
-                } catch (e) {
-                    console.error(e);
-                    statusEl.textContent = `❌ შეცდომა: ${e.message}`;
-                }
-            };
+                        // Add seconds to entry.date to ensure sequential order for same-day items
+                        const itemDate = new Date(entry.date || new Date());
+                        itemDate.setSeconds(itemDate.getSeconds() - (offset++));
 
-            async function syncFandomAll(count = 3) {
-                try {
-                    fandomLog('📡 Fandom Wiki-ებიდან მონაცემების წამოღება...');
-                    let totalAdded = 0;
+                        // Ensure date is valid and capped at NOW()
+                        let finalDate = itemDate;
+                        if (finalDate > new Date()) finalDate = new Date();
 
-                    for (const source of FANDOM_SOURCES) {
-                        fandomLog(`🔍 მოწმდება ${source.id}...`);
-                        const allEntries = await parseFandomSource(source);
-                        if (allEntries.length === 0) {
-                            fandomLog(`⚠️ ${source.id}-ზე მონაცემები ვერ მოიძებნა`, 'orange');
+                        if (existingMap.get(key)) {
+                            const dbItem = existingMap.get(key);
+                            if (new Date(dbItem.created_at).getTime() !== finalDate.getTime()) {
+                                await sql`UPDATE news SET created_at = ${finalDate} WHERE id = ${dbItem.id}`;
+                                fandomLog(`🔄 თარიღი გასწორდა: ${entry.description.slice(0, 20)}...`, '#3498db');
+                            }
                             continue;
                         }
 
-                        // For Leaks, newest are at the bottom. For Update Log, newest are at the top.
-                        let latest;
-                        if (source.type === 'leaks') {
-                            latest = allEntries.slice(-count).reverse();
-                        } else {
-                            latest = allEntries.slice(0, count);
-                        }
+                        fandomLog(`🖼️ სურათის მიღება: ${entry.filename || 'No Image'}...`);
+                        const imageUrl = await getImageUrl(source.api, entry.filename);
 
-                        // Get existing titles AND their IDs to allow updating dates
-                        const existing = await sql`SELECT id, title, created_at FROM news WHERE category = ${source.category} ORDER BY created_at DESC LIMIT 100`;
-                        const existingMap = new Map();
-                        existing.forEach(e => existingMap.set(e.title.toLowerCase().trim(), e));
+                        const opinions = ["საინტერესოდ გამოიყურება! 🔥", "ახალი ამბებია! 🎮", "ეპიკური განახლებაა! 💥", "ველოდებით სიახლეებს! 😍", "ძალიან მაგარია! 🏆"];
+                        const opinion = opinions[Math.floor(Math.random() * opinions.length)];
 
-                        // Use a sequential offset to ensure that even items on the same day have a stable order
-                        let offset = 0;
-                        for (const entry of latest) {
-                            const translatedDesc = await translateToKa(entry.description);
-                            const fullTitle = `${source.prefix} ${translatedDesc}`;
-                            const key = fullTitle.toLowerCase().trim();
-
-                            // Add seconds to entry.date to ensure sequential order for same-day items
-                            const itemDate = new Date(entry.date || new Date());
-                            itemDate.setSeconds(itemDate.getSeconds() - (offset++));
-
-                            // Ensure date is valid and capped at NOW()
-                            let finalDate = itemDate;
-                            if (finalDate > new Date()) finalDate = new Date();
-
-                            if (existingMap.get(key)) {
-                                const dbItem = existingMap.get(key);
-                                if (new Date(dbItem.created_at).getTime() !== finalDate.getTime()) {
-                                    await sql`UPDATE news SET created_at = ${finalDate} WHERE id = ${dbItem.id}`;
-                                    fandomLog(`🔄 თარიღი გასწორდა: ${entry.description.slice(0, 20)}...`, '#3498db');
-                                }
-                                continue;
-                            }
-
-                            fandomLog(`🖼️ სურათის მიღება: ${entry.filename || 'No Image'}...`);
-                            const imageUrl = await getImageUrl(source.api, entry.filename);
-
-                            const opinions = ["საინტერესოდ გამოიყურება! 🔥", "ახალი ამბებია! 🎮", "ეპიკური განახლებაა! 💥", "ველოდებით სიახლეებს! 😍", "ძალიან მაგარია! 🏆"];
-                            const opinion = opinions[Math.floor(Math.random() * opinions.length)];
-
-                            const content = `
+                        const content = `
                             <p><strong>${translatedDesc}</strong></p>
                             <p>💬 <em>აზრი:</em> ${opinion}</p>
                             <p>წყარო: <a href="${source.url}/wiki/${source.page}" target="_blank">${source.id} Wiki</a></p>
                             <p style="opacity:0.5;font-size:0.8em;">🔮 ავტომატური სინქრონიზაცია & თარგმანი</p>
                         `;
 
-                            await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${finalDate}) RETURNING id`;
-                            totalAdded++;
-                            fandomLog(`✅ დაემატა (${source.id}): ${entry.description.slice(0, 30)}...`, '#4caf50');
-                        }
+                        await sql`INSERT INTO news (title, content, image_url, video_url, category, created_at) VALUES (${fullTitle}, ${content}, ${imageUrl}, ${''}, ${source.category}, ${finalDate}) RETURNING id`;
+                        totalAdded++;
+                        fandomLog(`✅ დაემატა (${source.id}): ${entry.description.slice(0, 30)}...`, '#4caf50');
                     }
-
-                    if (totalAdded > 0) {
-                        fandomLog(`🎉 სულ დაემატა ${totalAdded} სიახლე!`, '#4caf50');
-                        loadAdminNews();
-                    } else {
-                        fandomLog('✨ ახალი სიახლეები არ არის.', '#4caf50');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    fandomLog(`❌ შეცდომა: ${e.message}`, 'red');
                 }
-            }
 
-            // Sync buttons
-            get('sync-fandom-btn').onclick = () => syncFandomAll(3);
-            get('deep-sync-fandom-btn').onclick = () => syncFandomAll(50);
-            get('fix-sort-btn').onclick = () => syncFandomAll(100);
-            get('translate-manual-btn').onclick = translateExistingNews;
-
-            // Auto-sync toggle
-            const autoSyncToggle = get('fandom-auto-sync-toggle');
-            if (localStorage.getItem('fandom_auto_sync') === 'true') {
-                autoSyncToggle.checked = true;
-                startFandomAutoSync();
-            }
-
-            autoSyncToggle.onchange = () => {
-                localStorage.setItem('fandom_auto_sync', autoSyncToggle.checked);
-                if (autoSyncToggle.checked) {
-                    startFandomAutoSync();
-                    fandomLog('🔄 ავტო-სინქრონიზაცია ჩართულია (10 წთ)', '#4caf50');
+                if (totalAdded > 0) {
+                    fandomLog(`🎉 სულ დაემატა ${totalAdded} სიახლე!`, '#4caf50');
+                    loadAdminNews();
                 } else {
-                    stopFandomAutoSync();
-                    fandomLog('⏹️ ავტო-სინქრონიზაცია გამორთულია', '#888');
+                    fandomLog('✨ ახალი სიახლეები არ არის.', '#4caf50');
                 }
-            };
-
-            function startFandomAutoSync() {
-                if (fandomAutoSyncInterval) clearInterval(fandomAutoSyncInterval);
-                fandomAutoSyncInterval = setInterval(() => syncFandomAll(1), 10 * 60 * 1000);
-                fandomLog('🔄 ავტო-სინქრონიზაცია აქტიურია', '#4caf50');
+            } catch (e) {
+                console.error(e);
+                fandomLog(`❌ შეცდომა: ${e.message}`, 'red');
             }
+        }
 
-            function stopFandomAutoSync() {
-                if (fandomAutoSyncInterval) {
-                    clearInterval(fandomAutoSyncInterval);
-                    fandomAutoSyncInterval = null;
-                }
+        // Sync buttons
+        get('sync-fandom-btn').onclick = () => syncFandomAll(3);
+        get('deep-sync-fandom-btn').onclick = () => syncFandomAll(50);
+        get('fix-sort-btn').onclick = () => syncFandomAll(100);
+        get('translate-manual-btn').onclick = translateExistingNews;
+
+        // Auto-sync toggle
+        const autoSyncToggle = get('fandom-auto-sync-toggle');
+        if (localStorage.getItem('fandom_auto_sync') === 'true') {
+            autoSyncToggle.checked = true;
+            startFandomAutoSync();
+        }
+
+        autoSyncToggle.onchange = () => {
+            localStorage.setItem('fandom_auto_sync', autoSyncToggle.checked);
+            if (autoSyncToggle.checked) {
+                startFandomAutoSync();
+                fandomLog('🔄 ავტო-სინქრონიზაცია ჩართულია (10 წთ)', '#4caf50');
+            } else {
+                stopFandomAutoSync();
+                fandomLog('⏹️ ავტო-სინქრონიზაცია გამორთულია', '#888');
             }
+        };
 
-            // Auto-translate existing on load if needed
-            setTimeout(translateExistingNews, 3000);
+        function startFandomAutoSync() {
+            if (fandomAutoSyncInterval) clearInterval(fandomAutoSyncInterval);
+            fandomAutoSyncInterval = setInterval(() => syncFandomAll(1), 10 * 60 * 1000);
+            fandomLog('🔄 ავტო-სინქრონიზაცია აქტიურია', '#4caf50');
+        }
 
-        </script>
+        function stopFandomAutoSync() {
+            if (fandomAutoSyncInterval) {
+                clearInterval(fandomAutoSyncInterval);
+                fandomAutoSyncInterval = null;
+            }
+        }
+
+        // Auto-translate existing on load if needed
+        setTimeout(translateExistingNews, 3000);
+
+    </script>
 </body>
 
 </html>
