@@ -213,11 +213,15 @@ async function loadAdminAbuseSidebar() {
                     return;
                 }
 
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s_val = Math.floor((diff % 60000) / 1000);
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s_val = Math.floor((diff % (1000 * 60)) / 1000);
 
-                timerEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s_val.toString().padStart(2, '0')}`;
+                let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s_val.toString().padStart(2, '0')}`;
+                if (d > 0) timeStr = `${d}დ ${timeStr}`;
+
+                timerEl.textContent = timeStr;
             };
 
             updateTimer();
@@ -271,10 +275,16 @@ async function loadAdminAbuseSidebar() {
                         const end = new Date(s.end_time);
                         const diff = end - now;
                         if (diff <= 0) { timerEl.textContent = "END"; timerEl.style.color = '#ff4d4d'; return; }
-                        const h = Math.floor(diff / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        const sv = Math.floor((diff % 60000) / 1000);
-                        timerEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sv).padStart(2, '0')}`;
+
+                        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const sv = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        let timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sv).padStart(2, '0')}`;
+                        if (d > 0) timeStr = `${d}დ ${timeStr}`;
+
+                        timerEl.textContent = timeStr;
                     };
                     updateMobTimer();
                     setInterval(updateMobTimer, 1000);
