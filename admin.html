@@ -2923,6 +2923,10 @@
                 try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
                 try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS link_url TEXT`; } catch (e) { }
 
+                // 6. Abuse Suggestions & Q&A
+                await sql`CREATE TABLE IF NOT EXISTS abuse_suggestions (id SERIAL PRIMARY KEY, suggest_text TEXT NOT NULL, nickname TEXT, likes INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS suggestion_likes (id SERIAL PRIMARY KEY, suggestion_id INTEGER REFERENCES abuse_suggestions(id) ON DELETE CASCADE, user_email TEXT NOT NULL, UNIQUE(suggestion_id, user_email))`;
+
                 log('🎉 SETUP დასრულებულია!', 'green');
                 loadPlayers();
             } catch (e) { log('Setup Error: ' + e.message, 'red'); }

@@ -154,6 +154,27 @@ async function initDatabase() {
             UNIQUE(news_id, user_email)
         )`;
 
+        // 10. Admin Abuse Suggestions (Q&A)
+        await sql`CREATE TABLE IF NOT EXISTS abuse_suggestions (
+            id SERIAL PRIMARY KEY,
+            suggest_text TEXT NOT NULL,
+            nickname TEXT,
+            likes INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // 11. Suggestion Likes (to prevent multiple likes from same user)
+        await sql`CREATE TABLE IF NOT EXISTS suggestion_likes (
+            id SERIAL PRIMARY KEY,
+            suggestion_id INTEGER REFERENCES abuse_suggestions(id) ON DELETE CASCADE,
+            user_email TEXT NOT NULL,
+            UNIQUE(suggestion_id, user_email)
+        )`;
+
+        try {
+            await sql`ALTER TABLE news_comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES news_comments(id) ON DELETE CASCADE`;
+        } catch (e) { }
+
         console.log("✅ Database schema sync complete!");
     } catch (e) {
         console.error("❌ DB Sync Error:", e);

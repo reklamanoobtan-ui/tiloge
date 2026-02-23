@@ -65,6 +65,43 @@
             font-size: 1.1rem;
             text-align: center;
         }
+
+        .suggest-section {
+            margin-top: 60px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--news-border);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-suggestion-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--news-border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: 0.3s;
+        }
+
+        .top-suggestion-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--news-primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 
@@ -92,6 +129,29 @@
         <div id="all-abuse-list" class="abuse-grid">
             <p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">იტვირთება...</p>
         </div>
+
+        <!-- Suggestion Section -->
+        <section class="suggest-section">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h2 style="font-weight: 900; font-size: 2rem;">💡 კითხვა-პასუხი</h2>
+                <p style="opacity: 0.7; font-size: 1.1rem; margin-top: 10px;">რომელი თამაშის ადმინ აბიუსი დავამატოთ
+                    კიდევ?</p>
+            </div>
+
+            <div style="display: flex; gap: 15px; max-width: 600px; margin: 0 auto 40px;">
+                <input type="text" id="suggestion-input" placeholder="დაწერეთ თამაშის სახელი..."
+                    style="flex: 1; padding: 15px 25px; border-radius: 15px; border: 1px solid var(--news-border); background: var(--news-bg); color: var(--news-text); font-weight: 600; font-size: 1rem;">
+                <button id="submit-suggest-btn" class="action-btn" style="padding: 0 30px;">გაგზავნა</button>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h3 style="font-weight: 800; font-size: 1.4rem; color: var(--news-primary);">🔥 TOP 3 პასუხი</h3>
+            </div>
+
+            <div id="top-suggestions-list" style="display: grid; gap: 15px; max-width: 600px; margin: 0 auto;">
+                <!-- Top 3 suggestions load here -->
+            </div>
+        </section>
     </div>
 
     <!-- Footer -->
@@ -125,6 +185,9 @@
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
         const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
         const sql = neon(DB_URL);
+
+        const userEmail = localStorage.getItem('tilo_email');
+        const nickname = localStorage.getItem('tilo_nick');
 
         async function loadAllAbuse() {
             const container = document.getElementById('all-abuse-list');
@@ -160,27 +223,18 @@
                     `;
                     container.appendChild(card);
 
-                    // Timer
                     const updateTimer = () => {
                         const el = document.getElementById(timerId);
                         if (!el) return;
                         if (!s.end_time) { el.textContent = "⏱️"; return; }
-
                         const now = new Date();
                         const end = new Date(s.end_time);
                         const diff = end - now;
-
-                        if (diff <= 0) {
-                            el.textContent = "დასრულდა";
-                            el.style.color = "#ff4757";
-                            return;
-                        }
-
+                        if (diff <= 0) { el.textContent = "დასრულდა"; el.style.color = "#ff4757"; return; }
                         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                         const sv = Math.floor((diff % (1000 * 60)) / 1000);
-
                         let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sv.toString().padStart(2, '0')}`;
                         if (d > 0) timeStr = `${d}დ ${timeStr}`;
                         el.textContent = timeStr;
@@ -188,21 +242,77 @@
                     updateTimer();
                     setInterval(updateTimer, 1000);
                 });
+            } catch (e) { console.error(e); }
+        }
 
+        async function loadTopSuggestions() {
+            const list = document.getElementById('top-suggestions-list');
+            try {
+                const suggestions = await sql`
+                    SELECT LOWER(TRIM(suggest_text)) as text, SUM(likes) as total_likes, MAX(suggest_text) as original_text
+                    FROM abuse_suggestions
+                    GROUP BY LOWER(TRIM(suggest_text))
+                    ORDER BY total_likes DESC, MAX(created_at) DESC
+                    LIMIT 3
+                `;
+
+                if (suggestions.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; opacity: 0.5;">ჯერ პასუხები არ არის.</p>';
+                    return;
+                }
+
+                list.innerHTML = suggestions.map((s, idx) => `
+                    <div class="top-suggestion-item" style="animation: slideIn 0.3s ease-out backwards; animation-delay: ${idx * 0.1}s;">
+                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--news-primary); min-width: 30px;">#${idx + 1}</div>
+                        <div style="flex: 1; font-weight: 700; font-size: 1.1rem; color: var(--news-text);">${s.original_text}</div>
+                        <button onclick="likeSuggestion('${s.text}')" id="like-btn-${s.text.replace(/\s+/g, '-')}"
+                            style="background: ${localStorage.getItem('liked_' + s.text) ? 'var(--news-primary)' : 'rgba(255,255,255,0.1)'}; 
+                                   border: none; padding: 8px 15px; border-radius: 10px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800; transition: 0.3s;">
+                            ❤️ <span>${s.total_likes}</span>
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        window.likeSuggestion = async (text) => {
+            if (!userEmail) return alert('გთხოვთ გაიაროთ ავტორიზაცია');
+            if (localStorage.getItem('liked_' + text)) return alert('თქვენ უკვე დაალაიქეთ ეს პასუხი');
+
+            try {
+                const groupRes = await sql`SELECT id FROM abuse_suggestions WHERE LOWER(TRIM(suggest_text)) = ${text} LIMIT 1`;
+                if (groupRes.length === 0) return;
+
+                const suggestId = groupRes[0].id;
+                await sql`INSERT INTO suggestion_likes (suggestion_id, user_email) VALUES (${suggestId}, ${userEmail})`;
+                await sql`UPDATE abuse_suggestions SET likes = likes + 1 WHERE LOWER(TRIM(suggest_text)) = ${text}`;
+
+                localStorage.setItem('liked_' + text, 'true');
+                loadTopSuggestions();
             } catch (e) {
                 console.error(e);
-                container.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 50px; color: red;">შეცდომა ჩატვირთვისას.</p>';
+                if (e.message.includes('unique')) alert('თქვენ უკვე დაალაიქეთ ეს პასუხი');
             }
-        }
+        };
 
-        // Dark mode check
-        if (localStorage.getItem('tilo_dark_mode') !== 'false') {
-            document.body.classList.add('dark-mode');
-        }
+        document.getElementById('submit-suggest-btn').onclick = async () => {
+            const input = document.getElementById('suggestion-input');
+            const text = input.value.trim();
+            if (!text) return alert('გთხოვთ შეიყვანოთ ტექსტი');
+
+            try {
+                await sql`INSERT INTO abuse_suggestions (suggest_text, nickname) VALUES (${text}, ${nickname || 'Guest'})`;
+                input.value = '';
+                alert('მადლობა, თქვენი პასუხი დაფიქსირდა!');
+                loadTopSuggestions();
+            } catch (e) { console.error(e); }
+        };
 
         loadAllAbuse();
+        loadTopSuggestions();
 
-        // Footer counter link fix
+        if (localStorage.getItem('tilo_dark_mode') !== 'false') document.body.classList.add('dark-mode');
+
         setInterval(() => {
             document.querySelectorAll('.footer-counters a').forEach(a => {
                 if (a.getAttribute('target') !== '_blank') a.setAttribute('target', '_blank');
