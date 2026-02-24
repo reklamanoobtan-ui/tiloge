@@ -1589,6 +1589,14 @@
                             <!-- Items list -->
                         </div>
                     </div>
+
+                    <div class="card">
+                        <h3>💡 კითხვა-პასუხი (ტოპ 3)</h3>
+                        <div id="admin-suggestions-list"
+                            style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <!-- Suggestions list -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1695,7 +1703,7 @@
                 if (target === 'players') loadPlayers();
                 if (target === 'online') loadOnlinePlayers();
                 if (target === 'comments') loadAdminComments();
-                if (target === 'abuse') loadAdminAbuse();
+                if (target === 'abuse') { loadAdminAbuse(); loadAbuseSuggestions(); }
             };
         });
 
@@ -2785,6 +2793,48 @@
             get('abuse-form-title').textContent = '💠 ADMIN ABUSE მართვა';
             get('publish-abuse-btn').textContent = '🚀 გამოქვეყნება';
             get('cancel-abuse-edit-btn').classList.add('hidden');
+        };
+
+        window.loadAbuseSuggestions = async () => {
+            try {
+                const suggestions = await sql`
+                    SELECT LOWER(TRIM(suggest_text)) as text, SUM(likes) as total_likes, MAX(suggest_text) as original_text
+                    FROM abuse_suggestions
+                    GROUP BY LOWER(TRIM(suggest_text))
+                    ORDER BY total_likes DESC, MAX(created_at) DESC
+                    LIMIT 3
+                `;
+                const container = get('admin-suggestions-list');
+                if (!container) return;
+
+                if (suggestions.length === 0) {
+                    container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">პასუხები ჯერ არ არის.</p>';
+                    return;
+                }
+
+                container.innerHTML = suggestions.map(s => `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.original_text}</div>
+                            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 4px;">❤️ ლაიქები: ${s.total_likes}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-left: 15px;">
+                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAbuseSuggestion('${s.text}')">🗑️ წაშლა</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.deleteAbuseSuggestion = async (text) => {
+            if (!confirm('ნამდვილად გსურთ ამ პასუხის წაშლა?')) return;
+            try {
+                await sql`DELETE FROM abuse_suggestions WHERE LOWER(TRIM(suggest_text)) = ${text}`;
+                log('🗑️ პასუხი წაიშალა!', 'var(--danger)');
+                loadAbuseSuggestions();
+            } catch (e) { console.error(e); }
         };
 
         // Initialize news list if tab is active
