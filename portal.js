@@ -61,7 +61,7 @@ async function loadNews() {
             news = await sql`SELECT * FROM news WHERE category = ${currentCategory} ORDER BY created_at DESC, id DESC`;
         } else {
             ITEMS_PER_PAGE = 10;
-            news = await sql`SELECT * FROM news ORDER BY created_at DESC, id DESC`;
+            news = await sql`SELECT * FROM news WHERE category != 'Steam Prices' ORDER BY created_at DESC, id DESC`;
         }
         allNewsCache = news;
         currentPage = 1;

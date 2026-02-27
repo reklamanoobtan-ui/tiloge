@@ -123,13 +123,16 @@ setInterval(verifyStorageIntegrity, 5000);
 Object.freeze(Object.prototype);
 Object.freeze(Array.prototype);
 
-// Disable right-click context menu
+// Disable right-click context menu (REMOVED for Google Security Compliance)
+/*
 document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     return false;
 });
+*/
 
-// Disable common keyboard shortcuts
+// Disable common keyboard shortcuts (REMOVED for Google Security Compliance)
+/*
 document.addEventListener('keydown', (e) => {
     // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
     if (e.keyCode === 123 ||
@@ -139,6 +142,7 @@ document.addEventListener('keydown', (e) => {
         return false;
     }
 });
+*/
 
 // Rate Limiting for API Calls
 const rateLimiter = {
