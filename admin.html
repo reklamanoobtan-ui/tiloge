@@ -1583,7 +1583,13 @@
                     </div>
 
                     <div class="card">
-                        <h3>📋 არსებული სლოტები (ბოლო 10)</h3>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>📋 არსებული სლოტები (ბოლო 10)</h3>
+                            <button class="btn btn-outline" onclick="syncRecentAbusesToNews()"
+                                style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--news-primary); color: var(--news-primary);">🔄
+                                სიახლეებში სინქრონიზაცია (3 დღე)</button>
+                        </div>
                         <div id="admin-abuse-list"
                             style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
                             <!-- Items list -->
@@ -2739,11 +2745,56 @@
                     log('✅ წარმატებით გამოქვეყნდა!', 'var(--accent)');
                 }
 
+                // --- Sync to News ---
+                const newsTitle = `ადმინ აბიუსი თამაშში ${title}`;
+                const newsContent = `
+                    <div style="text-align: center;">
+                        <p style="font-size: 1.25rem; font-weight: 800; margin-bottom: 25px; line-height:1.4;">${title} არის ადმინ აბიუსი (${time ? time.toLocaleString('ka-GE') : 'განუსაზღვრელი'})</p>
+                        <a href="all-abuse.html" class="action-btn" style="text-decoration:none; display:inline-block; padding: 18px 40px; background:var(--news-primary, #0066cc); color:#fff; border-radius:12px; font-weight: 900; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: 0.3s;">🚀 გადადი აბიუსზე</a>
+                    </div>
+                `;
+
+                // Check if news already exists to avoid duplicates (optional but good)
+                const checkNews = await sql`SELECT id FROM news WHERE title = ${newsTitle} LIMIT 1`;
+                if (checkNews.length === 0) {
+                    await sql`INSERT INTO news (title, content, image_url, category) VALUES (${newsTitle}, ${newsContent}, ${img}, 'ადმინ აბიუსი')`;
+                }
+
                 resetAbuseForm();
                 loadAdminAbuse();
             } catch (e) {
                 console.error(e);
                 log('❌ შეცდომა: ' + e.message, 'red');
+            }
+        };
+
+        window.syncRecentAbusesToNews = async () => {
+            log('აბიუსების სინქრონიზაცია...', 'var(--accent)');
+            try {
+                // Fetch abuses from last 3 days
+                const recentAbuses = await sql`SELECT * FROM admin_abuse WHERE created_at > NOW() - INTERVAL '3 days'`;
+                let count = 0;
+
+                for (const s of recentAbuses) {
+                    const newsTitle = `ადმინ აბიუსი თამაშში ${s.title}`;
+                    const checkNews = await sql`SELECT id FROM news WHERE title = ${newsTitle} LIMIT 1`;
+
+                    if (checkNews.length === 0) {
+                        const time = s.end_time ? new Date(s.end_time) : null;
+                        const newsContent = `
+                            <div style="text-align: center;">
+                                <p style="font-size: 1.25rem; font-weight: 800; margin-bottom: 25px; line-height:1.4;">${s.title} არის ადმინ აბიუსი (${time ? time.toLocaleString('ka-GE') : 'განუსაზღვრელი'})</p>
+                                <a href="all-abuse.html" class="action-btn" style="text-decoration:none; display:inline-block; padding: 18px 40px; background:var(--news-primary, #0066cc); color:#fff; border-radius:12px; font-weight: 900; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: 0.3s;">🚀 გადადი აბიუსზე</a>
+                            </div>
+                        `;
+                        await sql`INSERT INTO news (title, content, image_url, category) VALUES (${newsTitle}, ${newsContent}, ${s.image_url}, 'ადმინ აბიუსი')`;
+                        count++;
+                    }
+                }
+                log(`✅ ${count} აბიუსი დაემატა სიახლეებში!`, 'var(--accent)');
+            } catch (e) {
+                console.error(e);
+                log('❌ შეცდომა სინქრონიზაციისას', 'red');
             }
         };
 

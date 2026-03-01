@@ -9,9 +9,147 @@ let currentNewsId = null;
 let currentCategory = null;
 let replyingToId = null;
 
+let currentLang = localStorage.getItem('tilo_lang') || 'ka';
 const get = id => document.getElementById(id);
 
+async function translateToEn(text) {
+    if (!text || !/[ა-ჰ]/.test(text)) return text;
+    try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ka&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data[0]) {
+            return data[0].map(x => x[0]).join('');
+        }
+        return text;
+    } catch (e) {
+        return text;
+    }
+}
+
+const translations = {
+    ka: {
+        home: "მთავარი",
+        steala: "სთილი",
+        tsunami: "ცუნამი",
+        login: "🔐 შესვლა",
+        logout: "🔒 გასვლა",
+        profile: "👤 პროფილი",
+        darkMode: "🌙 Dark Mode",
+        newsLoading: "სიახლეები იტვირთება...",
+        noNews: "სიახლეები ჯერ არ არის.",
+        back: "← უკან დაბრუნება",
+        likes: "მოწონება",
+        comments: "💬 კომენტარები",
+        send: "გაგზავნა",
+        commentPlaceholder: "დაწერეთ თქვენი აზრი...",
+        share: "🔗 გაზიარება",
+        topAbuse: "💠 TOP 3 ADMIN ABUSE",
+        seeAll: "ნახეთ სრულად 📂",
+        chatTitle: "💬 გლობალური ჩატი",
+        chatPlaceholder: "მესიჯი...",
+        authLogin: "შესვლა",
+        authRegister: "რეგისტრაცია",
+        authEmail: "ელ-ფოსტა",
+        authPass: "პაროლი",
+        authNick: "ნიკნეიმი",
+        authForgot: "პაროლის აღდგენა?",
+        authBtn: "შესვლა",
+        prev: "← წინა",
+        next: "შემდეგი →",
+        wait: "დაელოდეთ...",
+        finished: "დასრულდა",
+        day: "დ",
+    },
+    en: {
+        home: "Home",
+        steala: "Steala",
+        tsunami: "Tsunami",
+        login: "🔐 Login",
+        logout: "🔒 Logout",
+        profile: "👤 Profile",
+        darkMode: "🌙 Dark Mode",
+        newsLoading: "Loading news...",
+        noNews: "No news yet.",
+        back: "← Go Back",
+        likes: "Likes",
+        comments: "💬 Comments",
+        send: "Send",
+        commentPlaceholder: "Write your opinion...",
+        share: "🔗 Share",
+        topAbuse: "💠 TOP 3 ADMIN ABUSE",
+        seeAll: "See Full 📂",
+        chatTitle: "💬 Global Chat",
+        chatPlaceholder: "Message...",
+        authLogin: "Login",
+        authRegister: "Register",
+        authEmail: "Email",
+        authPass: "Password",
+        authNick: "Nickname",
+        authForgot: "Forgot Password?",
+        authBtn: "Login",
+        prev: "← Prev",
+        next: "Next →",
+        wait: "Wait...",
+        finished: "Finished",
+        day: "d",
+    }
+};
+
+window.switchLanguage = (lang) => {
+    currentLang = lang;
+    localStorage.setItem('tilo_lang', lang);
+    applyLanguage();
+    renderNewsPage(); // To update titles/dates
+    loadAdminAbuseSidebar();
+};
+
+function applyLanguage() {
+    const t = translations[currentLang];
+
+    // Update nav links
+    const navLinks = document.querySelectorAll('.nav-link');
+    if (navLinks.length >= 3) {
+        navLinks[0].textContent = t.home;
+        navLinks[1].textContent = t.steala;
+        navLinks[2].textContent = t.tsunami;
+    }
+
+    if (get('login-nav-btn')) get('login-nav-btn').textContent = t.login;
+    if (get('nav-logout-btn')) get('nav-logout-btn').textContent = t.logout;
+
+    // Switcher UI
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.style.background = 'none';
+        b.style.color = 'var(--news-text)';
+    });
+    const activeBtn = get('lang-' + currentLang);
+    if (activeBtn) {
+        activeBtn.style.background = 'var(--news-primary)';
+        activeBtn.style.color = 'white';
+    }
+
+    // Main UI parts
+    if (get('comment-input')) get('comment-input').placeholder = t.commentPlaceholder;
+    if (get('submit-comment-btn')) get('submit-comment-btn').textContent = t.send;
+
+    // Sidebar titles
+    const sidebarTitles = document.querySelectorAll('.sidebar-title');
+    if (sidebarTitles[0]) sidebarTitles[0].textContent = t.topAbuse;
+    if (sidebarTitles[1]) sidebarTitles[1].textContent = t.chatTitle;
+
+    // Chat
+    if (get('chat-input')) get('chat-input').placeholder = t.chatPlaceholder;
+
+    // News list loading text
+    const gridLoading = get('news-grid');
+    if (gridLoading && gridLoading.innerHTML.includes('Loading') || gridLoading?.innerHTML.includes('იტვირთება')) {
+        gridLoading.innerHTML = `<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">${t.newsLoading}</p>`;
+    }
+}
+
 async function init() {
+    applyLanguage();
     updateAuthUI();
     loadNews();
     setupEventListeners();
@@ -72,13 +210,12 @@ async function loadNews() {
     }
 }
 
-function renderNewsPage() {
+async function renderNewsPage() {
     const grid = get('news-grid');
     if (!grid) return;
-    grid.innerHTML = '';
 
     if (allNewsCache.length === 0) {
-        grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">სიახლეები ჯერ არ არის.</p>';
+        grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">${translations[currentLang].noNews}</p>`;
         renderPagination(0);
         return;
     }
@@ -88,27 +225,36 @@ function renderNewsPage() {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     const pageItems = allNewsCache.slice(start, start + ITEMS_PER_PAGE);
 
-    pageItems.forEach(item => {
+    grid.innerHTML = '';
+    for (const item of pageItems) {
         const card = document.createElement('div');
         card.className = 'news-card';
         card.onclick = () => openNews(item.id);
 
-        const date = new Date(item.created_at).toLocaleDateString('ka-GE');
+        let title = item.title;
+        let category = item.category;
+
+        if (currentLang === 'en') {
+            title = await translateToEn(title);
+            category = await translateToEn(category);
+        }
+
+        const dateStr = new Date(item.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'ka-GE');
         const img = item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1000';
 
         card.innerHTML = `
-            <img src="${img}" class="news-img" alt="${item.title}" referrerpolicy="no-referrer">
+            <img src="${img}" class="news-img" alt="${title}" referrerpolicy="no-referrer">
             <div class="news-body">
                 <div class="news-meta">
-                    <span>${item.category}</span>
-                    <span>${date}</span>
+                    <span>${category}</span>
+                    <span>${dateStr}</span>
                 </div>
-                <h3 class="news-title">${item.title}</h3>
-                <p class="news-excerpt">${stripHtml(item.content)}</p>
+                <h3 class="news-title">${title}</h3>
+                <p class="news-excerpt">${stripHtml(item.content).substring(0, 100)}...</p>
             </div>
         `;
         grid.appendChild(card);
-    });
+    }
 
     renderPagination(totalPages);
 }
@@ -135,7 +281,7 @@ function renderPagination(totalPages) {
     // Prev button
     if (currentPage > 1) {
         const prev = document.createElement('button');
-        prev.textContent = '← წინა';
+        prev.textContent = translations[currentLang].prev;
         prev.style.cssText = btnStyle(false);
         prev.onclick = () => { currentPage--; renderNewsPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
         container.appendChild(prev);
@@ -153,7 +299,7 @@ function renderPagination(totalPages) {
     // Next button
     if (currentPage < totalPages) {
         const next = document.createElement('button');
-        next.textContent = 'შემდეგი →';
+        next.textContent = translations[currentLang].next;
         next.style.cssText = btnStyle(false);
         next.onclick = () => { currentPage++; renderNewsPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
         container.appendChild(next);
@@ -175,7 +321,7 @@ async function loadAdminAbuseSidebar() {
         `;
         sidebar.innerHTML = '';
 
-        slots.forEach(s => {
+        for (const s of slots) {
             const el = document.createElement('div');
             el.className = 'sidebar-item';
             el.style.flexDirection = 'column';
@@ -185,15 +331,15 @@ async function loadAdminAbuseSidebar() {
             el.style.cursor = 'default';
 
             const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
-
-            // Countdown logic
             const timerId = `timer-${s.id}`;
+            let title = s.title;
+            if (currentLang === 'en') title = await translateToEn(title);
 
             el.innerHTML = `
                 <div onclick="location.href='top.html?id=${s.id}'" style="cursor: pointer; display: flex; gap: 12px; width: 100%; transition: 0.2s;">
                     <img src="${img}" style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;" referrerpolicy="no-referrer">
                     <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: hidden;">
-                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--news-text); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.title}</div>
+                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--news-text); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${title}</div>
                         <div id="${timerId}" style="font-family: monospace; font-weight: 900; color: var(--news-primary); font-size: 1.1rem; letter-spacing: 1px;">00:00:00</div>
                     </div>
                 </div>
@@ -207,7 +353,7 @@ async function loadAdminAbuseSidebar() {
                 if (!timerEl) return;
 
                 if (!s.end_time) {
-                    timerEl.textContent = "დაელოდეთ...";
+                    timerEl.textContent = translations[currentLang].wait;
                     return;
                 }
 
@@ -216,7 +362,7 @@ async function loadAdminAbuseSidebar() {
                 const diff = end - now;
 
                 if (diff <= 0) {
-                    timerEl.textContent = "დასრულდა";
+                    timerEl.textContent = translations[currentLang].finished;
                     timerEl.style.color = "#ff4757";
 
                     // Auto-delete after 1 minute
@@ -238,21 +384,21 @@ async function loadAdminAbuseSidebar() {
                 const s_val = Math.floor((diff % (1000 * 60)) / 1000);
 
                 let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s_val.toString().padStart(2, '0')}`;
-                if (d > 0) timeStr = `${d}დ ${timeStr}`;
+                if (d > 0) timeStr = `${d}${translations[currentLang].day} ${timeStr}`;
 
                 timerEl.textContent = timeStr;
             };
 
             updateTimer();
             setInterval(updateTimer, 1000);
-        });
+        }
 
         // Add "See All" button
         if (slots.length > 0) {
             const allBtn = document.createElement('a');
             allBtn.href = 'all-abuse.html';
             allBtn.style.cssText = 'display:block; text-align:center; padding:12px; margin-top:10px; background:rgba(0,102,204,0.1); border:1px dashed var(--news-primary); border-radius:12px; color:var(--news-primary); text-decoration:none; font-weight:800; font-size:0.85rem; transition:0.3s;';
-            allBtn.textContent = 'ნახეთ სრულად 📂';
+            allBtn.textContent = translations[currentLang].seeAll;
             sidebar.appendChild(allBtn);
         }
 
@@ -335,7 +481,25 @@ async function openNews(id) {
     try {
         const res = await sql`SELECT * FROM news WHERE id = ${id}`;
         const item = res[0];
-        const date = new Date(item.created_at).toLocaleString('ka-GE');
+
+        let title = item.title;
+        let content = item.content;
+        let category = item.category;
+
+        if (currentLang === 'en') {
+            title = await translateToEn(title);
+            category = await translateToEn(category);
+            // Translate content only if it contains enough Georgian
+            if (/[ა-ჰ]{5,}/.test(content)) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                const plainText = tempDiv.innerText || tempDiv.textContent;
+                const translatedText = await translateToEn(plainText);
+                content = `<p><strong>${translatedText}</strong></p><p style="opacity:0.5;font-size:0.8em;">Translated by AI</p>`;
+            }
+        }
+
+        const dateStr = new Date(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ka-GE');
 
         let visualContent = '';
         if (item.video_url) {
@@ -349,20 +513,20 @@ async function openNews(id) {
 
         get('detail-content').innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; gap: 20px;">
-                <h1 style="font-size: 2.5rem; font-weight: 900; margin: 0; line-height: 1.1; color: var(--news-text);">${item.title}</h1>
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin: 0; line-height: 1.1; color: var(--news-text);">${title}</h1>
                 <button onclick="shareNews()" class="nav-link" style="background: var(--news-bg); border: 1px solid var(--news-border); color: var(--news-text); padding: 10px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800;">
-                    🔗 გაზიარება
+                    🔗 ${translations[currentLang].share}
                 </button>
             </div>
             <div style="font-size: 0.95rem; color: var(--news-text-dim); margin-bottom: 35px; display: flex; align-items: center; gap: 10px; font-weight: 600;">
-                <span>✍️ ${item.author}</span>
+                <span>✍️ ${item.author || 'Admin'}</span>
                 <span>•</span>
-                <span>📅 ${date}</span>
+                <span>📅 ${dateStr}</span>
                 <span>•</span>
-                <span style="color: var(--news-primary);">🏷️ ${item.category}</span>
+                <span style="color: var(--news-primary);">🏷️ ${category}</span>
             </div>
             ${visualContent}
-            <div style="line-height: 1.8; font-size: 1.15rem; color: var(--news-text); font-family: 'Inter', sans-serif;">${item.content}</div>
+            <div id="translated-content" style="line-height: 1.8; font-size: 1.15rem; color: var(--news-text); font-family: 'Inter', sans-serif;">${content}</div>
         `;
 
         loadComments(id);

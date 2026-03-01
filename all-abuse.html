@@ -121,30 +121,39 @@
         <div class="header-container">
             <a href="index.html" class="logo-text">TILO<span>.LIFE</span></a>
             <nav class="nav-menu">
-                <a href="index.html" class="nav-link">მთავარი</a>
-                <a href="game.html" class="nav-link">თამაში</a>
+                <a href="index.html" id="nav-home" class="nav-link">მთავარი</a>
+                <a href="game.html" id="nav-game" class="nav-link">თამაში</a>
             </nav>
             <div class="auth-nav">
-                <a href="index.html" class="nav-link">🏠 უკან</a>
+                <div id="language-switcher"
+                    style="display: flex; gap: 5px; margin-right: 15px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; border: 1px solid var(--news-border);">
+                    <button id="lang-ka" class="lang-btn active" onclick="switchLanguage('ka')"
+                        style="background: var(--news-primary); color: white; border: none; padding: 5px 12px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.3s;">GE</button>
+                    <button id="lang-en" class="lang-btn" onclick="switchLanguage('en')"
+                        style="background: none; color: var(--news-text); border: none; padding: 5px 12px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.3s;">EN</button>
+                </div>
+                <a href="index.html" id="btn-back" class="nav-link">🏠 უკან</a>
             </div>
         </div>
     </header>
 
     <div class="portal-container" style="display: block;">
-        <h1 style="font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+        <h1 id="page-title"
+            style="font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
             💠 ყველა ადმინ აბიუსი
         </h1>
 
         <div id="all-abuse-list" class="abuse-grid">
-            <p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">იტვირთება...</p>
+            <p id="loading-text" style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">
+                იტვირთება...</p>
         </div>
 
         <!-- Suggestion Section -->
         <section class="suggest-section">
             <div style="text-align: center; margin-bottom: 40px;">
-                <h2 style="font-weight: 900; font-size: 2rem;">💡 კითხვა-პასუხი</h2>
-                <p style="opacity: 0.7; font-size: 1.1rem; margin-top: 10px;">რომელი თამაშის ადმინ აბიუსი დავამატოთ
-                    კიდევ?</p>
+                <h2 id="qa-title" style="font-weight: 900; font-size: 2rem;">💡 კითხვა-პასუხი</h2>
+                <p id="qa-desc" style="opacity: 0.7; font-size: 1.1rem; margin-top: 10px;">რომელი თამაშის ადმინ აბიუსი
+                    დავამატოთ კიდევ?</p>
             </div>
 
             <div style="display: flex; gap: 15px; max-width: 600px; margin: 0 auto 40px;">
@@ -154,7 +163,8 @@
             </div>
 
             <div style="text-align: center; margin-bottom: 25px;">
-                <h3 style="font-weight: 800; font-size: 1.4rem; color: var(--news-primary);">🔥 TOP 3 პასუხი</h3>
+                <h3 id="top-qa-title" style="font-weight: 800; font-size: 1.4rem; color: var(--news-primary);">🔥 TOP 3
+                    პასუხი</h3>
             </div>
 
             <div id="top-suggestions-list" style="display: grid; gap: 15px; max-width: 600px; margin: 0 auto;">
@@ -167,7 +177,7 @@
     <footer class="news-footer">
         <div class="footer-container">
             <h2 class="logo-text">TILO<span>.LIFE</span></h2>
-            <p style="opacity: 0.6; margin-top: 10px;">ყველა უფლება დაცულია &copy; 2026</p>
+            <p id="footer-rights" style="opacity: 0.6; margin-top: 10px;">ყველა უფლება დაცულია &copy; 2026</p>
 
             <div class="footer-counters">
                 <!-- TOP.GE ASYNC COUNTER CODE -->
@@ -180,7 +190,7 @@
                 <script async src="//waust.at/d.js"></script>
             </div>
 
-            <div
+            <div id="footer-links"
                 style="margin-top:20px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size: 0.85rem;">
                 <a href="privacy.html" style="color:var(--news-primary); text-decoration:none;">🔒 კონფიდენციალურობა</a>
                 <a href="about.html" style="color:var(--news-primary); text-decoration:none;">🌐 ჩვენ შესახებ</a>
@@ -198,8 +208,117 @@
         const userEmail = localStorage.getItem('tilo_email');
         const nickname = localStorage.getItem('tilo_nick');
 
+        let currentLang = localStorage.getItem('tilo_lang') || 'ka';
+
+        const translations = {
+            ka: {
+                home: "მთავარი",
+                game: "თამაში",
+                back: "🏠 უკან",
+                pageTitle: "💠 ყველა ადმინ აბიუსი",
+                loading: "იტვირთება...",
+                noAbuse: "სლოტები ჯერ არ არის.",
+                qaTitle: "💡 კითხვა-პასუხი",
+                qaDesc: "რომელი თამაშის ადმინ აბიუსი დავამატოთ კიდევ?",
+                suggestPlaceholder: "დაწერეთ თამაშის სახელი...",
+                send: "გაგზავნა",
+                topQa: "🔥 TOP 3 პასუხი",
+                noSuggestions: "ჯერ პასუხები არ არის.",
+                go: "🚀 გადასვლა",
+                finished: "დასრულდა",
+                wait: "⏱️",
+                rights: "ყველა უფლება დაცულია &copy; 2026",
+                privacy: "🔒 კონფიდენციალურობა",
+                about: "🌐 ჩვენ შესახებ",
+                contact: "📧 კონტაქტი",
+                thanks: "მადლობა, თქვენი პასუხი დაფიქსირდა!",
+                authReq: "გთხოვთ გაიაროთ ავტორიზაცია",
+                alreadyLiked: "თქვენ უკვე დაალაიქეთ ეს პასუხი",
+                enterText: "გთხოვთ შეიყვანოთ ტექსტი",
+                day: "დ",
+            },
+            en: {
+                home: "Home",
+                game: "Game",
+                back: "🏠 Back",
+                pageTitle: "💠 All Admin Abuse",
+                loading: "Loading...",
+                noAbuse: "No abuse slots yet.",
+                qaTitle: "💡 Q&A",
+                qaDesc: "Which game's admin abuse should we add next?",
+                suggestPlaceholder: "Write the game name...",
+                send: "Send",
+                topQa: "🔥 TOP 3 Answers",
+                noSuggestions: "No answers yet.",
+                go: "🚀 Go To",
+                finished: "Finished",
+                wait: "⏱️",
+                rights: "All Rights Reserved &copy; 2026",
+                privacy: "🔒 Privacy Policy",
+                about: "🌐 About Us",
+                contact: "📧 Contact",
+                thanks: "Thanks, your response has been recorded!",
+                authReq: "Please authorize first",
+                alreadyLiked: "You already liked this answer",
+                enterText: "Please enter text",
+                day: "d",
+            }
+        };
+
+        const get = id => document.getElementById(id);
+
+        async function translateToEn(text) {
+            if (!text || !/[ა-ჰ]/.test(text)) return text;
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ka&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data && data[0]) return data[0].map(x => x[0]).join('');
+                return text;
+            } catch (e) { return text; }
+        }
+
+        function applyLanguage() {
+            const t = translations[currentLang];
+            if (get('nav-home')) get('nav-home').textContent = t.home;
+            if (get('nav-game')) get('nav-game').textContent = t.game;
+            if (get('btn-back')) get('btn-back').textContent = t.back;
+            if (get('page-title')) get('page-title').textContent = t.pageTitle;
+            if (get('loading-text')) get('loading-text').textContent = t.loading;
+            if (get('qa-title')) get('qa-title').textContent = t.qaTitle;
+            if (get('qa-desc')) get('qa-desc').textContent = t.qaDesc;
+            if (get('suggestion-input')) get('suggestion-input').placeholder = t.suggestPlaceholder;
+            if (get('submit-suggest-btn')) get('submit-suggest-btn').textContent = t.send;
+            if (get('top-qa-title')) get('top-qa-title').textContent = t.topQa;
+            if (get('footer-rights')) get('footer-rights').innerHTML = t.rights;
+
+            const links = get('footer-links').querySelectorAll('a');
+            if (links[0]) links[0].textContent = t.privacy;
+            if (links[1]) links[1].textContent = t.about;
+            if (links[2]) links[2].textContent = t.contact;
+
+            document.querySelectorAll('.lang-btn').forEach(b => {
+                b.style.background = 'none';
+                b.style.color = 'var(--news-text)';
+            });
+            const activeBtn = get('lang-' + currentLang);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--news-primary)';
+                activeBtn.style.color = 'white';
+            }
+        }
+
+        window.switchLanguage = (lang) => {
+            currentLang = lang;
+            localStorage.setItem('tilo_lang', lang);
+            applyLanguage();
+            loadAllAbuse();
+            loadTopSuggestions();
+        };
+
         async function loadAllAbuse() {
             const container = document.getElementById('all-abuse-list');
+            const t = translations[currentLang];
             try {
                 const slots = await sql`
                     SELECT * FROM admin_abuse 
@@ -210,24 +329,26 @@
                 `;
 
                 if (slots.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">სლოტები ჯერ არ არის.</p>';
+                    container.innerHTML = `<p style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">${t.noAbuse}</p>`;
                     return;
                 }
 
                 container.innerHTML = '';
-                slots.forEach(s => {
+                for (const s of slots) {
                     const card = document.createElement('div');
                     card.className = 'abuse-card';
 
                     const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
                     const timerId = `timer-${s.id}`;
+                    let title = s.title;
+                    if (currentLang === 'en') title = await translateToEn(title);
 
                     card.innerHTML = `
                         <img src="${img}" class="abuse-img">
                         <div class="abuse-body">
-                            <h3 style="font-weight: 800; font-size: 1.2rem;">${s.title}</h3>
+                            <h3 style="font-weight: 800; font-size: 1.2rem;">${title}</h3>
                             <div class="timer-badge" id="${timerId}">00:00:00</div>
-                            <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width:100%; margin-top:auto;">🚀 გადასვლა</button>
+                            <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width:100%; margin-top:auto;">${t.go}</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -235,27 +356,28 @@
                     const updateTimer = () => {
                         const el = document.getElementById(timerId);
                         if (!el) return;
-                        if (!s.end_time) { el.textContent = "⏱️"; return; }
+                        if (!s.end_time) { el.textContent = t.wait; return; }
                         const now = new Date();
                         const end = new Date(s.end_time);
                         const diff = end - now;
-                        if (diff <= 0) { el.textContent = "დასრულდა"; el.style.color = "#ff4757"; return; }
+                        if (diff <= 0) { el.textContent = t.finished; el.style.color = "#ff4757"; return; }
                         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                         const sv = Math.floor((diff % (1000 * 60)) / 1000);
                         let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sv.toString().padStart(2, '0')}`;
-                        if (d > 0) timeStr = `${d}დ ${timeStr}`;
+                        if (d > 0) timeStr = `${d}${t.day} ${timeStr}`;
                         el.textContent = timeStr;
                     };
                     updateTimer();
                     setInterval(updateTimer, 1000);
-                });
+                }
             } catch (e) { console.error(e); }
         }
 
         async function loadTopSuggestions() {
             const list = document.getElementById('top-suggestions-list');
+            const t = translations[currentLang];
             try {
                 const suggestions = await sql`
                     SELECT LOWER(TRIM(suggest_text)) as text, SUM(likes) as total_likes, MAX(suggest_text) as original_text
@@ -266,27 +388,39 @@
                 `;
 
                 if (suggestions.length === 0) {
-                    list.innerHTML = '<p style="text-align: center; opacity: 0.5;">ჯერ პასუხები არ არის.</p>';
+                    list.innerHTML = `<p style="text-align: center; opacity: 0.5;">${t.noSuggestions}</p>`;
                     return;
                 }
 
-                list.innerHTML = suggestions.map((s, idx) => `
-                    <div class="top-suggestion-item" style="animation: slideIn 0.3s ease-out backwards; animation-delay: ${idx * 0.1}s;">
-                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--news-primary); min-width: 30px;">#${idx + 1}</div>
-                        <div style="flex: 1; font-weight: 700; font-size: 1.1rem; color: var(--news-text);">${s.original_text}</div>
+                list.innerHTML = '';
+                for (let i = 0; i < suggestions.length; i++) {
+                    const s = suggestions[i];
+                    let text = s.original_text;
+                    if (currentLang === 'en') text = await translateToEn(text);
+
+                    const item = document.createElement('div');
+                    item.className = 'top-suggestion-item';
+                    item.style.animation = `slideIn 0.3s ease-out backwards`;
+                    item.style.animationDelay = `${i * 0.1}s`;
+
+                    item.innerHTML = `
+                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--news-primary); min-width: 30px;">#${i + 1}</div>
+                        <div style="flex: 1; font-weight: 700; font-size: 1.1rem; color: var(--news-text);">${text}</div>
                         <button onclick="likeSuggestion('${s.text}')" id="like-btn-${s.text.replace(/\s+/g, '-')}"
                             style="background: ${localStorage.getItem('liked_' + s.text) ? 'var(--news-primary)' : 'rgba(255,255,255,0.1)'}; 
                                    border: none; padding: 8px 15px; border-radius: 10px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800; transition: 0.3s;">
                             ❤️ <span>${s.total_likes}</span>
                         </button>
-                    </div>
-                `).join('');
+                    `;
+                    list.appendChild(item);
+                }
             } catch (e) { console.error(e); }
         }
 
         window.likeSuggestion = async (text) => {
-            if (!userEmail) return alert('გთხოვთ გაიაროთ ავტორიზაცია');
-            if (localStorage.getItem('liked_' + text)) return alert('თქვენ უკვე დაალაიქეთ ეს პასუხი');
+            const t = translations[currentLang];
+            if (!userEmail) return alert(t.authReq);
+            if (localStorage.getItem('liked_' + text)) return alert(t.alreadyLiked);
 
             try {
                 const groupRes = await sql`SELECT id FROM abuse_suggestions WHERE LOWER(TRIM(suggest_text)) = ${text} LIMIT 1`;
@@ -300,23 +434,25 @@
                 loadTopSuggestions();
             } catch (e) {
                 console.error(e);
-                if (e.message.includes('unique')) alert('თქვენ უკვე დაალაიქეთ ეს პასუხი');
+                if (e.message.includes('unique')) alert(t.alreadyLiked);
             }
         };
 
         document.getElementById('submit-suggest-btn').onclick = async () => {
+            const t = translations[currentLang];
             const input = document.getElementById('suggestion-input');
             const text = input.value.trim();
-            if (!text) return alert('გთხოვთ შეიყვანოთ ტექსტი');
+            if (!text) return alert(t.enterText);
 
             try {
                 await sql`INSERT INTO abuse_suggestions (suggest_text, nickname) VALUES (${text}, ${nickname || 'Guest'})`;
                 input.value = '';
-                alert('მადლობა, თქვენი პასუხი დაფიქსირდა!');
+                alert(t.thanks);
                 loadTopSuggestions();
             } catch (e) { console.error(e); }
         };
 
+        applyLanguage();
         loadAllAbuse();
         loadTopSuggestions();
 
