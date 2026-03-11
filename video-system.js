@@ -138,24 +138,46 @@ function handleForcedVideo(cfg) {
 async function fetchChannelVideos() {
     const newAllVideos = {};
     for (const channel of videoChannels) {
-        let rss = '';
-        if (channel.id.startsWith('UC')) {
-            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
-        } else if (channel.id.startsWith('@')) {
-            // For handles, we use a proxy or hope rss2json can handle it if we find the correct RSS
-            // YouTube doesn't have a direct RSS for @handles easily without internal ID
-            // But we can try the /@handle/videos or similar if we had a scraper.
-            // For now, let's assume it might be a username if no UC prefix.
-            rss = `https://www.youtube.com/feeds/videos.xml?user=${channel.id.replace('@', '')}`;
-        } else {
-            rss = `https://www.youtube.com/feeds/videos.xml?user=${channel.id}`;
+        let actualChannelId = channel.id;
+
+        // If it's a handle, we need to resolve it to a UC... ID first
+        if (channel.id.startsWith('@')) {
+            try {
+                // Try resolving via a proxy
+                const proxyUrl = `https://corsproxy.io/?https://www.youtube.com/${channel.id}`;
+                const ytHtmlRes = await fetch(proxyUrl);
+                const ytHtml = await ytHtmlRes.text();
+                
+                // Regex to find "channelId":"UC..." in the page source
+                const idMatch = ytHtml.match(/"channelId":"(UC.+?)"/);
+                if (idMatch && idMatch[1]) {
+                    actualChannelId = idMatch[1];
+                }
+            } catch (err) {
+                console.error("Failed to resolve channel handle:", channel.id, err);
+                // Fallback to the old assumption method just in case
+            }
         }
+
+        let rss = '';
+        if (actualChannelId.startsWith('UC')) {
+            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${actualChannelId}`;
+        } else {
+            // Very old username format fallback
+            rss = `https://www.youtube.com/feeds/videos.xml?user=${actualChannelId.replace('@', '')}`;
+        }
+        
         const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
         try {
             const res = await fetch(api);
             const data = await res.json();
-            if (data.status === 'ok') newAllVideos[channel.id] = data.items;
-        } catch (e) { }
+            if (data.status === 'ok') {
+                // Keep mapping back to original channel.id so config checks pass
+                newAllVideos[channel.id] = data.items;
+            }
+        } catch (e) {
+            console.error("Failed to fetch RSS for:", channel.id, e);
+        }
     }
     allChannelVideos = newAllVideos;
 }
