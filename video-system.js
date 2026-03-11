@@ -138,45 +138,24 @@ function handleForcedVideo(cfg) {
 async function fetchChannelVideos() {
     const newAllVideos = {};
     for (const channel of videoChannels) {
-        let actualChannelId = channel.id;
-
-        // If it's a handle, we need to resolve it to a UC... ID first
-        if (channel.id.startsWith('@')) {
-            try {
-                // Try resolving via a proxy
-                const proxyUrl = `https://corsproxy.io/?https://www.youtube.com/${channel.id}`;
-                const ytHtmlRes = await fetch(proxyUrl);
-                const ytHtml = await ytHtmlRes.text();
-                
-                // Regex to find "channelId":"UC..." in the page source
-                const idMatch = ytHtml.match(/"channelId":"(UC.+?)"/);
-                if (idMatch && idMatch[1]) {
-                    actualChannelId = idMatch[1];
-                }
-            } catch (err) {
-                console.error("Failed to resolve channel handle:", channel.id, err);
-                // Fallback to the old assumption method just in case
-            }
+        // Only UC... IDs are supported in admin panel (Channel ID, not @handle)
+        if (!channel.id || !channel.id.startsWith('UC')) {
+            console.warn('Skipping invalid channel ID (use UC... format):', channel.id);
+            continue;
         }
 
-        let rss = '';
-        if (actualChannelId.startsWith('UC')) {
-            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${actualChannelId}`;
-        } else {
-            // Very old username format fallback
-            rss = `https://www.youtube.com/feeds/videos.xml?user=${actualChannelId.replace('@', '')}`;
-        }
-        
+        const rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
         const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
         try {
             const res = await fetch(api);
             const data = await res.json();
             if (data.status === 'ok') {
-                // Keep mapping back to original channel.id so config checks pass
                 newAllVideos[channel.id] = data.items;
+            } else {
+                console.error('RSS fetch failed for:', channel.id, data.message);
             }
         } catch (e) {
-            console.error("Failed to fetch RSS for:", channel.id, e);
+            console.error('Failed to fetch RSS for:', channel.id, e);
         }
     }
     allChannelVideos = newAllVideos;
