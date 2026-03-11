@@ -145,17 +145,17 @@ async function fetchChannelVideos() {
 
         const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
         const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
-        
+
         try {
             const res = await fetch(proxyUrl);
             const xmlText = await res.text();
             const parser = new DOMParser();
             const xml = parser.parseFromString(xmlText, 'text/xml');
             const entries = xml.querySelectorAll('entry');
-            
+
             const items = Array.from(entries).map(entry => {
-                const videoId = entry.querySelector('videoId')?.textContent || 
-                                entry.querySelector('id')?.textContent?.split(':').pop() || '';
+                const videoId = entry.querySelector('videoId')?.textContent ||
+                    entry.querySelector('id')?.textContent?.split(':').pop() || '';
                 return {
                     guid: `yt:video:${videoId}`,
                     title: entry.querySelector('title')?.textContent || '',
@@ -188,14 +188,14 @@ window.showVideoPopup = () => {
     if (Object.keys(allChannelVideos).length > 0) {
         let selectedChannelId = '';
         const ids = Object.keys(allChannelVideos);
-        
+
         // Filter out channels that failed to load
         const activeChannels = videoChannels.filter(c => allChannelVideos[c.id] && allChannelVideos[c.id].length > 0);
-        
+
         if (activeChannels.length > 0) {
             const totalWeight = activeChannels.reduce((sum, c) => sum + c.weight, 0);
             let random = Math.random() * totalWeight;
-            
+
             for (const c of activeChannels) {
                 random -= c.weight;
                 if (random <= 0) {
@@ -204,16 +204,16 @@ window.showVideoPopup = () => {
                 }
             }
         }
-        
+
         if (!selectedChannelId) selectedChannelId = ids[0];
 
         const videos = allChannelVideos[selectedChannelId];
-        
+
         if (videos && videos.length > 0) {
             // Get up to the 5 most recent videos
             const recentVideos = videos.slice(0, 5);
             vid = recentVideos[Math.floor(Math.random() * recentVideos.length)];
-            
+
             videoId = vid?.guid?.split(':')[2];
             if (!videoId && vid?.link) {
                 try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
@@ -223,8 +223,8 @@ window.showVideoPopup = () => {
 
     // Fallback if RSS fails or no videos found
     if (!videoId) {
-        videoId = 'dQw4w9WgXcQ'; // Rickroll as a placeholder for testing (User can change this)
-        vid = { title: 'TILO.LIFE - უყურე სიახლეებს!', link: `https://youtube.com/watch?v=${videoId}` };
+        videoId = '2NZFhlYoWSk'; // Rickroll as a placeholder for testing (User can change this)
+        vid = { title: 'ნახე ვიდეო?', link: `https://youtube.com/watch?v=${videoId}` };
     }
 
     currentVideoId = videoId;
@@ -310,7 +310,7 @@ function setupVideoPlayerDrag() {
 // Initialize
 (async function init() {
     if (window.location.pathname.includes('admin.html')) return;
-    
+
     injectVideoElements();
     await refreshGlobalConfig();
     fetchChannelVideos();
@@ -336,7 +336,7 @@ function scheduleNextPopup() {
     }
 
     console.log(`🎬 Next video popup scheduled in ${delaySeconds}s (Index: ${sequenceIndex})`);
-    
+
     timingTimeout = setTimeout(() => {
         window.showVideoPopup();
         scheduleNextPopup(); // Schedule the one after
