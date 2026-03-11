@@ -172,7 +172,7 @@ window.showVideoPopup = () => {
         const ids = Object.keys(allChannelVideos);
         
         // Filter out channels that failed to load
-        const activeChannels = videoChannels.filter(c => allChannelVideos[c.id]);
+        const activeChannels = videoChannels.filter(c => allChannelVideos[c.id] && allChannelVideos[c.id].length > 0);
         
         if (activeChannels.length > 0) {
             const totalWeight = activeChannels.reduce((sum, c) => sum + c.weight, 0);
@@ -190,11 +190,16 @@ window.showVideoPopup = () => {
         if (!selectedChannelId) selectedChannelId = ids[0];
 
         const videos = allChannelVideos[selectedChannelId];
-        vid = videos[Math.floor(Math.random() * videos.length)];
         
-        videoId = vid.guid?.split(':')[2];
-        if (!videoId && vid.link) {
-            try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+        if (videos && videos.length > 0) {
+            // Get up to the 5 most recent videos
+            const recentVideos = videos.slice(0, 5);
+            vid = recentVideos[Math.floor(Math.random() * recentVideos.length)];
+            
+            videoId = vid?.guid?.split(':')[2];
+            if (!videoId && vid?.link) {
+                try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+            }
         }
     }
 
