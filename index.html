@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1P900RJ6DJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-1P900RJ6DJ');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TILO.LIFE - სიახლეების პორტალი</title>
+
+    <!-- Open Graph / Discord Previews -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tilo.life/">
+    <meta property="og:title" content="TILO.LIFE - სიახლეების პორტალი">
+    <meta property="og:description" content="გაიგეთ უახლესი ამბები, ითამაშეთ და დააგროვეთ ქოინები თილოს სამყაროში!">
+    <meta property="og:image"
+        content="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200">
+    <meta name="theme-color" content="#0066cc">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@400;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="news.css">
+    <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" href="ratings.css">
+    <link rel="stylesheet" href="home-redesign.css">
+    <script src="security.js"></script>
+    <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5131926411609590"
+        crossorigin="anonymous"></script>
+</head>
+
+<body class="news-portal dark-mode">
+    <div id="game-bg-layer"></div>
+    <div id="tilo-cloth"></div>
+
+    <div class="home-hero-container">
+        <div class="y-menu">
+            <svg class="y-shape-svg" viewBox="0 0 600 600">
+                <!-- Center to Top -->
+                <line class="y-line" x1="300" y1="300" x2="300" y2="20" />
+                <!-- Center to Bottom Left -->
+                <line class="y-line" x1="300" y1="300" x2="80" y2="520" />
+                <!-- Center to Bottom Right -->
+                <line class="y-line" x1="300" y1="300" x2="520" y2="520" />
+            </svg>
+            <div class="y-center"></div>
+
+            <div id="menu-item-top" class="menu-item top" onclick="handleMenuClick('abuse')" onmouseenter="handleAbuseHover()" onmouseleave="handleAbuseLeave()">
+                <div id="abuse-preview-container" class="abuse-preview-container"></div>
+                <div class="menu-icon">🛡️</div>
+                <span class="label">ადმინ აბუსი</span>
+                <span class="sub-label">ADMIN ABUSE</span>
+            </div>
+
+            <div id="menu-item-left" class="menu-item left" onclick="handleMenuClick('roblox')">
+                <div class="menu-icon">👕</div>
+                <span class="label">მაისური</span>
+                <span class="sub-label" style="color: #ff3d00;">ROBLOX</span>
+            </div>
+
+            <div id="menu-item-right" class="menu-item right" onclick="handleMenuClick('game')">
+                <div class="menu-icon">🕹️</div>
+                <span class="label">ტილოს</span>
+                <span class="sub-label" style="color: #00e5ff;">თამაში</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden containers needed for portal.js to not error out if it looks for them -->
+    <div id="news-grid" class="hidden"></div>
+    <div id="pagination-container" class="hidden"></div>
+    <div id="news-detail" class="hidden"><div id="detail-content"></div></div>
+    <div id="sidebar-abuse-list" class="hidden"></div>
+    <div id="chat-messages" class="hidden"></div>
+    <input type="text" id="chat-input" class="hidden">
+    <button id="send-chat-btn" class="hidden"></button>
+
+    <!-- Simplified Footer with only counters -->
+    <footer class="news-footer" style="padding: 10px; background: transparent; border: none; margin-top: auto;">
+        <div class="footer-container" style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+            <div class="footer-counters" style="display: flex; align-items: center; gap: 15px;">
+                <!-- TOP.GE ASYNC COUNTER CODE -->
+                <div id="top-ge-counter-container" data-site-id="118538"></div>
+                <script async src="//counter.top.ge/counter.js"></script>
+                <!-- / END OF TOP.GE COUNTER CODE -->
+
+                <!-- WAUST.AT COUNTER CODE -->
+                <script id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
+                <script async src="//waust.at/d.js"></script>
+                <!-- / END OF WAUST.AT COUNTER CODE -->
+            </div>
+        </div>
+    </footer>
+
+    </div>
+
+    <script type="module" src="video-system.js"></script>
+    <script type="module" src="portal.js"></script>
+    <script type="module" src="home-game.js"></script>
+</body>
+
+</html>

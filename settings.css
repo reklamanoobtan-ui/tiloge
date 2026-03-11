@@ -1,0 +1,152 @@
+/* Wide Modal Override */
+.wide-modal {
+    max-width: 800px;
+    width: 95%;
+    padding: 40px;
+}
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-col h3.section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--secondary-text);
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Enhanced shop items in settings */
+.settings-col .shop-item {
+    padding: 20px;
+    background: var(--item-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    margin-bottom: 15px;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Chat Styles */
+.chat-container {
+    position: absolute;
+    top: 360px;
+    left: 20px;
+    /* Force Left Position */
+    width: 250px;
+    padding: 15px;
+    border-radius: 16px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    transition: opacity 0.3s ease;
+    /* Transformed removed to prevent conflict with JS drag */
+    z-index: 90;
+    cursor: move;
+    /* Indicate draggable */
+    user-select: none;
+}
+
+.chat-messages {
+    height: 150px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.chat-msg {
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: var(--item-bg);
+    word-break: break-all;
+    color: var(--text-color);
+}
+
+.chat-msg strong {
+    color: var(--cloth-color);
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 5px;
+}
+
+#chat-input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 5px;
+    color: var(--text-color);
+    outline: none;
+    font-size: 0.8rem;
+}
+
+#send-chat-btn {
+    background: var(--cloth-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 0 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        width: 180px;
+        top: auto;
+        bottom: 20px;
+        /* Position at bottom on mobile */
+        left: 10px;
+        font-size: 0.7rem;
+    }
+
+    .chat-messages {
+        height: 100px;
+    }
+}
+
+.settings-col .shop-item:hover {
+    background: var(--input-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.settings-col .shop-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.settings-col .shop-info p {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.settings-profile-full {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

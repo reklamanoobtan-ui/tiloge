@@ -1,0 +1,180 @@
+/* Skin Card Animations */
+@keyframes fireGlow {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes iceSparkle {
+
+    0%,
+    100% {
+        opacity: 0.2;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes rainbowShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes electricPulse {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(20px);
+    }
+}
+
+/* New Weapon and Skin FX */
+.lightning-bolt {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: #4facfe;
+    box-shadow: 0 0 15px #4facfe, 0 0 30px #fff;
+    height: 3px;
+    transform-origin: left center;
+    filter: blur(1px);
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.fire-trail {
+    position: fixed;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle, #ff0000 0%, #ff4500 50%, transparent 80%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10;
+    filter: blur(4px);
+    animation: fadeUp 0.8s forwards;
+    box-shadow: 0 0 15px #ff4500;
+}
+
+.ice-trail {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #ffffff 0%, #00bfff 60%, transparent 80%);
+    box-shadow: 0 0 20px #00bfff;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10;
+    animation: fadeUp 1s forwards;
+    filter: blur(1px);
+}
+
+.rainbow-trail {
+    position: fixed;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 10;
+    animation: bubbleUp 1.2s forwards;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.electric-trail {
+    position: fixed;
+    width: 6px;
+    height: 25px;
+    background: #ffff00;
+    box-shadow: 0 0 15px #ffff00, 0 0 5px #fff;
+    pointer-events: none;
+    z-index: 10;
+    animation: zapFade 0.5s forwards;
+    filter: brightness(1.5);
+}
+
+@keyframes fadeUp {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-30px) rotate(45deg);
+    }
+}
+
+@keyframes bubbleUp {
+    0% {
+        opacity: 0.9;
+        transform: scale(0.5) translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(2.0) translateY(-60px);
+    }
+}
+
+@keyframes zapFade {
+    0% {
+        opacity: 1;
+        transform: scaleY(1) rotate(0deg);
+    }
+
+    50% {
+        transform: scaleY(2) rotate(25deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scaleY(0) rotate(-25deg);
+    }
+}
+
+.bomb-explosion {
+    position: fixed;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, #ff4500 0%, #ff8c00 40%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1000;
+    animation: exploAnim 0.5s ease-out forwards;
+}
+
+@keyframes exploAnim {
+    0% {
+        transform: scale(0.1);
+        opacity: 1;
+        filter: brightness(2);
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+        filter: brightness(1);
+    }
+}

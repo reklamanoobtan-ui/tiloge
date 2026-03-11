@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1P900RJ6DJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-1P900RJ6DJ');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tilo.life - ⚔️ დუელი</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="ratings.css">
+    <style>
+        body {
+            background: #050505;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 0;
+            user-select: none;
+            font-family: 'Inter', 'Outfit', sans-serif;
+        }
+
+        .duel-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+
+        .duel-hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .duel-status-bar {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 12px 35px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .duel-score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .duel-score-box span {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .duel-score-box strong {
+            font-size: 1.8rem;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .duel-timer {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .duel-exit {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2000;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.3s;
+            pointer-events: auto;
+        }
+
+        .duel-exit:hover {
+            background: rgba(255, 77, 77, 0.3);
+            border-color: #ff4d4d;
+        }
+
+        .winner-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, rgba(20, 20, 30, 0.98) 0%, rgba(5, 5, 10, 1) 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .winner-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .results-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 30px;
+            min-width: 300px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .result-total {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stain {
+            position: absolute;
+            border-radius: 50%;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        .cloth {
+            width: 150px;
+            height: 150px;
+            z-index: 1100;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5131926411609590"
+        crossorigin="anonymous"></script>
+</head>
+
+<body class="theme-dark">
+    <button class="duel-exit" id="exit-btn">🏠</button>
+
+    <div class="duel-hud">
+        <div class="duel-status-bar">
+            <div class="duel-score-box">
+                <span id="p1-label" style="color: #4facfe;">თქვენ</span>
+                <span id="p1-name" style="font-size: 0.9rem; opacity: 0.8; color: #fff;">...</span>
+                <strong id="p1-score-display">0</strong>
+            </div>
+            <div class="duel-timer" id="duel-timer">01:00</div>
+            <div class="duel-score-box">
+                <span id="p2-label" style="color: #ff4d4d;">მოწინააღმდეგე</span>
+                <span id="p2-name" style="font-size: 0.9rem; opacity: 0.8; color: #fff;">...</span>
+                <strong id="p2-score-display">0</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="duel-container" id="duel-field"></div>
+
+    <div id="winner-modal" class="winner-overlay hidden">
+        <div class="winner-title" id="winner-text">გამარჯვებული!</div>
+
+        <div class="results-box">
+            <div class="result-row">
+                <span>თქვენი ქულა:</span>
+                <span id="res-my-score">0</span>
+            </div>
+            <div class="result-row">
+                <span>მოწინააღმდეგის:</span>
+                <span id="res-opp-score">0</span>
+            </div>
+            <div class="result-row result-total">
+                <span>ჯამური:</span>
+                <span id="res-total">0</span>
+            </div>
+            <div class="result-row" style="color: #2ecc71; font-weight: 800;">
+                <span>მოგებული ქოინები:</span>
+                <span id="res-prize">0 🪙</span>
+            </div>
+        </div>
+
+        <button class="glass-btn" onclick="goToHome()"
+            style="padding: 15px 40px; font-size: 1.2rem; border-radius: 50px;">მთავარ მენიუში დაბრუნება</button>
+    </div>
+
+    <div id="cloth" class="cloth" style="position: fixed;"></div>
+
+    <script type="module" src="video-system.js"></script>
+    <script type="module">
+        import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+        const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
+        const sql = neon(DB_URL);
+
+        const params = new URLSearchParams(window.location.search);
+        const duelId = params.get('id');
+        const userEmail = localStorage.getItem('tilo_email');
+
+        if (!duelId || !userEmail) window.location.href = 'index.html';
+
+        let duelData = null;
+        let isPlayer1 = false;
+        let myScore = 0;
+        let opponentScore = 0;
+        let timeLeft = 60;
+        let duelActive = false;
+        let lastX = window.innerWidth / 2, lastY = window.innerHeight / 2;
+
+        const get = id => document.getElementById(id);
+        const field = get('duel-field');
+        const myCloth = get('cloth');
+
+        async function initDuel() {
+            try {
+                const res = await sql`SELECT * FROM duels WHERE id = ${duelId}`;
+                if (res.length === 0) return window.location.href = 'index.html';
+
+                duelData = res[0];
+                if (duelData.status !== 'active') return window.location.href = 'index.html';
+
+                isPlayer1 = (userEmail === duelData.player1_email);
+
+                const p1Row = await sql`SELECT nickname FROM users WHERE email = ${duelData.player1_email}`;
+                const p2Row = await sql`SELECT nickname FROM users WHERE email = ${duelData.player2_email}`;
+
+                get('p1-name').textContent = p1Row[0].nickname;
+                get('p2-name').textContent = p2Row[0].nickname;
+
+                if (isPlayer1) {
+                    get('p1-label').textContent = "თქვენ";
+                    get('p2-label').textContent = "მოწინააღმდეგე";
+                } else {
+                    get('p1-label').textContent = "მოწინააღმდეგე";
+                    get('p2-label').textContent = "თქვენ";
+                    // Swap colors too
+                    get('p1-label').style.color = "#ff4d4d";
+                    get('p2-label').style.color = "#4facfe";
+                }
+
+                duelActive = true;
+                startTimer();
+                spawnStainsLoop();
+                syncLoop();
+            } catch (e) { console.error(e); }
+        }
+
+        function startTimer() {
+            const int = setInterval(() => {
+                if (!duelActive) return clearInterval(int);
+                timeLeft--;
+                const s = timeLeft;
+                get('duel-timer').textContent = `00:${s < 10 ? '0' : ''}${s}`;
+                if (timeLeft <= 0) { clearInterval(int); finishDuel(); }
+            }, 1000);
+        }
+
+        async function syncLoop() {
+            const int = setInterval(async () => {
+                if (!duelActive) return clearInterval(int);
+                try {
+                    // Update my score & heartbeat
+                    if (isPlayer1) {
+                        await sql`UPDATE duels SET player1_score = ${myScore}, p1_last_active = NOW() WHERE id = ${duelId}`;
+                    } else {
+                        await sql`UPDATE duels SET player2_score = ${myScore}, p2_last_active = NOW() WHERE id = ${duelId}`;
+                    }
+
+                    // Fetch current state with server-side age check
+                    const dRes = await sql`
+                        SELECT player1_score, player2_score, status,
+                        (p1_last_active < NOW() - INTERVAL '25 seconds') as p1_dead,
+                        (p2_last_active < NOW() - INTERVAL '25 seconds') as p2_dead
+                        FROM duels WHERE id = ${duelId}
+                    `;
+                    const d = dRes[0];
+
+                    if (d.status === 'cancelled') {
+                        duelActive = false;
+                        alert("თამაში ჩაიშალა - მოწინააღმდეგემ დატოვა დუელი.");
+                        window.location.href = 'index.html';
+                        return;
+                    }
+
+                    if (d.status === 'finished' && duelActive) {
+                        duelActive = false;
+                        finishDuel();
+                        return;
+                    }
+
+                    // Check disconnect (server-side age)
+                    const isOtherDead = isPlayer1 ? d.p2_dead : d.p1_dead;
+                    if (isOtherDead) {
+                        duelActive = false;
+                        await sql`UPDATE duels SET status = 'cancelled' WHERE id = ${duelId}`;
+                        alert("თამაში ჩაიშალა - მოწინააღმდეგესთან კავშირი შეწყდა.");
+                        window.location.href = 'index.html';
+                        return;
+                    }
+
+                    opponentScore = isPlayer1 ? d.player2_score : d.player1_score;
+                    updateUI();
+                } catch (e) { console.error("Sync Error:", e); }
+            }, 1000); // Sync every 1s for better stability
+        }
+
+        function updateUI() {
+            if (isPlayer1) {
+                get('p1-score-display').textContent = myScore;
+                get('p2-score-display').textContent = opponentScore;
+            } else {
+                get('p2-score-display').textContent = myScore;
+                get('p1-score-display').textContent = opponentScore;
+            }
+        }
+
+        function spawnStainsLoop() {
+            if (!duelActive) return;
+            const stain = document.createElement('div');
+            stain.className = 'stain';
+            const size = 50 + Math.random() * 40;
+            stain.style.width = size + 'px';
+            stain.style.height = size + 'px';
+            stain.style.background = `hsla(${Math.random() * 360}, 75%, 60%, 0.6)`;
+            stain.style.left = (5 + Math.random() * 90) + '%';
+            stain.style.top = (15 + Math.random() * 80) + '%';
+            field.appendChild(stain);
+
+            setTimeout(() => { if (stain.parentNode) stain.remove(); }, 3000); // Auto remove if not cleaned
+            setTimeout(spawnStainsLoop, 50);
+        }
+
+        function checkClean(mx, my) {
+            if (!duelActive) return;
+            const stains = document.querySelectorAll('.stain');
+            stains.forEach(s => {
+                const rect = s.getBoundingClientRect();
+                const sx = rect.left + rect.width / 2;
+                const sy = rect.top + rect.height / 2;
+                const dist = Math.hypot(mx - sx, my - sy);
+                if (dist < 75) {
+                    s.remove();
+                    myScore++;
+                    updateUI();
+                }
+            });
+        }
+
+        async function finishDuel() {
+            if (!duelActive && get('winner-modal').classList.contains('hidden') === false) return;
+            duelActive = false;
+
+            // Final Fetch
+            const res = await sql`SELECT player1_score, player2_score FROM duels WHERE id = ${duelId}`;
+            const p1Final = res[0].player1_score;
+            const p2Final = res[0].player2_score;
+            const total = p1Final + p2Final;
+            const prize = Math.floor(total / 100);
+
+            const isWinner = isPlayer1 ? (p1Final >= p2Final) : (p2Final > p1Final);
+            const winnerEmail = (p1Final >= p2Final) ? duelData.player1_email : duelData.player2_email;
+
+            get('winner-modal').classList.remove('hidden');
+            get('winner-text').textContent = isWinner ? "თქვენ გაიმარჯვეთ! 🎉" : "თქვენ წააგეთ... 📉";
+            get('res-my-score').textContent = myScore;
+            get('res-opp-score').textContent = opponentScore;
+            get('res-total').textContent = total;
+            get('res-prize').textContent = isWinner ? `${prize} 🪙` : "0 🪙";
+
+            if (isWinner) {
+                // Update DB
+                await sql`UPDATE users SET coins = coins + ${prize}, total_coins = total_coins + ${prize}, duel_wins = COALESCE(duel_wins, 0) + 1 WHERE email = ${userEmail}`;
+                await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
+
+                // CRITICAL: Update localStorage so that when we return to index.html, it has the latest coins even if DB fetch is slow/cached
+                const currentLocalCoins = parseInt(localStorage.getItem('tilo_coins')) || 0;
+                localStorage.setItem('tilo_coins', currentLocalCoins + prize);
+            } else {
+                await sql`UPDATE duels SET status = 'finished', winner_email = ${winnerEmail} WHERE id = ${duelId}`;
+            }
+        }
+
+        window.exitDuel = async () => {
+            if (duelActive && confirm("ნამდვილად გსურთ გასვლა? თამაში ჩაიშლება.")) {
+                await sql`UPDATE duels SET status = 'cancelled' WHERE id = ${duelId}`;
+                window.location.href = 'index.html';
+            } else if (!duelActive) {
+                window.location.href = 'index.html';
+            }
+        };
+
+        window.goToHome = () => { window.location.href = 'index.html'; };
+
+        get('exit-btn').onclick = exitDuel;
+
+        const handleInput = (ex, ey) => {
+            lastX = ex; lastY = ey;
+            myCloth.style.left = (ex - 75) + 'px';
+            myCloth.style.top = (ey - 75) + 'px';
+            checkClean(ex, ey);
+        };
+
+        window.onmousemove = (e) => handleInput(e.clientX, e.clientY);
+        window.ontouchmove = (e) => { e.preventDefault(); handleInput(e.touches[0].clientX, e.touches[0].clientY); };
+
+        initDuel();
+    </script>
+</body>
+
+</html>
