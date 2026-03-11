@@ -2564,6 +2564,7 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; margin-left: 10px;">
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" title="დუბლირება" onclick="duplicateAdminNews(${item.id})">👯</button>
                             <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" onclick="editAdminNews(${item.id})">✏️</button>
                             <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="deleteAdminNews(${item.id})">🗑️</button>
                         </div>
@@ -2640,6 +2641,20 @@
             } catch (e) { console.error(e); }
         };
 
+        window.duplicateAdminNews = async (id) => {
+            if (!confirm('ნამდვილად გსურთ ამ სიახლის დუბლირება?')) return;
+            try {
+                const res = await sql`SELECT * FROM news WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const item = res[0];
+                const insertRes = await sql`INSERT INTO news (title, content, image_url, video_url, category) 
+                          VALUES (${item.title + ' (ასლი)'}, ${item.content}, ${item.image_url}, ${item.video_url}, ${item.category}) RETURNING id`;
+                log('✅ სიახლე დუბლირებულია!', 'var(--accent)');
+                await loadAdminNews();
+                if (insertRes.length > 0) editAdminNews(insertRes[0].id);
+            } catch (e) { console.error(e); }
+        };
+
         // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
         // --- ADMIN ABUSE LOGIC (DYNAMIC) ---
         window.loadAdminAbuse = async () => {
@@ -2707,6 +2722,7 @@
                             <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 4px;">⏳ ${s.end_time ? new Date(s.end_time).toLocaleString('ka-GE') : 'არ არის'}</div>
                         </div>
                         <div style="display: flex; gap: 8px; margin-left: 15px;">
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" title="დუბლირება" onclick="duplicateAbuseItem(${s.id})">👯</button>
                             <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="editAbuseItem(${s.id})">✏️</button>
                             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteAbuseItem(${s.id})">🗑️</button>
                         </div>
@@ -2831,6 +2847,20 @@
                 await sql`DELETE FROM admin_abuse WHERE id = ${id}`;
                 log('🗑️ წაიშალა!', 'var(--danger)');
                 loadAdminAbuse();
+            } catch (e) { console.error(e); }
+        };
+
+        window.duplicateAbuseItem = async (id) => {
+            if (!confirm('ნამდვილად გსურთ ამ აბიუსის დუბლირება?')) return;
+            try {
+                const res = await sql`SELECT * FROM admin_abuse WHERE id = ${id}`;
+                if (res.length === 0) return;
+                const s = res[0];
+                const insertRes = await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) 
+                          VALUES (${s.title + ' (ასლი)'}, ${s.image_url}, ${s.end_time}, ${s.link_url}) RETURNING id`;
+                log('✅ სლოტი დუბლირებულია!', 'var(--accent)');
+                await loadAdminAbuse();
+                if (insertRes.length > 0) editAbuseItem(insertRes[0].id);
             } catch (e) { console.error(e); }
         };
 
