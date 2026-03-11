@@ -42,7 +42,7 @@ class HomeGame {
         try {
             const items = await sql`SELECT * FROM menu_items`;
             items.forEach(item => {
-                const el = get(`menu-item-${item.id}`);
+                const el = get(`menu-item-${item.menu_type}`); // top, left, right
                 if (el) {
                     const label = el.querySelector('.label');
                     const subLabelEl = el.querySelector('.sub-label');
@@ -183,12 +183,16 @@ window.addEventListener('pageshow', (event) => {
     }
 });
 
-async function handleMenuClick(type) {
+window.handleMenuClick = async function(type) {
     let url = '';
     let newTab = false;
     
+    // Convert 'abuse' -> 'top', 'roblox' -> 'left', 'game' -> 'right' for matching IDs
+    const typeMap = { 'abuse': 'top', 'roblox': 'left', 'game': 'right' };
+    const menuType = typeMap[type] || type;
+
     // Fetch current config from dataset or fallback
-    const el = get(`menu-item-${type}`);
+    const el = get(`menu-item-${menuType}`);
     if (el && el.dataset.link) {
         url = el.dataset.link;
         if (url.startsWith('http')) newTab = true;
@@ -203,7 +207,7 @@ async function handleMenuClick(type) {
 
     // TRACK CLICK
     try {
-        sql`INSERT INTO menu_clicks (menu_type) VALUES (${type})`;
+        sql`INSERT INTO menu_clicks (menu_type) VALUES (${menuType})`;
     } catch (e) { }
     
     if (window.homeGame) {
@@ -213,3 +217,13 @@ async function handleMenuClick(type) {
         else window.location.href = url;
     }
 }
+
+// Hover effects for Top Menu
+window.handleAbuseHover = () => {
+    const container = get('abuse-preview-container');
+    if (container) container.classList.add('active');
+};
+window.handleAbuseLeave = () => {
+    const container = get('abuse-preview-container');
+    if (container) container.classList.remove('active');
+};
