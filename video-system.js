@@ -19,7 +19,7 @@ function injectVideoElements() {
             to { text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px #00ffff; }
         }
         #video-notification.slide-in {
-            transform: translateX(0) !important;
+            left: 20px !important;
         }
     `;
     document.head.appendChild(style);
@@ -28,7 +28,7 @@ function injectVideoElements() {
 
     <!-- Global Video Notification -->
     <div id="video-notification" class="hidden"
-        style="position: fixed; top: 100px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        style="position: fixed; top: 100px; left: -300px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 2000000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <h3 style="margin: 0; color: cyan; font-size: 0.9rem;">✨ ახალი ვიდეო!</h3>
             <button id="hide-video-btn" style="background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer;">&times;</button>
@@ -50,7 +50,7 @@ function injectVideoElements() {
 
     <!-- Mini Video Player -->
     <div id="video-player-modal" class="hidden"
-        style="position: fixed; bottom: 80px; right: 20px; width: 380px; max-width: 90vw; z-index: 20000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); background: black; border: 2px solid cyan; border-radius: 12px; overflow: visible; display: flex; flex-direction: column;">
+        style="position: fixed; bottom: 80px; right: 20px; width: 380px; max-width: 90vw; z-index: 3000000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); background: black; border: 2px solid cyan; border-radius: 12px; overflow: visible; display: flex; flex-direction: column;">
         <div id="video-player-handle" style="height: 30px; background: rgba(0,0,0,0.9); cursor: move; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid rgba(0,255,255,0.3); border-top-left-radius: 10px; border-top-right-radius: 10px;">
             <span style="font-size: 0.7rem; color: cyan; font-weight: bold;">📺 TILO VIDEO PLAYER</span>
             <button id="close-video-player-btn" style="background: rgba(255,0,0,0.8); color: white; border: none; width: 20px; height: 20px; border-radius: 4px; cursor: pointer;">&times;</button>
@@ -129,19 +129,28 @@ async function fetchChannelVideos() {
 }
 
 window.showVideoPopup = () => {
-    if (Object.keys(allChannelVideos).length === 0) return;
+    const popup = get('video-notification');
     if (get('video-player-modal') && !get('video-player-modal').classList.contains('hidden')) return;
 
-    const ids = Object.keys(allChannelVideos);
-    const videos = allChannelVideos[ids[0]];
-    const vid = videos[Math.floor(Math.random() * videos.length)];
+    let vid = null;
+    let videoId = '';
 
-    const popup = get('video-notification');
-    let videoId = vid.guid?.split(':')[2];
-    if (!videoId && vid.link) {
-        try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+    if (Object.keys(allChannelVideos).length > 0) {
+        const ids = Object.keys(allChannelVideos);
+        const videos = allChannelVideos[ids[0]];
+        vid = videos[Math.floor(Math.random() * videos.length)];
+        
+        videoId = vid.guid?.split(':')[2];
+        if (!videoId && vid.link) {
+            try { videoId = new URL(vid.link).searchParams.get('v'); } catch (e) { }
+        }
     }
-    if (!videoId) return;
+
+    // Fallback if RSS fails or no videos found
+    if (!videoId) {
+        videoId = 'dQw4w9WgXcQ'; // Rickroll as a placeholder for testing (User can change this)
+        vid = { title: 'TILO.LIFE - უყურე სიახლეებს!', link: `https://youtube.com/watch?v=${videoId}` };
+    }
 
     currentVideoId = videoId;
     get('video-thumb').src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;

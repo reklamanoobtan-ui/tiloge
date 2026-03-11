@@ -93,12 +93,9 @@ class HomeGame {
         if (this.isNavigating && !newTab) return;
         if (!newTab) this.isNavigating = true;
 
-        // Animation: Clean everything quickly
-        const allStains = document.querySelectorAll('.bg-stain');
-        allStains.forEach(s => s.classList.add('cleaning'));
-        
         // Add a "wipe" effect to the screen
         const wipe = document.createElement('div');
+        wipe.id = 'transition-wipe';
         wipe.style.cssText = `
             position: fixed;
             top: 0;
@@ -106,42 +103,60 @@ class HomeGame {
             width: 100%;
             height: 100%;
             background: var(--news-primary);
-            z-index: 10000;
-            transition: left 0.5s ease-in-out;
+            z-index: 1000000;
+            transition: left 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
+            pointer-events: none;
         `;
         document.body.appendChild(wipe);
         
         // Use the cloth to "wipe"
         if (this.cloth) {
-            const oldTransition = this.cloth.style.transition;
-            this.cloth.style.transition = 'all 0.5s ease-in-out';
-            this.cloth.style.left = '100%';
-            if (newTab) {
-                setTimeout(() => {
-                    this.cloth.style.transition = oldTransition;
-                    this.cloth.style.left = '50%'; // Reset or keep it somewhere
-                }, 600);
-            }
+            this.cloth.style.transition = 'all 0.6s cubic-bezier(0.645, 0.045, 0.355, 1)';
+            this.cloth.style.left = '100vw';
         }
 
-        setTimeout(() => {
-            wipe.style.left = '0';
-        }, 10);
+        setTimeout(() => { wipe.style.left = '0'; }, 10);
 
         setTimeout(() => {
             if (newTab) {
                 window.open(url, '_blank');
-                wipe.style.left = '100%'; // Move wipe out
-                setTimeout(() => wipe.remove(), 500);
+                wipe.style.left = '100%';
+                setTimeout(() => {
+                    wipe.remove();
+                    this.isNavigating = false;
+                }, 600);
             } else {
                 window.location.href = url;
+                // Safety: if navigation is cancelled or takes too long
+                setTimeout(() => {
+                    wipe.style.left = '100%';
+                    setTimeout(() => wipe.remove(), 600);
+                    this.isNavigating = false;
+                }, 2000);
             }
-        }, 600);
+        }, 650);
     }
 }
 
+// Global initialization and cleanup
 document.addEventListener('DOMContentLoaded', () => {
     window.homeGame = new HomeGame();
+    
+    // Check if we arrived with a wipe (from a previous page)
+    const existingWipe = get('transition-wipe');
+    if (existingWipe) {
+        existingWipe.style.left = '100%';
+        setTimeout(() => existingWipe.remove(), 600);
+    }
+});
+
+// Handle Back/Forward Cache
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        const wipe = get('transition-wipe');
+        if (wipe) wipe.remove();
+        if (window.homeGame) window.homeGame.isNavigating = false;
+    }
 });
 
 function handleMenuClick(type) {
