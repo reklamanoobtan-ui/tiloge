@@ -236,6 +236,9 @@
                 alreadyLiked: "თქვენ უკვე დაალაიქეთ ეს პასუხი",
                 enterText: "გთხოვთ შეიყვანოთ ტექსტი",
                 day: "დ",
+                today: "📅 დღეს",
+                thisWeek: "📆 ამ კვირაში",
+                other: "📂 სხვა"
             },
             en: {
                 home: "Home",
@@ -262,6 +265,9 @@
                 alreadyLiked: "You already liked this answer",
                 enterText: "Please enter text",
                 day: "d",
+                today: "📅 Today",
+                thisWeek: "📆 This Week",
+                other: "📂 Other"
             }
         };
 
@@ -334,44 +340,85 @@
                 }
 
                 container.innerHTML = '';
-                for (const s of slots) {
-                    const card = document.createElement('div');
-                    card.className = 'abuse-card';
+                
+                const groupItems = (items) => {
+                    const today = [];
+                    const week = [];
+                    const others = [];
+                    const now = new Date();
+                    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-                    const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
-                    const timerId = `timer-${s.id}`;
-                    let title = s.title;
-                    if (currentLang === 'en') title = await translateToEn(title);
+                    items.forEach(item => {
+                        const date = new Date(item.created_at);
+                        if (date >= startOfToday) today.push(item);
+                        else if (date >= startOfWeek) week.push(item);
+                        else others.push(item);
+                    });
+                    return { today, week, others };
+                };
 
-                    card.innerHTML = `
-                        <img src="${img}" class="abuse-img">
-                        <div class="abuse-body">
-                            <h3 style="font-weight: 800; font-size: 1.2rem;">${title}</h3>
-                            <div class="timer-badge" id="${timerId}">00:00:00</div>
-                            <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width:100%; margin-top:auto;">${t.go}</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                const groups = groupItems(slots);
 
-                    const updateTimer = () => {
-                        const el = document.getElementById(timerId);
-                        if (!el) return;
-                        if (!s.end_time) { el.textContent = t.wait; return; }
-                        const now = new Date();
-                        const end = new Date(s.end_time);
-                        const diff = end - now;
-                        if (diff <= 0) { el.textContent = t.finished; el.style.color = "#ff4757"; return; }
-                        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const sv = Math.floor((diff % (1000 * 60)) / 1000);
-                        let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sv.toString().padStart(2, '0')}`;
-                        if (d > 0) timeStr = `${d}${t.day} ${timeStr}`;
-                        el.textContent = timeStr;
-                    };
-                    updateTimer();
-                    setInterval(updateTimer, 1000);
-                }
+                const renderSection = async (title, items) => {
+                    if (items.length === 0) return;
+                    
+                    const sectionHeader = document.createElement('h2');
+                    sectionHeader.style.cssText = "grid-column: 1/-1; margin-top: 40px; margin-bottom: 20px; font-weight: 800; border-bottom: 2px solid var(--news-border); padding-bottom: 10px; color: var(--news-primary);";
+                    sectionHeader.textContent = title;
+                    container.appendChild(sectionHeader);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'abuse-grid';
+                    grid.style.marginTop = '0';
+                    container.appendChild(grid);
+
+                    for (const s of items) {
+                        const card = document.createElement('div');
+                        card.className = 'abuse-card';
+
+                        const img = s.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
+                        const timerId = `timer-${s.id}`;
+                        let titleText = s.title;
+                        if (currentLang === 'en') titleText = await translateToEn(titleText);
+
+                        card.innerHTML = `
+                            <img src="${img}" class="abuse-img">
+                            <div class="abuse-body">
+                                <h3 style="font-weight: 800; font-size: 1.2rem;">${titleText}</h3>
+                                <div class="timer-badge" id="${timerId}" style="font-size: 1.6rem; padding: 12px; background: rgba(0, 229, 255, 0.15); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.3);">00:00:00</div>
+                                <button onclick="window.open('${s.link_url}', '_blank')" class="action-btn" style="width:100%; margin-top:auto;">${t.go}</button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+
+                        const updateTimer = () => {
+                            const el = document.getElementById(timerId);
+                            if (!el) return;
+                            if (!s.end_time) { el.textContent = t.wait; return; }
+                            const now = new Date();
+                            const end = new Date(s.end_time);
+                            const diff = end - now;
+                            if (diff <= 0) { el.textContent = t.finished; el.style.color = "#ff4757"; return; }
+                            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const sv = Math.floor((diff % (1000 * 60)) / 1000);
+                            let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sv.toString().padStart(2, '0')}`;
+                            if (d > 0) timeStr = `${d}${t.day} ${timeStr}`;
+                            el.textContent = timeStr;
+                        };
+                        updateTimer();
+                        setInterval(updateTimer, 1000);
+                    }
+                };
+
+                // Clear container and change display to allow section-based headers
+                container.style.display = 'block';
+                await renderSection(t.today, groups.today);
+                await renderSection(t.thisWeek, groups.week);
+                await renderSection(t.other, groups.others);
+
             } catch (e) { console.error(e); }
         }
 

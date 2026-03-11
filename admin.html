@@ -2648,7 +2648,7 @@
                 if (res.length === 0) return;
                 const item = res[0];
                 const insertRes = await sql`INSERT INTO news (title, content, image_url, video_url, category) 
-                          VALUES (${item.title + ' (ასლი)'}, ${item.content}, ${item.image_url}, ${item.video_url}, ${item.category}) RETURNING id`;
+                          VALUES (${item.title}, ${item.content}, ${item.image_url}, ${item.video_url}, ${item.category}) RETURNING id`;
                 log('✅ სიახლე დუბლირებულია!', 'var(--accent)');
                 await loadAdminNews();
                 if (insertRes.length > 0) editAdminNews(insertRes[0].id);
@@ -2857,7 +2857,7 @@
                 if (res.length === 0) return;
                 const s = res[0];
                 const insertRes = await sql`INSERT INTO admin_abuse (title, image_url, end_time, link_url) 
-                          VALUES (${s.title + ' (ასლი)'}, ${s.image_url}, ${s.end_time}, ${s.link_url}) RETURNING id`;
+                          VALUES (${s.title}, ${s.image_url}, ${s.end_time}, ${s.link_url}) RETURNING id`;
                 log('✅ სლოტი დუბლირებულია!', 'var(--accent)');
                 await loadAdminAbuse();
                 if (insertRes.length > 0) editAbuseItem(insertRes[0].id);

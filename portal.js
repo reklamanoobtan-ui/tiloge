@@ -1032,15 +1032,80 @@ let allChannelVideos = {};
 let videoPopupTimers = [];
 let currentVideoId = '';
 let hasWatchedOneVideo = false;
+let isConfigLoaded = false;
+
 
 async function initVideoSystem() {
-    await fetchChannelVideos();
+    try {
+        await refreshGlobalConfig();
+        isConfigLoaded = true;
+        await fetchChannelVideos();
+    } catch (e) {
+        console.error("Initial config failed", e);
+        isConfigLoaded = true; // Still proceed with hardcoded defaults
+    }
+    
     // Schedule first popup after 5 seconds
     setTimeout(showVideoPopup, 5000);
-    // Loop every 5 min
+    // Loop for popup every 5 min
     setInterval(showVideoPopup, 300000);
+    // Refresh settings from DB every 30 seconds
+    setInterval(async () => {
+        await refreshGlobalConfig();
+        await fetchChannelVideos(); 
+    }, 30000);
     setupVideoPlayerDrag();
 };
+
+
+async function refreshGlobalConfig() {
+    try {
+        const events = await sql`SELECT event_type, event_value FROM global_events WHERE expires_at > NOW()`;
+        
+        // Reset forced video
+        let forcedVideo = null;
+
+        events.forEach(ev => {
+            if (ev.event_type === 'video_config') {
+                try {
+                    const cfg = JSON.parse(ev.event_value);
+                    if (Array.isArray(cfg) && cfg.length > 0) {
+                        videoChannels = cfg;
+                    }
+                } catch (e) { console.error("Video config error", e); }
+            }
+            if (ev.event_type === 'forced_video') {
+                try {
+                    const cfg = JSON.parse(ev.event_value);
+                    if (cfg && cfg.id) forcedVideo = cfg;
+                } catch (e) { }
+            }
+        });
+
+        if (forcedVideo) {
+            handleForcedVideo(forcedVideo);
+        }
+    } catch (e) { console.error("Config fetch error", e); }
+}
+
+let lastForcedVideoId = '';
+function handleForcedVideo(cfg) {
+    if (cfg.id === lastForcedVideoId) return;
+    lastForcedVideoId = cfg.id;
+    
+    currentVideoId = cfg.id;
+    const popup = get('video-notification');
+    if (popup) {
+        get('video-thumb').src = `https://img.youtube.com/vi/${cfg.id}/maxresdefault.jpg`;
+        get('video-notif-title').textContent = "📢 სპეციალური შემოთავაზება!";
+        get('btn-youtube').href = cfg.link || `https://youtube.com/watch?v=${cfg.id}`;
+        
+        popup.classList.remove('hidden');
+        void popup.offsetWidth;
+        popup.classList.add('slide-in');
+    }
+}
+
 
 async function fetchChannelVideos() {
     const newAllVideos = {};
@@ -1104,12 +1169,15 @@ window.showVideoPopup = () => {
         void popup.offsetWidth; // Trigger reflow
         popup.classList.add('slide-in');
 
-        // Auto hide after 10s
+        // Auto hide after 15s instead of 10s for better visibility
         setTimeout(() => {
-            popup.classList.remove('slide-in');
-        }, 10000);
+            if (!popup.matches(':hover')) {
+                popup.classList.remove('slide-in');
+            }
+        }, 15000);
     }
 };
+
 
 window.hideVideoPopup = function () {
     const popup = get('video-notification');
