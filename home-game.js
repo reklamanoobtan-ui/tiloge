@@ -1,4 +1,8 @@
 
+import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.9.4/+esm';
+const DB_URL = "postgresql://neondb_owner:npg_NBPsUe3FXb4o@ep-calm-wildflower-aim8iczt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require";
+const sql = neon(DB_URL);
+
 const get = id => document.getElementById(id);
 
 class HomeGame {
@@ -15,7 +19,8 @@ class HomeGame {
     init() {
         if (!this.container) return;
 
-        // Follow mouse
+        // Fetch dynamic menu config
+        this.loadMenuConfig();
         window.addEventListener('mousemove', (e) => this.handleMove(e.clientX, e.clientY));
         window.addEventListener('touchmove', (e) => {
             e.preventDefault();
@@ -31,6 +36,24 @@ class HomeGame {
 
         // Click to clean
         window.addEventListener('mousedown', () => this.cleanAllAround());
+    }
+
+    async loadMenuConfig() {
+        try {
+            const items = await sql`SELECT * FROM menu_items`;
+            items.forEach(item => {
+                const el = get(`menu-item-${item.id}`);
+                if (el) {
+                    const label = el.querySelector('.label');
+                    const subLabelEl = el.querySelector('.sub-label');
+                    const iconEl = el.querySelector('.menu-icon');
+                    if (label) label.textContent = item.label;
+                    if (subLabelEl) subLabelEl.textContent = item.sub_label;
+                    if (iconEl) iconEl.textContent = item.icon;
+                    el.dataset.link = item.link;
+                }
+            });
+        } catch (e) { console.error("Menu config error", e); }
     }
 
     handleMove(x, y) {
@@ -138,6 +161,7 @@ class HomeGame {
     }
 }
 
+
 // Global initialization and cleanup
 document.addEventListener('DOMContentLoaded', () => {
     window.homeGame = new HomeGame();
@@ -159,17 +183,28 @@ window.addEventListener('pageshow', (event) => {
     }
 });
 
-function handleMenuClick(type) {
+async function handleMenuClick(type) {
     let url = '';
     let newTab = false;
-    switch(type) {
-        case 'abuse': url = 'all-abuse.html'; break;
-        case 'roblox': 
-            url = 'https://www.roblox.com/communities/4403989/ggitems#!/store'; 
-            newTab = true;
-            break;
-        case 'game': url = 'game.html'; break;
+    
+    // Fetch current config from dataset or fallback
+    const el = get(`menu-item-${type}`);
+    if (el && el.dataset.link) {
+        url = el.dataset.link;
+        if (url.startsWith('http')) newTab = true;
+    } else {
+        // Fallbacks
+        switch(type) {
+            case 'abuse': url = 'all-abuse.html'; break;
+            case 'roblox': url = 'https://www.roblox.com/communities/4403989/ggitems#!/store'; newTab = true; break;
+            case 'game': url = 'game.html'; break;
+        }
     }
+
+    // TRACK CLICK
+    try {
+        sql`INSERT INTO menu_clicks (menu_type) VALUES (${type})`;
+    } catch (e) { }
     
     if (window.homeGame) {
         window.homeGame.navigateWithAnim(url, newTab);

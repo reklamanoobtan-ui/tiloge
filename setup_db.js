@@ -175,6 +175,34 @@ async function initDatabase() {
             await sql`ALTER TABLE news_comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES news_comments(id) ON DELETE CASCADE`;
         } catch (e) { }
 
+        // 12. Menu System
+        await sql`CREATE TABLE IF NOT EXISTS menu_items (
+            id SERIAL PRIMARY KEY,
+            menu_type VARCHAR(50) UNIQUE NOT NULL,
+            label TEXT NOT NULL,
+            sub_label TEXT,
+            icon TEXT,
+            link TEXT,
+            updated_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS menu_clicks (
+            id SERIAL PRIMARY KEY,
+            menu_type VARCHAR(50) NOT NULL,
+            clicked_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // Seed default menu items if table is empty
+        const menuCount = await sql`SELECT count(*) FROM menu_items`;
+        if (parseInt(menuCount[0].count) === 0) {
+            console.log("🌱 Seeding default menu items...");
+            await sql`INSERT INTO menu_items (menu_type, label, sub_label, icon, link) VALUES 
+                ('top', 'ადმინ აბუსი', 'ADMIN ABUSE', '🛡️', 'all-abuse.html'),
+                ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/catalog/12534062013/TILO-GE-OFFICIAL-SHIRT'),
+                ('right', 'ტილოს', 'თამაში', '🕹️', 'game.html')
+            `;
+        }
+
         console.log("✅ Database schema sync complete!");
     } catch (e) {
         console.error("❌ DB Sync Error:", e);

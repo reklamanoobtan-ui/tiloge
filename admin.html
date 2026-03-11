@@ -563,11 +563,11 @@
 
             <div class="nav-items">
                 <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
+                <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="online">🟢 ონლაინ</div>
                 <div class="nav-item" data-tab="players">👥 მომხმარებლები</div>
                 <div class="nav-item" data-tab="site">🌐 საიტის მართვა</div>
                 <div class="nav-item" data-tab="bosses">👾 ბოსები</div>
-                <div class="nav-item" data-tab="systems">⚙️ სისტემა</div>
                 <div class="nav-item" data-tab="events">🎉 ივენთები</div>
                 <div class="nav-item" data-tab="youtube">📺 იუთუბი</div>
                 <div class="nav-item" data-tab="news">📰 სიახლეები</div>
@@ -641,6 +641,71 @@
                         <input type="number" id="massive-dur" value="10" placeholder="წამი"
                             style="width: 80px; margin-bottom: 0;">
                         <button class="btn btn-gold full-width" id="send-massive">🔥 ყველასთან გაგზავნა</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENU STATISTICS TAB -->
+            <div id="tab-stats" class="tab-content">
+                <div class="header-bar">
+                    <h2>📈 მენიუს სტატისტიკა</h2>
+                    <button class="btn btn-outline" onclick="loadMenuStats()">🔄 განახლება</button>
+                </div>
+                <div class="dashboard-grid" id="menu-stats-grid">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- MENU CONFIG TAB -->
+            <div id="tab-menu_config" class="tab-content">
+                <div class="header-bar">
+                    <h2>🛠️ მენიუს მართვა</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <!-- Top Menu -->
+                    <div class="card">
+                        <h3 style="color: #ffeb3b;">🛡️ TOP Menu (Abuse)</h3>
+                        <div class="mt-10">
+                            <label class="mini-label">Label (სათაური)</label>
+                            <input type="text" id="menu-top-label" placeholder="მაგ: ადმინ აბუსი">
+                            <label class="mini-label">Subtitle (ქვესათაური)</label>
+                            <input type="text" id="menu-top-sub" placeholder="მაგ: ADMIN ABUSE">
+                            <label class="mini-label">Icon (ემოჯი)</label>
+                            <input type="text" id="menu-top-icon" placeholder="🛡️">
+                            <label class="mini-label">Link (ბმული)</label>
+                            <input type="text" id="menu-top-link" placeholder="all-abuse.html">
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('top')">💾 UPDATE TOP MENU</button>
+                        </div>
+                    </div>
+                    <!-- Left Menu -->
+                    <div class="card">
+                        <h3 style="color: #00e5ff;">👕 LEFT Menu (Roblox)</h3>
+                        <div class="mt-10">
+                            <label class="mini-label">Label</label>
+                            <input type="text" id="menu-left-label" placeholder="მაგ: მაისური">
+                            <label class="mini-label">Subtitle</label>
+                            <input type="text" id="menu-left-sub" placeholder="მაგ: ROBLOX">
+                            <label class="mini-label">Icon</label>
+                            <input type="text" id="menu-left-icon" placeholder="👕">
+                            <label class="mini-label">Link</label>
+                            <input type="text" id="menu-left-link" placeholder="roblox.com/...">
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('left')">💾 UPDATE LEFT MENU</button>
+                        </div>
+                    </div>
+                    <!-- Right Menu -->
+                    <div class="card">
+                        <h3 style="color: #ff3333;">🕹️ RIGHT Menu (Game)</h3>
+                        <div class="mt-10">
+                            <label class="mini-label">Label</label>
+                            <input type="text" id="menu-right-label" placeholder="მაგ: ტილოს">
+                            <label class="mini-label">Subtitle</label>
+                            <input type="text" id="menu-right-sub" placeholder="მაგ: თამაში">
+                            <label class="mini-label">Icon</label>
+                            <input type="text" id="menu-right-icon" placeholder="🕹️">
+                            <label class="mini-label">Link</label>
+                            <input type="text" id="menu-right-link" placeholder="game.html">
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('right')">💾 UPDATE RIGHT MENU</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1048,7 +1113,60 @@
             <div id="tab-systems" class="tab-content">
                 <div class="header-bar">
                     <h2>⚙️ სისტემური მართვა</h2>
+                    <div class="flex-row">
+                        <button class="btn btn-outline" onclick="loadMenuStats(); loadMenuConfig();">🔄 განახლება</button>
+                    </div>
                 </div>
+
+                <!-- Menu Stats Section -->
+                <div class="card" style="margin-bottom: 25px; background: rgba(0,0,0,0.2);">
+                    <h3>📈 მენიუს სტატისტიკა</h3>
+                    <div class="dashboard-grid" id="menu-stats-grid" style="margin-top: 15px;">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Menu Configuration Section -->
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🛠️ მენიუს მართვა</h3>
+                    <div class="dashboard-grid mt-10" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                        <!-- Top Menu -->
+                        <div class="mini-card" style="border-left: 4px solid #ffeb3b;">
+                            <h4 style="color: #ffeb3b; margin-bottom: 10px;">🛡️ TOP Menu</h4>
+                            <input type="text" id="menu-top-label" placeholder="Label (მაგ: ადმინ აბუსი)" class="search-input" style="width: 100%;">
+                            <input type="text" id="menu-top-sub" placeholder="Subtitle (მაგ: ADMIN ABUSE)" class="search-input" style="width: 100%;">
+                            <div class="flex-row gap-5">
+                                <input type="text" id="menu-top-icon" placeholder="🛡️" class="search-input" style="width: 60px; margin: 0;">
+                                <input type="text" id="menu-top-link" placeholder="all-abuse.html" class="search-input" style="flex: 1; margin: 0;">
+                            </div>
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('top')" style="font-size: 0.8rem;">💾 UPDATE TOP</button>
+                        </div>
+                        <!-- Left Menu -->
+                        <div class="mini-card" style="border-left: 4px solid #00e5ff;">
+                            <h4 style="color: #00e5ff; margin-bottom: 10px;">👕 LEFT Menu</h4>
+                            <input type="text" id="menu-left-label" placeholder="Label" class="search-input" style="width: 100%;">
+                            <input type="text" id="menu-left-sub" placeholder="Subtitle" class="search-input" style="width: 100%;">
+                            <div class="flex-row gap-5">
+                                <input type="text" id="menu-left-icon" placeholder="👕" class="search-input" style="width: 60px; margin: 0;">
+                                <input type="text" id="menu-left-link" placeholder="roblox.com/..." class="search-input" style="flex: 1; margin: 0;">
+                            </div>
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('left')" style="font-size: 0.8rem;">💾 UPDATE LEFT</button>
+                        </div>
+                        <!-- Right Menu -->
+                        <div class="mini-card" style="border-left: 4px solid #ff3333;">
+                            <h4 style="color: #ff3333; margin-bottom: 10px;">🕹️ RIGHT Menu</h4>
+                            <input type="text" id="menu-right-label" placeholder="Label" class="search-input" style="width: 100%;">
+                            <input type="text" id="menu-right-sub" placeholder="Subtitle" class="search-input" style="width: 100%;">
+                            <div class="flex-row gap-5">
+                                <input type="text" id="menu-right-icon" placeholder="🕹️" class="search-input" style="width: 60px; margin: 0;">
+                                <input type="text" id="menu-right-link" placeholder="game.html" class="search-input" style="flex: 1; margin: 0;">
+                            </div>
+                            <button class="btn btn-primary full-width mt-10" onclick="updateMenuItem('right')" style="font-size: 0.8rem;">💾 UPDATE RIGHT</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Tools Section -->
                 <div class="dashboard-grid">
                     <div class="card">
                         <h3>🧹 მონაცემების გასუფთავება</h3>
@@ -1715,6 +1833,7 @@
                 if (target === 'online') loadOnlinePlayers();
                 if (target === 'comments') loadAdminComments();
                 if (target === 'abuse') { loadAdminAbuse(); loadAbuseSuggestions(); }
+                if (target === 'systems') { loadMenuStats(); loadMenuConfig(); }
             };
         });
 
@@ -3085,6 +3204,20 @@
                 await sql`CREATE TABLE IF NOT EXISTS abuse_suggestions (id SERIAL PRIMARY KEY, suggest_text TEXT NOT NULL, nickname TEXT, likes INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`;
                 await sql`CREATE TABLE IF NOT EXISTS suggestion_likes (id SERIAL PRIMARY KEY, suggestion_id INTEGER REFERENCES abuse_suggestions(id) ON DELETE CASCADE, user_email TEXT NOT NULL, UNIQUE(suggestion_id, user_email))`;
 
+                // 7. Menu System
+                await sql`CREATE TABLE IF NOT EXISTS menu_items (id SERIAL PRIMARY KEY, menu_type VARCHAR(50) UNIQUE NOT NULL, label TEXT NOT NULL, sub_label TEXT, icon TEXT, link TEXT, updated_at TIMESTAMP DEFAULT NOW())`;
+                await sql`CREATE TABLE IF NOT EXISTS menu_clicks (id SERIAL PRIMARY KEY, menu_type VARCHAR(50) NOT NULL, clicked_at TIMESTAMP DEFAULT NOW())`;
+                
+                // Seed Menu Items if empty
+                const menuCheck = await sql`SELECT count(*) FROM menu_items`;
+                if (parseInt(menuCheck[0].count) === 0) {
+                    await sql`INSERT INTO menu_items (menu_type, label, sub_label, icon, link) VALUES 
+                        ('top', 'ადმინ აბუსი', 'ADMIN ABUSE', '🛡️', 'all-abuse.html'),
+                        ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/catalog/12534062013/TILO-GE-OFFICIAL-SHIRT'),
+                        ('right', 'ტილოს', 'თამაში', '🕹️', 'game.html')
+                    `;
+                }
+
                 log('🎉 SETUP დასრულებულია!', 'green');
                 loadPlayers();
             } catch (e) { log('Setup Error: ' + e.message, 'red'); }
@@ -3518,6 +3651,102 @@
 
         // Auto-translate existing on load if needed
         setTimeout(translateExistingNews, 3000);
+
+        // --- MENU DASHBOARD LOGIC ---
+        window.loadMenuStats = async () => {
+            const grid = get('menu-stats-grid');
+            if(!grid) return;
+            grid.innerHTML = '<p style="padding:20px; text-align:center; width:100%;">📊 სტატისტიკა იტვირთება...</p>';
+
+            try {
+                // Fetch stats for Day, Week, Month, Year
+                const stats = await sql`
+                    SELECT 
+                        menu_type,
+                        COUNT(*) FILTER (WHERE clicked_at > NOW() - INTERVAL '1 day') as day_clicks,
+                        COUNT(*) FILTER (WHERE clicked_at > NOW() - INTERVAL '7 days') as week_clicks,
+                        COUNT(*) FILTER (WHERE clicked_at > NOW() - INTERVAL '30 days') as month_clicks,
+                        COUNT(*) as total_clicks
+                    FROM menu_clicks
+                    GROUP BY menu_type
+                `;
+
+                if (stats.length === 0) {
+                    grid.innerHTML = '<p style="padding:20px; text-align:center; width:100%; opacity:0.5;">მონაცემები ჯერ არ არის.</p>';
+                    return;
+                }
+
+                grid.innerHTML = stats.map(s => `
+                    <div class="card">
+                        <h3 style="color: var(--primary); text-transform: uppercase;">${s.menu_type} MENU</h3>
+                        <div class="mt-10">
+                            <div class="flex-row" style="justify-content: space-between; margin-bottom: 5px;">
+                                <span>დღეს:</span>
+                                <strong style="color: #00ff00;">${s.day_clicks}</strong>
+                            </div>
+                            <div class="flex-row" style="justify-content: space-between; margin-bottom: 5px;">
+                                <span>კვირაში:</span>
+                                <strong style="color: #4facfe;">${s.week_clicks}</strong>
+                            </div>
+                            <div class="flex-row" style="justify-content: space-between; margin-bottom: 5px;">
+                                <span>თვეში:</span>
+                                <strong style="color: #ff9800;">${s.month_clicks}</strong>
+                            </div>
+                            <hr style="opacity: 0.1; margin: 10px 0;">
+                            <div class="flex-row" style="justify-content: space-between;">
+                                <span>ჯამში:</span>
+                                <strong style="color: gold; font-size: 1.2rem;">${s.total_clicks}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<p style="padding:20px; color:red;">შეცდომა სტატისტიკის წამოღებისას.</p>';
+            }
+        };
+
+        window.loadMenuConfig = async () => {
+            try {
+                const items = await sql`SELECT * FROM menu_items`;
+                items.forEach(item => {
+                    const type = item.menu_type; // top, left, right
+                    if (get(`menu-${type}-label`)) get(`menu-${type}-label`).value = item.label;
+                    if (get(`menu-${type}-sub`)) get(`menu-${type}-sub`).value = item.sub_label;
+                    if (get(`menu-${type}-icon`)) get(`menu-${type}-icon`).value = item.icon;
+                    if (get(`menu-${type}-link`)) get(`menu-${type}-link`).value = item.link;
+                });
+            } catch (e) { console.error(e); }
+        };
+
+        window.updateMenuItem = async (type) => {
+            const label = get(`menu-${type}-label`).value.trim();
+            const sub = get(`menu-${type}-sub`).value.trim();
+            const icon = get(`menu-${type}-icon`).value.trim();
+            const link = get(`menu-${type}-link`).value.trim();
+
+            if (!label) return alert("მიუთითეთ სათაური!");
+
+            try {
+                await sql`
+                    INSERT INTO menu_items (menu_type, label, sub_label, icon, link, updated_at)
+                    VALUES (${type}, ${label}, ${sub}, ${icon}, ${link}, NOW())
+                    ON CONFLICT (menu_type) DO UPDATE SET 
+                        label = EXCLUDED.label,
+                        sub_label = EXCLUDED.sub_label,
+                        icon = EXCLUDED.icon,
+                        link = EXCLUDED.link,
+                        updated_at = NOW()
+                `;
+                log(`✅ ${type.toUpperCase()} Menu განახლდა!`, 'green');
+                
+                // Clear cache on frontend (home-game.js loads this on refresh)
+                // We could emit a signal if we had websockets, but for now refresh is needed
+            } catch (e) {
+                console.error(e);
+                log('შეცდომა განახლებისას', 'red');
+            }
+        };
 
     </script>
 </body>
