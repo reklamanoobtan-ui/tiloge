@@ -143,6 +143,58 @@
             💠 ყველა ადმინ აბიუსი
         </h1>
 
+        <!-- Video Notification Popup -->
+        <div id="video-notification" class="hidden"
+            style="position: fixed; top: 100px; left: 20px; width: 280px; background: rgba(16, 16, 30, 0.95); border: 2px solid cyan; border-radius: 12px; padding: 12px; z-index: 10000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); backdrop-filter: blur(5px); transform: translateX(-150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3 style="margin: 0; color: cyan; font-size: 0.9rem;">✨ ახალი ვიდეო!</h3>
+                <button onclick="hideVideoPopup()"
+                    style="background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <div onclick="watchVideoHere()"
+                style="position: relative; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; cursor: pointer;">
+                <img id="video-thumb" src="" alt="Thumbnail"
+                    style="width: 100%; height: auto; display: block; filter: brightness(0.8);">
+                <div
+                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <div
+                        style="width: 40px; height: 40px; background: rgba(255,0,0,0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        ▶️</div>
+                </div>
+            </div>
+            <div id="video-notif-title"
+                style="font-size: 0.8rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white;">
+                Loading...</div>
+
+            <div style="display: flex; gap: 5px; margin-top: 5px;">
+                <button id="btn-watch-here" onclick="watchVideoHere()"
+                    style="flex: 1; background: rgba(0, 255, 255, 0.2); color: cyan; border: 1px solid cyan; border-radius: 5px; cursor: pointer; padding: 6px; font-weight: bold; font-size: 0.75rem;">ვუყურებ
+                    👁️</button>
+                <a id="btn-youtube" href="#" target="_blank"
+                    style="flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 5px; text-decoration: none; font-size: 0.75rem; padding: 6px; font-weight: bold;">YouTube
+                    ↗️</a>
+            </div>
+        </div>
+
+        <!-- Mini Video Player -->
+        <div id="video-player-modal" class="hidden"
+            style="position: fixed; bottom: 80px; right: 20px; width: 380px; max-width: 90vw; z-index: 20000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); background: black; border: 2px solid cyan; border-radius: 12px; overflow: visible; display: flex; flex-direction: column;">
+            <div id="video-player-handle"
+                style="height: 30px; background: rgba(0,0,0,0.9); cursor: move; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid rgba(0,255,255,0.3); border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                <span style="font-size: 0.7rem; color: cyan; font-weight: bold;">📺 TILO VIDEO PLAYER</span>
+                <button onclick="closeVideoPlayer()"
+                    style="background: rgba(255,0,0,0.8); color: white; border: none; width: 20px; height: 20px; border-radius: 4px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                <iframe id="video-iframe" src=""
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                    allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div id="video-player-resizer" style="position: absolute; bottom: 0; right: 0; width: 15px; height: 15px; cursor: nwse-resize; background: cyan; border-bottom-right-radius: 10px; opacity: 0.5;"></div>
+        </div>
+
+
         <div id="all-abuse-list" class="abuse-grid">
             <p id="loading-text" style="text-align: center; grid-column: 1/-1; padding: 50px; opacity: 0.5;">
                 იტვირთება...</p>
@@ -237,8 +289,7 @@
                 enterText: "გთხოვთ შეიყვანოთ ტექსტი",
                 day: "დ",
                 today: "📅 დღეს",
-                thisWeek: "📆 ამ კვირაში",
-                other: "📂 სხვა"
+                all: "📂 ყველა ადმინ აბიუსი"
             },
             en: {
                 home: "Home",
@@ -266,8 +317,7 @@
                 enterText: "Please enter text",
                 day: "d",
                 today: "📅 Today",
-                thisWeek: "📆 This Week",
-                other: "📂 Other"
+                all: "📂 All Admin Abuse"
             }
         };
 
@@ -343,20 +393,26 @@
                 
                 const groupItems = (items) => {
                     const today = [];
-                    const week = [];
                     const others = [];
                     const now = new Date();
-                    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
                     items.forEach(item => {
-                        const date = new Date(item.created_at);
-                        if (date >= startOfToday) today.push(item);
-                        else if (date >= startOfWeek) week.push(item);
-                        else others.push(item);
+                        if (item.end_time) {
+                            const end = new Date(item.end_time);
+                            const diff = end - now;
+                            // Less than 24 hours remaining
+                            if (diff > 0 && diff < 24 * 60 * 60 * 1000) {
+                                today.push(item);
+                            } else {
+                                others.push(item);
+                            }
+                        } else {
+                            others.push(item);
+                        }
                     });
-                    return { today, week, others };
+                    return { today, others };
                 };
+
 
                 const groups = groupItems(slots);
 
@@ -416,8 +472,7 @@
                 // Clear container and change display to allow section-based headers
                 container.style.display = 'block';
                 await renderSection(t.today, groups.today);
-                await renderSection(t.thisWeek, groups.week);
-                await renderSection(t.other, groups.others);
+                await renderSection(t.all, groups.others);
 
             } catch (e) { console.error(e); }
         }
