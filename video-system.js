@@ -138,21 +138,37 @@ function handleForcedVideo(cfg) {
 async function fetchChannelVideos() {
     const newAllVideos = {};
     for (const channel of videoChannels) {
-        // Only UC... IDs are supported in admin panel (Channel ID, not @handle)
         if (!channel.id || !channel.id.startsWith('UC')) {
             console.warn('Skipping invalid channel ID (use UC... format):', channel.id);
             continue;
         }
 
-        const rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
-        const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
+        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
+        
         try {
-            const res = await fetch(api);
-            const data = await res.json();
-            if (data.status === 'ok') {
-                newAllVideos[channel.id] = data.items;
+            const res = await fetch(proxyUrl);
+            const xmlText = await res.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, 'text/xml');
+            const entries = xml.querySelectorAll('entry');
+            
+            const items = Array.from(entries).map(entry => {
+                const videoId = entry.querySelector('videoId')?.textContent || 
+                                entry.querySelector('id')?.textContent?.split(':').pop() || '';
+                return {
+                    guid: `yt:video:${videoId}`,
+                    title: entry.querySelector('title')?.textContent || '',
+                    link: `https://www.youtube.com/watch?v=${videoId}`,
+                    pubDate: entry.querySelector('published')?.textContent || ''
+                };
+            }).filter(v => v.title);
+
+            if (items.length > 0) {
+                newAllVideos[channel.id] = items;
+                console.log(`✅ Loaded ${items.length} videos for ${channel.id}`);
             } else {
-                console.error('RSS fetch failed for:', channel.id, data.message);
+                console.error('No videos found for:', channel.id);
             }
         } catch (e) {
             console.error('Failed to fetch RSS for:', channel.id, e);
@@ -160,6 +176,7 @@ async function fetchChannelVideos() {
     }
     allChannelVideos = newAllVideos;
 }
+
 
 window.showVideoPopup = () => {
     const popup = get('video-notification');
