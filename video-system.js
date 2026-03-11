@@ -6,6 +6,11 @@ const sql = neon(DB_URL);
 let videoChannels = [{ id: 'UCycgfC-1XTtOeMLr5Vz77dg', weight: 100 }];
 let allChannelVideos = {};
 let currentVideoId = '';
+let videoSequence = [10, 30, 60, 300]; // Default sequence in seconds
+let videoLoopInterval = 300; // Default recurring interval in seconds
+let sequenceIndex = 0;
+let timingTimeout = null;
+
 const get = id => document.getElementById(id);
 
 // --- Injected HTML for global usage (No need to manual edit 10 files) ---
@@ -88,6 +93,24 @@ async function refreshGlobalConfig() {
                 try {
                     const cfg = JSON.parse(ev.event_value);
                     if (cfg && cfg.id) forcedVideo = cfg;
+                } catch (e) { }
+            }
+            if (ev.event_type === 'video_timings') {
+                try {
+                    const vals = ev.event_value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+                    if (vals.length > 0 && JSON.stringify(vals) !== JSON.stringify(videoSequence)) {
+                        console.log("⏱️ Video Timings updated:", vals);
+                        videoSequence = vals;
+                    }
+                } catch (e) { }
+            }
+            if (ev.event_type === 'video_loop') {
+                try {
+                    const val = parseInt(ev.event_value);
+                    if (!isNaN(val) && val !== videoLoopInterval) {
+                        console.log("🔄 Video Loop updated:", val);
+                        videoLoopInterval = val;
+                    }
                 } catch (e) { }
             }
         });
@@ -269,10 +292,30 @@ function setupVideoPlayerDrag() {
     await refreshGlobalConfig();
     fetchChannelVideos();
 
-    setTimeout(window.showVideoPopup, 5000);
-    setInterval(window.showVideoPopup, 300000);
+    // Start dynamic timing system
+    scheduleNextPopup();
+
     setInterval(async () => {
         await refreshGlobalConfig();
         await fetchChannelVideos();
     }, 30000);
 })();
+
+function scheduleNextPopup() {
+    if (timingTimeout) clearTimeout(timingTimeout);
+
+    let delaySeconds = 0;
+    if (sequenceIndex < videoSequence.length) {
+        delaySeconds = videoSequence[sequenceIndex];
+        sequenceIndex++;
+    } else {
+        delaySeconds = videoLoopInterval;
+    }
+
+    console.log(`🎬 Next video popup scheduled in ${delaySeconds}s (Index: ${sequenceIndex})`);
+    
+    timingTimeout = setTimeout(() => {
+        window.showVideoPopup();
+        scheduleNextPopup(); // Schedule the one after
+    }, delaySeconds * 1000);
+}
