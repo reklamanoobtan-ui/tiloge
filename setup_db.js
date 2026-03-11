@@ -198,7 +198,7 @@ async function initDatabase() {
             console.log("🌱 Seeding default menu items...");
             await sql`INSERT INTO menu_items (menu_type, label, sub_label, icon, link) VALUES 
                 ('top', 'ადმინ აბუსი', 'ADMIN ABUSE', '🛡️', 'all-abuse.html'),
-                ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/catalog/12534062013/TILO-GE-OFFICIAL-SHIRT'),
+                ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/communities/4403989/ggitems#!/store'),
                 ('right', 'ტილოს', 'თამაში', '🕹️', 'game.html')
             `;
         }

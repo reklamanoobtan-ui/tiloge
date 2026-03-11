@@ -3213,7 +3213,7 @@
                 if (parseInt(menuCheck[0].count) === 0) {
                     await sql`INSERT INTO menu_items (menu_type, label, sub_label, icon, link) VALUES 
                         ('top', 'ადმინ აბუსი', 'ADMIN ABUSE', '🛡️', 'all-abuse.html'),
-                        ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/catalog/12534062013/TILO-GE-OFFICIAL-SHIRT'),
+                        ('left', 'მაისური', 'ROBLOX', '👕', 'https://www.roblox.com/communities/4403989/ggitems#!/store'),
                         ('right', 'ტილოს', 'თამაში', '🕹️', 'game.html')
                     `;
                 }
@@ -3716,6 +3716,7 @@
                     if (get(`menu-${type}-icon`)) get(`menu-${type}-icon`).value = item.icon;
                     if (get(`menu-${type}-link`)) get(`menu-${type}-link`).value = item.link;
                 });
+                console.log("✅ Menu values pre-filled from database.");
             } catch (e) { console.error(e); }
         };
 
