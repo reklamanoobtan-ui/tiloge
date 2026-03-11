@@ -1300,38 +1300,43 @@
                 <!-- YouTube Notifier Multi-Channel -->
                 <div class="card"
                     style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,0,0,0.1); padding: 20px;">
-                    <h4 style="color: #ff0000; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <h4 style="color: #ff0000; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;">
                         📡 Multi-Channel Notification System
-                        <span
-                            style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT:
-                            5</span>
+                        <span style="font-size: 0.7rem; background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">LIMIT: 5</span>
                     </h4>
+                    <p style="font-size: 0.75rem; opacity: 0.6; margin-bottom: 20px; line-height: 1.4;">
+                        მიუთითეთ <b>Channel ID</b> (იწყება UC-თი) მაქსიმალური სიზუსტისთვის. <br>
+                        თუ იყენებთ @handle-ს (მაგ: @UbralodNoobi), სისტემა შეეცდება მოძებნოს შესაბამისი RSS. <br>
+                        <b>Weight:</b> განსაზღვრავს პრიორიტეტულობას (სულ უნდა იყოს 100%).
+                    </p>
 
                     <div id="channel-config-list">
-                        <div
-                            style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="font-size: 0.7rem; opacity: 0.5;">Channel ID (UC...) or Username</div>
-                            <div style="font-size: 0.7rem; opacity: 0.5;">Weight %</div>
-
-                            <input type="text" id="ch-id-1" class="search-input" placeholder="UCycgfC-1XTtOeMLr5Vz..."
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%;">
-
-                            <input type="text" id="ch-id-2" class="search-input" placeholder="Channel 2"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-3" class="search-input" placeholder="Channel 3"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-4" class="search-input" placeholder="Channel 4"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%;">
-
-                            <input type="text" id="ch-id-5" class="search-input" placeholder="Channel 5"
-                                style="width: 100%;">
-                            <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%;">
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+                            <!-- Row 1 -->
+                            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                                <input type="text" id="ch-id-1" class="search-input" placeholder="Channel ID (UC...) or @Handle" style="width: 100%; margin: 0;">
+                                <input type="number" id="ch-wt-1" class="search-input" value="100" style="width: 100%; margin: 0;" title="Weight % (0-100)">
+                            </div>
+                            <!-- Row 2 -->
+                            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                                <input type="text" id="ch-id-2" class="search-input" placeholder="Channel ID 2" style="width: 100%; margin: 0;">
+                                <input type="number" id="ch-wt-2" class="search-input" value="0" style="width: 100%; margin: 0;">
+                            </div>
+                            <!-- Row 3 -->
+                            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                                <input type="text" id="ch-id-3" class="search-input" placeholder="Channel ID 3" style="width: 100%; margin: 0;">
+                                <input type="number" id="ch-wt-3" class="search-input" value="0" style="width: 100%; margin: 0;">
+                            </div>
+                            <!-- Row 4 -->
+                            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                                <input type="text" id="ch-id-4" class="search-input" placeholder="Channel ID 4" style="width: 100%; margin: 0;">
+                                <input type="number" id="ch-wt-4" class="search-input" value="0" style="width: 100%; margin: 0;">
+                            </div>
+                            <!-- Row 5 -->
+                            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                                <input type="text" id="ch-id-5" class="search-input" placeholder="Channel ID 5" style="width: 100%; margin: 0;">
+                                <input type="number" id="ch-wt-5" class="search-input" value="0" style="width: 100%; margin: 0;">
+                            </div>
                         </div>
                     </div>
 
@@ -1998,9 +2003,24 @@
                             });
                         } catch (e) { }
                     }
-                    if (ev.event_type === 'video_channel') get('cur-channel').textContent = `(${ev.event_value})`;
-                    if (ev.event_type === 'video_timings') get('cur-timings').textContent = `(${ev.event_value})`;
-                    if (ev.event_type === 'video_loop') get('cur-loop').textContent = `(${ev.event_value}s)`;
+                    if (ev.event_type === 'video_config') {
+                        get('cur-channel').textContent = `(ACTIVE)`;
+                        try {
+                            const cfg = JSON.parse(ev.event_value);
+                            cfg.forEach((c, idx) => {
+                                if (get(`ch-id-${idx + 1}`)) get(`ch-id-${idx + 1}`).value = c.id;
+                                if (get(`ch-wt-${idx + 1}`)) get(`ch-wt-${idx + 1}`).value = c.weight;
+                            });
+                        } catch (e) { }
+                    }
+                    if (ev.event_type === 'video_timings') {
+                        get('cur-timings').textContent = `(${ev.event_value})`;
+                        if (get('val-timings')) get('val-timings').value = ev.event_value;
+                    }
+                    if (ev.event_type === 'video_loop') {
+                        get('cur-loop').textContent = `(${ev.event_value}s)`;
+                        if (get('val-loop')) get('val-loop').value = ev.event_value;
+                    }
                     if (ev.event_type === 'boss_config') get('cur-boss-config').textContent = `(ACTIVE)`;
                     if (ev.event_type === 'forced_video') get('cur-forced-video').textContent = `(ACTIVE)`;
                     if (ev.event_type === 'boss_spawn_rate') get('cur-bossrate').textContent = `(${ev.event_value}s)`;
@@ -2080,9 +2100,16 @@
                 if (id) config.push({ id, weight: wt });
             }
             if (config.length === 0) { alert('მიუთითეთ მინიმუმ 1 არხი'); return; }
+            
+            const totalWeight = config.reduce((sum, c) => sum + c.weight, 0);
+            if (totalWeight !== 100) {
+                if (!confirm(`Warning: Total weight is ${totalWeight}%, not 100%. Continue?`)) return;
+            }
+
             const val = JSON.stringify(config);
-            const dur = parseInt(get('global-duration').value) || 120;
-            triggerEvent('video_config', val, dur);
+            const dur = 1440; // Default to 24 hours for config
+            await triggerEvent('video_config', val, dur);
+            log('✅ YouTube არხების კონფიგურაცია განახლდა', 'var(--accent)');
         };
 
         window.saveBossConfig = async () => {

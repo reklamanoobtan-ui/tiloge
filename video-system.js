@@ -115,9 +115,18 @@ function handleForcedVideo(cfg) {
 async function fetchChannelVideos() {
     const newAllVideos = {};
     for (const channel of videoChannels) {
-        const rss = channel.id.startsWith('UC') ? 
-            `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}` : 
-            `https://www.youtube.com/feeds/videos.xml?user=${channel.id}`;
+        let rss = '';
+        if (channel.id.startsWith('UC')) {
+            rss = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+        } else if (channel.id.startsWith('@')) {
+            // For handles, we use a proxy or hope rss2json can handle it if we find the correct RSS
+            // YouTube doesn't have a direct RSS for @handles easily without internal ID
+            // But we can try the /@handle/videos or similar if we had a scraper.
+            // For now, let's assume it might be a username if no UC prefix.
+            rss = `https://www.youtube.com/feeds/videos.xml?user=${channel.id.replace('@', '')}`;
+        } else {
+            rss = `https://www.youtube.com/feeds/videos.xml?user=${channel.id}`;
+        }
         const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`;
         try {
             const res = await fetch(api);
@@ -136,8 +145,28 @@ window.showVideoPopup = () => {
     let videoId = '';
 
     if (Object.keys(allChannelVideos).length > 0) {
+        let selectedChannelId = '';
         const ids = Object.keys(allChannelVideos);
-        const videos = allChannelVideos[ids[0]];
+        
+        // Filter out channels that failed to load
+        const activeChannels = videoChannels.filter(c => allChannelVideos[c.id]);
+        
+        if (activeChannels.length > 0) {
+            const totalWeight = activeChannels.reduce((sum, c) => sum + c.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (const c of activeChannels) {
+                random -= c.weight;
+                if (random <= 0) {
+                    selectedChannelId = c.id;
+                    break;
+                }
+            }
+        }
+        
+        if (!selectedChannelId) selectedChannelId = ids[0];
+
+        const videos = allChannelVideos[selectedChannelId];
         vid = videos[Math.floor(Math.random() * videos.length)];
         
         videoId = vid.guid?.split(':')[2];
