@@ -173,6 +173,114 @@ async function init() {
 
     initVideoSystem();
     setupChat();
+    initAbuseHoverSystem();
+}
+
+let abuseHoverTimer = null;
+let abuseHideTimer = null;
+
+async function initAbuseHoverSystem() {
+    window.handleAbuseHover = async () => {
+        const container = get('abuse-preview-container');
+        if (!container) return;
+
+        // Clear hide timer if it exists
+        if (abuseHideTimer) {
+            clearTimeout(abuseHideTimer);
+            abuseHideTimer = null;
+        }
+
+        // Only fetch if not already active or empty
+        if (!container.classList.contains('active') || container.innerHTML === '') {
+            await updateAbusePreviews();
+        }
+
+        container.classList.add('active');
+
+        // Auto-hide after 10 seconds
+        if (abuseHoverTimer) clearTimeout(abuseHoverTimer);
+        abuseHoverTimer = setTimeout(() => {
+            window.handleAbuseLeave(true); // Forced hide
+        }, 10000);
+    };
+
+    window.handleAbuseLeave = (force = false) => {
+        const container = get('abuse-preview-container');
+        if (!container) return;
+
+        if (force) {
+            container.classList.remove('active');
+            return;
+        }
+
+        // Delay hiding to allow transition or "staying"
+        abuseHideTimer = setTimeout(() => {
+            container.classList.remove('active');
+        }, 300); // Small buffer
+    };
+}
+
+async function updateAbusePreviews() {
+    const container = get('abuse-preview-container');
+    if (!container) return;
+
+    try {
+        const items = await sql`
+            SELECT * FROM admin_abuse 
+            WHERE end_time > NOW()
+            ORDER BY end_time ASC 
+            LIMIT 2
+        `;
+
+        if (items.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = '';
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'preview-card';
+            card.onclick = (e) => {
+                e.stopPropagation();
+                location.href = `top.html?id=${item.id}`;
+            };
+
+            const img = item.image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000';
+            const timerId = `prev-timer-${item.id}`;
+
+            card.innerHTML = `
+                <img src="${img}" referrerpolicy="no-referrer">
+                <div class="preview-card-body">
+                    <div class="preview-card-title">${item.title}</div>
+                    <div id="${timerId}" class="preview-card-timer">00:00:00</div>
+                    <button class="preview-card-btn">🚀 ნახეთ სრულად</button>
+                </div>
+            `;
+            container.appendChild(card);
+
+            // Start timer for this card
+            const updateTimer = () => {
+                const el = get(timerId);
+                if (!el) return;
+                const now = new Date();
+                const end = new Date(item.end_time);
+                const diff = end - now;
+                if (diff <= 0) {
+                    el.textContent = "დასრულდა";
+                    return;
+                }
+                const h = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                el.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            };
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        });
+    } catch (e) {
+        console.error("Abuse Preview Error:", e);
+    }
 }
 
 function updateAuthUI() {

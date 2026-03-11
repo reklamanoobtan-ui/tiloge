@@ -190,3 +190,95 @@ body.dark-mode {
     .menu-item.left { left: 0; }
     .menu-item.right { right: 0; }
 }
+
+/* Abuse Preview Cards */
+.abuse-preview-container {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+    width: max-content;
+}
+
+.abuse-preview-container.active {
+    opacity: 1;
+    pointer-events: auto;
+    bottom: 110%;
+}
+
+.preview-card {
+    width: 200px;
+    background: rgba(20, 20, 35, 0.98);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.8);
+    transition: all 0.3s;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+}
+
+.preview-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    border-color: #00e5ff;
+    box-shadow: 0 20px 60px rgba(0, 229, 255, 0.3);
+}
+
+.preview-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.preview-card-body {
+    padding: 12px;
+    text-align: center;
+}
+
+.preview-card-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2rem;
+    line-height: 1.2;
+}
+
+.preview-card-timer {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #ffd700;
+    background: rgba(0,0,0,0.4);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+.preview-card-btn {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    width: 100%;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
