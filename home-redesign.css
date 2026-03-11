@@ -69,39 +69,38 @@ body.dark-mode {
     transition: opacity 0.3s;
 }
 
-/* Y Menu Layout */
+/* Y-Menu redesign with Glassmorphism, 3D & Liquid effects */
 .y-menu {
     position: relative;
-    width: 600px;
-    height: 600px;
+    width: 650px;
+    height: 650px;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10;
+    perspective: 1500px;
 }
 
-.y-shape-svg {
+/* 5. Liquid Portal Center */
+.y-center {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle at center, #fff, var(--y-color), transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 30px var(--y-glow), 0 0 60px var(--y-glow);
+    z-index: 25;
+    animation: liquidNode 4s infinite alternate ease-in-out;
 }
 
-.y-line {
-    stroke: var(--y-color);
-    stroke-width: 4;
-    stroke-linecap: round;
-    filter: drop-shadow(0 0 10px var(--y-glow));
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: lineDraw 1.5s ease-out forwards;
+@keyframes liquidNode {
+    0% { transform: scale(1) rotate(0deg); border-radius: 50%; box-shadow: 0 0 30px var(--y-glow); }
+    33% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+    66% { border-radius: 60% 40% 30% 70% / 50% 60% 40% 60%; }
+    100% { transform: scale(1.4) rotate(360deg); border-radius: 50%; box-shadow: 0 0 50px var(--y-glow), 0 0 100px var(--y-glow); }
 }
 
-@keyframes lineDraw {
-    to { stroke-dashoffset: 0; }
-}
-
-/* Menu Item Base */
+/* Menu Item Base - 1. Glassmorphism & 8. Deep Shadows */
 .menu-item {
     position: absolute;
     display: flex;
@@ -109,115 +108,174 @@ body.dark-mode {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-align: center;
+    padding: 25px 40px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     z-index: 20;
+    overflow: hidden;
+}
+
+/* 10. Background Liquid Ripple (Decorative) */
+.menu-item::after {
+    content: '';
+    position: absolute;
+    inset: -100%;
+    background: radial-gradient(circle at center, var(--hover-color) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.menu-item:hover::after {
+    opacity: 0.15;
+    animation: liquidRipple 2s infinite linear;
+}
+
+@keyframes liquidRipple {
+    0% { transform: translate(-10%, -10%) scale(1); }
+    50% { transform: translate(10%, 10%) scale(1.1); }
+    100% { transform: translate(-10%, -10%) scale(1); }
+}
+
+/* 4. Floating Icons */
+.menu-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 10px var(--hover-color));
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.1); }
 }
 
 .menu-item .label {
     font-family: 'Outfit', 'Inter', sans-serif;
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 900;
     color: #fff;
     text-transform: uppercase;
-    text-shadow: 0 0 15px rgba(0,0,0,0.8), 2px 2px 0 #000;
     line-height: 1;
-    transition: color 0.3s, text-shadow 0.3s;
-}
-
-.menu-item .sub-label {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--news-primary);
-    margin-top: 5px;
     letter-spacing: 2px;
+    transition: all 0.3s;
 }
 
-/* Specific Positions */
-.menu-item.top { top: 20px; left: 50%; transform: translateX(-50%); }
-.menu-item.left { bottom: 120px; left: 20px; }
-.menu-item.right { bottom: 120px; right: 20px; }
-
-/* Hover States & Effects */
+/* 2. 3D Tilt Hover */
 .menu-item:hover {
-    transform: scale(1.15) translateY(-5px);
-    z-index: 50;
+    transform: scale(1.08) translateY(-10px) rotateX(10deg) rotateY(10deg);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--hover-color);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 30px var(--hover-color);
 }
-.menu-item:hover.top { transform: translateX(-50%) scale(1.15) translateY(-5px); }
 
-.menu-item:hover .label {
-    text-shadow: 0 0 30px var(--hover-color), 0 0 60px var(--hover-color);
-}
+.menu-item.top { top: -20px; left: 50%; transform: translateX(-50%) rotateX(-15deg); }
+.menu-item.left { bottom: 100px; left: -20px; transform: rotateY(15deg); }
+.menu-item.right { bottom: 100px; right: -20px; transform: rotateY(-15deg); }
+
+.menu-item:hover.top { transform: translateX(-50%) scale(1.1) translateY(-15px) rotateX(0deg); }
+.menu-item:hover.left { transform: scale(1.1) translateY(-15px) rotateX(5deg) rotateY(5deg); }
+.menu-item:hover.right { transform: scale(1.1) translateY(-15px) rotateX(5deg) rotateY(-5deg); }
 
 .menu-item.top { --hover-color: #ffeb3b; }
 .menu-item.left { --hover-color: #00e5ff; }
 .menu-item.right { --hover-color: #ff3333; }
 
-.menu-item.top:hover .label { color: #ffeb3b; }
-.menu-item.left:hover .label { color: #00e5ff; }
-.menu-item.right:hover .label { color: #ff0000; }
+/* SVG lines drawing animation */
+.y-shape-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
 
-/* Inverted Y-shape glow shifts */
+.y-line {
+    stroke: rgba(255, 255, 255, 0.15);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: lineDraw 2s ease-out forwards;
+}
+
+@keyframes lineDraw {
+    to { stroke-dashoffset: 0; }
+}
+
+/* 10. Portal Background Distortion / Ripple */
+.y-center::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, var(--y-glow) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: portalRipple 2s infinite ease-out;
+    z-index: -1;
+}
+
+@keyframes portalRipple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+/* Inverted Y-shape glow shifts on hover */
 .y-menu:has(.menu-item.top:hover) .y-line {
     stroke: #ffeb3b;
-    filter: drop-shadow(0 0 25px rgba(255, 235, 59, 0.8));
+    filter: drop-shadow(0 0 15px #ffeb3b);
     stroke-width: 6;
 }
 
 .y-menu:has(.menu-item.left:hover) .y-line {
     stroke: #00e5ff;
-    filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.8));
+    filter: drop-shadow(0 0 15px #00e5ff);
     stroke-width: 6;
 }
 
-/* Specific red glow for Tilo Game */
 .y-menu:has(.menu-item.right:hover) .y-line {
-    stroke: #ff0000;
-    filter: drop-shadow(0 0 35px rgba(255, 0, 0, 1));
-    stroke-width: 8;
-    animation: lineGlowPulse 1s infinite alternate;
+    stroke: #ff3333;
+    filter: drop-shadow(0 0 15px #ff3333);
+    stroke-width: 6;
 }
 
-.y-menu:has(.menu-item.right:hover) .y-center {
-    background: #ff0000 !important;
-    box-shadow: 0 0 40px #ff0000 !important;
-    transform: scale(2) !important;
-}
-
-@keyframes lineGlowPulse {
-    from { opacity: 0.8; stroke-width: 6; }
-    to { opacity: 1; stroke-width: 10; }
-}
-
-/* Center HUB pulse */
-.y-center {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: var(--y-color);
-    border-radius: 50%;
-    box-shadow: 0 0 20px var(--y-glow);
-    transition: all 0.4s ease;
-    z-index: 15;
-    animation: centerPulse 3s infinite;
-}
-
-@keyframes centerPulse {
-    0% { transform: scale(1); box-shadow: 0 0 20px var(--y-glow); }
-    50% { transform: scale(1.6); box-shadow: 0 0 40px var(--y-glow); }
-    100% { transform: scale(1); box-shadow: 0 0 20px var(--y-glow); }
-}
-
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .y-menu {
-        width: 350px;
-        height: 500px;
+        width: 100%;
+        height: 550px;
+        perspective: none; /* Reduce complexity for performance */
     }
+    
+    .menu-item {
+        padding: 15px 25px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+    
     .menu-item .label {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
     }
-    .menu-item.left { left: 0; }
-    .menu-item.right { right: 0; }
+    
+    .menu-icon {
+        font-size: 1.8rem;
+    }
+    
+    .menu-item.top { top: 0; }
+    .menu-item.left { bottom: 80px; left: 10px; }
+    .menu-item.right { bottom: 80px; right: 10px; }
+}
+
+@media (max-width: 480px) {
+    .menu-item .label { font-size: 1.2rem; }
+    .menu-item .sub-label { font-size: 0.8rem; }
+    .menu-item { padding: 12px 20px; }
+    .y-menu { height: 450px; }
 }
 
 /* Abuse Preview Cards */
