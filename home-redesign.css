@@ -1,0 +1,192 @@
+
+:root {
+    --y-color: #ff3333;
+    --y-glow: rgba(255, 51, 51, 0.6);
+}
+
+body.dark-mode {
+    --news-bg: #050510;
+}
+
+.home-hero-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 160px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #0a0b1e 0%, #050510 100%);
+}
+
+.home-hero-container::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg at 50% 50%, transparent, rgba(0, 102, 204, 0.05), transparent);
+    animation: rotateBg 20s linear infinite;
+    z-index: 0;
+}
+
+@keyframes rotateBg {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+#game-bg-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.bg-stain {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(15px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    pointer-events: none;
+}
+
+.bg-stain.cleaning {
+    transform: scale(2);
+    opacity: 0 !important;
+}
+
+#tilo-cloth {
+    position: fixed;
+    width: 120px;
+    height: 120px;
+    background-image: url('tilo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Y Menu Layout */
+.y-menu {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.y-shape-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.y-line {
+    stroke: var(--y-color);
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 10px var(--y-glow));
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: lineDraw 1.5s ease-out forwards;
+}
+
+@keyframes lineDraw {
+    to { stroke-dashoffset: 0; }
+}
+
+.menu-item {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    z-index: 20;
+}
+
+.menu-item:hover {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+}
+
+.menu-item .label {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    text-shadow: 0 0 15px rgba(0,0,0,0.8), 2px 2px 0 #000;
+    line-height: 1;
+}
+
+.menu-item .sub-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--news-primary);
+    margin-top: 5px;
+    letter-spacing: 2px;
+}
+
+/* Specific Positions */
+.menu-item.top {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.menu-item.left {
+    bottom: 120px;
+    left: 20px;
+}
+
+.menu-item.right {
+    bottom: 120px;
+    right: 20px;
+}
+
+.menu-item:hover.top { transform: translateX(-50%) scale(1.15); }
+.menu-item:hover.left { transform: scale(1.15); }
+.menu-item:hover.right { transform: scale(1.15); }
+
+/* Animations */
+.menu-item.top:hover .label { color: #ffeb3b; }
+.menu-item.left:hover .label { color: #00e5ff; }
+.menu-item.right:hover .label { color: #ff4081; }
+
+/* Pulse for the center point */
+.y-center {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--y-color);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--y-glow);
+    animation: centerPulse 2s infinite;
+}
+
+@keyframes centerPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .y-menu {
+        width: 350px;
+        height: 500px;
+    }
+    .menu-item .label {
+        font-size: 1.6rem;
+    }
+    .menu-item.left { left: 0; }
+    .menu-item.right { right: 0; }
+}
