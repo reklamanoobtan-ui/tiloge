@@ -89,9 +89,9 @@ class HomeGame {
         setTimeout(() => stain.remove(), 500);
     }
 
-    async navigateWithAnim(url) {
-        if (this.isNavigating) return;
-        this.isNavigating = true;
+    async navigateWithAnim(url, newTab = false) {
+        if (this.isNavigating && !newTab) return;
+        if (!newTab) this.isNavigating = true;
 
         // Animation: Clean everything quickly
         const allStains = document.querySelectorAll('.bg-stain');
@@ -113,8 +113,15 @@ class HomeGame {
         
         // Use the cloth to "wipe"
         if (this.cloth) {
+            const oldTransition = this.cloth.style.transition;
             this.cloth.style.transition = 'all 0.5s ease-in-out';
             this.cloth.style.left = '100%';
+            if (newTab) {
+                setTimeout(() => {
+                    this.cloth.style.transition = oldTransition;
+                    this.cloth.style.left = '50%'; // Reset or keep it somewhere
+                }, 600);
+            }
         }
 
         setTimeout(() => {
@@ -122,7 +129,13 @@ class HomeGame {
         }, 10);
 
         setTimeout(() => {
-            window.location.href = url;
+            if (newTab) {
+                window.open(url, '_blank');
+                wipe.style.left = '100%'; // Move wipe out
+                setTimeout(() => wipe.remove(), 500);
+            } else {
+                window.location.href = url;
+            }
         }, 600);
     }
 }
@@ -133,15 +146,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handleMenuClick(type) {
     let url = '';
+    let newTab = false;
     switch(type) {
         case 'abuse': url = 'all-abuse.html'; break;
-        case 'roblox': url = 'https://www.roblox.com/communities/4403989/ggitems#!/store'; break;
+        case 'roblox': 
+            url = 'https://www.roblox.com/communities/4403989/ggitems#!/store'; 
+            newTab = true;
+            break;
         case 'game': url = 'game.html'; break;
     }
     
     if (window.homeGame) {
-        window.homeGame.navigateWithAnim(url);
+        window.homeGame.navigateWithAnim(url, newTab);
     } else {
-        window.location.href = url;
+        if (newTab) window.open(url, '_blank');
+        else window.location.href = url;
     }
 }
