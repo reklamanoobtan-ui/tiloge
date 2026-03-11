@@ -1463,17 +1463,31 @@
 
                     <div
                         style="margin-top: 30px; padding: 20px; background: rgba(255, 215, 0, 0.03); border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.3);">
-                        <h4 style="color: var(--accent); margin-bottom: 15px;">🎯 forced_video (High Priority)</h4>
-                        <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 15px;">If active, this specific video
-                            will always show instead of the channel rotation.</p>
+                        <h4 style="color: var(--accent); margin-bottom: 5px;">🎯 forced_video (High Priority)</h4>
+                        <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 15px;">თუ აქტიურია, ეს კონკრეტული ვიდეო ყოველთვის გამოჩნდება არხების ვიდეოების ნაცვლად.</p>
 
                         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                             <input type="text" id="val-forced-video" class="search-input"
                                 placeholder="https://www.youtube.com/watch?v=..." style="flex: 3;">
-                            <button class="btn btn-gold" style="flex: 1;" onclick="saveForcedVideo()">SET VIDEO</button>
                         </div>
-                        <button class="btn btn-outline full-width" onclick="stopEvent('forced_video')">DISABLE FORCED
-                            VIDEO</button>
+
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+                            <span style="font-size: 0.8rem; opacity: 0.7; white-space: nowrap;">⏱️ ხანგრძლივობა:</span>
+                            <input type="number" id="forced-video-dur-val" class="search-input" value="1" min="1" max="10" style="width: 70px; margin: 0; text-align: center;">
+                            <select id="forced-video-dur-unit" style="flex: 1; padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
+                                <option value="1">წამი (seconds)</option>
+                                <option value="60">წუთი (minutes)</option>
+                                <option value="3600" selected>საათი (hours)</option>
+                                <option value="86400">დღე (days)</option>
+                            </select>
+                        </div>
+
+                        <div style="font-size:0.75rem; opacity:0.5; margin-bottom:10px; padding: 6px 10px; background:rgba(255,215,0,0.05); border-radius:8px;">
+                            ⚠️ მაქსიმუმი: 10 დღე (240 სთ). შეიყვანეთ 1-დან 10-მდე შესაბამისი ერთეულით.
+                        </div>
+
+                        <button class="btn btn-gold full-width" onclick="saveForcedVideo()">🚀 SET FORCED VIDEO</button>
+                        <button class="btn btn-outline full-width" style="margin-top:8px;" onclick="stopEvent('forced_video')">❌ DISABLE FORCED VIDEO</button>
                     </div>
                 </div>
 
@@ -2336,20 +2350,28 @@
 
         window.saveForcedVideo = async () => {
             const url = get('val-forced-video').value.trim();
-            if (!url) return alert("შეიყვანეთ ლინკი");
+            if (!url) return alert('შეიყვანეთ ვიდეოს ლინკი');
 
             let videoId = '';
             try {
                 if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
                 else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
-                else videoId = url; // assume raw ID
-            } catch (e) { return alert("არასწორი ლინკი"); }
+                else videoId = url.trim(); // raw ID
+            } catch (e) { return alert('არასწორი ლინკი'); }
 
-            if (!videoId) return alert("ID ვერ მოიძებნა");
+            if (!videoId) return alert('Video ID ვერ მოიძებნა');
 
-            const dur = parseInt(get('global-duration').value) || 60;
-            const config = { id: videoId, link: url };
-            triggerEvent('forced_video', JSON.stringify(config), dur);
+            // Calculate duration in minutes
+            const numVal = parseFloat(get('forced-video-dur-val').value) || 1;
+            const unitSec = parseInt(get('forced-video-dur-unit').value) || 3600;
+            const MAX_DAYS = 10;
+            const MAX_MINUTES = MAX_DAYS * 24 * 60;
+            let durationMinutes = Math.round((numVal * unitSec) / 60);
+            durationMinutes = Math.max(1, Math.min(durationMinutes, MAX_MINUTES)); // clamp 1min - 10 days
+
+            const config = { id: videoId, link: `https://www.youtube.com/watch?v=${videoId}` };
+            triggerEvent('forced_video', JSON.stringify(config), durationMinutes);
+            log(`🎯 Forced video set: ${videoId} for ${durationMinutes} minutes`, 'gold');
         };
 
         get('stop-events').onclick = async () => {
