@@ -41,52 +41,6 @@
     <div id="game-bg-layer"></div>
     <div id="tilo-cloth"></div>
 
-    <!-- Header -->
-    <header class="news-header">
-        <div class="header-container">
-            <a href="index.html" class="logo-text">TILO<span>.LIFE</span></a>
-
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link active">მთავარი</a>
-                <a href="all-abuse.html" class="nav-link">ადმინ აბუსი</a>
-                <a href="game.html" class="nav-link">თამაში</a>
-            </nav>
-
-            <div class="auth-nav">
-                <div id="language-switcher"
-                    style="display: flex; gap: 5px; margin-right: 15px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; border: 1px solid var(--news-border);">
-                    <button id="lang-ka" class="lang-btn active" onclick="switchLanguage('ka')"
-                        style="background: var(--news-primary); color: white; border: none; padding: 5px 12px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.3s;">GE</button>
-                    <button id="lang-en" class="lang-btn" onclick="switchLanguage('en')"
-                        style="background: none; color: var(--news-text); border: none; padding: 5px 12px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.3s;">EN</button>
-                </div>
-                <div id="user-profile-header" class="hidden"
-                    style="display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;">
-                    <span id="header-nickname"
-                        style="font-weight: 800; color: var(--news-primary); font-size: 0.9rem;"></span>
-                    <div id="profile-btn" class="profile-circle">U</div>
-
-                    <!-- Dropdown -->
-                    <div id="profile-dropdown" class="profile-dropdown">
-                        <a href="profile.html" class="dropdown-item">👤 პროფილი</a>
-                        <div class="dropdown-item" id="dark-mode-toggle">
-                            <span>🌙 Dark Mode</span>
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="dark-mode-checkbox">
-                                <span class="slider"></span>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div id="nav-logout-btn" class="dropdown-item" style="color: var(--news-accent);">🔒 გასვლა
-                        </div>
-                    </div>
-                </div>
-                <button id="login-nav-btn" class="nav-link"
-                    style="border: none; background: none; cursor: pointer; font-family: inherit;">🔐 შესვლა</button>
-            </div>
-        </div>
-    </header>
-
     <div class="home-hero-container">
         <div class="y-menu">
             <svg class="y-shape-svg" viewBox="0 0 600 600">
@@ -126,74 +80,19 @@
     <input type="text" id="chat-input" class="hidden">
     <button id="send-chat-btn" class="hidden"></button>
 
-    <!-- Auth Modal -->
-    <div id="auth-modal" class="modal hidden">
-        <div class="modal-content glass" style="max-width: 400px;">
-            <span class="close-modal" id="close-auth">&times;</span>
-            <div id="auth-mode-toggle" style="display: flex; gap: 10px; margin-bottom: 25px;">
-                <button id="show-login-btn" class="action-btn">შესვლა</button>
-                <button id="show-register-btn" class="action-btn second-btn">რეგისტრაცია</button>
-            </div>
-            <h2 id="auth-title">ავტორიზაცია</h2>
-            <div style="margin-top: 25px;">
-                <div id="nick-field" class="auth-field hidden">
-                    <input type="text" id="nickname-input" placeholder="ნიკნეიმი" maxlength="15">
-                </div>
-                <div class="auth-field">
-                    <input type="text" id="auth-email" placeholder="ელ-ფოსტა">
-                </div>
-                <div class="auth-field">
-                    <input type="password" id="auth-password" placeholder="პაროლი">
-                </div>
-                <div id="forgot-password-container" style="text-align: right; margin-bottom: 10px;">
-                    <a href="#" id="forgot-password-link"
-                        style="font-size: 0.8rem; color: var(--news-primary); text-decoration: none;">პაროლის
-                        აღდგენა?</a>
-                </div>
-                <button id="auth-submit-btn" class="action-btn" style="width: 100%; margin-top: 20px;">შესვლა</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Settings Modal -->
-    <div id="settings-modal" class="modal hidden">
-        <div class="modal-content glass" style="max-width: 500px; background: rgba(255,255,255,0.98); color: #222;">
-            <span class="close-modal" id="close-settings" style="color: #000;">&times;</span>
-            <h2>👤 პროფილის რედაქტირება</h2>
-            <div id="profile-edit-form" style="margin-top: 20px;">
-                <div class="auth-field">
-                    <label>ნიკნეიმი:</label>
-                    <input type="text" id="edit-nick" style="background: #eee; color: #000;">
-                </div>
-                <button id="update-profile-btn" class="action-btn"
-                    style="background: var(--news-primary); margin-top: 15px;">შენახვა</button>
-                <button id="logout-btn" class="action-btn second-btn" style="margin-top: 20px;">გასვლა</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="news-footer" style="padding: 20px;">
-        <div class="footer-container">
-            <div class="footer-counters">
+    <!-- Simplified Footer with only counters -->
+    <footer class="news-footer" style="padding: 10px; background: transparent; border: none; margin-top: auto;">
+        <div class="footer-container" style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+            <div class="footer-counters" style="display: flex; align-items: center; gap: 15px;">
                 <!-- TOP.GE ASYNC COUNTER CODE -->
                 <div id="top-ge-counter-container" data-site-id="118538"></div>
                 <script async src="//counter.top.ge/counter.js"></script>
                 <!-- / END OF TOP.GE COUNTER CODE -->
 
                 <!-- WAUST.AT COUNTER CODE -->
-                <script
-                    id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
+                <script id="_wau3mz">var _wau = _wau || []; _wau.push(["dynamic", "rcj6goig4h", "3mz", "c4302bffffff", "small"]);</script>
                 <script async src="//waust.at/d.js"></script>
                 <!-- / END OF WAUST.AT COUNTER CODE -->
-            </div>
-
-            <div
-                style="margin-top:10px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size: 0.8rem;">
-                <a href="privacy.html" style="color:var(--news-primary); text-decoration:none;">🔒 კონფიდენციალურობა</a>
-                <a href="about.html" style="color:var(--news-primary); text-decoration:none;">🌐 ჩვენ შესახებ</a>
-                <a href="mailto:contact@tilo.life" style="color:var(--news-primary); text-decoration:none;">📧
-                    კონტაქტი</a>
             </div>
         </div>
     </footer>

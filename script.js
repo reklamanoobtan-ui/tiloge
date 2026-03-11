@@ -1144,6 +1144,21 @@ function initUI() {
     let isPaused = false;
     const pauseBtn = get('pause-btn');
     if (pauseBtn) {
+        // Create container for pause buttons if not exist
+        const hudActions = pauseBtn.parentElement;
+        if (hudActions && !get('back-btn-pause')) {
+            const backBtn = document.createElement('button');
+            backBtn.id = 'back-btn-pause';
+            backBtn.className = 'glass-btn';
+            backBtn.textContent = '🏠 უკან';
+            backBtn.onclick = () => {
+                if (confirm("ნამდვილად გსურთ გასვლა? მიმდინარე თამაში არ შეინახება.")) {
+                    location.href = 'index.html';
+                }
+            };
+            hudActions.insertBefore(backBtn, pauseBtn);
+        }
+
         pauseBtn.onclick = () => {
             isPaused = !isPaused;
             gameActive = !isPaused;
@@ -1172,7 +1187,7 @@ function initUI() {
         };
     }
 
-    // Restart Logic
+    // Restart & Back Logic in Defeat Modal
     const handleRestart = () => {
         if (userEmail && !userEmail.startsWith('guest_')) {
             startGameSession();
@@ -1183,6 +1198,19 @@ function initUI() {
         }
     };
     if (get('restart-game-btn')) get('restart-game-btn').onclick = handleRestart;
+
+    // Add back button to defeat modal
+    const defeatContent = get('defeat-modal')?.querySelector('.modal-content');
+    if (defeatContent && !get('back-btn-defeat')) {
+        const backBtn = document.createElement('button');
+        backBtn.id = 'back-btn-defeat';
+        backBtn.className = 'action-btn second-btn';
+        backBtn.style.width = '100%';
+        backBtn.style.marginTop = '10px';
+        backBtn.textContent = '🏠 პორტალზე დაბრუნება';
+        backBtn.onclick = () => location.href = 'index.html';
+        defeatContent.appendChild(backBtn);
+    }
 
     // Logout Logic
     if (get('logout-btn')) {
