@@ -111,6 +111,124 @@
                 transform: translateX(0);
             }
         }
+
+        /* Discord Modal Styles */
+        .discord-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .discord-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .discord-modal {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 40px;
+            padding: 50px 40px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+            transform: scale(0.85) translateY(30px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .discord-modal::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(88, 101, 242, 0.15) 0%, transparent 60%);
+            z-index: -1;
+            animation: rotateGradient 10s linear infinite;
+        }
+
+        @keyframes rotateGradient {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .discord-modal-overlay.active .discord-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .discord-modal h2 {
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            font-size: 1.6rem;
+            line-height: 1.5;
+            margin-bottom: 35px;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .discord-logo-link {
+            display: inline-block;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .discord-logo-link:hover {
+            transform: scale(1.1) translateY(-10px) rotate(3deg);
+            background: rgba(88, 101, 242, 0.2);
+            border-color: rgba(88, 101, 242, 0.5);
+            box-shadow: 0 15px 30px rgba(88, 101, 242, 0.3);
+        }
+
+        .discord-logo-img {
+            width: 120px;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 0 10px rgba(88, 101, 242, 0.5));
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .close-modal-btn:hover {
+            background: #ff4757;
+            border-color: #ff4757;
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+        }
     </style>
 </head>
 
@@ -172,6 +290,17 @@
                 <!-- Top 3 suggestions load here -->
             </div>
         </section>
+    </div>
+
+    <div id="discord-promo-modal" class="discord-modal-overlay">
+        <div class="discord-modal">
+            <button class="close-modal-btn" aria-label="Close" onclick="closeDiscordModal()">&times;</button>
+            <h2 id="modal-text">ადმინ აბიუსების სიახლეები გადავიდა დისქორდზე დააკლიკე დაბლა ლოგოზე და გადმოდი</h2>
+            <a href="https://discord.gg/uuSPAW4tUF" target="_blank" class="discord-logo-link">
+                <img src="https://assets-global.website-files.com/6257adef93867e37d8a9a2ad/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png"
+                    alt="Discord Logo" class="discord-logo-img">
+            </a>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -240,7 +369,8 @@
                 enterText: "გთხოვთ შეიყვანოთ ტექსტი",
                 day: "დ",
                 today: "📅 დღეს",
-                all: "📂 ყველა ადმინ აბიუსი"
+                all: "📂 ყველა ადმინ აბიუსი",
+                modalText: "ადმინ აბიუსების სიახლეები გადავიდა დისქორდზე დააკლიკე დაბლა ლოგოზე და გადმოდი"
             },
             en: {
                 home: "Home",
@@ -268,7 +398,8 @@
                 enterText: "Please enter text",
                 day: "d",
                 today: "📅 Today",
-                all: "📂 All Admin Abuse"
+                all: "📂 All Admin Abuse",
+                modalText: "Admin abuse news has moved to Discord, click the logo below and join"
             }
         };
 
@@ -298,6 +429,7 @@
             if (get('submit-suggest-btn')) get('submit-suggest-btn').textContent = t.send;
             if (get('top-qa-title')) get('top-qa-title').textContent = t.topQa;
             if (get('footer-rights')) get('footer-rights').innerHTML = t.rights;
+            if (get('modal-text')) get('modal-text').textContent = t.modalText;
 
             const links = get('footer-links').querySelectorAll('a');
             if (links[0]) links[0].textContent = t.privacy;
@@ -314,6 +446,17 @@
                 activeBtn.style.color = 'white';
             }
         }
+
+        window.closeDiscordModal = () => {
+            get('discord-promo-modal').classList.remove('active');
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const modal = get('discord-promo-modal');
+                if (modal) modal.classList.add('active');
+            }, 800);
+        });
 
         window.switchLanguage = (lang) => {
             currentLang = lang;
