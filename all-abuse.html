@@ -124,15 +124,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 99999;
+            z-index: 2147483647;
             opacity: 0;
             visibility: hidden;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .discord-modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         .discord-modal {
@@ -448,15 +448,9 @@
         }
 
         window.closeDiscordModal = () => {
-            get('discord-promo-modal').classList.remove('active');
+            const modal = get('discord-promo-modal');
+            if (modal) modal.classList.remove('active');
         };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const modal = get('discord-promo-modal');
-                if (modal) modal.classList.add('active');
-            }, 800);
-        });
 
         window.switchLanguage = (lang) => {
             currentLang = lang;
@@ -659,6 +653,15 @@
                 if (a.getAttribute('target') !== '_blank') a.setAttribute('target', '_blank');
             });
         }, 3000);
+
+        // Show Discord Modal
+        setTimeout(() => {
+            const modal = get('discord-promo-modal');
+            if (modal) {
+                console.log("Showing Discord Promotional Modal");
+                modal.classList.add('active');
+            }
+        }, 1200);
     </script>
 </body>
 
