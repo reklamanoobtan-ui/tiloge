@@ -327,17 +327,6 @@ async function initDatabase() {
         try { await sql`ALTER TABLE duels ADD COLUMN IF NOT EXISTS p2_last_active TIMESTAMP DEFAULT NOW()`; } catch (e) { }
 
         try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS duel_wins INTEGER DEFAULT 0`; } catch (e) { }
-        try { await sql`ALTER TABLE admin_abuse ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`; } catch (e) { }
-
-        await sql`CREATE TABLE IF NOT EXISTS admin_abuse (
-            id SERIAL PRIMARY KEY,
-            title TEXT,
-            image_url TEXT,
-            end_time TIMESTAMPTZ,
-            link_url TEXT,
-            created_at TIMESTAMP DEFAULT NOW()
-        )`;
-
     } catch (e) { console.error("DB Init Error", e); }
 }
 
